@@ -54,16 +54,14 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
 from Bio.SeqRecord import SeqRecord
-from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
+from Bio.SeqFeature import SeqFeature, FeatureLocation
 from Bio.SeqFeature import ExactPosition, BeforePosition, Reference
-from collections import OrderedDict
-from datetime import datetime, date
+from datetime import datetime
 import csv
 import logging
 from pathlib import Path
-import pymysql
 import shutil
-import subprocess
+import sys
 import unittest
 from unittest.mock import patch
 from pdm_utils import run
@@ -71,9 +69,18 @@ from pdm_utils.constants import constants
 from pdm_utils.functions import eval_modes
 from pdm_utils.pipelines import import_genome
 
+# Import helper functions to build mock database and mock flat files
+unittest_file = Path(__file__)
+test_dir = unittest_file.parent.parent
+sys.path.append(str(test_dir))
+import pdm_utils_mock_db
+import pdm_utils_mock_data
+
+
+
 # Format of the date the script imports into the database.
-current_date = datetime.today().replace(hour=0, minute=0,
-                                        second=0, microsecond=0)
+# current_date = datetime.today().replace(hour=0, minute=0,
+#                                         second=0, microsecond=0)
 #folder_date = date.today().strftime("%Y%m%d")
 
 # Create the main test directory in which all files will be
@@ -109,15 +116,14 @@ pipeline = "import"
 
 # The following integration tests user the 'pdm_anon' MySQL user.
 # It is expected that this user has all privileges for 'test_db' database.
-user = "pdm_anon"
-pwd = "pdm_anon"
-db = "test_db"
-unittest_file = Path(__file__)
-test_dir = unittest_file.parent.parent
+# user = "pdm_anon"
+# pwd = "pdm_anon"
+# db = "test_db"
+user = pdm_utils_mock_db.user
+pwd = pdm_utils_mock_db.pwd
+db = pdm_utils_mock_db.db
 test_file_dir = Path(test_dir, "test_files")
 schema_version = constants.CODE_SCHEMA_VERSION
-schema_file = f"test_schema_{schema_version}.sql"
-schema_filepath = Path(test_file_dir, schema_file)
 version_table_data = {"Version":1, "SchemaVersion":schema_version}
 
 
@@ -148,212 +154,6 @@ fail_alice_path = Path(fail_genomes_path, alice_flat_file)
 fail_l5_path = Path(fail_genomes_path, l5_flat_file)
 
 
-def create_new_db(schema_filepath, db, user, pwd):
-    """Creates a new, empty database."""
-    connection = pymysql.connect(host = "localhost",
-                                 user = user,
-                                 password = pwd,
-                                 cursorclass = pymysql.cursors.DictCursor)
-    cur = connection.cursor()
-
-    # First, test if a test database already exists within mysql.
-    # If there is, delete it so that a fresh test database is installed.
-    sql = ("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA "
-          f"WHERE SCHEMA_NAME = '{db}'")
-    cur.execute(sql)
-    result = cur.fetchall()
-    if len(result) != 0:
-        cur.execute(f"DROP DATABASE {db}")
-        connection.commit()
-
-    # Next, create the database within mysql.
-    cur.execute(f"CREATE DATABASE {db}")
-    connection.commit()
-    connection.close()
-
-    # Now import the empty schema from file.
-    # Seems like pymysql has trouble with this step, so use subprocess.
-    handle = open(schema_filepath, "r")
-    command_string = f"mysql -u {user} -p{pwd} {db}"
-    command_list = command_string.split(" ")
-    proc = subprocess.check_call(command_list, stdin = handle)
-    handle.close()
-
-
-def remove_db(db, user, pwd):
-    """Remove the MySQL database created for the test."""
-    connection = pymysql.connect(host="localhost",
-                                 user=user,
-                                 password=pwd,
-                                 cursorclass=pymysql.cursors.DictCursor)
-    cur = connection.cursor()
-    cur.execute(f"DROP DATABASE {db}")
-    connection.commit()
-    connection.close()
-
-
-def insert_data_into_version_table(db, user, pwd, data_dict):
-    """Insert data into the version table."""
-    connection = pymysql.connect(host = "localhost",
-                                 user = user,
-                                 password = pwd,
-                                 database = db,
-                                 cursorclass = pymysql.cursors.DictCursor)
-    cur = connection.cursor()
-    sql = (
-        "INSERT INTO version "
-        "(Version, SchemaVersion) "
-        "VALUES ("
-        f"'{data_dict['Version']}', '{data_dict['SchemaVersion']}');"
-        )
-    cur.execute(sql)
-    connection.commit()
-    connection.close()
-
-
-def insert_data_into_phage_table(db, user, pwd, data_dict):
-    """Insert data into the phage table."""
-    connection = pymysql.connect(host = "localhost",
-                                 user = user,
-                                 password = pwd,
-                                 database = db,
-                                 cursorclass = pymysql.cursors.DictCursor)
-    cur = connection.cursor()
-    sql = (
-        "INSERT INTO phage "
-        "(PhageID, Accession, Name, "
-        "HostGenus, Sequence, Length, GC, Status, "
-        "DateLastModified, RetrieveRecord, AnnotationAuthor, "
-        "Cluster, Subcluster) "
-        "VALUES ("
-        f"'{data_dict['PhageID']}', '{data_dict['Accession']}', "
-        f"'{data_dict['Name']}', '{data_dict['HostGenus']}', "
-        f"'{data_dict['Sequence']}', {data_dict['Length']}, "
-        f"{data_dict['GC']}, '{data_dict['Status']}', "
-        f"'{data_dict['DateLastModified']}', "
-        f"{data_dict['RetrieveRecord']}, "
-        f"{data_dict['AnnotationAuthor']}, "
-        f"'{data_dict['Cluster']}', '{data_dict['Subcluster']}');"
-        )
-    cur.execute(sql)
-    connection.commit()
-    connection.close()
-
-
-def insert_data_into_gene_table(db, user, pwd, data_dict):
-    """Insert data into the gene table."""
-    connection = pymysql.connect(host = "localhost",
-                                 user = user,
-                                 password = pwd,
-                                 database = db,
-                                 cursorclass = pymysql.cursors.DictCursor)
-    cur = connection.cursor()
-    sql = (
-        "INSERT INTO gene "
-        "(GeneID, PhageID, Start, Stop, Length, Name, "
-        "Translation, Orientation, Notes, LocusTag, Parts) "
-        "VALUES ("
-        f"'{data_dict['GeneID']}', '{data_dict['PhageID']}', "
-        f"{data_dict['Start']}, {data_dict['Stop']}, "
-        f"{data_dict['Length']}, '{data_dict['Name']}', "
-        f"'{data_dict['Translation']}', '{data_dict['Orientation']}', "
-        f"'{data_dict['Notes']}', '{data_dict['LocusTag']}',"
-        f"{data_dict['Parts']});"
-        )
-    cur.execute(sql)
-    connection.commit()
-    connection.close()
-
-
-phage_table_query = (
-    "SELECT "
-    "PhageID, Accession, Name, "
-    "HostGenus, Sequence, Length, GC, Status, "
-    "DateLastModified, RetrieveRecord, AnnotationAuthor, "
-    "Cluster, Subcluster "
-    "FROM phage;")
-
-gene_table_query = (
-    "SELECT "
-    "GeneID, PhageID, Start, Stop, Length, Name, "
-    "Translation, Orientation, Notes, LocusTag, Parts "
-    "FROM gene;")
-
-
-def get_sql_data(db, user, pwd, query):
-    """Get data from the database."""
-    connection = pymysql.connect(host = "localhost",
-                                 user = user,
-                                 password = pwd,
-                                 database = db,
-                                 cursorclass = pymysql.cursors.DictCursor)
-    cur = connection.cursor()
-    cur.execute(query)
-    results = cur.fetchall()
-    cur.close()
-    connection.close()
-    return results
-
-
-def process_phage_table_data(list_of_sql_results):
-    """Converts datatype for data retrieved from a few fields
-    in the phage table."""
-    x = 0
-    while x < len(list_of_sql_results):
-        data_dict = list_of_sql_results[x]
-        # print(data_dict.keys())
-        # input("pause")
-        data_dict["Sequence"] = data_dict["Sequence"].decode("utf-8")
-        data_dict["Length"] = int(data_dict["Length"])
-        # data_dict["Notes"] = data_dict["Notes"].decode("utf-8")
-        data_dict["GC"] = float(data_dict["GC"])
-        x += 1
-
-
-def process_gene_table_data(list_of_sql_results):
-    """Converts datatype for data retrieved from a few fields
-    in the gene table."""
-    x = 0
-    while x < len(list_of_sql_results):
-        data_dict = list_of_sql_results[x]
-        data_dict["Notes"] = data_dict["Notes"].decode("utf-8")
-        data_dict["Length"] = int(data_dict["Length"])
-        data_dict["Start"] = int(data_dict["Start"])
-        data_dict["Stop"] = int(data_dict["Stop"])
-        data_dict["Parts"] = int(data_dict["Parts"])
-        x += 1
-
-
-def filter_genome_data(list_of_sql_results, phage_id):
-    """Returns a dictionary of data from the phage table
-    based on the indicated PhageID."""
-    x = 0
-    output_dict = {}
-    while x < len(list_of_sql_results):
-        if list_of_sql_results[x]["PhageID"] == phage_id:
-            output_dict = list_of_sql_results[x]
-        else:
-            pass
-        x += 1
-    return output_dict
-
-
-def filter_gene_data(list_of_sql_results, coordinates):
-    """Returns a dictionary of data from the gene table
-    based on a tuple of coordinates."""
-    x = 0
-    output_dict = {}
-    while x < len(list_of_sql_results):
-        if (list_of_sql_results[x]["Start"] == coordinates[0] and
-                list_of_sql_results[x]["Stop"] == coordinates[1]):
-            output_dict = list_of_sql_results[x]
-        else:
-            pass
-        x += 1
-
-    return output_dict
-
-
 def compare_data(ref_dict, query_dict):
     """Compares data in two dictionaries.
     Ref dictionary = the expected data.
@@ -365,18 +165,13 @@ def compare_data(ref_dict, query_dict):
         query_value = query_dict[key]
         if exp_value != query_value:
             errors += 1
+
             # print(key)
             # print(exp_value)
             # print(query_value)
             # input("check value")
+
     return errors
-
-
-def get_seq(filepath):
-    """Get genome sequence from a flat file so that it can be added
-    to a MySQL database for testing."""
-    seqrecord = SeqIO.read(filepath, "genbank")
-    return seqrecord.seq
 
 
 def get_trixie_phage_table_data():
@@ -394,7 +189,8 @@ def get_trixie_phage_table_data():
         "RetrieveRecord": 1,
         "AnnotationAuthor": 1,
         "Cluster": "A",
-        "Subcluster": "A3"
+        "Subcluster": "A3",
+        "Notes": "NULL"
         }
     return dict
 
@@ -414,7 +210,8 @@ def get_redrock_phage_table_data():
         "RetrieveRecord": 1,
         "AnnotationAuthor": 1,
         "Cluster": "B",
-        "Subcluster": "B1"
+        "Subcluster": "B1",
+        "Notes": "NULL"
         }
     return dict
 
@@ -434,7 +231,8 @@ def get_d29_phage_table_data():
         "RetrieveRecord": 0,
         "AnnotationAuthor": 0,
         "Cluster": "D",
-        "Subcluster": "D1"
+        "Subcluster": "D1",
+        "Notes": "NULL"
         }
     return dict
 
@@ -517,37 +315,6 @@ def clear_descriptions(record):
         x += 1
 
 
-def get_alice_genome_draft_data_in_db():
-    """Returns mock data from phage table for 'draft' Alice genome."""
-    genome_seq = get_seq(base_flat_file_path)
-    data_dict = {
-        "PhageID": "Alice",
-        "Accession": "",
-        "Name": "Alice_Draft",
-        "HostGenus": "Mycobacterium",
-        "Sequence": genome_seq,
-        "Length": 153401,
-        "GC": 64.6808,
-        "Status": "draft",
-        "DateLastModified": current_date,
-        "RetrieveRecord": 1,
-        "AnnotationAuthor": 1,
-        "Cluster": "C",
-        "Subcluster": "C1"
-        }
-    return data_dict
-
-
-def get_alice_genome_final_data_in_db():
-    """Returns mock data from phage table for 'final' Alice genome."""
-    data_dict = get_alice_genome_draft_data_in_db()
-    data_dict["Name"] = "Alice"
-    data_dict["Accession"] = "JF704092"
-    data_dict["Status"] = "final"
-    data_dict["DateLastModified"] = current_date
-    return data_dict
-
-
 def get_unparsed_draft_import_args():
     """Returns list of command line arguments to import 'draft' Alice genome."""
     unparsed_args = ["run.py", pipeline, db,
@@ -569,346 +336,11 @@ def get_unparsed_final_import_args():
     return unparsed_args
 
 
-
-alice_cds_252_translation = (
-    "MFDNHPLMSTLITSVRDLNRLANGVIIRNRCEKCDTSAGPDQGV"
-    "HFVKTPLGWLYSDPKGKPTTWELFPSDAIHLPVQVIHRVSESEDVSEITENSPHTRKD"
-    "DSEATEGAAPSFEPLYPSSHKTERFTVQDTPDGLGAYVFDFGGDAFGAQTCADALAKV"
-    "TGKTWYVMHKTVVENTGIYSSMVRHEEESSS")
-
-
-def get_alice_cds_252_draft_data_in_db(translation=alice_cds_252_translation):
-    """Returns mock data from gene table for 'draft' Alice CDS 252."""
-    dict = {
-        "GeneID": "Alice_CDS_4",
-        "PhageID": "Alice",
-        "Start": 152829,
-        "Stop": 4,
-        "Parts": 2,
-        "Length": 191,
-        "Name": "252",
-        "Translation": translation,
-        "Orientation": "F",
-        "Notes": "",
-        "LocusTag": None
-        }
-    return dict
-
-
-def get_alice_cds_252_final_data_in_db():
-    """Returns mock data from gene table for 'final' Alice CDS 252."""
-    dict = get_alice_cds_252_draft_data_in_db()
-    dict["LocusTag"] = "ALICE_252"
-    return dict
-
-
-alice_cds_124_translation = (
-    "MKDEMTTSDVPADPAIDPDLAPPEPRRVVGELVETEPQEHEDPEVTELTDEERSSFVSLLT"
-    "CGKHSKKITVMGHPVVIQTLKTGDEMRVGLFTKKYLESQMGFQRAYQVAVCAAGIREIQGK"
-    "PLFRELREVTDEDEIFDKNVEAVMELYPIVITQIYQAIMDLEREYAQLAVKLGKTVRLDAS"
-    "TELEIRLAYKQGLLTQPSLNRYQRWALRYAIFMDRRLQLQDTEDMLQRQTWYLEPKRYHDL"
-    "FLAGAFEPEPIAVAGRDMEEVVDDLDEVDAYFARLEGSQSMSGAQLFAALDEPDEEGWM"
-    )
-
-
-def get_alice_cds_124_draft_data_in_db(translation=alice_cds_124_translation):
-    """Returns mock data from gene table for 'draft' Alice CDS 124."""
-    dict = {
-        "GeneID": "Alice_CDS_1",
-        "PhageID": "Alice",
-        "Start": 70374,
-        "Stop": 71285,
-        "Parts": 2,
-        "Length": 303,
-        "Name": "124",
-        "Translation": translation,
-        "Orientation": "F",
-        "Notes": "",
-        "LocusTag": None
-        }
-    return dict
-
-
-def get_alice_cds_124_final_data_in_db():
-    """Returns mock data from gene table for 'final' Alice CDS 124."""
-    dict = get_alice_cds_124_draft_data_in_db()
-    dict["LocusTag"] = "ALICE_124"
-    dict["Notes"] = "tail assembly chaperone"
-    return dict
-
-
-alice_cds_139_translation = (
-    "MKKLVTGGLVAAGITLGLISAPSASAEYMTICPSQVSAVVTANTSCGFADNV"
-    "FRGFYRQSGWDPLAYSPATGKVYRMHCAPATTTNWGEAKRCWGVGYGGDLLVVYID"
-    )
-
-
-def get_alice_cds_139_draft_data_in_db(translation=alice_cds_139_translation):
-    """Returns mock data from gene table for 'draft' Alice CDS 139."""
-    dict = {
-        "GeneID": "Alice_CDS_2",
-        "PhageID": "Alice",
-        "Start": 88120,
-        "Stop": 88447,
-        "Parts": 1,
-        "Length": 108,
-        "Name": "139",
-        "Translation": translation,
-        "Orientation": "R",
-        "Notes": "",
-        "LocusTag": None
-        }
-    return dict
-
-def get_alice_cds_139_final_data_in_db():
-    """Returns mock data from gene table for 'final' Alice CDS 139."""
-    dict = get_alice_cds_139_draft_data_in_db()
-    dict["LocusTag"] = "ALICE_139"
-    return dict
-
-
-alice_cds_193_translation = (
-    "MGNNRPTTRTLPTGEKATHHPDGRLVLKPKNSLADALSGQLDAQQEASQALTEALV"
-    "QTAVTKREAQADGNPVPEDKRVF"
-    )
-
-
-def get_alice_cds_193_draft_data_in_db(translation=alice_cds_193_translation):
-    """Returns mock data from gene table for 'draft' Alice CDS 193."""
-    dict = {
-        "GeneID": "Alice_CDS_3",
-        "PhageID": "Alice",
-        "Start": 110297,
-        "Stop": 110537,
-        "Parts": 1,
-        "Length": 79,
-        "Name": "193",
-        "Translation": translation,
-        "Orientation": "F",
-        "Notes": "",
-        "LocusTag": None
-        }
-    return dict
-
-
-def get_alice_cds_193_final_data_in_db():
-    """Returns mock data from gene table for 'final' Alice CDS 193."""
-    dict = get_alice_cds_193_draft_data_in_db()
-    dict["LocusTag"] = "ALICE_193"
-    return dict
-
-
 # Tuples of the four Alice CDS features used.
 alice_cds_252_coords = (152829, 4)
 alice_cds_124_coords = (70374, 71285)
 alice_cds_139_coords = (88120, 88447)
 alice_cds_193_coords = (110297, 110537)
-
-
-def get_alice_cds_252_qualifier_dict():
-    """Returns data to construct Alice CDS 252 flat file feature."""
-    dict = OrderedDict(
-            [("gene", ["252"]),
-             ("locus_tag", ["ALICE_252"]),
-             ("note", ["gp252"]),
-             ("codon_start", ["1"]),
-             ("transl_table", ["11"]),
-             ("product", ["hypothetical protein"]),
-             ("protein_id", ["AEJ94474.1"]),
-             ("translation", [])])
-    return dict
-
-
-def get_alice_cds_252_seqfeature():
-    """Constructs Alice CDS 252 flat file feature."""
-    seq_ftr = SeqFeature(
-                CompoundLocation(
-                    [FeatureLocation(
-                        ExactPosition(152829),
-                        ExactPosition(153401),
-                        strand=1),
-                    FeatureLocation(
-                        ExactPosition(0),
-                        ExactPosition(4),
-                        strand=1)],
-                    "join"),
-                type="CDS",
-                location_operator="join")
-    return seq_ftr
-
-
-def get_alice_cds_124_qualifier_dict():
-    """Returns data to construct Alice CDS 124 flat file feature."""
-    dict = OrderedDict(
-        [("gene", ["124"]),
-         ("locus_tag", ["ALICE_124"]),
-         ("ribosomal_slippage", [""]),
-         ("note", ["gp124"]),
-         ("codon_start", ["1"]),
-         ("transl_table", ["11"]),
-         ("product", [""]),
-         ("protein_id", ["AEJ94379.1"]),
-         ("translation", [])])
-    return dict
-
-
-def get_alice_cds_124_seqfeature():
-    """Constructs Alice CDS 124 flat file feature."""
-    seq_ftr = SeqFeature(
-                CompoundLocation(
-                    [FeatureLocation(
-                        ExactPosition(70374),
-                        ExactPosition(70902),
-                        strand=1),
-                    FeatureLocation(
-                        ExactPosition(70901),
-                        ExactPosition(71285),
-                        strand=1)],
-                    "join"),
-                type="CDS",
-                location_operator="join")
-    return seq_ftr
-
-
-def get_alice_cds_139_qualifier_dict():
-    """Returns data to construct Alice CDS 139 flat file feature."""
-    dict = OrderedDict(
-            [("gene", ["139"]),
-             ("locus_tag", ["ALICE_139"]),
-             ("note", ["gp139"]),
-             ("codon_start", ["1"]),
-             ("transl_table", ["11"]),
-             ("product", ["hypothetical protein"]),
-             ("protein_id", ["AEJ94477.1"]),
-             ("translation", [])])
-    return dict
-
-
-def get_alice_cds_139_seqfeature():
-    """Constructs Alice CDS 139 flat file feature."""
-    seq_ftr = SeqFeature(
-                FeatureLocation(
-                    ExactPosition(88120),
-                    ExactPosition(88447),
-                    strand=-1),
-                type="CDS")
-    return seq_ftr
-
-
-def get_alice_cds_193_qualifier_dict():
-    """Returns data to construct Alice CDS 193 flat file feature."""
-    dict = OrderedDict(
-            [("gene", ["193"]),
-             ("locus_tag", ["ALICE_193"]),
-             ("note", ["gp193"]),
-             ("codon_start", ["1"]),
-             ("transl_table", ["11"]),
-             ("product", ["hypothetical protein"]),
-             ("protein_id", ["AEJ94419.1"]),
-             ("translation", [])])
-    return dict
-
-
-def get_alice_cds_193_seqfeature():
-    """Constructs Alice CDS 193 flat file feature."""
-    seq_ftr = SeqFeature(
-                FeatureLocation(
-                    ExactPosition(110297),
-                    ExactPosition(110537),
-                    strand=1),
-                type="CDS")
-    return seq_ftr
-
-
-def get_alice_tmrna_169_qualifier_dict():
-    """Returns data to construct Alice tmRNA 169 flat file feature."""
-    dict = OrderedDict(
-            [('gene', ['169']),
-             ('locus_tag', ['ALICE_169'])])
-    return dict
-
-
-def get_alice_tmrna_169():
-    """Constructs Alice tmRNA 169 flat file feature."""
-    seq_ftr = SeqFeature(
-                FeatureLocation(
-                    ExactPosition(95923),
-                    ExactPosition(96358),
-                    strand=1),
-                type="tmRNA")
-    return seq_ftr
-
-
-def get_alice_trna_170_qualifier_dict():
-    """Returns data to construct Alice tRNA 170 flat file feature."""
-    dict = OrderedDict(
-            [('gene', ['170']),
-             ('locus_tag', ['ALICE_170']),
-             ('product', ['tRNA-Gln']),
-             ('note', ['tRNA-Gln (ttg)'])])
-    return dict
-
-
-def get_alice_trna_170():
-    """Constructs Alice tRNA 170 flat file feature."""
-    seq_ftr = SeqFeature(
-                FeatureLocation(
-                    ExactPosition(96431),
-                    ExactPosition(96507),
-                    strand=1),
-                type="tRNA")
-    return seq_ftr
-
-
-def get_alice_source_1_qualifiers():
-    """Returns data to construct Alice source flat file feature."""
-    dict = OrderedDict(
-            [("organism", ["Mycobacterium phage Alice_Draft"]),
-             ("mol_type", ["genomic DNA"]),
-             ("isolation_source", ["soil"]),
-             ("db_xref", ["taxon:1034128"]),
-             ("lab_host", ["Mycobacterium smegmatis mc2 155"]),
-             ("country", ["USA: Aledo, TX"]),
-             ("lat_lon", ["31.69 N 97.65 W"]),
-             ("collection_date", ["01-Oct-2009"]),
-             ("collected_by", ["C. Manley"]),
-             ("identified_by", ["C. Manley"])])
-    return dict
-
-
-def get_alice_source_1():
-    """Constructs Alice source flat file feature."""
-    seq_ftr = SeqFeature(
-                FeatureLocation(
-                    ExactPosition(0),
-                    ExactPosition(153401),
-                    strand=1),
-                type="source")
-    return seq_ftr
-
-
-# Authorship info.
-author_string_1 = "Hatfull,G.F."
-author_string_2 = (
-    "Alferez,G.I., Bryan,W.J., Byington,E.L., Contreras,T.D., "
-    "Evans,C.R., Griffin,J.A., Jalal,M.D., Lindsey,C.B., "
-    "Manley,C.M., Mitchell,A.M., O'Hara,J.M., Onoh,U.M., "
-    "Padilla,E., Penrod,L.C., Regalado,M.S., Reis,K.E., "
-    "Ruprecht,A.M., Slater,A.E., Staton,A.C., Tovar,I.G., "
-    "Turek,A.J., Utech,N.T., Simon,S.E., Hughes,L.E., "
-    "Benjamin,R.C., Serrano,M.G., Lee,V., Hendricks,S.L., "
-    "Sheth,N.U., Buck,G.A., Bradley,K.W., Khaja,R., "
-    "Lewis,M.F., Barker,L.P., Jordan,T.C., Russell,D.A., "
-    "Leuba,K.D., Fritz,M.J., Bowman,C.A., Pope,W.H., "
-    "Jacobs-Sera,D., Hendrix,R.W. and Hatfull,G.F.")
-
-
-
-
-
-
-
-
 
 
 class TestImportGenome1(unittest.TestCase):
@@ -935,8 +367,8 @@ class TestImportGenome1(unittest.TestCase):
     """
 
     def setUp(self):
-        create_new_db(schema_filepath, db, user, pwd)
-        insert_data_into_version_table(db, user, pwd, version_table_data)
+        pdm_utils_mock_db.create_new_db()
+        pdm_utils_mock_db.insert_version_data(version_table_data)
         base_dir.mkdir()
         genome_folder.mkdir()
         output_folder.mkdir()
@@ -947,44 +379,44 @@ class TestImportGenome1(unittest.TestCase):
         # CDS 124 is a compound feature.
         # CDS 193 is a normal CDS.
         # CDS 139 is a normal CDS.
-        self.alice_cds_252_translation = alice_cds_252_translation
-        self.alice_cds_252_qualifier_dict = get_alice_cds_252_qualifier_dict()
+        self.alice_cds_252_translation = pdm_utils_mock_data.alice_cds_252_translation
+        self.alice_cds_252_qualifier_dict = pdm_utils_mock_data.get_alice_cds_252_qualifier_dict()
         self.alice_cds_252_qualifier_dict["translation"] = \
             [self.alice_cds_252_translation]
-        self.alice_cds_252 = get_alice_cds_252_seqfeature()
+        self.alice_cds_252 = pdm_utils_mock_data.get_alice_cds_252_seqfeature()
         self.alice_cds_252.qualifiers = self.alice_cds_252_qualifier_dict
 
-        self.alice_cds_124_translation = alice_cds_124_translation
-        self.alice_cds_124_qualifier_dict = get_alice_cds_124_qualifier_dict()
+        self.alice_cds_124_translation = pdm_utils_mock_data.alice_cds_124_translation
+        self.alice_cds_124_qualifier_dict = pdm_utils_mock_data.get_alice_cds_124_qualifier_dict()
         self.alice_cds_124_qualifier_dict["translation"] = \
             [self.alice_cds_124_translation]
-        self.alice_cds_124 = get_alice_cds_124_seqfeature()
+        self.alice_cds_124 = pdm_utils_mock_data.get_alice_cds_124_seqfeature()
         self.alice_cds_124.qualifiers = self.alice_cds_124_qualifier_dict
 
-        self.alice_cds_139_translation = alice_cds_139_translation
-        self.alice_cds_139_qualifier_dict = get_alice_cds_139_qualifier_dict()
+        self.alice_cds_139_translation = pdm_utils_mock_data.alice_cds_139_translation
+        self.alice_cds_139_qualifier_dict = pdm_utils_mock_data.get_alice_cds_139_qualifier_dict()
         self.alice_cds_139_qualifier_dict["translation"] = \
             [self.alice_cds_139_translation]
-        self.alice_cds_139 = get_alice_cds_139_seqfeature()
+        self.alice_cds_139 = pdm_utils_mock_data.get_alice_cds_139_seqfeature()
         self.alice_cds_139.qualifiers = self.alice_cds_139_qualifier_dict
 
-        self.alice_cds_193_translation = alice_cds_193_translation
-        self.alice_cds_193_qualifier_dict = get_alice_cds_193_qualifier_dict()
+        self.alice_cds_193_translation = pdm_utils_mock_data.alice_cds_193_translation
+        self.alice_cds_193_qualifier_dict = pdm_utils_mock_data.get_alice_cds_193_qualifier_dict()
         self.alice_cds_193_qualifier_dict["translation"] = \
             [self.alice_cds_193_translation]
-        self.alice_cds_193 = get_alice_cds_193_seqfeature()
+        self.alice_cds_193 = pdm_utils_mock_data.get_alice_cds_193_seqfeature()
         self.alice_cds_193.qualifiers = self.alice_cds_193_qualifier_dict
 
-        self.alice_tmrna_169_qualifier_dict = get_alice_tmrna_169_qualifier_dict()
-        self.alice_tmrna_169 = get_alice_tmrna_169()
+        self.alice_tmrna_169_qualifier_dict = pdm_utils_mock_data.get_alice_tmrna_169_qualifier_dict()
+        self.alice_tmrna_169 = pdm_utils_mock_data.get_alice_tmrna_169()
         self.alice_tmrna_169.qualifiers = self.alice_tmrna_169_qualifier_dict
 
-        self.alice_trna_170_qualifier_dict = get_alice_trna_170_qualifier_dict()
-        self.alice_trna_170 = get_alice_trna_170()
+        self.alice_trna_170_qualifier_dict = pdm_utils_mock_data.get_alice_trna_170_qualifier_dict()
+        self.alice_trna_170 = pdm_utils_mock_data.get_alice_trna_170()
         self.alice_trna_170.qualifiers = self.alice_trna_170_qualifier_dict
 
-        self.alice_source_1_qualifiers = get_alice_source_1_qualifiers()
-        self.alice_source_1 = get_alice_source_1()
+        self.alice_source_1_qualifiers = pdm_utils_mock_data.get_alice_source_1_qualifiers()
+        self.alice_source_1 = pdm_utils_mock_data.get_alice_source_1()
         self.alice_source_1.qualifiers = self.alice_source_1_qualifiers
 
         self.alice_feature_list = [self.alice_source_1,
@@ -997,9 +429,9 @@ class TestImportGenome1(unittest.TestCase):
                                    ]
 
         self.alice_ref1 = Reference()
-        self.alice_ref1.authors = author_string_1
+        self.alice_ref1.authors = pdm_utils_mock_data.author_string_1
         self.alice_ref2 = Reference()
-        self.alice_ref2.authors = author_string_2
+        self.alice_ref2.authors = pdm_utils_mock_data.author_string_2
         self.alice_ref_list = [self.alice_ref1, self.alice_ref2]
 
         self.alice_description = ("Mycobacterium phage Alice_Draft, "
@@ -1014,7 +446,7 @@ class TestImportGenome1(unittest.TestCase):
             "organism": self.alice_organism,
             "references": self.alice_ref_list,
             "date": self.alice_date}
-        self.alice_seq = get_seq(base_flat_file_path)
+        self.alice_seq = pdm_utils_mock_data.get_seq(base_flat_file_path)
         self.alice_record = SeqRecord(
                                 seq=self.alice_seq,
                                 id="",
@@ -1046,7 +478,7 @@ class TestImportGenome1(unittest.TestCase):
 
     def tearDown(self):
         shutil.rmtree(base_dir)
-        remove_db(db, user, pwd)
+        pdm_utils_mock_db.remove_db()
 
         # This removes the default output folder in the 'tmp'
         # directory, which gets created if no output folder is
@@ -1067,8 +499,8 @@ class TestImportGenome1(unittest.TestCase):
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 1)
         with self.subTest():
@@ -1101,30 +533,30 @@ class TestImportGenome1(unittest.TestCase):
         logging.info("test_add_2")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
-        insert_data_into_phage_table(db, user, pwd, get_d29_phage_table_data())
-        insert_data_into_phage_table(db, user, pwd, get_redrock_phage_table_data())
-        insert_data_into_phage_table(db, user, pwd, get_trixie_phage_table_data())
-        insert_data_into_gene_table(db, user, pwd, get_trixie_gene_table_data_1())
+        pdm_utils_mock_db.insert_phage_data(get_d29_phage_table_data())
+        pdm_utils_mock_db.insert_phage_data(get_redrock_phage_table_data())
+        pdm_utils_mock_db.insert_phage_data(get_trixie_phage_table_data())
+        pdm_utils_mock_db.insert_gene_data(get_trixie_gene_table_data_1())
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        process_phage_table_data(phage_table_results)
-        output_genome_data = filter_genome_data(phage_table_results, "Alice")
-        expected_phage_table_data = get_alice_genome_draft_data_in_db()
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        pdm_utils_mock_db.process_phage_table_data(phage_table_results)
+        output_genome_data = pdm_utils_mock_db.filter_genome_data(phage_table_results, "Alice")
+        expected_phage_table_data = pdm_utils_mock_data.get_alice_genome_draft_data_in_db()
         genome_errors = compare_data(expected_phage_table_data,
                                      output_genome_data)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
-        process_gene_table_data(gene_table_results)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
+        pdm_utils_mock_db.process_gene_table_data(gene_table_results)
 
-        cds252_data = filter_gene_data(gene_table_results, alice_cds_252_coords)
-        cds124_data = filter_gene_data(gene_table_results, alice_cds_124_coords)
-        cds139_data = filter_gene_data(gene_table_results, alice_cds_139_coords)
-        cds193_data = filter_gene_data(gene_table_results, alice_cds_193_coords)
+        cds252_data = pdm_utils_mock_db.filter_gene_data(gene_table_results, alice_cds_252_coords)
+        cds124_data = pdm_utils_mock_db.filter_gene_data(gene_table_results, alice_cds_124_coords)
+        cds139_data = pdm_utils_mock_db.filter_gene_data(gene_table_results, alice_cds_139_coords)
+        cds193_data = pdm_utils_mock_db.filter_gene_data(gene_table_results, alice_cds_193_coords)
 
-        expected_cds252_data = get_alice_cds_252_draft_data_in_db()
-        expected_cds124_data = get_alice_cds_124_draft_data_in_db()
-        expected_cds139_data = get_alice_cds_139_draft_data_in_db()
-        expected_cds193_data = get_alice_cds_193_draft_data_in_db()
+        expected_cds252_data = pdm_utils_mock_data.get_alice_cds_252_draft_data_in_db()
+        expected_cds124_data = pdm_utils_mock_data.get_alice_cds_124_draft_data_in_db()
+        expected_cds139_data = pdm_utils_mock_data.get_alice_cds_139_draft_data_in_db()
+        expected_cds193_data = pdm_utils_mock_data.get_alice_cds_193_draft_data_in_db()
 
         cds252_errors = compare_data(expected_cds252_data, cds252_data)
         cds124_errors = compare_data(expected_cds124_data, cds124_data)
@@ -1162,8 +594,8 @@ class TestImportGenome1(unittest.TestCase):
                          "-p",
                          ]
         run.main(unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 1)
         with self.subTest():
@@ -1181,8 +613,8 @@ class TestImportGenome1(unittest.TestCase):
         alice_min_ticket = create_min_tkt_dict(self.alice_ticket)
         create_import_table([alice_min_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 1)
         with self.subTest():
@@ -1205,8 +637,8 @@ class TestImportGenome1(unittest.TestCase):
                          "-o", str(output_folder)
                          ]
         run.main(unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 0)
         with self.subTest():
@@ -1232,7 +664,7 @@ class TestImportGenome1(unittest.TestCase):
         self.alice_record.description = self.alice_description
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
         self.assertEqual(len(phage_table_results), 1)
 
 
@@ -1250,7 +682,7 @@ class TestImportGenome1(unittest.TestCase):
         self.alice_ticket["subcluster"] = "NONE"
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
         with self.subTest():
             self.assertEqual(phage_table_results[0]["Accession"], "")
         with self.subTest():
@@ -1273,7 +705,7 @@ class TestImportGenome1(unittest.TestCase):
         self.alice_ticket["subcluster"] = "none"
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
         with self.subTest():
             self.assertIsNone(phage_table_results[0]["Cluster"])
         with self.subTest():
@@ -1297,8 +729,8 @@ class TestImportGenome1(unittest.TestCase):
         # Since the global dictionary may get used for other tests,
         # remove the new key.
         constants.PHAGE_ID_DICT.pop("Alice")
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 1)
         with self.subTest():
@@ -1335,7 +767,7 @@ class TestImportGenome1(unittest.TestCase):
         create_import_table([self.alice_ticket], import_table)
         pft_mock.return_value = ([], [], [], [], [])
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 0)
         with self.subTest():
@@ -1360,7 +792,7 @@ class TestImportGenome1(unittest.TestCase):
         create_import_table([self.alice_ticket], import_table)
         pft_mock.return_value = ([], [], [], [], [])
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
         self.assertEqual(len(phage_table_results), 0)
 
 
@@ -1378,7 +810,7 @@ class TestImportGenome1(unittest.TestCase):
         create_import_table([self.alice_ticket], import_table)
         pft_mock.return_value = ([], [], [], [], [])
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
         self.assertEqual(len(phage_table_results), 0)
 
 
@@ -1395,7 +827,7 @@ class TestImportGenome1(unittest.TestCase):
         self.alice_ticket["host_genus"] = "retain"
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
         with self.subTest():
             self.assertTrue(sys_exit_mock.called)
         with self.subTest():
@@ -1415,7 +847,7 @@ class TestImportGenome1(unittest.TestCase):
         self.alice_ticket["retrieve_record"] = "retrieve"
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
         with self.subTest():
             self.assertTrue(sys_exit_mock.called)
         with self.subTest():
@@ -1442,8 +874,8 @@ class TestImportGenome1(unittest.TestCase):
         self.alice_ticket["host_genus"] = "retrieve"
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 0)
         with self.subTest():
@@ -1465,8 +897,8 @@ class TestImportGenome1(unittest.TestCase):
         self.alice_ticket["annotation_status"] = "final"
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 0)
         with self.subTest():
@@ -1484,7 +916,7 @@ class TestImportGenome1(unittest.TestCase):
         self.alice_ticket["phage_id"] = "Trixie"
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
         self.assertEqual(len(phage_table_results), 0)
 
 
@@ -1503,10 +935,10 @@ class TestImportGenome1(unittest.TestCase):
         create_import_table([self.alice_ticket], import_table)
         d29_phage_table_data = get_d29_phage_table_data()
         d29_phage_table_data["PhageID"] = "Alice"
-        insert_data_into_phage_table(db, user, pwd, d29_phage_table_data)
+        pdm_utils_mock_db.insert_phage_data(d29_phage_table_data)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 1)
         with self.subTest():
@@ -1536,8 +968,8 @@ class TestImportGenome1(unittest.TestCase):
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 0)
         with self.subTest():
@@ -1559,8 +991,8 @@ class TestImportGenome1(unittest.TestCase):
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 1)
         with self.subTest():
@@ -1577,11 +1009,11 @@ class TestImportGenome1(unittest.TestCase):
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
         d29_phage_table_data = get_d29_phage_table_data()
         d29_phage_table_data["Sequence"] = str(self.alice_seq)
-        insert_data_into_phage_table(db, user, pwd, d29_phage_table_data)
+        pdm_utils_mock_db.insert_phage_data(d29_phage_table_data)
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 1)
         with self.subTest():
@@ -1603,8 +1035,8 @@ class TestImportGenome1(unittest.TestCase):
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 0)
         with self.subTest():
@@ -1627,8 +1059,8 @@ class TestImportGenome1(unittest.TestCase):
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 1)
         with self.subTest():
@@ -1646,8 +1078,8 @@ class TestImportGenome1(unittest.TestCase):
         self.alice_ticket["cluster"] = "XYZ"
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 0)
         with self.subTest():
@@ -1672,8 +1104,8 @@ class TestImportGenome1(unittest.TestCase):
         self.alice_ticket["subcluster"] = "WXYZ1"
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 0)
         with self.subTest():
@@ -1698,8 +1130,8 @@ class TestImportGenome1(unittest.TestCase):
         self.alice_ticket["subcluster"] = "WXYZ1"
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 1)
         with self.subTest():
@@ -1724,8 +1156,8 @@ class TestImportGenome1(unittest.TestCase):
         self.alice_ticket["subcluster"] = "WXYZ1"
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 1)
         with self.subTest():
@@ -1743,7 +1175,7 @@ class TestImportGenome1(unittest.TestCase):
         self.alice_ticket["subcluster"] = "A1234"
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
         self.assertEqual(len(phage_table_results), 0)
 
 
@@ -1758,7 +1190,7 @@ class TestImportGenome1(unittest.TestCase):
         self.alice_ticket["host_genus"] = "ABCDE"
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
         self.assertEqual(len(phage_table_results), 0)
 
 
@@ -1779,8 +1211,8 @@ class TestImportGenome1(unittest.TestCase):
         self.alice_ticket["host_genus"] = "ABCDE"
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 0)
         with self.subTest():
@@ -1804,8 +1236,8 @@ class TestImportGenome1(unittest.TestCase):
         self.alice_ticket["host_genus"] = "ABCDE"
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 1)
         with self.subTest():
@@ -1829,8 +1261,8 @@ class TestImportGenome1(unittest.TestCase):
         self.alice_ticket["host_genus"] = "ABCDE"
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 1)
         with self.subTest():
@@ -1848,7 +1280,7 @@ class TestImportGenome1(unittest.TestCase):
         self.alice_ticket["annotation_author"] = "invalid"
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
         self.assertEqual(len(phage_table_results), 0)
 
 
@@ -1863,7 +1295,7 @@ class TestImportGenome1(unittest.TestCase):
         self.alice_ticket["annotation_author"] = "3"
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
         self.assertEqual(len(phage_table_results), 0)
 
 
@@ -1878,7 +1310,7 @@ class TestImportGenome1(unittest.TestCase):
         self.alice_ticket["retrieve_record"] = "3"
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
         self.assertEqual(len(phage_table_results), 0)
 
 
@@ -1893,7 +1325,7 @@ class TestImportGenome1(unittest.TestCase):
         self.alice_ticket["annotation_status"] = "invalid"
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
         self.assertEqual(len(phage_table_results), 0)
 
 
@@ -1908,7 +1340,7 @@ class TestImportGenome1(unittest.TestCase):
         self.alice_ticket["accession"] = "ABC123"
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
         self.assertEqual(len(phage_table_results), 0)
 
 
@@ -1926,7 +1358,7 @@ class TestImportGenome1(unittest.TestCase):
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
         self.assertEqual(len(phage_table_results), 0)
 
 
@@ -1937,7 +1369,7 @@ class TestImportGenome1(unittest.TestCase):
         but flat file has genome with invalid '-' nucleotides."""
         logging.info("test_add_39")
         getpass_mock.side_effect = [user, pwd]
-        self.alice_seq = str(get_seq(base_flat_file_path))
+        self.alice_seq = str(pdm_utils_mock_data.get_seq(base_flat_file_path))
         self.alice_seq = list(self.alice_seq)
         self.alice_seq[100] = "-"
         self.alice_seq = "".join(self.alice_seq)
@@ -1953,7 +1385,7 @@ class TestImportGenome1(unittest.TestCase):
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
         self.assertEqual(len(phage_table_results), 0)
 
 
@@ -1964,7 +1396,7 @@ class TestImportGenome1(unittest.TestCase):
         but flat file has genome with invalid 'Z' nucleotides."""
         logging.info("test_add_40")
         getpass_mock.side_effect = [user, pwd]
-        self.alice_seq = str(get_seq(base_flat_file_path))
+        self.alice_seq = str(pdm_utils_mock_data.get_seq(base_flat_file_path))
         self.alice_seq = list(self.alice_seq)
         self.alice_seq[100] = "Z"
         self.alice_seq = "".join(self.alice_seq)
@@ -1980,7 +1412,7 @@ class TestImportGenome1(unittest.TestCase):
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
         self.assertEqual(len(phage_table_results), 0)
 
 
@@ -2005,7 +1437,7 @@ class TestImportGenome1(unittest.TestCase):
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
         self.assertEqual(len(phage_table_results), 0)
 
 
@@ -2023,7 +1455,7 @@ class TestImportGenome1(unittest.TestCase):
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
         self.assertEqual(len(phage_table_results), 0)
 
 
@@ -2049,7 +1481,7 @@ class TestImportGenome1(unittest.TestCase):
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
         # input("check file")
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
         self.assertEqual(len(phage_table_results), 0)
 
 
@@ -2065,7 +1497,7 @@ class TestImportGenome1(unittest.TestCase):
         self.alice_ticket["subcluster"] = "C1"
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 0)
 
@@ -2081,7 +1513,7 @@ class TestImportGenome1(unittest.TestCase):
         self.alice_ticket["host_genus"] = "none"
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 0)
 
@@ -2100,7 +1532,7 @@ class TestImportGenome1(unittest.TestCase):
 
         # Create second flat file. Change a single nucleotide from 'T' to 'G'
         # so that the genome sequence is different.
-        self.alice_seq = str(get_seq(base_flat_file_path))
+        self.alice_seq = str(pdm_utils_mock_data.get_seq(base_flat_file_path))
         self.alice_seq = list(self.alice_seq)
         self.alice_seq[100] = "G"
         self.alice_seq = "".join(self.alice_seq)
@@ -2124,8 +1556,8 @@ class TestImportGenome1(unittest.TestCase):
         l5_ticket["phage_id"] = "L5"
         create_import_table([self.alice_ticket, l5_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 2)
         with self.subTest():
@@ -2155,7 +1587,7 @@ class TestImportGenome1(unittest.TestCase):
 
         # Create second flat file. Change a single nucleotide from 'T' to 'G'
         # so that the genome sequence is different.
-        self.alice_seq = str(get_seq(base_flat_file_path))
+        self.alice_seq = str(pdm_utils_mock_data.get_seq(base_flat_file_path))
         self.alice_seq = list(self.alice_seq)
         self.alice_seq[100] = "G"
         self.alice_seq = "".join(self.alice_seq)
@@ -2182,8 +1614,8 @@ class TestImportGenome1(unittest.TestCase):
         l5_ticket["eval_mode"] = "final"
         create_import_table([self.alice_ticket, l5_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 1)
         with self.subTest():
@@ -2218,8 +1650,8 @@ class TestImportGenome1(unittest.TestCase):
         # unparsed_args = 'final' eval_mode
         unparsed_args = get_unparsed_final_import_args()
         run.main(unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 1)
         with self.subTest():
@@ -2238,8 +1670,8 @@ class TestImportGenome1(unittest.TestCase):
         create_import_table([self.alice_ticket], import_table)
         # unparsed_args = 'draft' eval_mode
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 0)
         with self.subTest():
@@ -2262,8 +1694,8 @@ class TestImportGenome1(unittest.TestCase):
         create_import_table([self.alice_ticket], import_table)
         self.unparsed_args[9] = "custom"
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 0)
         with self.subTest():
@@ -2285,8 +1717,8 @@ class TestImportGenome1(unittest.TestCase):
         self.alice_ticket["eval_mode"] = "custom"
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 0)
         with self.subTest():
@@ -2317,7 +1749,7 @@ class TestImportGenome1(unittest.TestCase):
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
 
         # Create second flat file.
-        self.alice_seq = str(get_seq(base_flat_file_path))
+        self.alice_seq = str(pdm_utils_mock_data.get_seq(base_flat_file_path))
         self.alice_seq = list(self.alice_seq)
         self.alice_seq[100] = "-" # Invalid nucleotide.
         self.alice_seq = "".join(self.alice_seq)
@@ -2344,8 +1776,8 @@ class TestImportGenome1(unittest.TestCase):
         self.alice_ticket["eval_mode"] = "custom"
         create_import_table([self.alice_ticket, l5_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 1)
         with self.subTest():
@@ -2374,8 +1806,8 @@ class TestImportGenome1(unittest.TestCase):
         create_import_table([self.alice_ticket], import_table)
         self.unparsed_args[6] = "filename"
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 1)
         with self.subTest():
@@ -2414,8 +1846,8 @@ class TestImportGenome2(unittest.TestCase):
 
 
     def setUp(self):
-        create_new_db(schema_filepath, db, user, pwd)
-        insert_data_into_version_table(db, user, pwd, version_table_data)
+        pdm_utils_mock_db.create_new_db()
+        pdm_utils_mock_db.insert_version_data(version_table_data)
         base_dir.mkdir()
         genome_folder.mkdir()
         output_folder.mkdir()
@@ -2426,51 +1858,51 @@ class TestImportGenome2(unittest.TestCase):
         # CDS 124 is a compound feature.
         # CDS 193 is a normal CDS.
         # CDS 139 is a normal CDS.
-        self.alice_cds_252_translation = alice_cds_252_translation
-        self.alice_cds_252_qualifier_dict = get_alice_cds_252_qualifier_dict()
+        self.alice_cds_252_translation = pdm_utils_mock_data.alice_cds_252_translation
+        self.alice_cds_252_qualifier_dict = pdm_utils_mock_data.get_alice_cds_252_qualifier_dict()
         self.alice_cds_252_qualifier_dict["translation"] = \
             [self.alice_cds_252_translation]
-        self.alice_cds_252 = get_alice_cds_252_seqfeature()
+        self.alice_cds_252 = pdm_utils_mock_data.get_alice_cds_252_seqfeature()
         self.alice_cds_252.qualifiers = self.alice_cds_252_qualifier_dict
 
-        self.alice_cds_124_translation = alice_cds_124_translation
-        self.alice_cds_124_qualifier_dict = get_alice_cds_124_qualifier_dict()
+        self.alice_cds_124_translation = pdm_utils_mock_data.alice_cds_124_translation
+        self.alice_cds_124_qualifier_dict = pdm_utils_mock_data.get_alice_cds_124_qualifier_dict()
         self.alice_cds_124_qualifier_dict["translation"] = \
             [self.alice_cds_124_translation]
-        self.alice_cds_124 = get_alice_cds_124_seqfeature()
+        self.alice_cds_124 = pdm_utils_mock_data.get_alice_cds_124_seqfeature()
         self.alice_cds_124.qualifiers = self.alice_cds_124_qualifier_dict
 
-        self.alice_cds_139_translation = alice_cds_139_translation
-        self.alice_cds_139_qualifier_dict = get_alice_cds_139_qualifier_dict()
+        self.alice_cds_139_translation = pdm_utils_mock_data.alice_cds_139_translation
+        self.alice_cds_139_qualifier_dict = pdm_utils_mock_data.get_alice_cds_139_qualifier_dict()
         self.alice_cds_139_qualifier_dict["translation"] = \
             [self.alice_cds_139_translation]
-        self.alice_cds_139 = get_alice_cds_139_seqfeature()
+        self.alice_cds_139 = pdm_utils_mock_data.get_alice_cds_139_seqfeature()
         self.alice_cds_139.qualifiers = self.alice_cds_139_qualifier_dict
 
-        self.alice_cds_193_translation = alice_cds_193_translation
-        self.alice_cds_193_qualifier_dict = get_alice_cds_193_qualifier_dict()
+        self.alice_cds_193_translation = pdm_utils_mock_data.alice_cds_193_translation
+        self.alice_cds_193_qualifier_dict = pdm_utils_mock_data.get_alice_cds_193_qualifier_dict()
 
         # Description intentionally contains "'" to verify that
         # descriptions with this character don't crash MySQL.
         self.alice_cds_193_qualifier_dict["product"] = ["5' phosphatase"]
         self.alice_cds_193_qualifier_dict["translation"] = \
             [self.alice_cds_193_translation]
-        self.alice_cds_193 = get_alice_cds_193_seqfeature()
+        self.alice_cds_193 = pdm_utils_mock_data.get_alice_cds_193_seqfeature()
         self.alice_cds_193.qualifiers = self.alice_cds_193_qualifier_dict
 
-        self.alice_tmrna_169_qualifier_dict = get_alice_tmrna_169_qualifier_dict()
-        self.alice_tmrna_169 = get_alice_tmrna_169()
+        self.alice_tmrna_169_qualifier_dict = pdm_utils_mock_data.get_alice_tmrna_169_qualifier_dict()
+        self.alice_tmrna_169 = pdm_utils_mock_data.get_alice_tmrna_169()
         self.alice_tmrna_169.qualifiers = self.alice_tmrna_169_qualifier_dict
 
-        self.alice_trna_170_qualifier_dict = get_alice_trna_170_qualifier_dict()
-        self.alice_trna_170 = get_alice_trna_170()
+        self.alice_trna_170_qualifier_dict = pdm_utils_mock_data.get_alice_trna_170_qualifier_dict()
+        self.alice_trna_170 = pdm_utils_mock_data.get_alice_trna_170()
         self.alice_trna_170.qualifiers = self.alice_trna_170_qualifier_dict
 
-        self.alice_source_1_qualifiers = get_alice_source_1_qualifiers()
+        self.alice_source_1_qualifiers = pdm_utils_mock_data.get_alice_source_1_qualifiers()
         self.alice_source_1_qualifiers["organism"] = \
             ["Mycobacterium phage Alice"]
 
-        self.alice_source_1 = get_alice_source_1()
+        self.alice_source_1 = pdm_utils_mock_data.get_alice_source_1()
         self.alice_source_1.qualifiers = self.alice_source_1_qualifiers
         self.alice_feature_list = [self.alice_source_1,
                                    self.alice_cds_252, # Wrap around gene
@@ -2482,9 +1914,9 @@ class TestImportGenome2(unittest.TestCase):
                                    ]
 
         self.alice_ref1 = Reference()
-        self.alice_ref1.authors = author_string_1
+        self.alice_ref1.authors = pdm_utils_mock_data.author_string_1
         self.alice_ref2 = Reference()
-        self.alice_ref2.authors = author_string_2
+        self.alice_ref2.authors = pdm_utils_mock_data.author_string_2
         self.alice_ref_list = [self.alice_ref1, self.alice_ref2]
 
         self.alice_description = ("Mycobacterium phage Alice, "
@@ -2499,7 +1931,7 @@ class TestImportGenome2(unittest.TestCase):
             "organism": self.alice_organism,
             "references": self.alice_ref_list,
             "date": self.alice_date}
-        self.alice_seq = get_seq(base_flat_file_path)
+        self.alice_seq = pdm_utils_mock_data.get_seq(base_flat_file_path)
         self.alice_record = SeqRecord(
                                 seq = self.alice_seq,
                                 id = "JF704092.1",
@@ -2520,14 +1952,14 @@ class TestImportGenome2(unittest.TestCase):
         self.unparsed_args = get_unparsed_final_import_args()
 
         # Get data to insert into database that will be replaced.
-        self.alice_data_to_insert = get_alice_genome_draft_data_in_db()
+        self.alice_data_to_insert = pdm_utils_mock_data.get_alice_genome_draft_data_in_db()
         self.alice_data_to_insert["DateLastModified"] = \
             datetime.strptime('1/1/2018', '%m/%d/%Y')
 
 
     def tearDown(self):
         shutil.rmtree(base_dir)
-        remove_db(db, user, pwd)
+        pdm_utils_mock_db.remove_db()
 
 
 
@@ -2542,44 +1974,44 @@ class TestImportGenome2(unittest.TestCase):
         logging.info("test_replacement_1")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
-        insert_data_into_phage_table(db, user, pwd, get_d29_phage_table_data())
-        insert_data_into_phage_table(db, user, pwd, get_redrock_phage_table_data())
-        insert_data_into_phage_table(db, user, pwd, get_trixie_phage_table_data())
-        insert_data_into_gene_table(db, user, pwd, get_trixie_gene_table_data_1())
-        insert_data_into_phage_table(db, user, pwd, self.alice_data_to_insert)
+        pdm_utils_mock_db.insert_phage_data(get_d29_phage_table_data())
+        pdm_utils_mock_db.insert_phage_data(get_redrock_phage_table_data())
+        pdm_utils_mock_db.insert_phage_data(get_trixie_phage_table_data())
+        pdm_utils_mock_db.insert_gene_data(get_trixie_gene_table_data_1())
+        pdm_utils_mock_db.insert_phage_data(self.alice_data_to_insert)
 
         # Modify several values of CDS 139 that is inserted into the database.
         # Since Alice genome is being replaced, this data
         # should be completely removed and replaced with the CDS 139 data
         # from within the flat file.
-        alice_cds_139_mod = get_alice_cds_139_draft_data_in_db()
+        alice_cds_139_mod = pdm_utils_mock_data.get_alice_cds_139_draft_data_in_db()
         alice_cds_139_mod["GeneID"] = "Alice_CDS_2000"
         alice_cds_139_mod["Start"] = 100
         alice_cds_139_mod["Stop"] = 200
         alice_cds_139_mod["Name"] = "abc123"
         alice_cds_139_mod["Orientation"] = "F"
         alice_cds_139_mod["LocusTag"] = "abc123"
-        insert_data_into_gene_table(db, user, pwd, alice_cds_139_mod)
+        pdm_utils_mock_db.insert_gene_data(alice_cds_139_mod)
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        process_phage_table_data(phage_table_results)
-        output_genome_data = filter_genome_data(phage_table_results, "Alice")
-        expected_phage_table_data = get_alice_genome_final_data_in_db()
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        pdm_utils_mock_db.process_phage_table_data(phage_table_results)
+        output_genome_data = pdm_utils_mock_db.filter_genome_data(phage_table_results, "Alice")
+        expected_phage_table_data = pdm_utils_mock_data.get_alice_genome_final_data_in_db()
         genome_errors = compare_data(expected_phage_table_data,
                                      output_genome_data)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
-        process_gene_table_data(gene_table_results)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
+        pdm_utils_mock_db.process_gene_table_data(gene_table_results)
 
-        cds252_data = filter_gene_data(gene_table_results, alice_cds_252_coords)
-        cds124_data = filter_gene_data(gene_table_results, alice_cds_124_coords)
-        cds139_data = filter_gene_data(gene_table_results, alice_cds_139_coords)
-        cds193_data = filter_gene_data(gene_table_results, alice_cds_193_coords)
+        cds252_data = pdm_utils_mock_db.filter_gene_data(gene_table_results, alice_cds_252_coords)
+        cds124_data = pdm_utils_mock_db.filter_gene_data(gene_table_results, alice_cds_124_coords)
+        cds139_data = pdm_utils_mock_db.filter_gene_data(gene_table_results, alice_cds_139_coords)
+        cds193_data = pdm_utils_mock_db.filter_gene_data(gene_table_results, alice_cds_193_coords)
 
-        expected_cds252_data = get_alice_cds_252_draft_data_in_db()
-        expected_cds124_data = get_alice_cds_124_draft_data_in_db()
-        expected_cds139_data = get_alice_cds_139_draft_data_in_db()
-        expected_cds193_data = get_alice_cds_193_draft_data_in_db()
+        expected_cds252_data = pdm_utils_mock_data.get_alice_cds_252_draft_data_in_db()
+        expected_cds124_data = pdm_utils_mock_data.get_alice_cds_124_draft_data_in_db()
+        expected_cds139_data = pdm_utils_mock_data.get_alice_cds_139_draft_data_in_db()
+        expected_cds193_data = pdm_utils_mock_data.get_alice_cds_193_draft_data_in_db()
         expected_cds193_data["Notes"] = "5' phosphatase"
 
         cds252_errors = compare_data(expected_cds252_data, cds252_data)
@@ -2612,18 +2044,18 @@ class TestImportGenome2(unittest.TestCase):
         logging.info("test_replacement_2")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
-        insert_data_into_phage_table(db, user, pwd, self.alice_data_to_insert)
+        pdm_utils_mock_db.insert_phage_data(self.alice_data_to_insert)
         alice_min_tkt = create_min_tkt_dict(self.alice_ticket)
         create_import_table([alice_min_tkt], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        process_phage_table_data(phage_table_results)
-        output_genome_data = filter_genome_data(phage_table_results, "Alice")
-        expected_phage_table_data = get_alice_genome_final_data_in_db()
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        pdm_utils_mock_db.process_phage_table_data(phage_table_results)
+        output_genome_data = pdm_utils_mock_db.filter_genome_data(phage_table_results, "Alice")
+        expected_phage_table_data = pdm_utils_mock_data.get_alice_genome_final_data_in_db()
         expected_phage_table_data["Accession"] = ""
         genome_errors = compare_data(expected_phage_table_data,
                                      output_genome_data)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 1)
         with self.subTest():
@@ -2641,7 +2073,7 @@ class TestImportGenome2(unittest.TestCase):
         logging.info("test_replacement_3")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
-        insert_data_into_phage_table(db, user, pwd, self.alice_data_to_insert)
+        pdm_utils_mock_db.insert_phage_data(self.alice_data_to_insert)
         self.alice_ticket["host_genus"] = "RETAIN"
         self.alice_ticket["cluster"] = "RETRIEVE"
         self.alice_ticket["subcluster"] = "RETAIN"
@@ -2649,13 +2081,13 @@ class TestImportGenome2(unittest.TestCase):
         self.alice_ticket["retrieve_record"] = "RETAIN"
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        process_phage_table_data(phage_table_results)
-        output_genome_data = filter_genome_data(phage_table_results, "Alice")
-        expected_phage_table_data = get_alice_genome_final_data_in_db()
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        pdm_utils_mock_db.process_phage_table_data(phage_table_results)
+        output_genome_data = pdm_utils_mock_db.filter_genome_data(phage_table_results, "Alice")
+        expected_phage_table_data = pdm_utils_mock_data.get_alice_genome_final_data_in_db()
         genome_errors = compare_data(expected_phage_table_data,
                                      output_genome_data)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 1)
         with self.subTest():
@@ -2679,12 +2111,12 @@ class TestImportGenome2(unittest.TestCase):
         logging.info("test_replacement_4")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
-        insert_data_into_phage_table(db, user, pwd, self.alice_data_to_insert)
+        pdm_utils_mock_db.insert_phage_data(self.alice_data_to_insert)
         self.alice_ticket["retrieve_record"] = "RETRIEVE"
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 1)
         with self.subTest():
@@ -2706,13 +2138,13 @@ class TestImportGenome2(unittest.TestCase):
         logging.info("test_replacement_5")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
-        insert_data_into_phage_table(db, user, pwd, get_d29_phage_table_data())
+        pdm_utils_mock_db.insert_phage_data(get_d29_phage_table_data())
 
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
-        output_genome_data = filter_genome_data(phage_table_results, "Alice")
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
+        output_genome_data = pdm_utils_mock_db.filter_genome_data(phage_table_results, "Alice")
 
         with self.subTest():
             self.assertEqual(len(phage_table_results), 1)
@@ -2731,13 +2163,13 @@ class TestImportGenome2(unittest.TestCase):
         logging.info("test_replacement_6")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
-        insert_data_into_phage_table(db, user, pwd, get_d29_phage_table_data())
+        pdm_utils_mock_db.insert_phage_data(get_d29_phage_table_data())
         self.alice_ticket["host_genus"] = "RETAIN"
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
-        output_genome_data = filter_genome_data(phage_table_results, "Alice")
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
+        output_genome_data = pdm_utils_mock_db.filter_genome_data(phage_table_results, "Alice")
         with self.subTest():
             self.assertEqual(len(phage_table_results), 1)
         with self.subTest():
@@ -2761,14 +2193,14 @@ class TestImportGenome2(unittest.TestCase):
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
         d29_phage_table_data = get_d29_phage_table_data()
         d29_phage_table_data["PhageID"] = "Alice"
-        insert_data_into_phage_table(db, user, pwd, d29_phage_table_data)
+        pdm_utils_mock_db.insert_phage_data(d29_phage_table_data)
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        process_phage_table_data(phage_table_results)
-        output_genome_data = filter_genome_data(phage_table_results, "Alice")
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        pdm_utils_mock_db.process_phage_table_data(phage_table_results)
+        output_genome_data = pdm_utils_mock_db.filter_genome_data(phage_table_results, "Alice")
         genome_errors = compare_data(d29_phage_table_data, output_genome_data)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 1)
         with self.subTest():
@@ -2794,21 +2226,21 @@ class TestImportGenome2(unittest.TestCase):
         logging.info("test_replacement_8")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
-        alice_seq_mod = str(get_seq(base_flat_file_path))
+        alice_seq_mod = str(pdm_utils_mock_data.get_seq(base_flat_file_path))
         alice_seq_mod = list(alice_seq_mod)
         alice_seq_mod[100] = "-"
         alice_seq_mod = "".join(alice_seq_mod)
         alice_seq_mod = Seq(alice_seq_mod, IUPAC.ambiguous_dna)
-        exp_phage_table_data = get_alice_genome_final_data_in_db()
+        exp_phage_table_data = pdm_utils_mock_data.get_alice_genome_final_data_in_db()
         exp_phage_table_data["Sequence"] = alice_seq_mod
-        insert_data_into_phage_table(db, user, pwd, exp_phage_table_data)
+        pdm_utils_mock_db.insert_phage_data(exp_phage_table_data)
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        process_phage_table_data(phage_table_results)
-        output_genome_data = filter_genome_data(phage_table_results, "Alice")
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        pdm_utils_mock_db.process_phage_table_data(phage_table_results)
+        output_genome_data = pdm_utils_mock_db.filter_genome_data(phage_table_results, "Alice")
         genome_errors = compare_data(exp_phage_table_data, output_genome_data)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 1)
         with self.subTest():
@@ -2836,13 +2268,13 @@ class TestImportGenome2(unittest.TestCase):
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
         self.alice_data_to_insert["DateLastModified"] = \
             datetime.strptime('1/1/4018', '%m/%d/%Y')
-        insert_data_into_phage_table(db, user, pwd, self.alice_data_to_insert)
+        pdm_utils_mock_db.insert_phage_data(self.alice_data_to_insert)
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        process_phage_table_data(phage_table_results)
-        output_genome_data = filter_genome_data(phage_table_results, "Alice")
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        pdm_utils_mock_db.process_phage_table_data(phage_table_results)
+        output_genome_data = pdm_utils_mock_db.filter_genome_data(phage_table_results, "Alice")
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 1)
         with self.subTest():
@@ -2866,13 +2298,13 @@ class TestImportGenome2(unittest.TestCase):
         self.alice_record.description = ("Mycobacterium phage Alice_Draft, "
                                   "complete sequence")
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
-        insert_data_into_phage_table(db, user, pwd, self.alice_data_to_insert)
+        pdm_utils_mock_db.insert_phage_data(self.alice_data_to_insert)
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        process_phage_table_data(phage_table_results)
-        output_genome_data = filter_genome_data(phage_table_results, "Alice")
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        pdm_utils_mock_db.process_phage_table_data(phage_table_results)
+        output_genome_data = pdm_utils_mock_db.filter_genome_data(phage_table_results, "Alice")
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 1)
         with self.subTest():
@@ -2892,18 +2324,18 @@ class TestImportGenome2(unittest.TestCase):
         logging.info("test_replacement_11")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
-        insert_data_into_phage_table(db, user, pwd, self.alice_data_to_insert)
+        pdm_utils_mock_db.insert_phage_data(self.alice_data_to_insert)
         self.alice_ticket["annotation_status"] = "unknown"
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        process_phage_table_data(phage_table_results)
-        output_genome_data = filter_genome_data(phage_table_results, "Alice")
-        expected_phage_table_data = get_alice_genome_final_data_in_db()
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        pdm_utils_mock_db.process_phage_table_data(phage_table_results)
+        output_genome_data = pdm_utils_mock_db.filter_genome_data(phage_table_results, "Alice")
+        expected_phage_table_data = pdm_utils_mock_data.get_alice_genome_final_data_in_db()
         expected_phage_table_data["Status"] = "unknown"
         genome_errors = compare_data(expected_phage_table_data,
                                      output_genome_data)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 1)
         with self.subTest():
@@ -2925,16 +2357,16 @@ class TestImportGenome2(unittest.TestCase):
         self.alice_data_to_insert["Name"] = "Alice"
         self.alice_data_to_insert["Status"] = "final"
         self.alice_data_to_insert["Accession"] = "JF704092"
-        insert_data_into_phage_table(db, user, pwd, self.alice_data_to_insert)
+        pdm_utils_mock_db.insert_phage_data(self.alice_data_to_insert)
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        process_phage_table_data(phage_table_results)
-        output_genome_data = filter_genome_data(phage_table_results, "Alice")
-        expected_phage_table_data = get_alice_genome_final_data_in_db()
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        pdm_utils_mock_db.process_phage_table_data(phage_table_results)
+        output_genome_data = pdm_utils_mock_db.filter_genome_data(phage_table_results, "Alice")
+        expected_phage_table_data = pdm_utils_mock_data.get_alice_genome_final_data_in_db()
         genome_errors = compare_data(expected_phage_table_data,
                                      output_genome_data)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 1)
         with self.subTest():
@@ -2953,17 +2385,17 @@ class TestImportGenome2(unittest.TestCase):
         self.alice_data_to_insert["Name"] = "Alice"
         self.alice_data_to_insert["Status"] = "final"
         self.alice_data_to_insert["Accession"] = "JF704092"
-        insert_data_into_phage_table(db, user, pwd, self.alice_data_to_insert)
+        pdm_utils_mock_db.insert_phage_data(self.alice_data_to_insert)
         self.alice_ticket["eval_mode"] = "auto"
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        process_phage_table_data(phage_table_results)
-        output_genome_data = filter_genome_data(phage_table_results, "Alice")
-        expected_phage_table_data = get_alice_genome_final_data_in_db()
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        pdm_utils_mock_db.process_phage_table_data(phage_table_results)
+        output_genome_data = pdm_utils_mock_db.filter_genome_data(phage_table_results, "Alice")
+        expected_phage_table_data = pdm_utils_mock_data.get_alice_genome_final_data_in_db()
         genome_errors = compare_data(expected_phage_table_data,
                                      output_genome_data)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 1)
         with self.subTest():
@@ -2985,14 +2417,14 @@ class TestImportGenome2(unittest.TestCase):
         self.alice_data_to_insert["Name"] = "Alice"
         self.alice_data_to_insert["Status"] = "final"
         self.alice_data_to_insert["Accession"] = "JF704092"
-        insert_data_into_phage_table(db, user, pwd, self.alice_data_to_insert)
+        pdm_utils_mock_db.insert_phage_data(self.alice_data_to_insert)
         self.alice_ticket["annotation_status"] = "unknown"
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        process_phage_table_data(phage_table_results)
-        output_genome_data = filter_genome_data(phage_table_results, "Alice")
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        pdm_utils_mock_db.process_phage_table_data(phage_table_results)
+        output_genome_data = pdm_utils_mock_db.filter_genome_data(phage_table_results, "Alice")
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 1)
         with self.subTest():
@@ -3016,13 +2448,13 @@ class TestImportGenome2(unittest.TestCase):
         clear_descriptions(self.alice_record)
         self.alice_record.features[1].qualifiers["function"] = "repressor"
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
-        insert_data_into_phage_table(db, user, pwd, self.alice_data_to_insert)
+        pdm_utils_mock_db.insert_phage_data(self.alice_data_to_insert)
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        process_phage_table_data(phage_table_results)
-        output_genome_data = filter_genome_data(phage_table_results, "Alice")
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        pdm_utils_mock_db.process_phage_table_data(phage_table_results)
+        output_genome_data = pdm_utils_mock_db.filter_genome_data(phage_table_results, "Alice")
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 1)
         with self.subTest():
@@ -3042,16 +2474,16 @@ class TestImportGenome2(unittest.TestCase):
         clear_descriptions(self.alice_record)
         self.alice_record.features[1].qualifiers["function"] = "repressor"
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
-        insert_data_into_phage_table(db, user, pwd, self.alice_data_to_insert)
+        pdm_utils_mock_db.insert_phage_data(self.alice_data_to_insert)
         self.alice_ticket["description_field"] = "function"
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        process_phage_table_data(phage_table_results)
-        output_genome_data = filter_genome_data(phage_table_results, "Alice")
-        exp_phage_table_data = get_alice_genome_final_data_in_db()
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        pdm_utils_mock_db.process_phage_table_data(phage_table_results)
+        output_genome_data = pdm_utils_mock_db.filter_genome_data(phage_table_results, "Alice")
+        exp_phage_table_data = pdm_utils_mock_data.get_alice_genome_final_data_in_db()
         genome_errors = compare_data(exp_phage_table_data, output_genome_data)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 1)
         with self.subTest():
@@ -3069,11 +2501,11 @@ class TestImportGenome2(unittest.TestCase):
         getpass_mock.side_effect = [user, pwd]
         self.alice_record.annotations["source"] = "Mycobacterium phage D29"
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
-        insert_data_into_phage_table(db, user, pwd, self.alice_data_to_insert)
+        pdm_utils_mock_db.insert_phage_data(self.alice_data_to_insert)
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 1)
         with self.subTest():
@@ -3089,11 +2521,11 @@ class TestImportGenome2(unittest.TestCase):
         getpass_mock.side_effect = [user, pwd]
         self.alice_record.annotations["source"] = "Gordonia phage Alice"
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
-        insert_data_into_phage_table(db, user, pwd, self.alice_data_to_insert)
+        pdm_utils_mock_db.insert_phage_data(self.alice_data_to_insert)
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 1)
         with self.subTest():
@@ -3111,11 +2543,11 @@ class TestImportGenome2(unittest.TestCase):
                                    "Byington,E.L., Contreras,T.D.")
         self.alice_record.annotations["references"] = [self.alice_ref2]
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
-        insert_data_into_phage_table(db, user, pwd, self.alice_data_to_insert)
+        pdm_utils_mock_db.insert_phage_data(self.alice_data_to_insert)
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 1)
         with self.subTest():
@@ -3132,11 +2564,11 @@ class TestImportGenome2(unittest.TestCase):
         # Feature list already contains alice_cds_193.
         self.alice_feature_list.append(self.alice_cds_193)
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
-        insert_data_into_phage_table(db, user, pwd, self.alice_data_to_insert)
+        pdm_utils_mock_db.insert_phage_data(self.alice_data_to_insert)
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 1)
         with self.subTest():
@@ -3157,11 +2589,11 @@ class TestImportGenome2(unittest.TestCase):
         mod_organism = ["Mycobacterium phage Alice_Draft"]
         self.alice_record.features[0].qualifiers["organism"] = mod_organism
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
-        insert_data_into_phage_table(db, user, pwd, self.alice_data_to_insert)
+        pdm_utils_mock_db.insert_phage_data(self.alice_data_to_insert)
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 1)
         with self.subTest():
@@ -3178,11 +2610,11 @@ class TestImportGenome2(unittest.TestCase):
         mod_organism = ["Mycobacteriu phage Alice"]
         self.alice_record.features[0].qualifiers["organism"] = mod_organism
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
-        insert_data_into_phage_table(db, user, pwd, self.alice_data_to_insert)
+        pdm_utils_mock_db.insert_phage_data(self.alice_data_to_insert)
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 1)
         with self.subTest():
@@ -3199,11 +2631,11 @@ class TestImportGenome2(unittest.TestCase):
         mod_organism = ["Mycobacteriophage Alice"]
         self.alice_record.features[0].qualifiers["organism"] = mod_organism
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
-        insert_data_into_phage_table(db, user, pwd, self.alice_data_to_insert)
+        pdm_utils_mock_db.insert_phage_data(self.alice_data_to_insert)
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 1)
         with self.subTest():
@@ -3220,11 +2652,11 @@ class TestImportGenome2(unittest.TestCase):
         mod_organism = ["Mycobacteriophage Alice"]
         self.alice_record.features[0].qualifiers["host"] = mod_organism
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
-        insert_data_into_phage_table(db, user, pwd, self.alice_data_to_insert)
+        pdm_utils_mock_db.insert_phage_data(self.alice_data_to_insert)
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 1)
         with self.subTest():
@@ -3244,11 +2676,11 @@ class TestImportGenome2(unittest.TestCase):
         getpass_mock.side_effect = [user, pwd]
         self.alice_record.features[1].qualifiers["locus_tag"] = "L5_1"
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
-        insert_data_into_phage_table(db, user, pwd, self.alice_data_to_insert)
+        pdm_utils_mock_db.insert_phage_data(self.alice_data_to_insert)
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 1)
         with self.subTest():
@@ -3264,11 +2696,11 @@ class TestImportGenome2(unittest.TestCase):
         getpass_mock.side_effect = [user, pwd]
         self.alice_record.features[1].qualifiers["gene"] = "invalid"
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
-        insert_data_into_phage_table(db, user, pwd, self.alice_data_to_insert)
+        pdm_utils_mock_db.insert_phage_data(self.alice_data_to_insert)
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 1)
         with self.subTest():
@@ -3289,11 +2721,11 @@ class TestImportGenome2(unittest.TestCase):
         self.alice_record.features[1].qualifiers["product"] = "int"
         self.alice_record.features[2].qualifiers["function"] = "repressor"
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
-        insert_data_into_phage_table(db, user, pwd, self.alice_data_to_insert)
+        pdm_utils_mock_db.insert_phage_data(self.alice_data_to_insert)
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 1)
         with self.subTest():
@@ -3315,12 +2747,12 @@ class TestImportGenome2(unittest.TestCase):
         self.alice_record.features[1].qualifiers["product"] = "int"
         self.alice_record.features[2].qualifiers["function"] = "repressor"
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
-        insert_data_into_phage_table(db, user, pwd, self.alice_data_to_insert)
+        pdm_utils_mock_db.insert_phage_data(self.alice_data_to_insert)
         create_import_table([self.alice_ticket], import_table)
         self.unparsed_args.append("-i")
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 1)
         with self.subTest():
@@ -3342,17 +2774,17 @@ class TestImportGenome2(unittest.TestCase):
         self.alice_record.features[1].qualifiers["product"] = "int"
         self.alice_record.features[2].qualifiers["function"] = "repressor"
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
-        insert_data_into_phage_table(db, user, pwd, self.alice_data_to_insert)
+        pdm_utils_mock_db.insert_phage_data(self.alice_data_to_insert)
         create_import_table([self.alice_ticket], import_table)
         self.unparsed_args.append("-i")
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        process_phage_table_data(phage_table_results)
-        output_genome_data = filter_genome_data(phage_table_results, "Alice")
-        expected_phage_table_data = get_alice_genome_final_data_in_db()
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        pdm_utils_mock_db.process_phage_table_data(phage_table_results)
+        output_genome_data = pdm_utils_mock_db.filter_genome_data(phage_table_results, "Alice")
+        expected_phage_table_data = pdm_utils_mock_data.get_alice_genome_final_data_in_db()
         genome_errors = compare_data(expected_phage_table_data,
                                      output_genome_data)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 1)
         with self.subTest():
@@ -3376,8 +2808,8 @@ class TestImportGenome2(unittest.TestCase):
         create_import_table([self.alice_ticket], import_table)
         self.unparsed_args.append("-i")
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 0)
         with self.subTest():
@@ -3398,8 +2830,8 @@ class TestImportGenome2(unittest.TestCase):
         create_import_table([self.alice_ticket], import_table)
         self.unparsed_args.append("-i")
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 1)
         with self.subTest():
@@ -3418,8 +2850,8 @@ class TestImportGenome2(unittest.TestCase):
         self.alice_ticket["eval_mode"] = "misc"
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 1)
         with self.subTest():
@@ -3442,29 +2874,29 @@ class TestImportGenome2(unittest.TestCase):
         # features[6] = alice_cds_193
         self.alice_record.features[6].qualifiers["product"] = "60% homology"
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
-        insert_data_into_phage_table(db, user, pwd, self.alice_data_to_insert)
+        pdm_utils_mock_db.insert_phage_data(self.alice_data_to_insert)
 
         # Modify several values of CDS 139 that is inserted into the database.
-        alice_cds_193_mod = get_alice_cds_193_draft_data_in_db()
+        alice_cds_193_mod = pdm_utils_mock_data.get_alice_cds_193_draft_data_in_db()
         alice_cds_193_mod["GeneID"] = "Alice_CDS_2000"
         alice_cds_193_mod["Name"] = "abc123"
         alice_cds_193_mod["Orientation"] = "F"
         alice_cds_193_mod["LocusTag"] = "abc123"
         alice_cds_193_mod["Notes"] = "repressor"
-        insert_data_into_gene_table(db, user, pwd, alice_cds_193_mod)
+        pdm_utils_mock_db.insert_gene_data(alice_cds_193_mod)
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        phage_table_results = get_sql_data(db, user, pwd, phage_table_query)
-        process_phage_table_data(phage_table_results)
-        output_genome_data = filter_genome_data(phage_table_results, "Alice")
-        expected_phage_table_data = get_alice_genome_draft_data_in_db()
+        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        pdm_utils_mock_db.process_phage_table_data(phage_table_results)
+        output_genome_data = pdm_utils_mock_db.filter_genome_data(phage_table_results, "Alice")
+        expected_phage_table_data = pdm_utils_mock_data.get_alice_genome_draft_data_in_db()
         expected_phage_table_data["DateLastModified"] = \
             datetime.strptime('1/1/2018', '%m/%d/%Y')
         genome_errors = compare_data(expected_phage_table_data,
                                      output_genome_data)
-        gene_table_results = get_sql_data(db, user, pwd, gene_table_query)
-        process_gene_table_data(gene_table_results)
-        cds193_data = filter_gene_data(gene_table_results, alice_cds_193_coords)
+        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
+        pdm_utils_mock_db.process_gene_table_data(gene_table_results)
+        cds193_data = pdm_utils_mock_db.filter_gene_data(gene_table_results, alice_cds_193_coords)
         expected_cds193_data = alice_cds_193_mod
         cds193_errors = compare_data(expected_cds193_data, cds193_data)
         with self.subTest():

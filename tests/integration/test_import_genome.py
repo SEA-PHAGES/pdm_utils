@@ -7,6 +7,7 @@ from pathlib import Path
 import pymysql
 import shutil
 import subprocess
+import sys
 import time
 import unittest
 from unittest.mock import patch
@@ -15,6 +16,17 @@ from pdm_utils.classes import bundle, genome, genomepair, ticket, eval, cds, sou
 from pdm_utils.constants import constants
 from pdm_utils.functions import basic, eval_modes, mysqldb
 from pdm_utils.pipelines import import_genome
+
+# Import helper functions to build mock database and mock flat files
+unittest_file = Path(__file__)
+test_dir = unittest_file.parent.parent
+sys.path.append(str(test_dir))
+import pdm_utils_mock_db
+import pdm_utils_mock_data
+
+
+
+
 
 
 # Create the main test directory in which all files will be
@@ -59,109 +71,9 @@ db2 = "Actinobacteriophage"
 engine_string1 = f"mysql+pymysql://{user}:{pwd}@localhost/{db}"
 engine_string2 = f"mysql+pymysql://{user}:{pwd}@localhost/{db2}"
 
-unittest_file = Path(__file__)
-test_dir = unittest_file.parent.parent
 test_file_dir = Path(test_dir, "test_files")
 schema_version = constants.CODE_SCHEMA_VERSION
-schema_file = f"test_schema_{schema_version}.sql"
-schema_filepath = Path(test_file_dir, schema_file)
 version_table_data = {"Version":1, "SchemaVersion":schema_version}
-
-
-def create_new_db(schema_filepath, db, user, pwd):
-    """Creates a new, empty database."""
-    connection = pymysql.connect(host = "localhost",
-                                 user = user,
-                                 password = pwd,
-                                 cursorclass = pymysql.cursors.DictCursor)
-    cur = connection.cursor()
-
-    # First, test if a test database already exists within mysql.
-    # If there is, delete it so that a fresh test database is installed.
-    sql = ("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA "
-          f"WHERE SCHEMA_NAME = '{db}'")
-    cur.execute(sql)
-    result = cur.fetchall()
-    if len(result) != 0:
-        cur.execute(f"DROP DATABASE {db}")
-        connection.commit()
-
-    # Next, create the database within mysql.
-    cur.execute(f"CREATE DATABASE {db}")
-    connection.commit()
-    connection.close()
-
-    # Now import the empty schema from file.
-    # Seems like pymysql has trouble with this step, so use subprocess.
-    handle = open(schema_filepath, "r")
-    command_string = f"mysql -u {user} -p{pwd} {db}"
-    command_list = command_string.split(" ")
-    proc = subprocess.check_call(command_list, stdin = handle)
-    handle.close()
-
-
-def remove_db(db, user, pwd):
-    """Remove the MySQL database created for the test."""
-    connection = pymysql.connect(host="localhost",
-                                 user=user,
-                                 password=pwd,
-                                 cursorclass=pymysql.cursors.DictCursor)
-    cur = connection.cursor()
-    cur.execute(f"DROP DATABASE {db}")
-    connection.commit()
-    connection.close()
-
-
-def insert_data_into_phage_table(db, user, pwd, data_dict):
-    """Insert data into the phage table."""
-    connection = pymysql.connect(host = "localhost",
-                                 user = user,
-                                 password = pwd,
-                                 database = db,
-                                 cursorclass = pymysql.cursors.DictCursor)
-    cur = connection.cursor()
-    # Don't encapsulate Cluster or Subcluster with quotes, since they
-    # can sometimes be assigned NULL.
-    sql = (
-        "INSERT INTO phage "
-        "(PhageID, Accession, Name, "
-        "HostGenus, Sequence, Length, GC, Status, "
-        "DateLastModified, RetrieveRecord, AnnotationAuthor, "
-        "Cluster, Subcluster) "
-        "VALUES ("
-        f"'{data_dict['PhageID']}', '{data_dict['Accession']}', "
-        f"'{data_dict['Name']}', '{data_dict['HostGenus']}', "
-        f"'{data_dict['Sequence']}', {data_dict['Length']}, "
-        f"{data_dict['GC']}, '{data_dict['Status']}', "
-        f"'{data_dict['DateLastModified']}', "
-        f"{data_dict['RetrieveRecord']}, "
-        f"{data_dict['AnnotationAuthor']}, "
-        f"{data_dict['Cluster']}, {data_dict['Subcluster']});"
-        )
-    cur.execute(sql)
-    connection.commit()
-    connection.close()
-
-
-
-def insert_data_into_version_table(db, user, pwd, data_dict):
-    """Insert data into the version table."""
-    connection = pymysql.connect(host = "localhost",
-                                 user = user,
-                                 password = pwd,
-                                 database = db,
-                                 cursorclass = pymysql.cursors.DictCursor)
-    cur = connection.cursor()
-    sql = (
-        "INSERT INTO version "
-        "(Version, SchemaVersion) "
-        "VALUES ("
-        f"'{data_dict['Version']}', '{data_dict['SchemaVersion']}');"
-        )
-    cur.execute(sql)
-    connection.commit()
-    connection.close()
-
 
 def count_contents(path_to_folder):
     count = 0
@@ -169,34 +81,12 @@ def count_contents(path_to_folder):
         count += 1
     return count
 
-
-
-
-def get_d29_phage_table_data():
-    """Mock phage table data for D29."""
-    dict = {
-        "PhageID": "D29",
-        "Accession": "XYZ123",
-        "Name": "D29",
-        "HostGenus": "Microbacterium",
-        "Sequence": "ATGCATGCATGCATGC",
-        "Length": 16,
-        "GC": 0.5,
-        "Status": "unknown",
-        "DateLastModified": datetime.strptime('1/1/0001', '%m/%d/%Y'),
-        "RetrieveRecord": 0,
-        "AnnotationAuthor": 0,
-        "Cluster": "D",
-        "Subcluster": "D1"
-        }
-    return dict
-
 class TestImportGenome1(unittest.TestCase):
 
 
     def setUp(self):
-        create_new_db(schema_filepath, db, user, pwd)
-        insert_data_into_version_table(db, user, pwd, version_table_data)
+        pdm_utils_mock_db.create_new_db()
+        pdm_utils_mock_db.insert_version_data(version_table_data)
 
         self.base_dir = Path(test_root_dir, "test_import")
         self.base_dir.mkdir()
@@ -242,7 +132,7 @@ class TestImportGenome1(unittest.TestCase):
         self.engine.dispose()
 
         # Remove the MySQL database created for the test.
-        remove_db(db, user, pwd)
+        pdm_utils_mock_db.remove_db()
 
     def test_prepare_bundle_1(self):
         """Verify bundle is returned from a flat file with:
@@ -404,33 +294,59 @@ class TestImportGenome1(unittest.TestCase):
         and no PhagesDB data."""
         # Use host_genus and accession to confirm that only attributes
         # in the data_retain set are copied.
-        l5_data = ["L5", "EFG789", "L5_Draft", "Gordonia", "ATCG",
-                   4, 1, "draft", constants.EMPTY_DATE, 1, 1]
-        trixie_data = ["Trixie", "XYZ456", "Trixie", "Mycobacterium", "AATTC",
-                       5, 1, "final", constants.EMPTY_DATE, 1, 1]
-        d29_data = ["D29", "XYZ456", "D29", "Mycobacterium", "GGCCATT",
-                    7, 1, "final", constants.EMPTY_DATE, 1, 1]
-        input_phage_ids_and_seqs = [l5_data, trixie_data, d29_data]
-        connection = pymysql.connect(host = "localhost",
-                                     user = user,
-                                     password = pwd,
-                                     database = db,
-                                     cursorclass = pymysql.cursors.DictCursor)
-        cur = connection.cursor()
-        for data in input_phage_ids_and_seqs:
-            sql1 = (
-                "INSERT INTO phage (PhageID, Accession, Name, "
-                "HostGenus, Sequence, Length, GC, Status, "
-                "DateLastModified, RetrieveRecord, "
-                "AnnotationAuthor) VALUES ("
-                f"'{data[0]}', '{data[1]}', '{data[2]}', "
-                f"'{data[3]}', '{data[4]}', "
-                f" {data[5]}, {data[6]}, '{data[7]}', "
-                f"'{data[8]}', {data[9]}, {data[10]});"
-                )
-            cur.execute(sql1)
-        connection.commit()
-        connection.close()
+
+        phage_data1 = {}
+        phage_data1["PhageID"] = "L5"
+        phage_data1["Accession"] = "EFG789"
+        phage_data1["Name"] = "L5_Draft"
+        phage_data1["HostGenus"] = "Gordonia"
+        phage_data1["Sequence"] = "ATCG"
+        phage_data1["Length"] = 4
+        phage_data1["GC"] = 1
+        phage_data1["Status"] = "draft"
+        phage_data1["DateLastModified"] = constants.EMPTY_DATE
+        phage_data1["RetrieveRecord"] = 1
+        phage_data1["AnnotationAuthor"] = 1
+        phage_data1["Cluster"] = "A"
+        phage_data1["Subcluster"] = "A1"
+        phage_data1["Notes"] = "none"
+
+
+        phage_data2 = {}
+        phage_data2["PhageID"] = "Trixie"
+        phage_data2["Accession"] = "XYZ456"
+        phage_data2["Name"] = "Trixie"
+        phage_data2["HostGenus"] = "Mycobacterium"
+        phage_data2["Sequence"] = "AATTC"
+        phage_data2["Length"] = 5
+        phage_data2["GC"] = 1
+        phage_data2["Status"] = "final"
+        phage_data2["DateLastModified"] = constants.EMPTY_DATE
+        phage_data2["RetrieveRecord"] = 1
+        phage_data2["AnnotationAuthor"] = 1
+        phage_data2["Cluster"] = "A"
+        phage_data2["Subcluster"] = "A1"
+        phage_data2["Notes"] = "none"
+
+        phage_data3 = {}
+        phage_data3["PhageID"] = "D29"
+        phage_data3["Accession"] = "XYZ456"
+        phage_data3["Name"] = "D29"
+        phage_data3["HostGenus"] = "Mycobacterium"
+        phage_data3["Sequence"] = "GGCCATT"
+        phage_data3["Length"] = 7
+        phage_data3["GC"] = 1
+        phage_data3["Status"] = "final"
+        phage_data3["DateLastModified"] = constants.EMPTY_DATE
+        phage_data3["RetrieveRecord"] = 1
+        phage_data3["AnnotationAuthor"] = 1
+        phage_data3["Cluster"] = "A"
+        phage_data3["Subcluster"] = "A1"
+        phage_data3["Notes"] = "none"
+
+        pdm_utils_mock_db.insert_phage_data(phage_data1)
+        pdm_utils_mock_db.insert_phage_data(phage_data2)
+        pdm_utils_mock_db.insert_phage_data(phage_data3)
 
         self.tkt1.type = "replace"
         self.tkt1.data_dict["host_genus"] = "retain"
@@ -650,16 +566,16 @@ class TestImportGenome1(unittest.TestCase):
 
     def test_get_mysql_reference_sets_1(self):
         """Verify data dictionary is constructed properly."""
-        phage_data1 = get_d29_phage_table_data()
-        phage_data2 = get_d29_phage_table_data()
-        phage_data3 = get_d29_phage_table_data()
+        phage_data1 = pdm_utils_mock_data.get_alice_genome_draft_data_in_db(seq=False)
+        phage_data2 = pdm_utils_mock_data.get_alice_genome_draft_data_in_db(seq=False)
+        phage_data3 = pdm_utils_mock_data.get_alice_genome_draft_data_in_db(seq=False)
 
         phage_data1["PhageID"] = "D29"
         phage_data1["Accession"] = "ABC"
         phage_data1["HostGenus"] = "Mycobacterium"
         phage_data1["Sequence"] = "AAAA"
-        phage_data1["Cluster"] = "'A'"
-        phage_data1["Subcluster"] = "'A1'"
+        phage_data1["Cluster"] = "A"
+        phage_data1["Subcluster"] = "A1"
 
         phage_data2["PhageID"] = "Trixie"
         phage_data2["Accession"] = "EFG"
@@ -672,12 +588,12 @@ class TestImportGenome1(unittest.TestCase):
         phage_data3["Accession"] = ""
         phage_data3["HostGenus"] = "Gordonia"
         phage_data3["Sequence"] = "CCCC"
-        phage_data3["Cluster"] = "'B'"
+        phage_data3["Cluster"] = "B"
         phage_data3["Subcluster"] = "NULL"
 
-        insert_data_into_phage_table(db, user, pwd, phage_data1)
-        insert_data_into_phage_table(db, user, pwd, phage_data2)
-        insert_data_into_phage_table(db, user, pwd, phage_data3)
+        pdm_utils_mock_db.insert_phage_data(phage_data1)
+        pdm_utils_mock_db.insert_phage_data(phage_data2)
+        pdm_utils_mock_db.insert_phage_data(phage_data3)
 
         ref_dict = import_genome.get_mysql_reference_sets(self.engine)
         exp_keys = {"phage_id_set", "accession_set", "seq_set",
@@ -827,7 +743,7 @@ class TestImportGenome3(unittest.TestCase):
     def setUp(self):
         # The test_db is only needed to test shema compatibility.
         # Otherwise, Actinobacteriophage is sufficient.
-        create_new_db(schema_filepath, db, user, pwd)
+        pdm_utils_mock_db.create_new_db()
 
         self.import_table = Path(test_file_dir, "test_import_table_1.csv")
         self.base_dir = Path(test_root_dir, "test_folder")
@@ -855,7 +771,7 @@ class TestImportGenome3(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.base_dir)
         self.engine.dispose()
-        remove_db(db, user, pwd)
+        pdm_utils_mock_db.remove_db()
 
 
 
@@ -864,7 +780,7 @@ class TestImportGenome3(unittest.TestCase):
     @patch("pdm_utils.functions.mysqldb.connect_to_db")
     def test_main_1(self, ctd_mock, data_io_mock):
         """Verify that correct args calls data_io."""
-        insert_data_into_version_table(db, user, pwd, version_table_data)
+        pdm_utils_mock_db.insert_version_data(version_table_data)
         self.input_folder.mkdir()
         self.output_folder.mkdir()
         ctd_mock.return_value = self.engine
@@ -877,7 +793,7 @@ class TestImportGenome3(unittest.TestCase):
     @patch("sys.exit")
     def test_main_2(self, sys_exit_mock, ctd_mock, data_io_mock):
         """Verify that invalid input folder calls sys exit."""
-        insert_data_into_version_table(db, user, pwd, version_table_data)
+        pdm_utils_mock_db.insert_version_data(version_table_data)
         self.output_folder.mkdir()
         ctd_mock.return_value = self.engine
         import_genome.main(self.args_list)
@@ -889,7 +805,7 @@ class TestImportGenome3(unittest.TestCase):
     @patch("sys.exit")
     def test_main_3(self, sys_exit_mock, ctd_mock, data_io_mock):
         """Verify that invalid import file calls sys exit."""
-        insert_data_into_version_table(db, user, pwd, version_table_data)
+        pdm_utils_mock_db.insert_version_data(version_table_data)
         self.input_folder.mkdir()
         self.output_folder.mkdir()
         self.args_list[4] = ""
@@ -904,7 +820,7 @@ class TestImportGenome3(unittest.TestCase):
     @patch("sys.exit")
     def test_main_4(self, sys_exit_mock, mnd_mock, ctd_mock, data_io_mock):
         """Verify that invalid output folder calls sys exit."""
-        insert_data_into_version_table(db, user, pwd, version_table_data)
+        pdm_utils_mock_db.insert_version_data(version_table_data)
         self.input_folder.mkdir()
         # Need to provide filename in a valid directory to create log file
         # since output folder is invalid.
@@ -939,7 +855,7 @@ class TestImportGenome3(unittest.TestCase):
     def test_main_6(self, ctd_mock, sys_exit_mock, data_io_mock):
         """Verify that invalid database schema version calls sys exit."""
         new_version_table_data = {"Version":1, "SchemaVersion":0}
-        insert_data_into_version_table(db, user, pwd, new_version_table_data)
+        pdm_utils_mock_db.insert_version_data(new_version_table_data)
         self.input_folder.mkdir()
         self.output_folder.mkdir()
         ctd_mock.return_value = self.engine
