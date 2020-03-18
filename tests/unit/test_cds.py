@@ -1,22 +1,37 @@
 """ Unit tests for the CDS class."""
 
+
+from pathlib import Path
+import unittest
+import sys
+
+from Bio.Alphabet import IUPAC
+from Bio.SeqFeature import SeqFeature
+from Bio.Seq import Seq
+
 from pdm_utils.classes import cds
 from pdm_utils.constants import constants
-from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
-from Bio.Seq import Seq
-from Bio.Alphabet import IUPAC
-import unittest
+
+# Import helper functions to build mock database and mock flat files
+unittest_file = Path(__file__)
+test_dir = unittest_file.parent.parent
+if str(test_dir) not in set(sys.path):
+    sys.path.append(str(test_dir))
+import pdm_utils_mock_data
 
 
 
 class TestCdsClass(unittest.TestCase):
 
-
     def setUp(self):
         self.feature = cds.Cds()
-
-
-
+        self.seq1 = Seq("AATTCGAGCT")
+        self.seqfeature1 = pdm_utils_mock_data.create_simple_seqfeature(
+                                1, 5, 1, "CDS")
+        self.seqfeature2 = pdm_utils_mock_data.create_simple_seqfeature(
+                                1, 5, -1, "CDS")
+        self.seqfeature3 = pdm_utils_mock_data.create_two_compound_seqfeature(
+                                1, 5, 1, 3, 7, 1, "CDS")
 
     def test_set_locus_tag_1(self):
         """Verify that standard 3-part locus_tag is parsed correctly."""
@@ -903,20 +918,20 @@ class TestCdsClass(unittest.TestCase):
 
     def test_set_nucleotide_sequence_1(self):
         """Verify that supplied Seq object is set correctly."""
-        seq = Seq("aattcg")
+        seq = Seq("aattcgagct")
         self.feature.set_nucleotide_sequence(value=seq)
         with self.subTest():
-            self.assertEqual(self.feature.seq, "AATTCG")
+            self.assertEqual(self.feature.seq, str(self.seq1))
         with self.subTest():
             self.assertIsInstance(self.feature.seq, Seq)
 
     def test_set_nucleotide_sequence_2(self):
         """Verify that supplied sequence is set correclty
         (converted to Seq object)."""
-        seq = "aattcg"
+        seq = "aattcgagct"
         self.feature.set_nucleotide_sequence(value=seq)
         with self.subTest():
-            self.assertEqual(self.feature.seq, "AATTCG")
+            self.assertEqual(self.feature.seq, str(self.seq1))
         with self.subTest():
             self.assertIsInstance(self.feature.seq, Seq)
 
@@ -932,42 +947,31 @@ class TestCdsClass(unittest.TestCase):
 
     def test_set_nucleotide_sequence_4(self):
         """Verify that expected sequence is extracted from top orientation."""
-        seq = Seq("AATTCG")
-        self.feature.seqfeature = SeqFeature(FeatureLocation(1, 5),
-                                             type="CDS",
-                                             strand=1)
-        self.feature.set_nucleotide_sequence(parent_genome_seq=seq)
+        self.feature.seqfeature = self.seqfeature1
+        self.feature.set_nucleotide_sequence(parent_genome_seq=self.seq1)
         expected_seq = Seq("ATTC")
         self.assertEqual(self.feature.seq, expected_seq)
 
     def test_set_nucleotide_sequence_5(self):
         """Verify that expected sequence is extracted from bottom orientation."""
-        seq = Seq("AATTCG")
-        self.feature.seqfeature = SeqFeature(FeatureLocation(1, 5),
-                                             type="CDS",
-                                             strand=-1)
-        self.feature.set_nucleotide_sequence(parent_genome_seq=seq)
+        self.feature.seqfeature = self.seqfeature2
+        self.feature.set_nucleotide_sequence(parent_genome_seq=self.seq1)
         expected_seq = Seq("GAAT")
         self.assertEqual(self.feature.seq, expected_seq)
 
     def test_set_nucleotide_sequence_6(self):
         """Verify that no sequence is extracted if the 'seqfeature'
         attribute is not a Biopython SeqFeature object."""
-        seq = Seq("AATTCG")
         self.feature.seqfeature = ""
-        self.feature.set_nucleotide_sequence(parent_genome_seq=seq)
+        self.feature.set_nucleotide_sequence(parent_genome_seq=self.seq1)
         expected_seq = Seq("")
         self.assertEqual(self.feature.seq, expected_seq)
 
     def test_set_nucleotide_sequence_7(self):
         """Verify that expected sequence is extracted from a compound
         feature."""
-        seq = Seq("AATTCGAGCT")
-        self.feature.seqfeature = \
-            SeqFeature(CompoundLocation([FeatureLocation(1, 5, strand=1),
-                                         FeatureLocation(3, 7, strand=1)]),
-                       type="CDS")
-        self.feature.set_nucleotide_sequence(parent_genome_seq=seq)
+        self.feature.seqfeature = self.seqfeature3
+        self.feature.set_nucleotide_sequence(parent_genome_seq=self.seq1)
         # feature #1 = ATTC
         # feature #2 = TCGA
         expected_seq = Seq("ATTCTCGA")

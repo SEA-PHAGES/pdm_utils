@@ -189,19 +189,9 @@ def get_alice_cds_252_qualifier_dict():
 
 def get_alice_cds_252_seqfeature():
     """Constructs Alice CDS 252 flat file feature."""
-    seq_ftr = SeqFeature(
-                CompoundLocation(
-                    [FeatureLocation(
-                        ExactPosition(152829),
-                        ExactPosition(153401),
-                        strand=1),
-                    FeatureLocation(
-                        ExactPosition(0),
-                        ExactPosition(4),
-                        strand=1)],
-                    "join"),
-                type="CDS",
-                location_operator="join")
+
+    seq_ftr = create_two_compound_seqfeature(152829, 153401, 1,
+                                             0, 4, 1, "CDS")
     return seq_ftr
 
 
@@ -221,20 +211,38 @@ def get_alice_cds_124_qualifier_dict():
 
 def get_alice_cds_124_seqfeature():
     """Constructs Alice CDS 124 flat file feature."""
+    seq_ftr = create_two_compound_seqfeature(70374, 70902, 1,
+                                             70901, 71285, 1, "CDS")
+    return seq_ftr
+
+
+
+
+
+def create_two_compound_seqfeature(start1=0, stop1=0, strand1=1,
+                                   start2=0, stop2=0, strand2=1, type=""):
+    """Constructs simple BioPython SeqFeature.
+
+    Start1, Start2 = int
+    Stop1, Stop2 = int
+    Strand1, Strand2 = int (-1, 1)
+    Type = 'CDS', 'Source', 'tRNA', etc."""
     seq_ftr = SeqFeature(
                 CompoundLocation(
                     [FeatureLocation(
-                        ExactPosition(70374),
-                        ExactPosition(70902),
-                        strand=1),
+                        ExactPosition(start1),
+                        ExactPosition(stop1),
+                        strand=strand1),
                     FeatureLocation(
-                        ExactPosition(70901),
-                        ExactPosition(71285),
-                        strand=1)],
+                        ExactPosition(start2),
+                        ExactPosition(stop2),
+                        strand=strand2)],
                     "join"),
-                type="CDS",
+                type=type,
                 location_operator="join")
     return seq_ftr
+
+
 
 
 def get_alice_cds_139_qualifier_dict():
@@ -253,12 +261,7 @@ def get_alice_cds_139_qualifier_dict():
 
 def get_alice_cds_139_seqfeature():
     """Constructs Alice CDS 139 flat file feature."""
-    seq_ftr = SeqFeature(
-                FeatureLocation(
-                    ExactPosition(88120),
-                    ExactPosition(88447),
-                    strand=-1),
-                type="CDS")
+    seq_ftr = create_simple_seqfeature(88120, 88447, -1, "CDS")
     return seq_ftr
 
 
@@ -278,12 +281,7 @@ def get_alice_cds_193_qualifier_dict():
 
 def get_alice_cds_193_seqfeature():
     """Constructs Alice CDS 193 flat file feature."""
-    seq_ftr = SeqFeature(
-                FeatureLocation(
-                    ExactPosition(110297),
-                    ExactPosition(110537),
-                    strand=1),
-                type="CDS")
+    seq_ftr = create_simple_seqfeature(110297, 110537, 1, "CDS")
     return seq_ftr
 
 
@@ -297,12 +295,7 @@ def get_alice_tmrna_169_qualifier_dict():
 
 def get_alice_tmrna_169():
     """Constructs Alice tmRNA 169 flat file feature."""
-    seq_ftr = SeqFeature(
-                FeatureLocation(
-                    ExactPosition(95923),
-                    ExactPosition(96358),
-                    strand=1),
-                type="tmRNA")
+    seq_ftr = create_simple_seqfeature(95923, 96358, 1, "tmRNA")
     return seq_ftr
 
 
@@ -318,12 +311,7 @@ def get_alice_trna_170_qualifier_dict():
 
 def get_alice_trna_170():
     """Constructs Alice tRNA 170 flat file feature."""
-    seq_ftr = SeqFeature(
-                FeatureLocation(
-                    ExactPosition(96431),
-                    ExactPosition(96507),
-                    strand=1),
-                type="tRNA")
+    seq_ftr = create_simple_seqfeature(96431, 96507, 1, "tRNA")
     return seq_ftr
 
 
@@ -345,13 +333,27 @@ def get_alice_source_1_qualifiers():
 
 def get_alice_source_1():
     """Constructs Alice source flat file feature."""
+    seq_ftr = create_simple_seqfeature(0, 153401, 1, "source")
+    return seq_ftr
+
+
+
+
+def create_simple_seqfeature(start=0, stop=0, strand=1, type=""):
+    """Constructs simple BioPython SeqFeature.
+
+    Start = int
+    Stop = int
+    Strand = int (-1, 1)
+    Type = 'CDS', 'Source', 'tRNA', etc."""
     seq_ftr = SeqFeature(
                 FeatureLocation(
-                    ExactPosition(0),
-                    ExactPosition(153401),
-                    strand=1),
-                type="source")
+                    ExactPosition(start),
+                    ExactPosition(stop),
+                    strand=strand),
+                type=type)
     return seq_ftr
+
 
 
 # Authorship info.
