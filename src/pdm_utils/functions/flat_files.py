@@ -270,7 +270,7 @@ def create_seqfeature_dictionary(seqfeature_list):
         seqfeature_dict[type] = sublist
     return seqfeature_dict
 
-# TODO this function can be improved. Probably create a more basic
+# TODO should this function be improved? Maybe create a more basic
 # parse_flat_file() function - the only parameter is the seqrecord, and
 # there is only minimal parsing and data processing.
 # Then the parse_genome_data() function calls parse_flat_file(),
@@ -420,6 +420,7 @@ def parse_genome_data(seqrecord, filepath=pathlib.Path(),
             source_list.append(src_ftr)
 
     # TODO unit test after functions are constructed.
+    # TODO implement for trnas
     trna_list = []
     if "tRNA" in seqfeature_dict.keys():
         for seqfeature in seqfeature_dict["tRNA"]:
@@ -590,7 +591,7 @@ def get_seqrecord_annotations_comments(phage_genome):
 # TODO need to implement. Christian is developing tRNA object.
 # TODO unit test.
 def parse_trna_seqfeature(seqfeature):
-    """Parses a Biopython tRNA SeqFeature.
+    """Parses a Biopython tRNA SeqFeature and returns a pdm_utils Trna object.
     """
     trna_ftr = ""
     return trna_ftr
@@ -599,7 +600,7 @@ def parse_trna_seqfeature(seqfeature):
 # TODO need to implement. Christian is developing tRNA object.
 # TODO unit test.
 def parse_tmrna_seqfeature(seqfeature):
-    """Parses a Biopython tRNA SeqFeature.
+    """Parses a Biopython tRNA SeqFeature and returns a pdm_utils Tmrna object.
     """
     tmrna = ""
     return tmrna

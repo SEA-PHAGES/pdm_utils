@@ -691,9 +691,11 @@ def prepare_bundle(filepath=pathlib.Path(), ticket_dict={}, engine=None,
             # Need to recompute the feature ids using the new genome id.
             ff_gnm.set_feature_ids(use_type=True, use_cds=True)
             ff_gnm.set_feature_ids(use_type=True, use_source=True)
+            # TODO set tRNA and tmRNA feature ids.
+
             ff_gnm.set_feature_genome_ids("cds")
             ff_gnm.set_feature_genome_ids("source")
-            # TODO set tRNA and tmRNA feature ids.
+            # TODO set tRNA and tmRNA feature genome_ids.
 
         bndl.genome_dict[ff_gnm.type] = ff_gnm
 
@@ -805,6 +807,7 @@ def run_checks(bndl, accession_set=set(), phage_id_set=set(),
                           description_field=tkt.description_field)
 
             for x in range(len(gnm.trna_features)):
+                # TODO make sure this tRNA is implemented correctly.
                 check_trna(gnm.trna_features[x], eval_flags)
 
             for x in range(len(gnm.source_features)):
@@ -813,7 +816,7 @@ def run_checks(bndl, accession_set=set(), phage_id_set=set(),
 
             # TODO implement tmrna
             # for x in range(len(gnm.tmrna_features)):
-            #     check_trna(gnm.tmrna_features[x], eval_flags)
+            #     check_tmrna(gnm.tmrna_features[x], eval_flags)
 
         if retain_ref in bndl.genome_dict.keys():
             gnm2 = bndl.genome_dict[retain_ref]

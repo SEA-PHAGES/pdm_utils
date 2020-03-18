@@ -229,6 +229,10 @@ class Bundle:
                 cds_key = "cds_" + cds_ftr.id
                 if len(cds_ftr.evaluations) > 0:
                     eval_dict[cds_key] = cds_ftr.evaluations
+
+            # TODO get evaluations for trna and tmrna features
+
+
         for key in self.genome_pair_dict.keys():
             genome_pair = self.genome_pair_dict[key]
             genome_pair_key = "genome_pair_" + key

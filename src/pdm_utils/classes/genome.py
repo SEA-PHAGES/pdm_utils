@@ -470,7 +470,6 @@ class Genome:
 
 
 
-###TODO in progress below
     # TODO unittest
     def set_feature_genome_ids(self, feature_type, value=None):
         """Sets the genome_id of each feature.
@@ -492,9 +491,6 @@ class Genome:
 
         for feature in feature_list:
             feature.genome_id = value
-
-
-###TODO in progress above
 
 
     # Evaluations.
