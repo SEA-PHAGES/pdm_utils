@@ -11,17 +11,15 @@ from pdm_utils.pipelines import find_domains
 # Import helper functions to build mock database and mock flat files
 unittest_file = Path(__file__)
 test_dir = unittest_file.parent.parent
-sys.path.append(str(test_dir))
+if str(test_dir) not in set(sys.path):
+    sys.path.append(str(test_dir))
 import pdm_utils_mock_db
 import pdm_utils_mock_data
 
 
 # The following integration tests user the 'pdm_anon' MySQL user.
 # It is expected that this user has all privileges for 'test_db' database.
-user = pdm_utils_mock_db.user
-pwd = pdm_utils_mock_db.pwd
-db = pdm_utils_mock_db.db
-engine_string = f"mysql+pymysql://{user}:{pwd}@localhost/{db}"
+engine_string = pdm_utils_mock_db.create_engine_string()
 
 schema_version = constants.CODE_SCHEMA_VERSION
 version_table_data = {"Version":1, "SchemaVersion":schema_version}

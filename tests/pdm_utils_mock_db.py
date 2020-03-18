@@ -28,6 +28,10 @@ gene_domain_table_query = "SELECT * FROM gene_domain;"
 domain_table_query = "SELECT * FROM domain;"
 version_table_query = "SELECT * FROM version;"
 
+def create_engine_string(db=db, user=user, pwd=pwd):
+    """Generate engine string for SQLAlchemy."""
+    engine_string = f"mysql+pymysql://{user}:{pwd}@localhost/{db}"
+    return engine_string
 
 def execute(statement, db=db, user=user, pwd=pwd):
     """Execute a statement."""

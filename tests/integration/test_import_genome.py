@@ -16,7 +16,8 @@ from pdm_utils.pipelines import import_genome
 # Import helper functions to build mock database and mock flat files
 unittest_file = Path(__file__)
 test_dir = unittest_file.parent.parent
-sys.path.append(str(test_dir))
+if str(test_dir) not in set(sys.path):
+    sys.path.append(str(test_dir))
 import pdm_utils_mock_db
 import pdm_utils_mock_data
 
@@ -57,10 +58,10 @@ def count_status_from_dict(dict, *args):
 user = pdm_utils_mock_db.user
 pwd = pdm_utils_mock_db.pwd
 db = pdm_utils_mock_db.db
-db2 = "Actinobacteriophage"
+
 #sqlalchemy setup
-engine_string1 = f"mysql+pymysql://{user}:{pwd}@localhost/{db}"
-engine_string2 = f"mysql+pymysql://{user}:{pwd}@localhost/{db2}"
+engine_string1 = pdm_utils_mock_db.create_engine_string()
+engine_string2 = pdm_utils_mock_db.create_engine_string(db="Actinobacteriophage")
 
 test_file_dir = Path(test_dir, "test_files")
 schema_version = constants.CODE_SCHEMA_VERSION

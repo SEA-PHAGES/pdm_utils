@@ -16,28 +16,36 @@ DELETE FROM pham WHERE PhamID NOT IN (SELECT DISTINCT PhamID FROM gene);
 DELETE FROM domain WHERE HitID NOT IN (SELECT DISTINCT HitID FROM gene_domain);
 """
 
-from pdm_utils.functions.phameration import *
-from pdm_utils.functions import mysqldb
 import os
 import shutil
 import unittest
-import sqlalchemy
-import pymysql
 import subprocess
+import sys
 from pathlib import Path
 
-user = "pdm_anon"
-pwd = "pdm_anon"
-db = "test_db"
-engine_string = f"mysql+pymysql://{user}:{pwd}@localhost/{db}"
+import pymysql
+import sqlalchemy
 
+from pdm_utils.constants import constants
+from pdm_utils.functions.phameration import *
+from pdm_utils.functions import mysqldb
+
+
+# Import helper functions to build mock database
 unittest_file = Path(__file__)
 test_dir = unittest_file.parent.parent
+if str(test_dir) not in set(sys.path):
+    sys.path.append(str(test_dir))
+import pdm_utils_mock_db
+
+# Standard pdm_anon user/pwd and test_db
+engine_string = pdm_utils_mock_db.create_engine_string()
+
 test_file_dir = Path(test_dir, "test_files")
 schema_file = "test_db.sql"
 schema_filepath = Path(test_file_dir, schema_file)
-
-
+schema_version = constants.CODE_SCHEMA_VERSION
+version_table_data = {"Version":1, "SchemaVersion":schema_version}
 
 
 class TestPhamerationFunctions(unittest.TestCase):
@@ -45,44 +53,13 @@ class TestPhamerationFunctions(unittest.TestCase):
         self.engine = sqlalchemy.create_engine(engine_string, echo=False)
         self.temp_dir = "/tmp/pdm_utils_tests_phamerate"
 
-        connection = pymysql.connect(host="localhost", user=user, password=pwd,
-                                     cursorclass=pymysql.cursors.DictCursor)
-        cur = connection.cursor()
-
-        # First, test if a test database already exists within mysql.
-        # If there is, delete it so that a fresh test database is installed.
-        sql = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA " + \
-              f"WHERE SCHEMA_NAME = '{db}'"
-        cur.execute(sql)
-        result = cur.fetchall()
-
-        if len(result) != 0:
-            cur.execute(f"DROP DATABASE {db}")
-            connection.commit()
-
-        # Next, create the database within mysql.
-        cur.execute(f"CREATE DATABASE {db}")
-        connection.commit()
-        connection.close()
-
-        # Now import the empty schema from file.
-        # Seems like pymysql has trouble with this step, so use subprocess.
-        handle = open(schema_filepath, "r")
-        command_string = f"mysql -u {user} -p{pwd} {db}"
-        # command_string = f"mysql -u {user} -p{pwd} {db} --execute 'SOURCE " \
-        #                  f"filename'"
-        command_list = command_string.split(" ")
-        proc = subprocess.check_call(command_list, stdin=handle)
-        handle.close()
+        pdm_utils_mock_db.create_new_db(schema_filepath=schema_filepath)
+        pdm_utils_mock_db.insert_version_data(version_table_data)
 
     def tearDown(self):
         self.engine.dispose()
-        connection = pymysql.connect(host="localhost", user=user, password=pwd,
-                                     cursorclass=pymysql.cursors.DictCursor)
-        cur = connection.cursor()
-        cur.execute(f"DROP DATABASE {db}")
-        connection.commit()
-        connection.close()
+        pdm_utils_mock_db.remove_db()
+
         run_dir = Path.cwd()
         err_file = run_dir.joinpath("error.log")
         if err_file.exists():

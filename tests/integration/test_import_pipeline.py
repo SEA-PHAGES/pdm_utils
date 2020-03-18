@@ -72,7 +72,8 @@ from pdm_utils.pipelines import import_genome
 # Import helper functions to build mock database and mock flat files
 unittest_file = Path(__file__)
 test_dir = unittest_file.parent.parent
-sys.path.append(str(test_dir))
+if str(test_dir) not in set(sys.path):
+    sys.path.append(str(test_dir))
 import pdm_utils_mock_db
 import pdm_utils_mock_data
 
