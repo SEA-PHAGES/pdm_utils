@@ -24,6 +24,9 @@ version_table_data = {"Version":1, "SchemaVersion":schema_version}
 
 phage_table_query = "SELECT * FROM phage;"
 gene_table_query = "SELECT * FROM gene;"
+gene_domain_table_query = "SELECT * FROM gene_domain;"
+domain_table_query = "SELECT * FROM domain;"
+version_table_query = "SELECT * FROM version;"
 
 
 def execute(statement, db=db, user=user, pwd=pwd):
@@ -115,6 +118,49 @@ def insert_version_data(data_dict, db=db, user=user, pwd=pwd):
         f"'{data_dict['Version']}', '{data_dict['SchemaVersion']}');"
         )
     execute(statement, db=db, user=user, pwd=pwd)
+
+
+
+
+
+def insert_domain_data(data_dict, db=db, user=user, pwd=pwd):
+    """Insert data into the domain table."""
+    statement = (
+        "INSERT INTO domain  "
+        "(HitID, DomainID, Name, Description) "
+        "VALUES ("
+        f"'{data_dict['HitID']}', '{data_dict['DomainID']}',"
+        f"'{data_dict['Name']}', '{data_dict['Description']}');"
+        )
+    execute(statement, db=db, user=user, pwd=pwd)
+
+
+
+
+
+def insert_gene_domain_data(data_dict, db=db, user=user, pwd=pwd):
+    """Insert data into the gene_domain table."""
+    statement = (
+        "INSERT INTO gene_domain  "
+        "(GeneID, HitID, Expect, QueryStart, QueryEnd) "
+        "VALUES ("
+        f"'{data_dict['GeneID']}', '{data_dict['HitID']}',"
+        f"{data_dict['Expect']}, {data_dict['QueryStart']}"
+        f"{data_dict['QueryEnd']});"
+        )
+    execute(statement, db=db, user=user, pwd=pwd)
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 def insert_phage_data(data_dict, db=db, user=user, pwd=pwd):

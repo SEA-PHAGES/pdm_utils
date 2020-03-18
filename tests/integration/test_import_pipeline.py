@@ -174,87 +174,6 @@ def compare_data(ref_dict, query_dict):
     return errors
 
 
-def get_trixie_phage_table_data():
-    """Mock phage table data for Trixie."""
-    dict = {
-        "PhageID": "Trixie",
-        "Accession": "BCD456",
-        "Name": "Trixie",
-        "HostGenus": "Gordonia",
-        "Sequence": "GGGGGGGGGGGGGGGGGGGG",
-        "Length": 20,
-        "GC": 1,
-        "Status": "final",
-        "DateLastModified": datetime.strptime('1/1/2000', '%m/%d/%Y'),
-        "RetrieveRecord": 1,
-        "AnnotationAuthor": 1,
-        "Cluster": "A",
-        "Subcluster": "A3",
-        "Notes": "NULL"
-        }
-    return dict
-
-
-def get_redrock_phage_table_data():
-    """Mock phage table data for RedRock."""
-    dict = {
-        "PhageID": "RedRock",
-        "Accession": "BCD456",
-        "Name": "RedRock_Draft",
-        "HostGenus": "Arthrobacter",
-        "Sequence": "CCCCCCCCCCCCCCC",
-        "Length": 15,
-        "GC": 1,
-        "Status": "draft",
-        "DateLastModified": datetime.strptime('1/1/2010', '%m/%d/%Y'),
-        "RetrieveRecord": 1,
-        "AnnotationAuthor": 1,
-        "Cluster": "B",
-        "Subcluster": "B1",
-        "Notes": "NULL"
-        }
-    return dict
-
-
-def get_d29_phage_table_data():
-    """Mock phage table data for D29."""
-    dict = {
-        "PhageID": "D29",
-        "Accession": "XYZ123",
-        "Name": "D29",
-        "HostGenus": "Microbacterium",
-        "Sequence": "ATGCATGCATGCATGC",
-        "Length": 16,
-        "GC": 0.5,
-        "Status": "unknown",
-        "DateLastModified": datetime.strptime('1/1/0001', '%m/%d/%Y'),
-        "RetrieveRecord": 0,
-        "AnnotationAuthor": 0,
-        "Cluster": "D",
-        "Subcluster": "D1",
-        "Notes": "NULL"
-        }
-    return dict
-
-
-def get_trixie_gene_table_data_1():
-    """Mock gene table data for Trixie."""
-    dict = {
-        "GeneID": "TRIXIE_0001",
-        "PhageID": "Trixie",
-        "Start": 100,
-        "Stop": 1100,
-        "Parts": 1,
-        "Length": 1000,
-        "Name": "1",
-        "Translation": "ACTGC",
-        "Orientation": "F",
-        "Notes": "int",
-        "LocusTag": "SEA_TRIXIE_0001"
-        }
-    return dict
-
-
 def create_min_tkt_dict(old_tkt):
     """Returns a new dictionary containing only the minimum ticket fields
     from a dictionary of ticket data."""
@@ -337,6 +256,7 @@ def get_unparsed_final_import_args():
 
 
 # Tuples of the four Alice CDS features used.
+# TODO not sure if this belongs in the mock_data module.
 alice_cds_252_coords = (152829, 4)
 alice_cds_124_coords = (70374, 71285)
 alice_cds_139_coords = (88120, 88447)
@@ -533,10 +453,10 @@ class TestImportGenome1(unittest.TestCase):
         logging.info("test_add_2")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
-        pdm_utils_mock_db.insert_phage_data(get_d29_phage_table_data())
-        pdm_utils_mock_db.insert_phage_data(get_redrock_phage_table_data())
-        pdm_utils_mock_db.insert_phage_data(get_trixie_phage_table_data())
-        pdm_utils_mock_db.insert_gene_data(get_trixie_gene_table_data_1())
+        pdm_utils_mock_db.insert_phage_data(pdm_utils_mock_data.get_d29_phage_data())
+        pdm_utils_mock_db.insert_phage_data(pdm_utils_mock_data.get_redrock_phage_data())
+        pdm_utils_mock_db.insert_phage_data(pdm_utils_mock_data.get_trixie_phage_data())
+        pdm_utils_mock_db.insert_gene_data(pdm_utils_mock_data.get_trixie_gene_data())
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
         phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
@@ -933,7 +853,7 @@ class TestImportGenome1(unittest.TestCase):
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
         create_import_table([self.alice_ticket], import_table)
-        d29_phage_table_data = get_d29_phage_table_data()
+        d29_phage_table_data = pdm_utils_mock_data.get_d29_phage_data()
         d29_phage_table_data["PhageID"] = "Alice"
         pdm_utils_mock_db.insert_phage_data(d29_phage_table_data)
         run.main(self.unparsed_args)
@@ -1007,7 +927,7 @@ class TestImportGenome1(unittest.TestCase):
         logging.info("test_add_21")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
-        d29_phage_table_data = get_d29_phage_table_data()
+        d29_phage_table_data = pdm_utils_mock_data.get_d29_phage_data()
         d29_phage_table_data["Sequence"] = str(self.alice_seq)
         pdm_utils_mock_db.insert_phage_data(d29_phage_table_data)
         create_import_table([self.alice_ticket], import_table)
@@ -1974,10 +1894,10 @@ class TestImportGenome2(unittest.TestCase):
         logging.info("test_replacement_1")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
-        pdm_utils_mock_db.insert_phage_data(get_d29_phage_table_data())
-        pdm_utils_mock_db.insert_phage_data(get_redrock_phage_table_data())
-        pdm_utils_mock_db.insert_phage_data(get_trixie_phage_table_data())
-        pdm_utils_mock_db.insert_gene_data(get_trixie_gene_table_data_1())
+        pdm_utils_mock_db.insert_phage_data(pdm_utils_mock_data.get_d29_phage_data())
+        pdm_utils_mock_db.insert_phage_data(pdm_utils_mock_data.get_redrock_phage_data())
+        pdm_utils_mock_db.insert_phage_data(pdm_utils_mock_data.get_trixie_phage_data())
+        pdm_utils_mock_db.insert_gene_data(pdm_utils_mock_data.get_trixie_gene_data())
         pdm_utils_mock_db.insert_phage_data(self.alice_data_to_insert)
 
         # Modify several values of CDS 139 that is inserted into the database.
@@ -2138,7 +2058,7 @@ class TestImportGenome2(unittest.TestCase):
         logging.info("test_replacement_5")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
-        pdm_utils_mock_db.insert_phage_data(get_d29_phage_table_data())
+        pdm_utils_mock_db.insert_phage_data(pdm_utils_mock_data.get_d29_phage_data())
 
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
@@ -2163,7 +2083,7 @@ class TestImportGenome2(unittest.TestCase):
         logging.info("test_replacement_6")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
-        pdm_utils_mock_db.insert_phage_data(get_d29_phage_table_data())
+        pdm_utils_mock_db.insert_phage_data(pdm_utils_mock_data.get_d29_phage_data())
         self.alice_ticket["host_genus"] = "RETAIN"
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
@@ -2191,7 +2111,7 @@ class TestImportGenome2(unittest.TestCase):
         logging.info("test_replacement_7")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
-        d29_phage_table_data = get_d29_phage_table_data()
+        d29_phage_table_data = pdm_utils_mock_data.get_d29_phage_data()
         d29_phage_table_data["PhageID"] = "Alice"
         pdm_utils_mock_db.insert_phage_data(d29_phage_table_data)
         create_import_table([self.alice_ticket], import_table)

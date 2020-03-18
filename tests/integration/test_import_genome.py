@@ -1,12 +1,8 @@
 """Integration tests for the main import pipeline."""
 
 import csv
-from datetime import datetime
-import getpass
 from pathlib import Path
-import pymysql
 import shutil
-import subprocess
 import sys
 import time
 import unittest
@@ -23,11 +19,6 @@ test_dir = unittest_file.parent.parent
 sys.path.append(str(test_dir))
 import pdm_utils_mock_db
 import pdm_utils_mock_data
-
-
-
-
-
 
 # Create the main test directory in which all files will be
 # created and managed.
@@ -63,9 +54,9 @@ def count_status_from_dict(dict, *args):
 
 # The following integration tests user the 'pdm_anon' MySQL user.
 # It is expected that this user has all privileges for 'test_db' database.
-user = "pdm_anon"
-pwd = "pdm_anon"
-db = "test_db"
+user = pdm_utils_mock_db.user
+pwd = pdm_utils_mock_db.pwd
+db = pdm_utils_mock_db.db
 db2 = "Actinobacteriophage"
 #sqlalchemy setup
 engine_string1 = f"mysql+pymysql://{user}:{pwd}@localhost/{db}"
@@ -295,54 +286,9 @@ class TestImportGenome1(unittest.TestCase):
         # Use host_genus and accession to confirm that only attributes
         # in the data_retain set are copied.
 
-        phage_data1 = {}
-        phage_data1["PhageID"] = "L5"
-        phage_data1["Accession"] = "EFG789"
-        phage_data1["Name"] = "L5_Draft"
-        phage_data1["HostGenus"] = "Gordonia"
-        phage_data1["Sequence"] = "ATCG"
-        phage_data1["Length"] = 4
-        phage_data1["GC"] = 1
-        phage_data1["Status"] = "draft"
-        phage_data1["DateLastModified"] = constants.EMPTY_DATE
-        phage_data1["RetrieveRecord"] = 1
-        phage_data1["AnnotationAuthor"] = 1
-        phage_data1["Cluster"] = "A"
-        phage_data1["Subcluster"] = "A1"
-        phage_data1["Notes"] = "none"
-
-
-        phage_data2 = {}
-        phage_data2["PhageID"] = "Trixie"
-        phage_data2["Accession"] = "XYZ456"
-        phage_data2["Name"] = "Trixie"
-        phage_data2["HostGenus"] = "Mycobacterium"
-        phage_data2["Sequence"] = "AATTC"
-        phage_data2["Length"] = 5
-        phage_data2["GC"] = 1
-        phage_data2["Status"] = "final"
-        phage_data2["DateLastModified"] = constants.EMPTY_DATE
-        phage_data2["RetrieveRecord"] = 1
-        phage_data2["AnnotationAuthor"] = 1
-        phage_data2["Cluster"] = "A"
-        phage_data2["Subcluster"] = "A1"
-        phage_data2["Notes"] = "none"
-
-        phage_data3 = {}
-        phage_data3["PhageID"] = "D29"
-        phage_data3["Accession"] = "XYZ456"
-        phage_data3["Name"] = "D29"
-        phage_data3["HostGenus"] = "Mycobacterium"
-        phage_data3["Sequence"] = "GGCCATT"
-        phage_data3["Length"] = 7
-        phage_data3["GC"] = 1
-        phage_data3["Status"] = "final"
-        phage_data3["DateLastModified"] = constants.EMPTY_DATE
-        phage_data3["RetrieveRecord"] = 1
-        phage_data3["AnnotationAuthor"] = 1
-        phage_data3["Cluster"] = "A"
-        phage_data3["Subcluster"] = "A1"
-        phage_data3["Notes"] = "none"
+        phage_data1 = pdm_utils_mock_data.get_l5_phage_data()
+        phage_data2 = pdm_utils_mock_data.get_trixie_phage_data()
+        phage_data3 = pdm_utils_mock_data.get_d29_phage_data()
 
         pdm_utils_mock_db.insert_phage_data(phage_data1)
         pdm_utils_mock_db.insert_phage_data(phage_data2)
@@ -382,33 +328,14 @@ class TestImportGenome1(unittest.TestCase):
         one record, one 'replace' ticket, no MySQL data,
         and no PhagesDB data."""
 
-        l5_data = ["L5x", "ABC123", "L5_Draft", "Gordonia", "ATCG",
-                   4, 1, "draft", constants.EMPTY_DATE, 1, 1]
-        trixie_data = ["Trixie", "XYZ456", "Trixie", "Gordonia", "AATTC",
-                       5, 1, "final", constants.EMPTY_DATE, 1, 1]
-        d29_data = ["D29", "XYZ456", "D29", "Mycobacterium", "GGCCATT",
-                    7, 1, "final", constants.EMPTY_DATE, 1, 1]
-        input_phage_ids_and_seqs = [l5_data, trixie_data, d29_data]
-        connection = pymysql.connect(host = "localhost",
-                                     user = user,
-                                     password = pwd,
-                                     database = db,
-                                     cursorclass = pymysql.cursors.DictCursor)
-        cur = connection.cursor()
-        for data in input_phage_ids_and_seqs:
-            sql1 = (
-                "INSERT INTO phage (PhageID, Accession, Name, "
-                "HostGenus, Sequence, Length, GC, Status, "
-                "DateLastModified, RetrieveRecord, "
-                "AnnotationAuthor) VALUES ("
-                f"'{data[0]}', '{data[1]}', '{data[2]}', "
-                f"'{data[3]}', '{data[4]}', "
-                f" {data[5]}, {data[6]}, '{data[7]}', "
-                f"'{data[8]}', {data[9]}, {data[10]});"
-                )
-            cur.execute(sql1)
-        connection.commit()
-        connection.close()
+        phage_data1 = pdm_utils_mock_data.get_l5_phage_data()
+        phage_data1["PhageID"] = "L5x"
+        phage_data2 = pdm_utils_mock_data.get_trixie_phage_data()
+        phage_data3 = pdm_utils_mock_data.get_d29_phage_data()
+
+        pdm_utils_mock_db.insert_phage_data(phage_data1)
+        pdm_utils_mock_db.insert_phage_data(phage_data2)
+        pdm_utils_mock_db.insert_phage_data(phage_data3)
 
         self.tkt1.type = "replace"
         self.tkt1.data_dict["host_genus"] = "retain"
@@ -435,33 +362,13 @@ class TestImportGenome1(unittest.TestCase):
         one record, one 'replace' ticket, with MySQL data,
         no MySQL engine, and no PhagesDB data."""
 
-        l5_data = ["L5", "ABC123", "L5_Draft", "Gordonia", "ATCG",
-                   4, 1, "draft", constants.EMPTY_DATE, 1, 1]
-        trixie_data = ["Trixie", "XYZ456", "Trixie", "Mycobacterium", "AATTC",
-                       5, 1, "final", constants.EMPTY_DATE, 1, 1]
-        d29_data = ["D29", "XYZ456", "D29", "Mycobacterium", "GGCCATT",
-                    7, 1, "final", constants.EMPTY_DATE, 1, 1]
-        input_phage_ids_and_seqs = [l5_data, trixie_data, d29_data]
-        connection = pymysql.connect(host = "localhost",
-                                     user = user,
-                                     password = pwd,
-                                     database = db,
-                                     cursorclass = pymysql.cursors.DictCursor)
-        cur = connection.cursor()
-        for data in input_phage_ids_and_seqs:
-            sql1 = (
-                "INSERT INTO phage (PhageID, Accession, Name, "
-                "HostGenus, Sequence, Length, GC, Status, "
-                "DateLastModified, RetrieveRecord, "
-                "AnnotationAuthor) VALUES ("
-                f"'{data[0]}', '{data[1]}', '{data[2]}', "
-                f"'{data[3]}', '{data[4]}', "
-                f" {data[5]}, {data[6]}, '{data[7]}', "
-                f"'{data[8]}', {data[9]}, {data[10]});"
-                )
-            cur.execute(sql1)
-        connection.commit()
-        connection.close()
+        phage_data1 = pdm_utils_mock_data.get_l5_phage_data()
+        phage_data2 = pdm_utils_mock_data.get_trixie_phage_data()
+        phage_data3 = pdm_utils_mock_data.get_d29_phage_data()
+
+        pdm_utils_mock_db.insert_phage_data(phage_data1)
+        pdm_utils_mock_db.insert_phage_data(phage_data2)
+        pdm_utils_mock_db.insert_phage_data(phage_data3)
 
         self.tkt1.type = "replace"
         self.tkt1.data_dict["host_genus"] = "retain"

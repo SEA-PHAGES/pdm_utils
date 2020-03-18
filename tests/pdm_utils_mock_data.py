@@ -416,8 +416,128 @@ def get_alice_genome_final_data_in_db():
 
 
 
+def get_d29_phage_data():
+    """Mock phage table data for D29."""
+    dict = {
+        "PhageID": "D29",
+        "Accession": "XYZ123",
+        "Name": "D29",
+        "HostGenus": "Microbacterium",
+        "Sequence": "ATGCATGCATGCATGC",
+        "Length": 16,
+        "GC": 0.5,
+        "Status": "unknown",
+        "DateLastModified": datetime.strptime('1/1/0001', '%m/%d/%Y'),
+        "RetrieveRecord": 0,
+        "AnnotationAuthor": 0,
+        "Cluster": "D",
+        "Subcluster": "D1",
+        "Notes": "NULL"
+        }
+    return dict
 
 
 
+def get_l5_phage_data():
+    """Mock phage table data for L5."""
+    dict = {
+        "PhageID": "L5",
+        "Accession": "EFG789",
+        "Name": "L5_Draft",
+        "HostGenus": "Gordonia",
+        "Sequence": "ATCG",
+        "Length": 4,
+        "GC": 1,
+        "Status": "draft",
+        "DateLastModified": datetime.strptime('1/1/2010', '%m/%d/%Y'),
+        "RetrieveRecord": 1,
+        "AnnotationAuthor": 1,
+        "Cluster": "A",
+        "Subcluster": "A1",
+        "Notes": "NULL"
+        }
+    return dict
+
+def get_redrock_phage_data():
+    """Mock phage table data for RedRock."""
+    dict = {
+        "PhageID": "RedRock",
+        "Accession": "BCD456",
+        "Name": "RedRock_Draft",
+        "HostGenus": "Arthrobacter",
+        "Sequence": "CCCCCCCCCCCCCCC",
+        "Length": 15,
+        "GC": 1,
+        "Status": "draft",
+        "DateLastModified": datetime.strptime('1/1/2010', '%m/%d/%Y'),
+        "RetrieveRecord": 1,
+        "AnnotationAuthor": 1,
+        "Cluster": "B",
+        "Subcluster": "B1",
+        "Notes": "NULL"
+        }
+    return dict
+
+
+
+
+def get_trixie_phage_data():
+    """Mock phage table data for Trixie."""
+    dict = {
+        "PhageID": "Trixie",
+        "Accession": "BCD456",
+        "Name": "Trixie",
+        "HostGenus": "Gordonia",
+        "Sequence": "GGGGGGGGGGGGGGGGGGGG",
+        "Length": 20,
+        "GC": 1,
+        "Status": "final",
+        "DateLastModified": datetime.strptime('1/1/2000', '%m/%d/%Y'),
+        "RetrieveRecord": 1,
+        "AnnotationAuthor": 1,
+        "Cluster": "A",
+        "Subcluster": "A3",
+        "Notes": "NULL"
+        }
+    return dict
+
+def get_trixie_gene_data():
+    """Mock gene table data for Trixie."""
+    dict = {
+        "GeneID": "TRIXIE_0001",
+        "PhageID": "Trixie",
+        "Start": 100,
+        "Stop": 1100,
+        "Parts": 1,
+        "Length": 1000,
+        "Name": "1",
+        "Translation": "ACTGC",
+        "Orientation": "F",
+        "Notes": "int",
+        "LocusTag": "SEA_TRIXIE_0001"
+        }
+    return dict
+
+def get_trixie_gene_domain_data():
+    """Mock gene_domain table data for Trixie."""
+    dict = {
+        "GeneID": "TRIXIE_0001",
+        "HitID": "gnl|CDD|334841",
+        "Expect": 1.78531e-11,
+        "QueryStart": 33,
+        "QueryEnd": 115
+        }
+    return dict
+
+
+def get_trixie_domain_data():
+    """Mock domain table data for Trixie."""
+    dict = {
+        "HitID": "gnl|CDD|334841",
+        "DomainID": "pfam02195",
+        "Name": "ParBc",
+        "Description": "ParB-like nuclease domain"
+        }
+    return dict
 
 #
