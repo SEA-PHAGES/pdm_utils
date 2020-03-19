@@ -283,14 +283,18 @@ class TestImportGenome1(unittest.TestCase):
         # Use host_genus and accession to confirm that only attributes
         # in the data_retain set are copied.
 
-        phage_data1 = test_data_utils.get_l5_phage_data()
+        phage_data1 = test_data_utils.get_trixie_phage_data()
         phage_data2 = test_data_utils.get_trixie_phage_data()
-        phage_data3 = test_data_utils.get_d29_phage_data()
-
+        phage_data3 = test_data_utils.get_trixie_phage_data()
+        phage_data1["PhageID"] = "Trixie"
+        phage_data2["PhageID"] = "D29"
+        phage_data3["PhageID"] = "L5"
+        phage_data1["Accession"] = "BCD456"
+        phage_data2["Accession"] = "XYZ123"
+        phage_data3["Accession"] = "EFG789"
         test_db_utils.insert_phage_data(phage_data1)
         test_db_utils.insert_phage_data(phage_data2)
         test_db_utils.insert_phage_data(phage_data3)
-
         self.tkt1.type = "replace"
         self.tkt1.data_dict["host_genus"] = "retain"
         self.tkt1.data_add = set(["cluster", "subcluster",
@@ -324,16 +328,15 @@ class TestImportGenome1(unittest.TestCase):
         """Verify bundle is returned from a flat file with:
         one record, one 'replace' ticket, no MySQL data,
         and no PhagesDB data."""
-
-        phage_data1 = test_data_utils.get_l5_phage_data()
-        phage_data1["PhageID"] = "L5x"
+        phage_data1 = test_data_utils.get_trixie_phage_data()
         phage_data2 = test_data_utils.get_trixie_phage_data()
-        phage_data3 = test_data_utils.get_d29_phage_data()
-
+        phage_data3 = test_data_utils.get_trixie_phage_data()
+        phage_data1["PhageID"] = "L5x"
+        phage_data2["PhageID"] = "Trixie"
+        phage_data3["PhageID"] = "D29"
         test_db_utils.insert_phage_data(phage_data1)
         test_db_utils.insert_phage_data(phage_data2)
         test_db_utils.insert_phage_data(phage_data3)
-
         self.tkt1.type = "replace"
         self.tkt1.data_dict["host_genus"] = "retain"
         self.tkt1.data_add = set(["cluster", "subcluster",
@@ -358,15 +361,15 @@ class TestImportGenome1(unittest.TestCase):
         """Verify bundle is returned from a flat file with:
         one record, one 'replace' ticket, with MySQL data,
         no MySQL engine, and no PhagesDB data."""
-
-        phage_data1 = test_data_utils.get_l5_phage_data()
+        phage_data1 = test_data_utils.get_trixie_phage_data()
         phage_data2 = test_data_utils.get_trixie_phage_data()
-        phage_data3 = test_data_utils.get_d29_phage_data()
-
+        phage_data3 = test_data_utils.get_trixie_phage_data()
+        phage_data1["PhageID"] = "L5x"
+        phage_data2["PhageID"] = "Trixie"
+        phage_data3["PhageID"] = "D29"
         test_db_utils.insert_phage_data(phage_data1)
         test_db_utils.insert_phage_data(phage_data2)
         test_db_utils.insert_phage_data(phage_data3)
-
         self.tkt1.type = "replace"
         self.tkt1.data_dict["host_genus"] = "retain"
         self.tkt1.data_add = set(["cluster", "subcluster",

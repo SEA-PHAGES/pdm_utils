@@ -450,9 +450,16 @@ class TestImportGenome1(unittest.TestCase):
         logging.info("test_add_2")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
-        test_db_utils.insert_phage_data(test_data_utils.get_d29_phage_data())
-        test_db_utils.insert_phage_data(test_data_utils.get_redrock_phage_data())
-        test_db_utils.insert_phage_data(test_data_utils.get_trixie_phage_data())
+        phage_data1 = test_data_utils.get_trixie_phage_data()
+        phage_data2 = test_data_utils.get_trixie_phage_data()
+        phage_data3 = test_data_utils.get_trixie_phage_data()
+        phage_data1["PhageID"] = "Trixie"
+        phage_data2["PhageID"] = "D29"
+        phage_data3["PhageID"] = "RedRock"
+        test_db_utils.insert_phage_data(phage_data1)
+        test_db_utils.insert_phage_data(phage_data2)
+        test_db_utils.insert_phage_data(phage_data3)
+        gene_data1 = test_data_utils.get_trixie_gene_data()
         test_db_utils.insert_gene_data(test_data_utils.get_trixie_gene_data())
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
@@ -850,9 +857,11 @@ class TestImportGenome1(unittest.TestCase):
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
         create_import_table([self.alice_ticket], import_table)
-        d29_phage_table_data = test_data_utils.get_d29_phage_data()
-        d29_phage_table_data["PhageID"] = "Alice"
-        test_db_utils.insert_phage_data(d29_phage_table_data)
+
+        phage_data = test_data_utils.get_trixie_phage_data()
+        phage_data["PhageID"] = "Alice"
+        test_db_utils.insert_phage_data(phage_data)
+
         run.main(self.unparsed_args)
         phage_table_results = test_db_utils.get_data(test_db_utils.phage_table_query)
         gene_table_results = test_db_utils.get_data(test_db_utils.gene_table_query)
@@ -924,9 +933,11 @@ class TestImportGenome1(unittest.TestCase):
         logging.info("test_add_21")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
-        d29_phage_table_data = test_data_utils.get_d29_phage_data()
-        d29_phage_table_data["Sequence"] = str(self.alice_seq)
-        test_db_utils.insert_phage_data(d29_phage_table_data)
+
+        phage_data = test_data_utils.get_trixie_phage_data()
+        phage_data["Sequence"] = str(self.alice_seq)
+        test_db_utils.insert_phage_data(phage_data)
+
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
         phage_table_results = test_db_utils.get_data(test_db_utils.phage_table_query)
@@ -1385,7 +1396,7 @@ class TestImportGenome1(unittest.TestCase):
         getpass_mock.side_effect = [user, pwd]
 
         # In flat file, coordinates appear as:  "<110298..110537"
-        alice_cds_193_mod = test_data_utils.create_simple_seqfeature(
+        alice_cds_193_mod = test_data_utils.create_1_part_seqfeature(
                                 110297, 110537, 1, "CDS", fuzzy="start",
                                 qualifiers=self.alice_cds_193_qualifier_dict)
         self.alice_record.features = [alice_cds_193_mod]
@@ -1884,9 +1895,15 @@ class TestImportGenome2(unittest.TestCase):
         logging.info("test_replacement_1")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
-        test_db_utils.insert_phage_data(test_data_utils.get_d29_phage_data())
-        test_db_utils.insert_phage_data(test_data_utils.get_redrock_phage_data())
-        test_db_utils.insert_phage_data(test_data_utils.get_trixie_phage_data())
+        phage_data1 = test_data_utils.get_trixie_phage_data()
+        phage_data2 = test_data_utils.get_trixie_phage_data()
+        phage_data3 = test_data_utils.get_trixie_phage_data()
+        phage_data1["PhageID"] = "Trixie"
+        phage_data2["PhageID"] = "D29"
+        phage_data3["PhageID"] = "RedRock"
+        test_db_utils.insert_phage_data(phage_data1)
+        test_db_utils.insert_phage_data(phage_data2)
+        test_db_utils.insert_phage_data(phage_data3)
         test_db_utils.insert_gene_data(test_data_utils.get_trixie_gene_data())
         test_db_utils.insert_phage_data(self.alice_data_to_insert)
 
@@ -2048,8 +2065,7 @@ class TestImportGenome2(unittest.TestCase):
         logging.info("test_replacement_5")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
-        test_db_utils.insert_phage_data(test_data_utils.get_d29_phage_data())
-
+        test_db_utils.insert_phage_data(test_data_utils.get_trixie_phage_data())
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
         phage_table_results = test_db_utils.get_data(test_db_utils.phage_table_query)
@@ -2073,7 +2089,7 @@ class TestImportGenome2(unittest.TestCase):
         logging.info("test_replacement_6")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
-        test_db_utils.insert_phage_data(test_data_utils.get_d29_phage_data())
+        test_db_utils.insert_phage_data(test_data_utils.get_trixie_phage_data())
         self.alice_ticket["host_genus"] = "RETAIN"
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
@@ -2101,15 +2117,17 @@ class TestImportGenome2(unittest.TestCase):
         logging.info("test_replacement_7")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
-        d29_phage_table_data = test_data_utils.get_d29_phage_data()
-        d29_phage_table_data["PhageID"] = "Alice"
-        test_db_utils.insert_phage_data(d29_phage_table_data)
+
+        phage_data = test_data_utils.get_trixie_phage_data()
+        phage_data["PhageID"] = "Alice"
+        test_db_utils.insert_phage_data(phage_data)
+
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
         phage_table_results = test_db_utils.get_data(test_db_utils.phage_table_query)
         test_db_utils.process_phage_table_data(phage_table_results)
         output_genome_data = test_db_utils.filter_genome_data(phage_table_results, "Alice")
-        genome_errors = compare_data(d29_phage_table_data, output_genome_data)
+        genome_errors = compare_data(phage_data, output_genome_data)
         gene_table_results = test_db_utils.get_data(test_db_utils.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_table_results), 1)

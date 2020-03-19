@@ -26,11 +26,11 @@ class TestCdsClass(unittest.TestCase):
     def setUp(self):
         self.feature = cds.Cds()
         self.seq1 = Seq("AATTCGAGCT")
-        self.seqfeature1 = test_data_utils.create_simple_seqfeature(
+        self.seqfeature1 = test_data_utils.create_1_part_seqfeature(
                                 1, 5, 1, "CDS")
-        self.seqfeature2 = test_data_utils.create_simple_seqfeature(
+        self.seqfeature2 = test_data_utils.create_1_part_seqfeature(
                                 1, 5, -1, "CDS")
-        self.seqfeature3 = test_data_utils.create_two_compound_seqfeature(
+        self.seqfeature3 = test_data_utils.create_2_part_seqfeature(
                                 1, 5, 1, 3, 7, 1, "CDS")
 
     def test_set_locus_tag_1(self):

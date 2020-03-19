@@ -35,9 +35,6 @@ gene_domain_table_query = "SELECT * FROM gene_domain;"
 domain_table_query = "SELECT * FROM domain;"
 version_table_query = "SELECT * FROM version;"
 
-
-
-
 # SQLAlchemy setup
 
 def create_engine_string(db=DB, user=USER, pwd=PWD):
@@ -148,7 +145,7 @@ def install_db(schema_filepath, db=DB, user=USER, pwd=PWD):
 
 
 
-# Inserting data to specific tables
+# Inserting data into specific tables
 
 def insert_version_data(data_dict=VERSION_TABLE_DATA, db=DB, user=USER, pwd=PWD):
     """Insert data into the version table."""
@@ -165,6 +162,7 @@ def insert_version_data(data_dict=VERSION_TABLE_DATA, db=DB, user=USER, pwd=PWD)
 
 def insert_domain_data(data_dict, db=DB, user=USER, pwd=PWD):
     """Insert data into the domain table."""
+    # No need to insert ID, since that is auto-incremented.
     statement = (
         "INSERT INTO domain  "
         "(HitID, DomainID, Name, Description) "
@@ -176,6 +174,7 @@ def insert_domain_data(data_dict, db=DB, user=USER, pwd=PWD):
 
 def insert_gene_domain_data(data_dict, db=DB, user=USER, pwd=PWD):
     """Insert data into the gene_domain table."""
+    # No need to insert ID, since that is auto-incremented.
     statement = (
         "INSERT INTO gene_domain  "
         "(GeneID, HitID, Expect, QueryStart, QueryEnd) "
@@ -223,17 +222,26 @@ def insert_phage_data(data_dict, db=DB, user=USER, pwd=PWD):
 
 def insert_gene_data(data_dict, db=DB, user=USER, pwd=PWD):
     """Insert data into the gene table."""
+    # Since PhamID and DomainStatus can be auto-generated,
+    # they may not be in the data_dict.
+    if "PhamID" not in data_dict.keys():
+        data_dict["PhamID"] = "NULL"
+    if "DomainStatus" not in data_dict.keys():
+        data_dict["DomainStatus"] = 0
+
     statement = (
         "INSERT INTO gene "
         "(GeneID, PhageID, Start, Stop, Length, Name, "
-        "Translation, Orientation, Notes, LocusTag, Parts) "
+        "Translation, Orientation, Notes, LocusTag, "
+        "Parts, DomainStatus, PhamID) "
         "VALUES ("
         f"'{data_dict['GeneID']}', '{data_dict['PhageID']}', "
         f"{data_dict['Start']}, {data_dict['Stop']}, "
         f"{data_dict['Length']}, '{data_dict['Name']}', "
         f"'{data_dict['Translation']}', '{data_dict['Orientation']}', "
-        f"'{data_dict['Notes']}', '{data_dict['LocusTag']}',"
-        f"{data_dict['Parts']});"
+        f"'{data_dict['Notes']}', '{data_dict['LocusTag']}', "
+        f"{data_dict['Parts']}, {data_dict['DomainStatus']}, "
+        f"{data_dict['PhamID']});"
         )
     execute(statement, db=db, user=user, pwd=pwd)
 
@@ -270,6 +278,10 @@ def process_gene_table_data(list_of_sql_results):
         data_dict["Start"] = int(data_dict["Start"])
         data_dict["Stop"] = int(data_dict["Stop"])
         data_dict["Parts"] = int(data_dict["Parts"])
+
+        if data_dict["PhamID"] is None:
+            data_dict["PhamID"]  = "NULL"
+
 
 def filter_genome_data(list_of_sql_results, phage_id):
     """Returns a dictionary of data from the phage table

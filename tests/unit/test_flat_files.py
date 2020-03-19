@@ -33,7 +33,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
     def test_parse_coordinates_1(self):
         """Verify non-compound location is parsed correctly."""
 
-        seqfeature = test_data_utils.create_simple_seqfeature(
+        seqfeature = test_data_utils.create_1_part_seqfeature(
                                 2, 10, 1, "CDS")
         output_start, output_stop, parts = \
             flat_files.parse_coordinates(seqfeature)
@@ -46,7 +46,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
     def test_parse_coordinates_2(self):
         """Verify 1 strand 2-part compound location is parsed correctly."""
-        seqfeature = test_data_utils.create_two_compound_seqfeature(
+        seqfeature = test_data_utils.create_2_part_seqfeature(
                                 2, 10, 1, 8, 20, 1, "CDS")
         start, stop, parts = flat_files.parse_coordinates(seqfeature)
         with self.subTest():
@@ -58,7 +58,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
     def test_parse_coordinates_3(self):
         """Verify -1 strand 2-part compound location is parsed correctly."""
-        seqfeature = test_data_utils.create_two_compound_seqfeature(
+        seqfeature = test_data_utils.create_2_part_seqfeature(
                                 2, 10, -1, 8, 20, -1, "CDS")
         start, stop, parts = flat_files.parse_coordinates(seqfeature)
         with self.subTest():
@@ -100,7 +100,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
     def test_parse_coordinates_6(self):
         """Verify undefined strand 2-part compound location is not parsed."""
-        seqfeature = test_data_utils.create_two_compound_seqfeature(
+        seqfeature = test_data_utils.create_2_part_seqfeature(
                                         2, 10, None, 8, 20, None, "CDS")
         start, stop, parts = flat_files.parse_coordinates(seqfeature)
         with self.subTest():
@@ -112,7 +112,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
     def test_parse_coordinates_7(self):
         """Verify 1 strand 3-part compound location is not parsed."""
-        seqfeature = test_data_utils.create_three_compound_seqfeature(
+        seqfeature = test_data_utils.create_3_part_seqfeature(
                             2, 10, 1, 8, 20, 1, 30, 50, 1, "CDS")
         start, stop, parts = flat_files.parse_coordinates(seqfeature)
         with self.subTest():
@@ -136,7 +136,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
     def test_parse_coordinates_9(self):
         """Verify non-compound location with fuzzy start coordinate
         is parsed correctly."""
-        seqfeature = test_data_utils.create_simple_seqfeature(
+        seqfeature = test_data_utils.create_1_part_seqfeature(
                                             2, 10, 1, "CDS", fuzzy="start")
         start, stop, parts = flat_files.parse_coordinates(seqfeature)
         with self.subTest():
@@ -149,7 +149,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
     def test_parse_coordinates_10(self):
         """Verify non-compound location with fuzzy stop coordinate
         is parsed correctly."""
-        seqfeature = test_data_utils.create_simple_seqfeature(
+        seqfeature = test_data_utils.create_1_part_seqfeature(
                                             2, 10, 1, "CDS", fuzzy="stop")
         start, stop, parts = flat_files.parse_coordinates(seqfeature)
         with self.subTest():
@@ -162,7 +162,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
     def test_parse_coordinates_11(self):
         """Verify 1 strand 2-part compound location with fuzzy start
         coordinate is parsed correctly."""
-        seqfeature = test_data_utils.create_two_compound_seqfeature(
+        seqfeature = test_data_utils.create_2_part_seqfeature(
                             2, 10, 1, 8, 20, 1, "CDS", fuzzy="start")
         start, stop, parts = flat_files.parse_coordinates(seqfeature)
         with self.subTest():
@@ -178,7 +178,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
     def test_create_seqfeature_dictionary_1(self):
         """Verify feature dictionary is constructed correctly with
         one feature."""
-        ftr1 = test_data_utils.create_simple_seqfeature(2, 10, 1, "CDS")
+        ftr1 = test_data_utils.create_1_part_seqfeature(2, 10, 1, "CDS")
         feature_list = [ftr1]
         feature_dict = flat_files.create_seqfeature_dictionary(feature_list)
         with self.subTest():
@@ -197,12 +197,12 @@ class TestFlatFileFunctions1(unittest.TestCase):
     def test_create_seqfeature_dictionary_3(self):
         """Verify feature dictionary is constructed correctly with
         several different feature types."""
-        ftr1 = test_data_utils.create_simple_seqfeature(2, 10, 1, "CDS")
-        ftr2 = test_data_utils.create_simple_seqfeature(2, 10, 1, "tRNA")
-        ftr3 = test_data_utils.create_simple_seqfeature(2, 10, 1, "tmRNA")
-        ftr4 = test_data_utils.create_simple_seqfeature(2, 10, 1, "other")
-        ftr5 = test_data_utils.create_simple_seqfeature(2, 10, 1, "gene")
-        ftr6 = test_data_utils.create_simple_seqfeature(2, 10, 1, "CDS")
+        ftr1 = test_data_utils.create_1_part_seqfeature(2, 10, 1, "CDS")
+        ftr2 = test_data_utils.create_1_part_seqfeature(2, 10, 1, "tRNA")
+        ftr3 = test_data_utils.create_1_part_seqfeature(2, 10, 1, "tmRNA")
+        ftr4 = test_data_utils.create_1_part_seqfeature(2, 10, 1, "other")
+        ftr5 = test_data_utils.create_1_part_seqfeature(2, 10, 1, "gene")
+        ftr6 = test_data_utils.create_1_part_seqfeature(2, 10, 1, "CDS")
         feature_list = [ftr1, ftr2, ftr3, ftr4, ftr5, ftr6]
         feature_dict = flat_files.create_seqfeature_dictionary(feature_list)
         with self.subTest():
@@ -370,7 +370,7 @@ class TestFlatFileFunctions2(unittest.TestCase):
                                "function": [" hypothetical protein "],
                                "note": [" gp5 "],
                                "gene": ["2"]}
-        self.seqfeature = test_data_utils.create_simple_seqfeature(
+        self.seqfeature = test_data_utils.create_1_part_seqfeature(
                                 2, 10, 1, "CDS", qualifiers=self.qualifier_dict)
 
 
@@ -501,7 +501,7 @@ class TestFlatFileFunctions2(unittest.TestCase):
 
     def test_parse_cds_seqfeature_9(self):
         """Verify CDS feature is parsed with 3-part compound location."""
-        seqfeature = test_data_utils.create_three_compound_seqfeature(
+        seqfeature = test_data_utils.create_3_part_seqfeature(
                     2, 10, 1, 8, 20, 1, 30, 50, 1, "CDS",
                     qualifiers=self.qualifier_dict)
         cds_ftr = flat_files.parse_cds_seqfeature(seqfeature)
@@ -522,7 +522,7 @@ class TestFlatFileFunctions2(unittest.TestCase):
 
     def test_parse_cds_seqfeature_10(self):
         """Verify CDS feature is parsed with fuzzy coordinates."""
-        seqfeature = test_data_utils.create_simple_seqfeature(
+        seqfeature = test_data_utils.create_1_part_seqfeature(
                                             2, 10, 1, "CDS", fuzzy="start",
                                             qualifiers=self.qualifier_dict)
         cds_ftr = flat_files.parse_cds_seqfeature(seqfeature)
@@ -547,22 +547,22 @@ class TestFlatFileFunctions2(unittest.TestCase):
 class TestFlatFileFunctions3(unittest.TestCase):
 
     def setUp(self):
-        self.seqfeature1 = test_data_utils.create_simple_seqfeature(
+        self.seqfeature1 = test_data_utils.create_1_part_seqfeature(
                                             2, 10, 1, "CDS")
-        self.seqfeature2 = test_data_utils.create_simple_seqfeature(
+        self.seqfeature2 = test_data_utils.create_1_part_seqfeature(
                                             5000, 6000, 1, "tRNA")
-        self.seqfeature3 = test_data_utils.create_simple_seqfeature(
+        self.seqfeature3 = test_data_utils.create_1_part_seqfeature(
                                             1, 11000, 1, "source")
-        self.seqfeature7 = test_data_utils.create_simple_seqfeature(
+        self.seqfeature7 = test_data_utils.create_1_part_seqfeature(
                                             1, 9000, 1, "source")
 
         # Wrap-around feature, directly copied from
         # Biopython-parsed Alice flat file.
         # start1 = 152829, stop1 = 153401, start2 = 0, stop2 = 4, strand = 1
         self.seqfeature4 = test_data_utils.get_alice_cds_252_seqfeature()
-        self.seqfeature5 = test_data_utils.create_simple_seqfeature(
+        self.seqfeature5 = test_data_utils.create_1_part_seqfeature(
                                             9, 50, -1, "CDS")
-        self.seqfeature6 = test_data_utils.create_simple_seqfeature(
+        self.seqfeature6 = test_data_utils.create_1_part_seqfeature(
                                             9, 30, 1, "CDS")
         self.feature_list = [self.seqfeature1,
                              self.seqfeature2,
@@ -996,7 +996,7 @@ class TestFlatFileFunctions4(unittest.TestCase):
                                "host": [self.string2],
                                "lab_host": [self.string3]}
 
-        self.seqfeature = test_data_utils.create_simple_seqfeature(
+        self.seqfeature = test_data_utils.create_1_part_seqfeature(
                         2, 10, 1, "source", qualifiers=self.qualifier_dict)
 
 

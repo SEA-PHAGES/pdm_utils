@@ -78,7 +78,7 @@ MacOS installation
         D. Press <enter> to add a new line.
         E. Add the following text::
 
-            PATH=$PATH:/Users/<user name>/mmseqs/bin
+            export PATH=$PATH:/Users/<user name>/mmseqs/bin
 
         F. Exit the file by typing Ctrl+x.
         G. When prompted to save the file type: 'y'. Then hit <enter>, which will return you to the command line prompt.

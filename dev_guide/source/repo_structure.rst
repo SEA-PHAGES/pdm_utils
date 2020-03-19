@@ -13,6 +13,37 @@ tests/
 
 Unit and integration tests designed for ``pdm_utils``.
 
+
+tests/unit/
+***********
+
+Pure-python unit tests.
+
+tests/integration/
+******************
+
+Integration tests that require MySQL.
+
+tests/integration_heavy/
+************************
+
+Integration tests that require MySQL and additional dependencies (e.g. MMSeqs2).
+
+tests/test_files/
+*****************
+
+Resource files for integration testing.
+
+tests/test_db_utils.py
+**********************
+
+Helper functions to construct and manipulate test databases for integration tests.
+
+tests/test_data_utils.py
+************************
+
+Helper functions to construct and manipulate common genome-associated objects for unit and integration tests.
+
 misc/
 *****
 
