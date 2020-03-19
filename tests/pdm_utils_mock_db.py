@@ -2,25 +2,32 @@
 
 from datetime import datetime
 from pathlib import Path
-import pymysql
 import subprocess
+
+import pymysql
+
+from pdm_utils.constants import constants
 
 # Format of the date the script imports into the database.
 current_date = datetime.today().replace(hour=0, minute=0,
                                         second=0, microsecond=0)
 
 
-# It is expected that the 'pdm_anon' MySQL user has all privileges for 'test_db' database.
-user = "pdm_anon"
-pwd = "pdm_anon"
-db = "test_db"
+# It is expected that the 'pdm_anon' MySQL user has all privileges
+# for 'test_db' database.
+USER = "pdm_anon"
+PWD = "pdm_anon"
+DB = "test_db"
 unittest_file = Path(__file__)
 test_dir = unittest_file.parent
 test_file_dir = Path(test_dir, "test_files")
-schema_version = 8
-schema_file = f"test_schema_{schema_version}.sql"
-schema_filepath = Path(test_file_dir, schema_file)
-version_table_data = {"Version":1, "SchemaVersion":schema_version}
+SCHEMA_VERSION = constants.CODE_SCHEMA_VERSION
+SCHEMA_FILE = f"test_schema_{SCHEMA_VERSION}.sql" # Empty schema
+SCHEMA_FILEPATH = Path(test_file_dir, SCHEMA_FILE)
+TEST_DB_FILEPATH = Path(test_file_dir, "test_db.sql") # Contains data
+VERSION_TABLE_DATA = {"Version": 1, "SchemaVersion": SCHEMA_VERSION}
+
+# Common queries
 
 phage_table_query = "SELECT * FROM phage;"
 gene_table_query = "SELECT * FROM gene;"
@@ -28,12 +35,22 @@ gene_domain_table_query = "SELECT * FROM gene_domain;"
 domain_table_query = "SELECT * FROM domain;"
 version_table_query = "SELECT * FROM version;"
 
-def create_engine_string(db=db, user=user, pwd=pwd):
+
+
+
+# SQLAlchemy setup
+
+def create_engine_string(db=DB, user=USER, pwd=PWD):
     """Generate engine string for SQLAlchemy."""
     engine_string = f"mysql+pymysql://{user}:{pwd}@localhost/{db}"
     return engine_string
 
-def execute(statement, db=db, user=user, pwd=pwd):
+
+
+
+# Statement execution
+
+def execute(statement, db=DB, user=USER, pwd=PWD):
     """Execute a statement."""
     # Sometimes a connection is needed without a pre-specified database.
     if db is None:
@@ -53,7 +70,7 @@ def execute(statement, db=db, user=user, pwd=pwd):
     connection.close()
     return results
 
-def get_data(query, db=db, user=user, pwd=pwd):
+def get_data(query, db=DB, user=USER, pwd=PWD):
     """Get data from the database."""
     connection = pymysql.connect(host="localhost",
                                  user=user,
@@ -68,8 +85,23 @@ def get_data(query, db=db, user=user, pwd=pwd):
     return results
 
 
-def create_new_db(schema_filepath=schema_filepath, db=db, user=user, pwd=pwd):
-    """Creates a new, empty database."""
+
+
+# Database construction
+
+def create_empty_test_db():
+    """Creates a test database with the current schema version and no data."""
+    create_new_db(schema_filepath=SCHEMA_FILEPATH,
+                  version_table_data=VERSION_TABLE_DATA)
+
+def create_filled_test_db():
+    """Creates a test database with the current schema version and with data."""
+    create_new_db(schema_filepath=TEST_DB_FILEPATH,
+                  version_table_data=VERSION_TABLE_DATA)
+
+def create_new_db(schema_filepath=None, db=DB, user=USER, pwd=PWD,
+                  version_table_data=None):
+    """Deletes a database if it exists, then creates a new database."""
     connection = pymysql.connect(host="localhost",
                                  user=user,
                                  password=pwd,
@@ -88,23 +120,25 @@ def create_new_db(schema_filepath=schema_filepath, db=db, user=user, pwd=pwd):
     # Next, create the database within mysql.
     create_db(db=db, user=user, pwd=pwd)
 
-    # Now import the empty schema from file.
-    # Seems like pymysql has trouble with this step, so use subprocess.
-    install_db(schema_filepath, db=db, user=user, pwd=pwd)
+    # Now import the empty schema from file and add version data.
+    if schema_filepath is not None:
+        install_db(schema_filepath, db=db, user=user, pwd=pwd)
+    if version_table_data is not None:
+        insert_version_data(version_table_data, db=db, user=user, pwd=pwd)
 
-
-def create_db(db=db, user=user, pwd=pwd):
+def create_db(db=DB, user=USER, pwd=PWD):
     """Create a MySQL database for the test."""
     statement = f"CREATE DATABASE {db}"
     execute(statement, db=None, user=user, pwd=pwd)
 
-def remove_db(db=db, user=user, pwd=pwd):
+def remove_db(db=DB, user=USER, pwd=PWD):
     """Remove the MySQL database created for the test."""
     statement = f"DROP DATABASE {db}"
     execute(statement, db=db, user=user, pwd=pwd)
 
-def install_db(schema_filepath, db=db, user=user, pwd=pwd):
+def install_db(schema_filepath, db=DB, user=USER, pwd=PWD):
     """Install data into database from a SQL file."""
+    # Seems like pymysql has trouble with this step, so use subprocess.
     handle = open(schema_filepath, "r")
     command_string = f"mysql -u {user} -p{pwd} {db}"
     command_list = command_string.split(" ")
@@ -113,8 +147,14 @@ def install_db(schema_filepath, db=db, user=user, pwd=pwd):
 
 
 
-def insert_version_data(data_dict, db=db, user=user, pwd=pwd):
+
+# Inserting data to specific tables
+
+def insert_version_data(data_dict=VERSION_TABLE_DATA, db=DB, user=USER, pwd=PWD):
     """Insert data into the version table."""
+    # Unlike other tables, version table data is expected to have one row
+    # that reflects the structure of the database. So by default, data_dict
+    # has a default value.
     statement = (
         "INSERT INTO version "
         "(Version, SchemaVersion) "
@@ -123,11 +163,7 @@ def insert_version_data(data_dict, db=db, user=user, pwd=pwd):
         )
     execute(statement, db=db, user=user, pwd=pwd)
 
-
-
-
-
-def insert_domain_data(data_dict, db=db, user=user, pwd=pwd):
+def insert_domain_data(data_dict, db=DB, user=USER, pwd=PWD):
     """Insert data into the domain table."""
     statement = (
         "INSERT INTO domain  "
@@ -138,11 +174,7 @@ def insert_domain_data(data_dict, db=db, user=user, pwd=pwd):
         )
     execute(statement, db=db, user=user, pwd=pwd)
 
-
-
-
-
-def insert_gene_domain_data(data_dict, db=db, user=user, pwd=pwd):
+def insert_gene_domain_data(data_dict, db=DB, user=USER, pwd=PWD):
     """Insert data into the gene_domain table."""
     statement = (
         "INSERT INTO gene_domain  "
@@ -154,20 +186,7 @@ def insert_gene_domain_data(data_dict, db=db, user=user, pwd=pwd):
         )
     execute(statement, db=db, user=user, pwd=pwd)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-def insert_phage_data(data_dict, db=db, user=user, pwd=pwd):
+def insert_phage_data(data_dict, db=DB, user=USER, pwd=PWD):
     """Insert data into the phage table."""
 
     cluster = data_dict['Cluster']
@@ -202,13 +221,7 @@ def insert_phage_data(data_dict, db=db, user=user, pwd=pwd):
         )
     execute(statement, db=db, user=user, pwd=pwd)
 
-
-
-
-
-
-
-def insert_gene_data(data_dict, db=db, user=user, pwd=pwd):
+def insert_gene_data(data_dict, db=DB, user=USER, pwd=PWD):
     """Insert data into the gene table."""
     statement = (
         "INSERT INTO gene "
@@ -224,6 +237,10 @@ def insert_gene_data(data_dict, db=db, user=user, pwd=pwd):
         )
     execute(statement, db=db, user=user, pwd=pwd)
 
+
+
+
+# Data processing
 
 def process_phage_table_data(list_of_sql_results):
     """Converts datatype for data retrieved from a few fields
@@ -243,8 +260,6 @@ def process_phage_table_data(list_of_sql_results):
         if data_dict["Subcluster"] is None:
             data_dict["Subcluster"]  = "NULL"
 
-
-
 def process_gene_table_data(list_of_sql_results):
     """Converts datatype for data retrieved from a few fields
     in the gene table."""
@@ -255,8 +270,6 @@ def process_gene_table_data(list_of_sql_results):
         data_dict["Start"] = int(data_dict["Start"])
         data_dict["Stop"] = int(data_dict["Stop"])
         data_dict["Parts"] = int(data_dict["Parts"])
-
-
 
 def filter_genome_data(list_of_sql_results, phage_id):
     """Returns a dictionary of data from the phage table
@@ -269,7 +282,6 @@ def filter_genome_data(list_of_sql_results, phage_id):
             pass
     return output_dict
 
-
 def filter_gene_data(list_of_sql_results, coordinates):
     """Returns a dictionary of data from the gene table
     based on a tuple of coordinates."""
@@ -280,5 +292,4 @@ def filter_gene_data(list_of_sql_results, coordinates):
             output_dict = list_of_sql_results[x]
         else:
             pass
-
     return output_dict

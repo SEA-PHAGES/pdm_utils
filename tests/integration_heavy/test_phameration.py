@@ -26,7 +26,6 @@ from pathlib import Path
 import pymysql
 import sqlalchemy
 
-from pdm_utils.constants import constants
 from pdm_utils.functions.phameration import *
 from pdm_utils.functions import mysqldb
 
@@ -41,20 +40,13 @@ import pdm_utils_mock_db
 # Standard pdm_anon user/pwd and test_db
 engine_string = pdm_utils_mock_db.create_engine_string()
 
-test_file_dir = Path(test_dir, "test_files")
-schema_file = "test_db.sql"
-schema_filepath = Path(test_file_dir, schema_file)
-schema_version = constants.CODE_SCHEMA_VERSION
-version_table_data = {"Version":1, "SchemaVersion":schema_version}
-
 
 class TestPhamerationFunctions(unittest.TestCase):
     def setUp(self):
         self.engine = sqlalchemy.create_engine(engine_string, echo=False)
         self.temp_dir = "/tmp/pdm_utils_tests_phamerate"
+        pdm_utils_mock_db.create_filled_test_db()
 
-        pdm_utils_mock_db.create_new_db(schema_filepath=schema_filepath)
-        pdm_utils_mock_db.insert_version_data(version_table_data)
 
     def tearDown(self):
         self.engine.dispose()

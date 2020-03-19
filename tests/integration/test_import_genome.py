@@ -55,17 +55,15 @@ def count_status_from_dict(dict, *args):
 
 # The following integration tests user the 'pdm_anon' MySQL user.
 # It is expected that this user has all privileges for 'test_db' database.
-user = pdm_utils_mock_db.user
-pwd = pdm_utils_mock_db.pwd
-db = pdm_utils_mock_db.db
+user = pdm_utils_mock_db.USER
+pwd = pdm_utils_mock_db.PWD
+db = pdm_utils_mock_db.DB
 
 #sqlalchemy setup
 engine_string1 = pdm_utils_mock_db.create_engine_string()
 engine_string2 = pdm_utils_mock_db.create_engine_string(db="Actinobacteriophage")
 
 test_file_dir = Path(test_dir, "test_files")
-schema_version = constants.CODE_SCHEMA_VERSION
-version_table_data = {"Version":1, "SchemaVersion":schema_version}
 
 def count_contents(path_to_folder):
     count = 0
@@ -77,9 +75,7 @@ class TestImportGenome1(unittest.TestCase):
 
 
     def setUp(self):
-        pdm_utils_mock_db.create_new_db()
-        pdm_utils_mock_db.insert_version_data(version_table_data)
-
+        pdm_utils_mock_db.create_empty_test_db()
         self.base_dir = Path(test_root_dir, "test_import")
         self.base_dir.mkdir()
 
@@ -649,9 +645,9 @@ class TestImportGenome2(unittest.TestCase):
 class TestImportGenome3(unittest.TestCase):
 
     def setUp(self):
-        # The test_db is only needed to test shema compatibility.
+        # The empty test_db is only needed to test shema compatibility.
         # Otherwise, Actinobacteriophage is sufficient.
-        pdm_utils_mock_db.create_new_db()
+        pdm_utils_mock_db.create_empty_test_db()
 
         self.import_table = Path(test_file_dir, "test_import_table_1.csv")
         self.base_dir = Path(test_root_dir, "test_folder")
@@ -688,7 +684,6 @@ class TestImportGenome3(unittest.TestCase):
     @patch("pdm_utils.functions.mysqldb.connect_to_db")
     def test_main_1(self, ctd_mock, data_io_mock):
         """Verify that correct args calls data_io."""
-        pdm_utils_mock_db.insert_version_data(version_table_data)
         self.input_folder.mkdir()
         self.output_folder.mkdir()
         ctd_mock.return_value = self.engine
@@ -701,7 +696,6 @@ class TestImportGenome3(unittest.TestCase):
     @patch("sys.exit")
     def test_main_2(self, sys_exit_mock, ctd_mock, data_io_mock):
         """Verify that invalid input folder calls sys exit."""
-        pdm_utils_mock_db.insert_version_data(version_table_data)
         self.output_folder.mkdir()
         ctd_mock.return_value = self.engine
         import_genome.main(self.args_list)
@@ -713,7 +707,6 @@ class TestImportGenome3(unittest.TestCase):
     @patch("sys.exit")
     def test_main_3(self, sys_exit_mock, ctd_mock, data_io_mock):
         """Verify that invalid import file calls sys exit."""
-        pdm_utils_mock_db.insert_version_data(version_table_data)
         self.input_folder.mkdir()
         self.output_folder.mkdir()
         self.args_list[4] = ""
@@ -728,7 +721,6 @@ class TestImportGenome3(unittest.TestCase):
     @patch("sys.exit")
     def test_main_4(self, sys_exit_mock, mnd_mock, ctd_mock, data_io_mock):
         """Verify that invalid output folder calls sys exit."""
-        pdm_utils_mock_db.insert_version_data(version_table_data)
         self.input_folder.mkdir()
         # Need to provide filename in a valid directory to create log file
         # since output folder is invalid.
@@ -762,8 +754,7 @@ class TestImportGenome3(unittest.TestCase):
     @patch("pdm_utils.functions.mysqldb.connect_to_db")
     def test_main_6(self, ctd_mock, sys_exit_mock, data_io_mock):
         """Verify that invalid database schema version calls sys exit."""
-        new_version_table_data = {"Version":1, "SchemaVersion":0}
-        pdm_utils_mock_db.insert_version_data(new_version_table_data)
+        pdm_utils_mock_db.execute("UPDATE version SET SchemaVersion = 0")
         self.input_folder.mkdir()
         self.output_folder.mkdir()
         ctd_mock.return_value = self.engine

@@ -50,20 +50,20 @@
 #          phage table and in the gene table) is evaluated.
 
 
-from Bio import SeqIO
-from Bio.Seq import Seq
-from Bio.Alphabet import IUPAC
-from Bio.SeqRecord import SeqRecord
-from Bio.SeqFeature import SeqFeature, FeatureLocation
-from Bio.SeqFeature import ExactPosition, BeforePosition, Reference
-from datetime import datetime
 import csv
+from datetime import datetime
 import logging
 from pathlib import Path
 import shutil
 import sys
 import unittest
 from unittest.mock import patch
+
+from Bio import SeqIO
+from Bio.Seq import Seq
+from Bio.Alphabet import IUPAC
+from Bio.SeqRecord import SeqRecord
+
 from pdm_utils import run
 from pdm_utils.constants import constants
 from pdm_utils.functions import eval_modes
@@ -120,12 +120,10 @@ pipeline = "import"
 # user = "pdm_anon"
 # pwd = "pdm_anon"
 # db = "test_db"
-user = pdm_utils_mock_db.user
-pwd = pdm_utils_mock_db.pwd
-db = pdm_utils_mock_db.db
+user = pdm_utils_mock_db.USER
+pwd = pdm_utils_mock_db.PWD
+db = pdm_utils_mock_db.DB
 test_file_dir = Path(test_dir, "test_files")
-schema_version = constants.CODE_SCHEMA_VERSION
-version_table_data = {"Version":1, "SchemaVersion":schema_version}
 
 
 # Alice ("test_flat_file_10.gb"),
@@ -288,8 +286,7 @@ class TestImportGenome1(unittest.TestCase):
     """
 
     def setUp(self):
-        pdm_utils_mock_db.create_new_db()
-        pdm_utils_mock_db.insert_version_data(version_table_data)
+        pdm_utils_mock_db.create_empty_test_db()
         base_dir.mkdir()
         genome_folder.mkdir()
         output_folder.mkdir()
@@ -348,11 +345,10 @@ class TestImportGenome1(unittest.TestCase):
                                    self.alice_trna_170,
                                    self.alice_cds_193 # Top strand normal CDS
                                    ]
-
-        self.alice_ref1 = Reference()
-        self.alice_ref1.authors = pdm_utils_mock_data.author_string_1
-        self.alice_ref2 = Reference()
-        self.alice_ref2.authors = pdm_utils_mock_data.author_string_2
+        self.alice_ref1 = pdm_utils_mock_data.create_reference(
+                                pdm_utils_mock_data.author_string_1)
+        self.alice_ref2 = pdm_utils_mock_data.create_reference(
+                                pdm_utils_mock_data.author_string_2)
         self.alice_ref_list = [self.alice_ref1, self.alice_ref2]
 
         self.alice_description = ("Mycobacterium phage Alice_Draft, "
@@ -1389,19 +1385,13 @@ class TestImportGenome1(unittest.TestCase):
         getpass_mock.side_effect = [user, pwd]
 
         # In flat file, coordinates appear as:  "<110298..110537"
-        alice_cds_193_mod = SeqFeature(
-                                FeatureLocation(
-                                    BeforePosition(110297),
-                                    ExactPosition(110537),
-                                    strand=1),
-                                type="CDS",
+        alice_cds_193_mod = pdm_utils_mock_data.create_simple_seqfeature(
+                                110297, 110537, 1, "CDS", fuzzy="start",
                                 qualifiers=self.alice_cds_193_qualifier_dict)
-
         self.alice_record.features = [alice_cds_193_mod]
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
         create_import_table([self.alice_ticket], import_table)
         run.main(self.unparsed_args)
-        # input("check file")
         phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
         self.assertEqual(len(phage_table_results), 0)
 
@@ -1767,8 +1757,7 @@ class TestImportGenome2(unittest.TestCase):
 
 
     def setUp(self):
-        pdm_utils_mock_db.create_new_db()
-        pdm_utils_mock_db.insert_version_data(version_table_data)
+        pdm_utils_mock_db.create_empty_test_db()
         base_dir.mkdir()
         genome_folder.mkdir()
         output_folder.mkdir()
@@ -1834,10 +1823,10 @@ class TestImportGenome2(unittest.TestCase):
                                    self.alice_cds_193 # Top strand normal CDS
                                    ]
 
-        self.alice_ref1 = Reference()
-        self.alice_ref1.authors = pdm_utils_mock_data.author_string_1
-        self.alice_ref2 = Reference()
-        self.alice_ref2.authors = pdm_utils_mock_data.author_string_2
+        self.alice_ref1 = pdm_utils_mock_data.create_reference(
+                                pdm_utils_mock_data.author_string_1)
+        self.alice_ref2 = pdm_utils_mock_data.create_reference(
+                                pdm_utils_mock_data.author_string_2)
         self.alice_ref_list = [self.alice_ref1, self.alice_ref2]
 
         self.alice_description = ("Mycobacterium phage Alice, "

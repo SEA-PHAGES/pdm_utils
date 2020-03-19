@@ -1,19 +1,18 @@
 """Integration tests for misc. functions that interact with a MySQL database."""
 
-
+from pathlib import Path
 import unittest
-import sqlalchemy
-import sys
-from pdm_utils.functions import mysqldb
-from pdm_utils.classes import genome
-from pdm_utils.classes import cds
-from pdm_utils.constants import constants
 import subprocess
-import pymysql
+import sys
+from unittest.mock import patch
+
 from Bio.Alphabet import IUPAC
 from Bio.Seq import Seq
-from pathlib import Path
-from unittest.mock import patch
+import sqlalchemy
+
+from pdm_utils.classes import cds, genome
+from pdm_utils.constants import constants
+from pdm_utils.functions import mysqldb
 
 # Import helper functions to build mock database and mock flat files
 unittest_file = Path(__file__)
@@ -25,25 +24,18 @@ import pdm_utils_mock_data
 
 # The following integration tests user the 'pdm_anon' MySQL user.
 # It is expected that this user has all privileges for 'test_db' database.
-user = pdm_utils_mock_db.user
-pwd = pdm_utils_mock_db.pwd
-db = pdm_utils_mock_db.db
+user = pdm_utils_mock_db.USER
+pwd = pdm_utils_mock_db.PWD
+db = pdm_utils_mock_db.DB
 db2 = "Actinobacteriophage"
 engine_string1 = pdm_utils_mock_db.create_engine_string()
-
-test_file_dir = Path(test_dir, "test_files")
-schema_version = constants.CODE_SCHEMA_VERSION
-schema_file = f"test_schema_{schema_version}.sql"
-schema_filepath = Path(test_file_dir, schema_file)
-version_table_data = {"Version":1, "SchemaVersion":schema_version}
 
 
 class TestMysqldbFunctions1(unittest.TestCase):
 
     def setUp(self):
         self.engine = sqlalchemy.create_engine(engine_string1, echo=False)
-        pdm_utils_mock_db.create_new_db()
-
+        pdm_utils_mock_db.create_empty_test_db()
         phage_data1 = pdm_utils_mock_data.get_trixie_phage_data()
         phage_data2 = pdm_utils_mock_data.get_trixie_phage_data()
         phage_data3 = pdm_utils_mock_data.get_trixie_phage_data()
@@ -351,7 +343,8 @@ class TestMysqldbFunctions2(unittest.TestCase):
 
     def setUp(self):
         self.engine = sqlalchemy.create_engine(engine_string1, echo=False)
-        pdm_utils_mock_db.create_new_db()
+        pdm_utils_mock_db.create_empty_test_db()
+        pdm_utils_mock_db.execute("TRUNCATE version")
 
     def tearDown(self):
         self.engine.dispose()
@@ -442,24 +435,26 @@ class TestMysqldbFunctions2(unittest.TestCase):
 
     def test_change_version_1(self):
         """Verify the version is incremented by 1."""
-        pdm_utils_mock_db.insert_version_data(version_table_data)
+        data = {"Version": 10, "SchemaVersion": 1}
+        pdm_utils_mock_db.insert_version_data(data)
         mysqldb.change_version(self.engine)
         result = pdm_utils_mock_db.get_data(pdm_utils_mock_db.version_table_query)
         output_value = result[0]["Version"]
-        self.assertEqual(output_value, 2)
+        self.assertEqual(output_value, 11)
 
     def test_change_version_2(self):
         """Verify the version is incremented by 5."""
-        pdm_utils_mock_db.insert_version_data(version_table_data)
+        data = {"Version": 10, "SchemaVersion": 1}
+        pdm_utils_mock_db.insert_version_data(data)
         mysqldb.change_version(self.engine, amount=5)
         result = pdm_utils_mock_db.get_data(pdm_utils_mock_db.version_table_query)
         output_value = result[0]["Version"]
-        self.assertEqual(output_value, 6)
+        self.assertEqual(output_value, 15)
 
     def test_change_version_3(self):
         """Verify the version is decremented by 5."""
-        new_version_table_data = {"Version":10, "SchemaVersion":schema_version}
-        pdm_utils_mock_db.insert_version_data(new_version_table_data)
+        data = {"Version": 10, "SchemaVersion": 1}
+        pdm_utils_mock_db.insert_version_data(data)
         mysqldb.change_version(self.engine, amount=-5)
         result = pdm_utils_mock_db.get_data(pdm_utils_mock_db.version_table_query)
         output_value = result[0]["Version"]
@@ -471,9 +466,8 @@ class TestMysqldbFunctions2(unittest.TestCase):
 class TestMysqldbFunctions3(unittest.TestCase):
 
     def setUp(self):
-
         self.engine = sqlalchemy.create_engine(engine_string1, echo=False)
-        pdm_utils_mock_db.create_new_db()
+        pdm_utils_mock_db.create_empty_test_db()
         phage_data = pdm_utils_mock_data.get_trixie_phage_data()
         phage_data["PhageID"] = "Trixie"
         phage_data["HostGenus"] = "Mycobacterium"
@@ -657,7 +651,7 @@ class TestMysqldbFunctions4(unittest.TestCase):
 
     def setUp(self):
         self.engine = sqlalchemy.create_engine(engine_string1, echo=False)
-        pdm_utils_mock_db.create_new_db()
+        pdm_utils_mock_db.create_empty_test_db()
 
         phage_data1 = pdm_utils_mock_data.get_trixie_phage_data()
         phage_data1["PhageID"] = "Trixie"

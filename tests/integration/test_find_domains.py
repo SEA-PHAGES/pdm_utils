@@ -5,7 +5,6 @@ import sys
 import unittest
 from unittest.mock import patch
 import sqlalchemy
-from pdm_utils.constants import constants
 from pdm_utils.pipelines import find_domains
 
 # Import helper functions to build mock database and mock flat files
@@ -16,13 +15,9 @@ if str(test_dir) not in set(sys.path):
 import pdm_utils_mock_db
 import pdm_utils_mock_data
 
-
 # The following integration tests user the 'pdm_anon' MySQL user.
 # It is expected that this user has all privileges for 'test_db' database.
 engine_string = pdm_utils_mock_db.create_engine_string()
-
-schema_version = constants.CODE_SCHEMA_VERSION
-version_table_data = {"Version":1, "SchemaVersion":schema_version}
 
 # Assumes that output message contains "SQLAlchemy Error..."
 error_msg = "SQLAlchemy"
@@ -65,8 +60,7 @@ def get_gene_update_statement(data_dict):
 class TestFindDomains1(unittest.TestCase):
 
     def setUp(self):
-        pdm_utils_mock_db.create_new_db()
-        pdm_utils_mock_db.insert_version_data(version_table_data)
+        pdm_utils_mock_db.create_empty_test_db()
         pdm_utils_mock_db.insert_phage_data(pdm_utils_mock_data.get_trixie_phage_data())
         pdm_utils_mock_db.insert_gene_data(pdm_utils_mock_data.get_trixie_gene_data())
 
@@ -281,8 +275,7 @@ class TestFindDomains1(unittest.TestCase):
 class TestFindDomains2(unittest.TestCase):
 
     def setUp(self):
-        pdm_utils_mock_db.create_new_db()
-        pdm_utils_mock_db.insert_version_data(version_table_data)
+        pdm_utils_mock_db.create_empty_test_db()
         pdm_utils_mock_db.insert_phage_data(pdm_utils_mock_data.get_trixie_phage_data())
         pdm_utils_mock_db.insert_gene_data(pdm_utils_mock_data.get_trixie_gene_data())
 
