@@ -2,8 +2,7 @@
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
-# TODO utilize BeforePosition and Reference
-from Bio.SeqFeature import ExactPosition, BeforePosition, Reference
+from Bio.SeqFeature import ExactPosition, BeforePosition, AfterPosition, Reference
 from collections import OrderedDict
 from datetime import datetime
 from pathlib import Path
@@ -220,26 +219,48 @@ def get_alice_cds_124_seqfeature():
 
 
 def create_two_compound_seqfeature(start1=0, stop1=0, strand1=1,
-                                   start2=0, stop2=0, strand2=1, type=""):
+                                   start2=0, stop2=0, strand2=1, type="",
+                                   fuzzy="neither", qualifiers=None):
     """Constructs simple BioPython SeqFeature.
 
     Start1, Start2 = int
     Stop1, Stop2 = int
     Strand1, Strand2 = int (-1, 1)
-    Type = 'CDS', 'Source', 'tRNA', etc."""
-    seq_ftr = SeqFeature(
-                CompoundLocation(
-                    [FeatureLocation(
-                        ExactPosition(start1),
-                        ExactPosition(stop1),
-                        strand=strand1),
-                    FeatureLocation(
-                        ExactPosition(start2),
-                        ExactPosition(stop2),
-                        strand=strand2)],
-                    "join"),
-                type=type,
-                location_operator="join")
+    Type = 'CDS', 'Source', 'tRNA', etc.
+    Fuzzy = 'start', or 'neither'
+    Qualifiers = dictionary of feature descriptions."""
+    # This function could be improved if needed, but right now only
+    # can toggle one of the coordinate fuzziness.
+    if fuzzy == "start":
+        seq_ftr = SeqFeature(
+                    CompoundLocation(
+                        [FeatureLocation(
+                            BeforePosition(start1),
+                            ExactPosition(stop1),
+                            strand=strand1),
+                        FeatureLocation(
+                            ExactPosition(start2),
+                            ExactPosition(stop2),
+                            strand=strand2)],
+                        "join"),
+                    type=type,
+                    location_operator="join",
+                    qualifiers=qualifiers)
+    else:
+        seq_ftr = SeqFeature(
+                    CompoundLocation(
+                        [FeatureLocation(
+                            ExactPosition(start1),
+                            ExactPosition(stop1),
+                            strand=strand1),
+                        FeatureLocation(
+                            ExactPosition(start2),
+                            ExactPosition(stop2),
+                            strand=strand2)],
+                        "join"),
+                    type=type,
+                    location_operator="join",
+                    qualifiers=qualifiers)
     return seq_ftr
 
 
@@ -339,19 +360,48 @@ def get_alice_source_1():
 
 
 
-def create_simple_seqfeature(start=0, stop=0, strand=1, type=""):
+def create_simple_seqfeature(start=0, stop=0, strand=1, type="",
+                             fuzzy="neither", qualifiers=None):
     """Constructs simple BioPython SeqFeature.
 
     Start = int
     Stop = int
     Strand = int (-1, 1)
-    Type = 'CDS', 'Source', 'tRNA', etc."""
-    seq_ftr = SeqFeature(
-                FeatureLocation(
-                    ExactPosition(start),
-                    ExactPosition(stop),
-                    strand=strand),
-                type=type)
+    Type = 'CDS', 'Source', 'tRNA', etc.
+    Fuzzy = 'start', 'stop', 'both', or 'neither'
+    Qualifiers = dictionary of feature descriptions."""
+    if fuzzy == "start":
+        seq_ftr = SeqFeature(
+                    FeatureLocation(
+                        BeforePosition(start),
+                        ExactPosition(stop),
+                        strand=strand),
+                    type=type,
+                    qualifiers=qualifiers)
+    elif fuzzy == "stop":
+        seq_ftr = SeqFeature(
+                    FeatureLocation(
+                        ExactPosition(start),
+                        AfterPosition(stop),
+                        strand=strand),
+                    type=type,
+                    qualifiers=qualifiers)
+    elif fuzzy == "both":
+        seq_ftr = SeqFeature(
+                    FeatureLocation(
+                        BeforePosition(start),
+                        AfterPosition(stop),
+                        strand=strand),
+                    type=type,
+                    qualifiers=qualifiers)
+    else:
+        seq_ftr = SeqFeature(
+                    FeatureLocation(
+                        ExactPosition(start),
+                        ExactPosition(stop),
+                        strand=strand),
+                    type=type,
+                    qualifiers=qualifiers)
     return seq_ftr
 
 
@@ -370,6 +420,14 @@ author_string_2 = (
     "Lewis,M.F., Barker,L.P., Jordan,T.C., Russell,D.A., "
     "Leuba,K.D., Fritz,M.J., Bowman,C.A., Pope,W.H., "
     "Jacobs-Sera,D., Hendrix,R.W. and Hatfull,G.F.")
+
+
+
+def create_reference(author_string=None):
+    """Returns mock Reference data."""
+    reference = Reference()
+    reference.authors = author_string
+    return reference
 
 
 
@@ -542,4 +600,62 @@ def get_trixie_domain_data():
         }
     return dict
 
-#
+
+def get_lifes_cds_122_seqfeature():
+    """Constructs Lifes_Draft CDS 122 flat file feature.
+
+    The feature wraps around the end of the genome
+    termini on the bottom strand."""
+    # Below is the output when BioPython parses this feature.
+    # SeqFeature(
+    #     CompoundLocation(
+    #         [FeatureLocation(
+    #             ExactPosition(0),
+    #             ExactPosition(9),
+    #             strand=-1
+    #             ),
+    #          FeatureLocation(
+    #             ExactPosition(58743),
+    #             ExactPosition(59253),
+    #             strand=-1
+    #             )
+    #          ], 'join'
+    #      ),
+    #      type='CDS',
+    #      location_operator='join')
+    seq_ftr = create_two_compound_seqfeature(0, 9, -1,
+                                             58743, 59253, -1, "CDS")
+    return seq_ftr
+
+
+
+def create_three_compound_seqfeature(start1=0, stop1=0, strand1=1,
+                                     start2=0, stop2=0, strand2=1,
+                                     start3=0, stop3=0, strand3=1, type="",
+                                     qualifiers=None):
+    """Constructs simple BioPython SeqFeature.
+
+    Start1, Start2, Start3 = int
+    Stop1, Stop2, Stop3 = int
+    Strand1, Strand2, Strand3 = int (-1, 1)
+    Type = 'CDS', 'Source', 'tRNA', etc.
+    Qualifiers = dictionary of feature descriptions."""
+    seq_ftr = SeqFeature(
+                CompoundLocation(
+                    [FeatureLocation(
+                        ExactPosition(start1),
+                        ExactPosition(stop1),
+                        strand=strand1),
+                    FeatureLocation(
+                        ExactPosition(start2),
+                        ExactPosition(stop2),
+                        strand=strand2),
+                    FeatureLocation(
+                        ExactPosition(start3),
+                        ExactPosition(stop3),
+                        strand=strand3)],
+                    "join"),
+                type=type,
+                location_operator="join",
+                qualifiers=qualifiers)
+    return seq_ftr

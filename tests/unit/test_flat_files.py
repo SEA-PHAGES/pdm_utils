@@ -3,17 +3,27 @@ GenBank-formatted flat files."""
 
 
 from datetime import datetime
-import pathlib
+from pathlib import Path
 import unittest
+import sys
 
 from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
-from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
-from Bio.SeqFeature import ExactPosition, BeforePosition, Reference
+from Bio.SeqFeature import SeqFeature
 
 from pdm_utils.constants import constants
 from pdm_utils.classes import cds, source, genome
-from pdm_utils.functions import basic, flat_files
+from pdm_utils.functions import flat_files
+
+# Import helper functions to build mock database and mock flat files
+unittest_file = Path(__file__)
+test_dir = unittest_file.parent.parent
+if str(test_dir) not in set(sys.path):
+    sys.path.append(str(test_dir))
+import pdm_utils_mock_data
+
+
+
 
 class TestFlatFileFunctions1(unittest.TestCase):
 
@@ -26,10 +36,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
     def test_parse_coordinates_1(self):
         """Verify non-compound location is parsed correctly."""
 
-        seqfeature = SeqFeature(FeatureLocation(
-            ExactPosition(2), ExactPosition(10)),
-            type = "CDS",
-            strand = 1)
+        seqfeature = pdm_utils_mock_data.create_simple_seqfeature(
+                                2, 10, 1, "CDS")
         output_start, output_stop, parts = \
             flat_files.parse_coordinates(seqfeature)
         with self.subTest():
@@ -42,18 +50,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
     def test_parse_coordinates_2(self):
         """Verify 1 strand 2-part compound location is parsed correctly."""
 
-        seqfeature = SeqFeature(CompoundLocation([
-                        FeatureLocation(
-                            ExactPosition(2),
-                            ExactPosition(10),
-                            strand=1),
-                        FeatureLocation(
-                            ExactPosition(8),
-                            ExactPosition(20),
-                            strand=1)],
-                        'join'),
-                        type='CDS',
-                        location_operator='join')
+        seqfeature = pdm_utils_mock_data.create_two_compound_seqfeature(
+                                2, 10, 1, 8, 20, 1, "CDS")
         output_start, output_stop, parts = \
             flat_files.parse_coordinates(seqfeature)
         with self.subTest():
@@ -66,18 +64,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
     def test_parse_coordinates_3(self):
         """Verify -1 strand 2-part compound location is parsed correctly."""
 
-        seqfeature = SeqFeature(CompoundLocation([
-                        FeatureLocation(
-                            ExactPosition(2),
-                            ExactPosition(10),
-                            strand=-1),
-                        FeatureLocation(
-                            ExactPosition(8),
-                            ExactPosition(20),
-                            strand=-1)],
-                        'join'),
-                        type='CDS',
-                        location_operator='join')
+        seqfeature = pdm_utils_mock_data.create_two_compound_seqfeature(
+                                2, 10, -1, 8, 20, -1, "CDS")
         output_start, output_stop, parts = \
             flat_files.parse_coordinates(seqfeature)
         with self.subTest():
@@ -92,23 +80,13 @@ class TestFlatFileFunctions1(unittest.TestCase):
         genome end is parsed correctly."""
 
         # Wrap-around feature, directly copied from
-        # Biopython-parsed ET08 flat file.
-        seqfeature = SeqFeature(CompoundLocation([
-                        FeatureLocation(
-                            ExactPosition(154873),
-                            ExactPosition(155445),
-                            strand=1),
-                        FeatureLocation(
-                            ExactPosition(0),
-                            ExactPosition(4),
-                            strand=1)],
-                        'join'),
-                        type='CDS',
-                        location_operator='join')
+        # Biopython-parsed Alice flat file.
+        # start1 = 152829, stop1 = 153401, start2 = 0, stop2 = 4, strand = 1
+        seqfeature = pdm_utils_mock_data.get_alice_cds_252_seqfeature()
         output_start, output_stop, parts = \
             flat_files.parse_coordinates(seqfeature)
         with self.subTest():
-            self.assertEqual(output_start, 154873)
+            self.assertEqual(output_start, 152829)
         with self.subTest():
             self.assertEqual(output_stop, 4)
         with self.subTest():
@@ -119,45 +97,23 @@ class TestFlatFileFunctions1(unittest.TestCase):
         genome end is parsed correctly."""
 
         # Wrap-around feature, directly copied from
-        # Biopython-parsed ET08 flat file modified in CLC so that the
-        # the wrap-around gene is on the bottom strand and then
-        # exported as a GenBank-formatted flat file.
-        seqfeature = SeqFeature(CompoundLocation([
-                        FeatureLocation(
-                            ExactPosition(0),
-                            ExactPosition(4),
-                            strand=-1),
-                        FeatureLocation(
-                            ExactPosition(154873),
-                            ExactPosition(155445),
-                            strand=-1)],
-                        'join'),
-                        type='CDS',
-                        location_operator='join')
+        # Biopython-parsed Lifes_Draft flat file.
+        # start1 = 0, stop1 = 9, start2 = 58743, stop2 = 59253, strand = -1
+        seqfeature = pdm_utils_mock_data.get_lifes_cds_122_seqfeature()
         output_start, output_stop, parts = \
             flat_files.parse_coordinates(seqfeature)
         with self.subTest():
-            self.assertEqual(output_start, 154873)
+            self.assertEqual(output_start, 58743)
         with self.subTest():
-            self.assertEqual(output_stop, 4)
+            self.assertEqual(output_stop, 9)
         with self.subTest():
             self.assertEqual(parts, 2)
 
     def test_parse_coordinates_6(self):
         """Verify undefined strand 2-part compound location is not parsed."""
 
-        seqfeature = SeqFeature(CompoundLocation([
-                        FeatureLocation(
-                            ExactPosition(2),
-                            ExactPosition(10),
-                            strand=None),
-                        FeatureLocation(
-                            ExactPosition(8),
-                            ExactPosition(20),
-                            strand=None)],
-                        'join'),
-                        type='CDS',
-                        location_operator='join')
+        seqfeature = pdm_utils_mock_data.create_two_compound_seqfeature(
+                                        2, 10, None, 8, 20, None, "CDS")
         output_start, output_stop, parts = \
             flat_files.parse_coordinates(seqfeature)
         with self.subTest():
@@ -170,22 +126,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
     def test_parse_coordinates_7(self):
         """Verify 1 strand 3-part compound location is not parsed."""
 
-        seqfeature = SeqFeature(CompoundLocation([
-                        FeatureLocation(
-                            ExactPosition(2),
-                            ExactPosition(10),
-                            strand=1),
-                        FeatureLocation(
-                            ExactPosition(8),
-                            ExactPosition(20),
-                            strand=1),
-                        FeatureLocation(
-                            ExactPosition(30),
-                            ExactPosition(50),
-                            strand=1)],
-                        'join'),
-                        type='CDS',
-                        location_operator='join')
+        seqfeature = pdm_utils_mock_data.create_three_compound_seqfeature(
+                            2, 10, 1, 8, 20, 1, 30, 50, 1, "CDS")
         output_start, output_stop, parts = \
             flat_files.parse_coordinates(seqfeature)
         with self.subTest():
@@ -198,7 +140,7 @@ class TestFlatFileFunctions1(unittest.TestCase):
     def test_parse_coordinates_8(self):
         """Verify location of invalid data type is not parsed."""
 
-        seqfeature = SeqFeature(None, type = "CDS", strand = None)
+        seqfeature = SeqFeature(None, type="CDS", strand=None)
         output_start, output_stop, parts = \
             flat_files.parse_coordinates(seqfeature)
         with self.subTest():
@@ -211,12 +153,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
     def test_parse_coordinates_9(self):
         """Verify non-compound location with fuzzy start coordinate
         is parsed correctly."""
-        seqfeature = SeqFeature(
-                        FeatureLocation(
-                            BeforePosition(2),
-                            ExactPosition(10)),
-                        type = "CDS",
-                        strand = 1)
+        seqfeature = pdm_utils_mock_data.create_simple_seqfeature(
+                                            2, 10, 1, "CDS", fuzzy="start")
         output_start, output_stop, parts = \
             flat_files.parse_coordinates(seqfeature)
         with self.subTest():
@@ -229,12 +167,8 @@ class TestFlatFileFunctions1(unittest.TestCase):
     def test_parse_coordinates_10(self):
         """Verify non-compound location with fuzzy stop coordinate
         is parsed correctly."""
-        seqfeature = SeqFeature(
-                        FeatureLocation(
-                            ExactPosition(2),
-                            BeforePosition(10)),
-                        type = "CDS",
-                        strand = 1)
+        seqfeature = pdm_utils_mock_data.create_simple_seqfeature(
+                                            2, 10, 1, "CDS", fuzzy="stop")
         output_start, output_stop, parts = \
             flat_files.parse_coordinates(seqfeature)
         with self.subTest():
@@ -247,18 +181,9 @@ class TestFlatFileFunctions1(unittest.TestCase):
     def test_parse_coordinates_11(self):
         """Verify 1 strand 2-part compound location with fuzzy start
         coordinate is parsed correctly."""
-        seqfeature = SeqFeature(CompoundLocation([
-                        FeatureLocation(
-                            BeforePosition(2),
-                            ExactPosition(10),
-                            strand=1),
-                        FeatureLocation(
-                            ExactPosition(8),
-                            ExactPosition(20),
-                            strand=1)],
-                        "join"),
-                        type="CDS",
-                        location_operator="join")
+
+        seqfeature = pdm_utils_mock_data.create_two_compound_seqfeature(
+                            2, 10, 1, 8, 20, 1, "CDS", fuzzy="start")
         output_start, output_stop, parts = \
             flat_files.parse_coordinates(seqfeature)
         with self.subTest():
@@ -269,12 +194,11 @@ class TestFlatFileFunctions1(unittest.TestCase):
             self.assertEqual(parts, 2)
 
 
-
-
     def test_create_seqfeature_dictionary_1(self):
         """Verify feature dictionary is constructed correctly with
         one feature."""
-        feature_list = [SeqFeature(type = "CDS")]
+        ftr1 = pdm_utils_mock_data.create_simple_seqfeature(2, 10, 1, "CDS")
+        feature_list = [ftr1]
         feature_dict = flat_files.create_seqfeature_dictionary(feature_list)
         with self.subTest():
             self.assertEqual(len(feature_dict.keys()), 1)
@@ -294,13 +218,13 @@ class TestFlatFileFunctions1(unittest.TestCase):
     def test_create_seqfeature_dictionary_3(self):
         """Verify feature dictionary is constructed correctly with
         several different feature types."""
-        feature_list = [
-            SeqFeature(type = "CDS"),
-            SeqFeature(type = "CDS"),
-            SeqFeature(type = "tRNA"),
-            SeqFeature(type = "tmRNA"),
-            SeqFeature(type = "other"),
-            SeqFeature(type = "gene")]
+        ftr1 = pdm_utils_mock_data.create_simple_seqfeature(2, 10, 1, "CDS")
+        ftr2 = pdm_utils_mock_data.create_simple_seqfeature(2, 10, 1, "tRNA")
+        ftr3 = pdm_utils_mock_data.create_simple_seqfeature(2, 10, 1, "tmRNA")
+        ftr4 = pdm_utils_mock_data.create_simple_seqfeature(2, 10, 1, "other")
+        ftr5 = pdm_utils_mock_data.create_simple_seqfeature(2, 10, 1, "gene")
+        ftr6 = pdm_utils_mock_data.create_simple_seqfeature(2, 10, 1, "CDS")
+        feature_list = [ftr1, ftr2, ftr3, ftr4, ftr5, ftr6]
         feature_dict = flat_files.create_seqfeature_dictionary(feature_list)
         with self.subTest():
             self.assertEqual(len(feature_dict.keys()), 5)
@@ -454,16 +378,12 @@ class TestFlatFileFunctions2(unittest.TestCase):
                                "function": [" hypothetical protein "],
                                "note": [" gp5 "],
                                "gene": ["2"]}
-
-        self.seqfeature = SeqFeature(FeatureLocation(
-                            ExactPosition(2), ExactPosition(10)),
-                            type="CDS",
-                            strand=1,
-                            qualifiers=self.qualifier_dict)
+        self.seqfeature = pdm_utils_mock_data.create_simple_seqfeature(
+                                2, 10, 1, "CDS", qualifiers=self.qualifier_dict)
 
 
     def test_parse_cds_seqfeature_1(self):
-        """Verify CDS features is parsed."""
+        """Verify CDS feature is parsed."""
         cds_ftr = flat_files.parse_cds_seqfeature(self.seqfeature)
         with self.subTest():
             self.assertEqual(cds_ftr.locus_tag, "SEA_L5_1")
@@ -508,7 +428,7 @@ class TestFlatFileFunctions2(unittest.TestCase):
 
 
     def test_parse_cds_seqfeature_2(self):
-        """Verify CDS features is parsed with no locus tag."""
+        """Verify CDS feature is parsed with no locus tag."""
         self.qualifier_dict.pop("locus_tag")
         cds_ftr = flat_files.parse_cds_seqfeature(self.seqfeature)
         with self.subTest():
@@ -524,7 +444,7 @@ class TestFlatFileFunctions2(unittest.TestCase):
 
 
     def test_parse_cds_seqfeature_3(self):
-        """Verify CDS features is parsed with no translation."""
+        """Verify CDS feature is parsed with no translation."""
         self.qualifier_dict.pop("translation")
         cds_ftr = flat_files.parse_cds_seqfeature(self.seqfeature)
         with self.subTest():
@@ -536,7 +456,7 @@ class TestFlatFileFunctions2(unittest.TestCase):
 
 
     def test_parse_cds_seqfeature_4(self):
-        """Verify CDS features is parsed with no translation table."""
+        """Verify CDS feature is parsed with no translation table."""
         self.qualifier_dict.pop("transl_table")
         cds_ftr = flat_files.parse_cds_seqfeature(self.seqfeature)
         with self.subTest():
@@ -546,7 +466,7 @@ class TestFlatFileFunctions2(unittest.TestCase):
 
 
     def test_parse_cds_seqfeature_5(self):
-        """Verify CDS features is parsed with no product."""
+        """Verify CDS feature is parsed with no product."""
         self.qualifier_dict.pop("product")
         cds_ftr = flat_files.parse_cds_seqfeature(self.seqfeature)
         with self.subTest():
@@ -558,7 +478,7 @@ class TestFlatFileFunctions2(unittest.TestCase):
 
 
     def test_parse_cds_seqfeature_6(self):
-        """Verify CDS features is parsed with no function."""
+        """Verify CDS feature is parsed with no function."""
         self.qualifier_dict.pop("function")
         cds_ftr = flat_files.parse_cds_seqfeature(self.seqfeature)
         with self.subTest():
@@ -570,7 +490,7 @@ class TestFlatFileFunctions2(unittest.TestCase):
 
 
     def test_parse_cds_seqfeature_7(self):
-        """Verify CDS features is parsed with no note."""
+        """Verify CDS feature is parsed with no note."""
         self.qualifier_dict.pop("note")
         cds_ftr = flat_files.parse_cds_seqfeature(self.seqfeature)
         with self.subTest():
@@ -582,7 +502,7 @@ class TestFlatFileFunctions2(unittest.TestCase):
 
 
     def test_parse_cds_seqfeature_8(self):
-        """Verify CDS features is parsed with no gene."""
+        """Verify CDS feature is parsed with no gene."""
         self.qualifier_dict.pop("gene")
         cds_ftr = flat_files.parse_cds_seqfeature(self.seqfeature)
         with self.subTest():
@@ -596,25 +516,11 @@ class TestFlatFileFunctions2(unittest.TestCase):
 
 
     def test_parse_cds_seqfeature_9(self):
-        """Verify CDS features is parsed with 3-part compound location."""
-        self.seqfeature = SeqFeature(CompoundLocation([
-                        FeatureLocation(
-                            ExactPosition(2),
-                            ExactPosition(10),
-                            strand=1),
-                        FeatureLocation(
-                            ExactPosition(8),
-                            ExactPosition(20),
-                            strand=1),
-                        FeatureLocation(
-                            ExactPosition(30),
-                            ExactPosition(50),
-                            strand=1)],
-                        'join'),
-                        type='CDS',
-                        location_operator='join',
-                        qualifiers = self.qualifier_dict)
-        cds_ftr = flat_files.parse_cds_seqfeature(self.seqfeature)
+        """Verify CDS feature is parsed with 3-part compound location."""
+        seqfeature = pdm_utils_mock_data.create_three_compound_seqfeature(
+                    2, 10, 1, 8, 20, 1, 30, 50, 1, "CDS",
+                    qualifiers=self.qualifier_dict)
+        cds_ftr = flat_files.parse_cds_seqfeature(seqfeature)
         with self.subTest():
             self.assertEqual(cds_ftr.locus_tag, "SEA_L5_1")
         with self.subTest():
@@ -632,15 +538,11 @@ class TestFlatFileFunctions2(unittest.TestCase):
 
 
     def test_parse_cds_seqfeature_10(self):
-        """Verify CDS features is parsed with fuzzy coordinates."""
-        self.seqfeature = SeqFeature(
-                            FeatureLocation(
-                                BeforePosition(2),
-                                ExactPosition(10)),
-                            type="CDS",
-                            strand=1,
-                            qualifiers=self.qualifier_dict)
-        cds_ftr = flat_files.parse_cds_seqfeature(self.seqfeature)
+        """Verify CDS feature is parsed with fuzzy coordinates."""
+        seqfeature = pdm_utils_mock_data.create_simple_seqfeature(
+                                            2, 10, 1, "CDS", fuzzy="start",
+                                            qualifiers=self.qualifier_dict)
+        cds_ftr = flat_files.parse_cds_seqfeature(seqfeature)
         with self.subTest():
             self.assertEqual(cds_ftr.locus_tag, "SEA_L5_1")
         with self.subTest():
@@ -663,50 +565,28 @@ class TestFlatFileFunctions3(unittest.TestCase):
 
 
     def setUp(self):
-        self.seqfeature1 = SeqFeature(FeatureLocation(
-                                      ExactPosition(2), ExactPosition(10)),
-                                      type = "CDS",
-                                      strand = 1)
+        self.seqfeature1 = pdm_utils_mock_data.create_simple_seqfeature(
+                                            2, 10, 1, "CDS")
 
-        self.seqfeature2 = SeqFeature(FeatureLocation(
-                                      ExactPosition(5000), ExactPosition(6000)),
-                                      type = "tRNA",
-                                      strand = 1)
+        self.seqfeature2 = pdm_utils_mock_data.create_simple_seqfeature(
+                                            5000, 6000, 1, "tRNA")
 
-        self.seqfeature3 = SeqFeature(FeatureLocation(
-                                      ExactPosition(1), ExactPosition(11000)),
-                                      type = "source",
-                                      strand = 1)
+        self.seqfeature3 = pdm_utils_mock_data.create_simple_seqfeature(
+                                            1, 11000, 1, "source")
 
-        self.seqfeature7 = SeqFeature(FeatureLocation(
-                                      ExactPosition(1), ExactPosition(9000)),
-                                      type = "source",
-                                      strand = 1)
+        self.seqfeature7 = pdm_utils_mock_data.create_simple_seqfeature(
+                                            1, 9000, 1, "source")
 
         # Wrap-around feature, directly copied from
-        # Biopython-parsed ET08 flat file.
-        self.seqfeature4 = SeqFeature(CompoundLocation([
-                                    FeatureLocation(
-                                        ExactPosition(154873),
-                                        ExactPosition(155445),
-                                        strand=1),
-                                    FeatureLocation(
-                                        ExactPosition(0),
-                                        ExactPosition(4),
-                                        strand=1)],
-                                    'join'),
-                                    type='CDS',
-                                    location_operator='join')
+        # Biopython-parsed Alice flat file.
+        # start1 = 152829, stop1 = 153401, start2 = 0, stop2 = 4, strand = 1
+        self.seqfeature4 = pdm_utils_mock_data.get_alice_cds_252_seqfeature()
 
-        self.seqfeature5 = SeqFeature(FeatureLocation(
-                                      ExactPosition(9), ExactPosition(50)),
-                                      type = "CDS",
-                                      strand = -1)
+        self.seqfeature5 = pdm_utils_mock_data.create_simple_seqfeature(
+                                            9, 50, -1, "CDS")
 
-        self.seqfeature6 = SeqFeature(FeatureLocation(
-                                      ExactPosition(9), ExactPosition(30)),
-                                      type = "CDS",
-                                      strand = 1)
+        self.seqfeature6 = pdm_utils_mock_data.create_simple_seqfeature(
+                                            9, 30, 1, "CDS")
 
         self.feature_list = [self.seqfeature1,
                              self.seqfeature2,
@@ -716,15 +596,9 @@ class TestFlatFileFunctions3(unittest.TestCase):
                              self.seqfeature6,
                              self.seqfeature7]
 
-        self.reference1 = Reference()
-        self.reference1.authors = "Jane"
-
-        self.reference2 = Reference()
-        self.reference2.authors = "Doe"
-
-        self.reference3 = Reference()
-        self.reference3.authors = "Smith"
-
+        self.reference1 = pdm_utils_mock_data.create_reference("Jane")
+        self.reference2 = pdm_utils_mock_data.create_reference("Doe")
+        self.reference3 = pdm_utils_mock_data.create_reference("Smith")
         self.refs_list = [self.reference1,
                           self.reference2,
                           self.reference3]
@@ -741,15 +615,15 @@ class TestFlatFileFunctions3(unittest.TestCase):
                                 "references": self.refs_list,
                                 "date": self.date}
 
-        self.record = SeqRecord(seq = Seq("atgc"),
-                                id = "OPQ123.1",
-                                name = "XYZ123",
-                                annotations = self.annotation_dict,
-                                description = self.description,
-                                features = self.feature_list
+        self.record = SeqRecord(seq=Seq("atgc"),
+                                id="OPQ123.1",
+                                name="XYZ123",
+                                annotations=self.annotation_dict,
+                                description=self.description,
+                                features=self.feature_list
                                 )
 
-        self.filepath = pathlib.Path("/path/to/file/Phage_ZZZ.gb")
+        self.filepath = Path("/path/to/file/Phage_ZZZ.gb")
         self.exp_date = datetime.strptime(self.date,'%d-%b-%Y')
 
     def test_parse_genome_data_1(self):
@@ -829,7 +703,7 @@ class TestFlatFileFunctions3(unittest.TestCase):
             self.assertEqual(gnm.cds_features[0].genome_length, 4)
 
         with self.subTest():
-            self.assertEqual(gnm.cds_features[1].start, 154873)
+            self.assertEqual(gnm.cds_features[1].start, 152829)
         with self.subTest():
             self.assertEqual(gnm.cds_features[1].stop, 4)
         with self.subTest():
@@ -861,11 +735,11 @@ class TestFlatFileFunctions3(unittest.TestCase):
     def test_parse_genome_data_2(self):
         """Verify retrieved flat file data is parsed correctly with no
         record name."""
-        self.record = SeqRecord(seq = Seq("atgc"),
-                                id = "OPQ123.1",
-                                annotations = self.annotation_dict,
-                                description = self.description,
-                                features = self.feature_list
+        self.record = SeqRecord(seq=Seq("atgc"),
+                                id="OPQ123.1",
+                                annotations=self.annotation_dict,
+                                description=self.description,
+                                features=self.feature_list
                                 )
         gnm = flat_files.parse_genome_data(self.record, self.filepath,
                                            gnm_type="", genome_id_field="")
@@ -897,11 +771,11 @@ class TestFlatFileFunctions3(unittest.TestCase):
     def test_parse_genome_data_4(self):
         """Verify retrieved flat file data is parsed correctly with no
         record id."""
-        self.record = SeqRecord(seq = Seq("atgc"),
-                                name = "XYZ123",
-                                annotations = self.annotation_dict,
-                                description = self.description,
-                                features = self.feature_list,
+        self.record = SeqRecord(seq=Seq("atgc"),
+                                name="XYZ123",
+                                annotations=self.annotation_dict,
+                                description=self.description,
+                                features=self.feature_list,
                                 )
         gnm = flat_files.parse_genome_data(self.record, self.filepath,
                                     gnm_type="flat_file", genome_id_field="")
@@ -940,11 +814,11 @@ class TestFlatFileFunctions3(unittest.TestCase):
     def test_parse_genome_data_7(self):
         """Verify retrieved flat file data is parsed correctly with no
         record description."""
-        self.record = SeqRecord(seq = Seq("atgc"),
-                                id = "OPQ123.1",
-                                name = "XYZ123",
-                                annotations = self.annotation_dict,
-                                features = self.feature_list
+        self.record = SeqRecord(seq=Seq("atgc"),
+                                id="OPQ123.1",
+                                name="XYZ123",
+                                annotations=self.annotation_dict,
+                                features=self.feature_list
                                 )
 
         gnm = flat_files.parse_genome_data(self.record, self.filepath,
@@ -990,7 +864,9 @@ class TestFlatFileFunctions3(unittest.TestCase):
     def test_parse_genome_data_10(self):
         """Verify retrieved flat file data is parsed correctly with
         references that contain no authors."""
-        self.annotation_dict["references"] = [Reference(), Reference()]
+        ref1 = pdm_utils_mock_data.create_reference()
+        ref2 = pdm_utils_mock_data.create_reference()
+        self.annotation_dict["references"] = [ref1, ref2]
         gnm = flat_files.parse_genome_data(self.record, self.filepath,
                                                 gnm_type="flat_file")
         with self.subTest():
@@ -1170,10 +1046,9 @@ class TestFlatFileFunctions4(unittest.TestCase):
                                "host": [self.string2],
                                "lab_host": [self.string3]}
 
-        self.seqfeature = SeqFeature(FeatureLocation(
-                                ExactPosition(2), ExactPosition(10)),
-                                type="source", strand=1,
-                                qualifiers=self.qualifier_dict)
+        self.seqfeature = pdm_utils_mock_data.create_simple_seqfeature(
+                        2, 10, 1, "source", qualifiers=self.qualifier_dict)
+
 
     def test_parse_source_seqfeature_1(self):
         """Verify source feature is parsed."""
