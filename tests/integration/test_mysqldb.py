@@ -19,26 +19,26 @@ unittest_file = Path(__file__)
 test_dir = unittest_file.parent.parent
 if str(test_dir) not in set(sys.path):
     sys.path.append(str(test_dir))
-import pdm_utils_mock_db
-import pdm_utils_mock_data
+import test_db_utils
+import test_data_utils
 
 # The following integration tests user the 'pdm_anon' MySQL user.
 # It is expected that this user has all privileges for 'test_db' database.
-user = pdm_utils_mock_db.USER
-pwd = pdm_utils_mock_db.PWD
-db = pdm_utils_mock_db.DB
+user = test_db_utils.USER
+pwd = test_db_utils.PWD
+db = test_db_utils.DB
 db2 = "Actinobacteriophage"
-engine_string1 = pdm_utils_mock_db.create_engine_string()
+engine_string1 = test_db_utils.create_engine_string()
 
 
 class TestMysqldbFunctions1(unittest.TestCase):
 
     def setUp(self):
         self.engine = sqlalchemy.create_engine(engine_string1, echo=False)
-        pdm_utils_mock_db.create_empty_test_db()
-        phage_data1 = pdm_utils_mock_data.get_trixie_phage_data()
-        phage_data2 = pdm_utils_mock_data.get_trixie_phage_data()
-        phage_data3 = pdm_utils_mock_data.get_trixie_phage_data()
+        test_db_utils.create_empty_test_db()
+        phage_data1 = test_data_utils.get_trixie_phage_data()
+        phage_data2 = test_data_utils.get_trixie_phage_data()
+        phage_data3 = test_data_utils.get_trixie_phage_data()
 
         phage_data1["PhageID"] = "L5"
         phage_data2["PhageID"] = "Trixie"
@@ -74,12 +74,12 @@ class TestMysqldbFunctions1(unittest.TestCase):
 
         phage_data_list = [phage_data1, phage_data2, phage_data3]
         for phage_data in phage_data_list:
-            pdm_utils_mock_db.insert_phage_data(phage_data)
+            test_db_utils.insert_phage_data(phage_data)
 
-        gene_data1 = pdm_utils_mock_data.get_trixie_gene_data()
-        gene_data2 = pdm_utils_mock_data.get_trixie_gene_data()
-        gene_data3 = pdm_utils_mock_data.get_trixie_gene_data()
-        gene_data4 = pdm_utils_mock_data.get_trixie_gene_data()
+        gene_data1 = test_data_utils.get_trixie_gene_data()
+        gene_data2 = test_data_utils.get_trixie_gene_data()
+        gene_data3 = test_data_utils.get_trixie_gene_data()
+        gene_data4 = test_data_utils.get_trixie_gene_data()
 
         gene_data1["PhageID"] = "Trixie"
         gene_data2["PhageID"] = "Trixie"
@@ -93,7 +93,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
 
         gene_data_list = [gene_data1, gene_data2, gene_data3, gene_data4]
         for gene_data in gene_data_list:
-            pdm_utils_mock_db.insert_gene_data(gene_data)
+            test_db_utils.insert_gene_data(gene_data)
 
         self.phage_query = "SELECT * FROM phage"
         self.gene_query = "SELECT * FROM gene"
@@ -101,7 +101,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
 
     def tearDown(self):
         self.engine.dispose()
-        pdm_utils_mock_db.remove_db()
+        test_db_utils.remove_db()
 
 
 
@@ -109,8 +109,8 @@ class TestMysqldbFunctions1(unittest.TestCase):
     # TODO not sure if this is needed.
     def test_verify_db_setup(self):
         """Confirm that the database was setup correctly for the tests."""
-        phage_data = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
-        gene_data = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
+        phage_data = test_db_utils.get_data(test_db_utils.phage_table_query)
+        gene_data = test_db_utils.get_data(test_db_utils.gene_table_query)
         with self.subTest():
             self.assertEqual(len(phage_data), 3)
         with self.subTest():
@@ -343,12 +343,12 @@ class TestMysqldbFunctions2(unittest.TestCase):
 
     def setUp(self):
         self.engine = sqlalchemy.create_engine(engine_string1, echo=False)
-        pdm_utils_mock_db.create_empty_test_db()
-        pdm_utils_mock_db.execute("TRUNCATE version")
+        test_db_utils.create_empty_test_db()
+        test_db_utils.execute("TRUNCATE version")
 
     def tearDown(self):
         self.engine.dispose()
-        pdm_utils_mock_db.remove_db()
+        test_db_utils.remove_db()
 
 
 
@@ -373,8 +373,8 @@ class TestMysqldbFunctions2(unittest.TestCase):
         gnm.cluster = "Singleton"
         gnm.subcluster = "A2"
         statement = mysqldb.create_phage_table_insert(gnm)
-        pdm_utils_mock_db.execute(statement)
-        phage_data = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
+        test_db_utils.execute(statement)
+        phage_data = test_db_utils.get_data(test_db_utils.phage_table_query)
         results = phage_data[0]
         exp = ("INSERT INTO phage "
                "(PhageID, Accession, Name, HostGenus, Sequence, "
@@ -425,8 +425,8 @@ class TestMysqldbFunctions2(unittest.TestCase):
     def test_get_phage_table_count_2(self):
         """Verify the correct number of phages is returned when
         the database contains one genome."""
-        phage_data = pdm_utils_mock_data.get_trixie_phage_data()
-        pdm_utils_mock_db.insert_phage_data(phage_data)
+        phage_data = test_data_utils.get_trixie_phage_data()
+        test_db_utils.insert_phage_data(phage_data)
         count = mysqldb.get_phage_table_count(self.engine)
         self.assertEqual(count, 1)
 
@@ -436,27 +436,27 @@ class TestMysqldbFunctions2(unittest.TestCase):
     def test_change_version_1(self):
         """Verify the version is incremented by 1."""
         data = {"Version": 10, "SchemaVersion": 1}
-        pdm_utils_mock_db.insert_version_data(data)
+        test_db_utils.insert_version_data(data)
         mysqldb.change_version(self.engine)
-        result = pdm_utils_mock_db.get_data(pdm_utils_mock_db.version_table_query)
+        result = test_db_utils.get_data(test_db_utils.version_table_query)
         output_value = result[0]["Version"]
         self.assertEqual(output_value, 11)
 
     def test_change_version_2(self):
         """Verify the version is incremented by 5."""
         data = {"Version": 10, "SchemaVersion": 1}
-        pdm_utils_mock_db.insert_version_data(data)
+        test_db_utils.insert_version_data(data)
         mysqldb.change_version(self.engine, amount=5)
-        result = pdm_utils_mock_db.get_data(pdm_utils_mock_db.version_table_query)
+        result = test_db_utils.get_data(test_db_utils.version_table_query)
         output_value = result[0]["Version"]
         self.assertEqual(output_value, 15)
 
     def test_change_version_3(self):
         """Verify the version is decremented by 5."""
         data = {"Version": 10, "SchemaVersion": 1}
-        pdm_utils_mock_db.insert_version_data(data)
+        test_db_utils.insert_version_data(data)
         mysqldb.change_version(self.engine, amount=-5)
-        result = pdm_utils_mock_db.get_data(pdm_utils_mock_db.version_table_query)
+        result = test_db_utils.get_data(test_db_utils.version_table_query)
         output_value = result[0]["Version"]
         self.assertEqual(output_value, 5)
 
@@ -467,8 +467,8 @@ class TestMysqldbFunctions3(unittest.TestCase):
 
     def setUp(self):
         self.engine = sqlalchemy.create_engine(engine_string1, echo=False)
-        pdm_utils_mock_db.create_empty_test_db()
-        phage_data = pdm_utils_mock_data.get_trixie_phage_data()
+        test_db_utils.create_empty_test_db()
+        phage_data = test_data_utils.get_trixie_phage_data()
         phage_data["PhageID"] = "Trixie"
         phage_data["HostGenus"] = "Mycobacterium"
         phage_data["Accession"] = "ABC123"
@@ -477,14 +477,14 @@ class TestMysqldbFunctions3(unittest.TestCase):
         phage_data["Sequence"] = "atcg"
         phage_data["Length"] = 6
         phage_data["DateLastModified"] = constants.EMPTY_DATE
-        pdm_utils_mock_db.insert_phage_data(phage_data)
+        test_db_utils.insert_phage_data(phage_data)
         self.phage_query = "SELECT * FROM phage WHERE PhageID = 'Trixie'"
         self.gene_query = "SELECT * FROM gene WHERE PhageID = 'Trixie'"
 
 
     def tearDown(self):
         self.engine.dispose()
-        pdm_utils_mock_db.remove_db()
+        test_db_utils.remove_db()
 
 
 
@@ -509,8 +509,8 @@ class TestMysqldbFunctions3(unittest.TestCase):
         cds1.description = "5' nucleotide phosphatase"
         cds1.locus_tag = "TAG1"
         statement = mysqldb.create_gene_table_insert(cds1)
-        pdm_utils_mock_db.execute(statement)
-        result = pdm_utils_mock_db.get_data(self.gene_query)
+        test_db_utils.execute(statement)
+        result = test_db_utils.get_data(self.gene_query)
         results = result[0]
         exp = ("""INSERT INTO gene """
                """(GeneID, PhageID, Start, Stop, Length, Name, """
@@ -564,8 +564,8 @@ class TestMysqldbFunctions3(unittest.TestCase):
         cds1.description = "integrase"
         cds1.locus_tag = ""
         statement = mysqldb.create_gene_table_insert(cds1)
-        pdm_utils_mock_db.execute(statement)
-        result = pdm_utils_mock_db.get_data(self.gene_query)
+        test_db_utils.execute(statement)
+        result = test_db_utils.get_data(self.gene_query)
         results = result[0]
         exp = ("""INSERT INTO gene """
                """(GeneID, PhageID, Start, Stop, Length, Name, """
@@ -587,8 +587,8 @@ class TestMysqldbFunctions3(unittest.TestCase):
         """Verify correct Cluster statement is created for a non-singleton."""
         statement = mysqldb.create_update(
             "phage", "Cluster", "B", "PhageID", "Trixie")
-        pdm_utils_mock_db.execute(statement)
-        result = pdm_utils_mock_db.get_data(self.phage_query)
+        test_db_utils.execute(statement)
+        result = test_db_utils.get_data(self.phage_query)
         results = result[0]
         exp = "UPDATE phage SET Cluster = 'B' WHERE PhageID = 'Trixie';"
         with self.subTest():
@@ -600,8 +600,8 @@ class TestMysqldbFunctions3(unittest.TestCase):
         """Verify correct Cluster statement is created for a singleton."""
         statement = mysqldb.create_update(
             "phage", "Cluster", "Singleton", "PhageID", "Trixie")
-        pdm_utils_mock_db.execute(statement)
-        result = pdm_utils_mock_db.get_data(self.phage_query)
+        test_db_utils.execute(statement)
+        result = test_db_utils.get_data(self.phage_query)
         results = result[0]
         exp = "UPDATE phage SET Cluster = NULL WHERE PhageID = 'Trixie';"
         with self.subTest():
@@ -614,8 +614,8 @@ class TestMysqldbFunctions3(unittest.TestCase):
         non-empty value."""
         statement = mysqldb.create_update(
             "phage", "Subcluster", "A2", "PhageID", "Trixie")
-        pdm_utils_mock_db.execute(statement)
-        result = pdm_utils_mock_db.get_data(self.phage_query)
+        test_db_utils.execute(statement)
+        result = test_db_utils.get_data(self.phage_query)
         results = result[0]
         exp = "UPDATE phage SET Subcluster = 'A2' WHERE PhageID = 'Trixie';"
         with self.subTest():
@@ -626,17 +626,17 @@ class TestMysqldbFunctions3(unittest.TestCase):
     def test_create_update_4(self):
         """Verify Gene table statement is created correctly."""
         # First add gene Trixie_1 to the database.
-        gene_data = pdm_utils_mock_data.get_trixie_gene_data()
+        gene_data = test_data_utils.get_trixie_gene_data()
         gene_data["PhageID"] = "Trixie"
         gene_data["Notes"] = "none"
         gene_data["GeneID"] = "Trixie_1"
-        pdm_utils_mock_db.insert_gene_data(gene_data)
+        test_db_utils.insert_gene_data(gene_data)
 
         # Second run the update statement.
         statement = mysqldb.create_update(
             "gene", "Notes", "Repressor", "GeneID", "Trixie_1")
-        pdm_utils_mock_db.execute(statement)
-        result = pdm_utils_mock_db.get_data(self.gene_query)
+        test_db_utils.execute(statement)
+        result = test_db_utils.get_data(self.gene_query)
         results = result[0]
         exp = "UPDATE gene SET Notes = 'Repressor' WHERE GeneID = 'Trixie_1';"
         with self.subTest():
@@ -651,9 +651,9 @@ class TestMysqldbFunctions4(unittest.TestCase):
 
     def setUp(self):
         self.engine = sqlalchemy.create_engine(engine_string1, echo=False)
-        pdm_utils_mock_db.create_empty_test_db()
+        test_db_utils.create_empty_test_db()
 
-        phage_data1 = pdm_utils_mock_data.get_trixie_phage_data()
+        phage_data1 = test_data_utils.get_trixie_phage_data()
         phage_data1["PhageID"] = "Trixie"
         phage_data1["HostGenus"] = "Mycobacterium"
         phage_data1["Accession"] = "ABC123"
@@ -662,10 +662,10 @@ class TestMysqldbFunctions4(unittest.TestCase):
         phage_data1["Sequence"] = "atcg"
         phage_data1["Length"] = 6
         phage_data1["DateLastModified"] = constants.EMPTY_DATE
-        pdm_utils_mock_db.insert_phage_data(phage_data1)
+        test_db_utils.insert_phage_data(phage_data1)
 
-        gene_data1 = pdm_utils_mock_data.get_trixie_gene_data()
-        gene_data2 = pdm_utils_mock_data.get_trixie_gene_data()
+        gene_data1 = test_data_utils.get_trixie_gene_data()
+        gene_data2 = test_data_utils.get_trixie_gene_data()
 
         gene_data1["PhageID"] = "Trixie"
         gene_data2["PhageID"] = "Trixie"
@@ -673,15 +673,15 @@ class TestMysqldbFunctions4(unittest.TestCase):
         gene_data1["GeneID"] = "Trixie_1"
         gene_data2["GeneID"] = "Trixie_2"
 
-        pdm_utils_mock_db.insert_gene_data(gene_data1)
-        pdm_utils_mock_db.insert_gene_data(gene_data2)
+        test_db_utils.insert_gene_data(gene_data1)
+        test_db_utils.insert_gene_data(gene_data2)
 
         self.phage_query = "SELECT * FROM phage where PhageID = 'Trixie'"
         self.gene_query = "SELECT * FROM gene where PhageID = 'Trixie'"
 
     def tearDown(self):
         self.engine.dispose()
-        pdm_utils_mock_db.remove_db()
+        test_db_utils.remove_db()
 
 
 
@@ -690,17 +690,17 @@ class TestMysqldbFunctions4(unittest.TestCase):
         """Verify correct DELETE statement is created
         for a PhageID in the phage table."""
         # First, retrieve the current state of the phage table.
-        results1 = pdm_utils_mock_db.get_data(self.phage_query)
+        results1 = test_db_utils.get_data(self.phage_query)
         results1_phageids = set()
         for dict in results1:
             results1_phageids.add(dict["PhageID"])
 
         # Second, execute the DELETE statement.
         statement = mysqldb.create_delete("phage", "PhageID", "Trixie")
-        pdm_utils_mock_db.execute(statement)
+        test_db_utils.execute(statement)
 
         # Third, retrieve the current state of the phage table.
-        results2 = pdm_utils_mock_db.get_data(self.phage_query)
+        results2 = test_db_utils.get_data(self.phage_query)
         results2_phageids = set()
         for dict in results2:
             results2_phageids.add(dict["PhageID"])
@@ -718,7 +718,7 @@ class TestMysqldbFunctions4(unittest.TestCase):
         for a single GeneID in the gene table."""
 
         # First, retrieve the current state of the gene table.
-        results1 = pdm_utils_mock_db.get_data(self.gene_query)
+        results1 = test_db_utils.get_data(self.gene_query)
         results1_phageids = set()
         results1_geneids = set()
         for dict in results1:
@@ -727,10 +727,10 @@ class TestMysqldbFunctions4(unittest.TestCase):
 
         # Second, execute the DELETE statement.
         statement = mysqldb.create_delete("gene", "GeneID", "Trixie_1")
-        pdm_utils_mock_db.execute(statement)
+        test_db_utils.execute(statement)
 
         # Third, retrieve the current state of the gene table.
-        results2 = pdm_utils_mock_db.get_data(self.gene_query)
+        results2 = test_db_utils.get_data(self.gene_query)
         results2_phageids = set()
         results2_geneids = set()
         for dict in results2:

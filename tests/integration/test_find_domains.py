@@ -12,12 +12,12 @@ unittest_file = Path(__file__)
 test_dir = unittest_file.parent.parent
 if str(test_dir) not in set(sys.path):
     sys.path.append(str(test_dir))
-import pdm_utils_mock_db
-import pdm_utils_mock_data
+import test_db_utils
+import test_data_utils
 
 # The following integration tests user the 'pdm_anon' MySQL user.
 # It is expected that this user has all privileges for 'test_db' database.
-engine_string = pdm_utils_mock_db.create_engine_string()
+engine_string = test_db_utils.create_engine_string()
 
 # Assumes that output message contains "SQLAlchemy Error..."
 error_msg = "SQLAlchemy"
@@ -60,9 +60,9 @@ def get_gene_update_statement(data_dict):
 class TestFindDomains1(unittest.TestCase):
 
     def setUp(self):
-        pdm_utils_mock_db.create_empty_test_db()
-        pdm_utils_mock_db.insert_phage_data(pdm_utils_mock_data.get_trixie_phage_data())
-        pdm_utils_mock_db.insert_gene_data(pdm_utils_mock_data.get_trixie_gene_data())
+        test_db_utils.create_empty_test_db()
+        test_db_utils.insert_phage_data(test_data_utils.get_trixie_phage_data())
+        test_db_utils.insert_gene_data(test_data_utils.get_trixie_gene_data())
 
         self.engine = sqlalchemy.create_engine(engine_string, echo=False)
         self.connection = self.engine.connect()
@@ -70,7 +70,7 @@ class TestFindDomains1(unittest.TestCase):
 
 
     def tearDown(self):
-        pdm_utils_mock_db.remove_db()
+        test_db_utils.remove_db()
         self.trans.rollback()
         self.engine.dispose()
 
@@ -80,16 +80,16 @@ class TestFindDomains1(unittest.TestCase):
     def test_execute_statement_1(self):
         """Verify valid DomainStatus update data can be inserted
         into gene table."""
-        gene_table_results1 = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
+        gene_table_results1 = test_db_utils.get_data(test_db_utils.gene_table_query)
         update_data = get_trixie_gene_table_domain_status_update_data_1()
         statement = get_gene_update_statement(update_data)
         result, type_error, msg = find_domains.execute_statement(
                                     self.connection, statement)
         self.trans.commit()
-        phage_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.phage_table_query)
-        gene_table_results2 = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
-        gene_domain_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_domain_table_query)
-        domain_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.domain_table_query)
+        phage_table_results = test_db_utils.get_data(test_db_utils.phage_table_query)
+        gene_table_results2 = test_db_utils.get_data(test_db_utils.gene_table_query)
+        gene_domain_table_results = test_db_utils.get_data(test_db_utils.gene_domain_table_query)
+        domain_table_results = test_db_utils.get_data(test_db_utils.domain_table_query)
         domain_status1 = gene_table_results1[0]["DomainStatus"]
         domain_status2 = gene_table_results2[0]["DomainStatus"]
         with self.subTest():
@@ -114,12 +114,12 @@ class TestFindDomains1(unittest.TestCase):
 
     def test_execute_statement_2(self):
         """Verify valid data can be inserted into domain table."""
-        domain_data = pdm_utils_mock_data.get_trixie_domain_data()
+        domain_data = test_data_utils.get_trixie_domain_data()
         statement = get_domain_insert_statement(domain_data)
         result, type_error, msg = find_domains.execute_statement(
                                     self.connection, statement)
         self.trans.commit()
-        domain_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.domain_table_query)
+        domain_table_results = test_db_utils.get_data(test_db_utils.domain_table_query)
         with self.subTest():
             self.assertEqual(len(domain_table_results), 1)
         with self.subTest():
@@ -130,19 +130,19 @@ class TestFindDomains1(unittest.TestCase):
 
     def test_execute_statement_3(self):
         """Verify valid data can be inserted into domain and gene_domain tables."""
-        domain_data = pdm_utils_mock_data.get_trixie_domain_data()
+        domain_data = test_data_utils.get_trixie_domain_data()
         statement1 = get_domain_insert_statement(domain_data)
         result1, type_error1, msg1 = find_domains.execute_statement(
                                     self.connection, statement1)
 
-        gene_domain_data = pdm_utils_mock_data.get_trixie_gene_domain_data()
+        gene_domain_data = test_data_utils.get_trixie_gene_domain_data()
         statement2 = get_gene_domain_insert_statement(gene_domain_data)
         result2, type_error2, msg2 = find_domains.execute_statement(
                                     self.connection, statement2)
 
         self.trans.commit()
-        gene_domain_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_domain_table_query)
-        domain_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.domain_table_query)
+        gene_domain_table_results = test_db_utils.get_data(test_db_utils.gene_domain_table_query)
+        domain_table_results = test_db_utils.get_data(test_db_utils.domain_table_query)
         with self.subTest():
             self.assertEqual(len(domain_table_results), 1)
         with self.subTest():
@@ -160,12 +160,12 @@ class TestFindDomains1(unittest.TestCase):
     def test_execute_statement_4(self):
         """Verify invalid data can NOT be inserted into gene_domain table
         when there is no matching 'HitID' in the domain table."""
-        gene_domain_data = pdm_utils_mock_data.get_trixie_gene_domain_data()
+        gene_domain_data = test_data_utils.get_trixie_gene_domain_data()
         statement = get_gene_domain_insert_statement(gene_domain_data)
         result, type_error, msg = find_domains.execute_statement(
                                     self.connection, statement)
         self.trans.commit()
-        gene_domain_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_domain_table_query)
+        gene_domain_table_results = test_db_utils.get_data(test_db_utils.gene_domain_table_query)
         with self.subTest():
             self.assertEqual(len(gene_domain_table_results), 0)
         with self.subTest():
@@ -177,17 +177,17 @@ class TestFindDomains1(unittest.TestCase):
     def test_execute_statement_5(self):
         """Verify invalid data can NOT be inserted into domain table when
         there is a duplicated HitID."""
-        domain_data = pdm_utils_mock_data.get_trixie_domain_data()
+        domain_data = test_data_utils.get_trixie_domain_data()
         statement = get_domain_insert_statement(domain_data)
         result1, type_error1, msg1 = find_domains.execute_statement(
                                     self.connection, statement)
         self.trans.commit()
-        domain_table_results1 = pdm_utils_mock_db.get_data(pdm_utils_mock_db.domain_table_query)
+        domain_table_results1 = test_db_utils.get_data(test_db_utils.domain_table_query)
         new_trans = self.connection.begin()
         result2, type_error2, msg2 = find_domains.execute_statement(
                                     self.connection, statement)
         new_trans.commit()
-        domain_table_results2 = pdm_utils_mock_db.get_data(pdm_utils_mock_db.domain_table_query)
+        domain_table_results2 = test_db_utils.get_data(test_db_utils.domain_table_query)
         with self.subTest():
             self.assertEqual(len(domain_table_results1), 1)
         with self.subTest():
@@ -209,13 +209,13 @@ class TestFindDomains1(unittest.TestCase):
     def test_execute_statement_6(self):
         """Verify invalid data can NOT be inserted into domain table when
         there is an invalid column name."""
-        domain_data = pdm_utils_mock_data.get_trixie_domain_data()
+        domain_data = test_data_utils.get_trixie_domain_data()
         statement = get_domain_insert_statement(domain_data)
         statement = statement.replace("Name", "Name_invalid")
         result, type_error, msg = find_domains.execute_statement(
                                     self.connection, statement)
         self.trans.commit()
-        domain_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.domain_table_query)
+        domain_table_results = test_db_utils.get_data(test_db_utils.domain_table_query)
         with self.subTest():
             self.assertEqual(len(domain_table_results), 0)
         with self.subTest():
@@ -228,7 +228,7 @@ class TestFindDomains1(unittest.TestCase):
 
     def test_execute_statement_7(self):
         """Verify invalid data can NOT be inserted due to '%'."""
-        domain_data = pdm_utils_mock_data.get_trixie_domain_data()
+        domain_data = test_data_utils.get_trixie_domain_data()
         # "Description": "ParB-like nuclease domain"
         description = domain_data["Description"]
         description = description.replace("nuclease domain", "nuclease % domain")
@@ -237,7 +237,7 @@ class TestFindDomains1(unittest.TestCase):
         result, type_error, msg = find_domains.execute_statement(
                                     self.connection, statement)
         self.trans.commit()
-        domain_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.domain_table_query)
+        domain_table_results = test_db_utils.get_data(test_db_utils.domain_table_query)
         with self.subTest():
             self.assertEqual(len(domain_table_results), 0)
         with self.subTest():
@@ -251,7 +251,7 @@ class TestFindDomains1(unittest.TestCase):
     def test_execute_statement_8(self):
         """Verify invalid data can be inserted after '%' is
         replaced with '%%'."""
-        domain_data = pdm_utils_mock_data.get_trixie_domain_data()
+        domain_data = test_data_utils.get_trixie_domain_data()
         # "Description": "ParB-like nuclease domain"
         description = domain_data["Description"]
         description = description.replace("nuclease domain", "nuclease % domain")
@@ -261,7 +261,7 @@ class TestFindDomains1(unittest.TestCase):
         result, type_error, msg = find_domains.execute_statement(
                                     self.connection, statement)
         self.trans.commit()
-        domain_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.domain_table_query)
+        domain_table_results = test_db_utils.get_data(test_db_utils.domain_table_query)
         with self.subTest():
             self.assertEqual(len(domain_table_results), 1)
         with self.subTest():
@@ -275,16 +275,16 @@ class TestFindDomains1(unittest.TestCase):
 class TestFindDomains2(unittest.TestCase):
 
     def setUp(self):
-        pdm_utils_mock_db.create_empty_test_db()
-        pdm_utils_mock_db.insert_phage_data(pdm_utils_mock_data.get_trixie_phage_data())
-        pdm_utils_mock_db.insert_gene_data(pdm_utils_mock_data.get_trixie_gene_data())
+        test_db_utils.create_empty_test_db()
+        test_db_utils.insert_phage_data(test_data_utils.get_trixie_phage_data())
+        test_db_utils.insert_gene_data(test_data_utils.get_trixie_gene_data())
 
         self.engine = sqlalchemy.create_engine(engine_string, echo=False)
         self.connection = self.engine.connect()
 
 
     def tearDown(self):
-        pdm_utils_mock_db.remove_db()
+        test_db_utils.remove_db()
         self.engine.dispose()
 
 
@@ -293,7 +293,7 @@ class TestFindDomains2(unittest.TestCase):
     def test_execute_transaction_1(self):
         """Verify function runs with list of zero statements."""
         result = find_domains.execute_transaction(self.connection)
-        domain_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.domain_table_query)
+        domain_table_results = test_db_utils.get_data(test_db_utils.domain_table_query)
         with self.subTest():
             self.assertEqual(len(domain_table_results), 0)
         with self.subTest():
@@ -302,11 +302,11 @@ class TestFindDomains2(unittest.TestCase):
 
     def test_execute_transaction_2(self):
         """Verify list of one valid statement can be inserted into domain table."""
-        domain_data = pdm_utils_mock_data.get_trixie_domain_data()
+        domain_data = test_data_utils.get_trixie_domain_data()
         statement = get_domain_insert_statement(domain_data)
         statements = [statement]
         result = find_domains.execute_transaction(self.connection, statements)
-        domain_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.domain_table_query)
+        domain_table_results = test_db_utils.get_data(test_db_utils.domain_table_query)
         with self.subTest():
             self.assertEqual(len(domain_table_results), 1)
         with self.subTest():
@@ -316,14 +316,14 @@ class TestFindDomains2(unittest.TestCase):
     def test_execute_transaction_3(self):
         """Verify list of two valid statements can be inserted into
         domain and gene_domain tables"""
-        domain_data = pdm_utils_mock_data.get_trixie_domain_data()
+        domain_data = test_data_utils.get_trixie_domain_data()
         statement1 = get_domain_insert_statement(domain_data)
-        gene_domain_data = pdm_utils_mock_data.get_trixie_gene_domain_data()
+        gene_domain_data = test_data_utils.get_trixie_gene_domain_data()
         statement2 = get_gene_domain_insert_statement(gene_domain_data)
         statements = [statement1, statement2]
         result = find_domains.execute_transaction(self.connection, statements)
-        gene_domain_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_domain_table_query)
-        domain_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.domain_table_query)
+        gene_domain_table_results = test_db_utils.get_data(test_db_utils.gene_domain_table_query)
+        domain_table_results = test_db_utils.get_data(test_db_utils.domain_table_query)
         with self.subTest():
             self.assertEqual(len(domain_table_results), 1)
         with self.subTest():
@@ -335,13 +335,13 @@ class TestFindDomains2(unittest.TestCase):
     def test_execute_transaction_4(self):
         """Verify list of three statements (including one with
         duplicated HitID) are inserted."""
-        domain_data1 = pdm_utils_mock_data.get_trixie_domain_data()
-        pdm_utils_mock_db.insert_domain_data(domain_data1)
-        domain_table_results1 = pdm_utils_mock_db.get_data(pdm_utils_mock_db.domain_table_query)
+        domain_data1 = test_data_utils.get_trixie_domain_data()
+        test_db_utils.insert_domain_data(domain_data1)
+        domain_table_results1 = test_db_utils.get_data(test_db_utils.domain_table_query)
         # Duplicate HitID
         statement1 = get_domain_insert_statement(domain_data1)
         # Valid
-        gene_domain_data = pdm_utils_mock_data.get_trixie_gene_domain_data()
+        gene_domain_data = test_data_utils.get_trixie_gene_domain_data()
         statement2 = get_gene_domain_insert_statement(gene_domain_data)
         # Valid
         update_data = get_trixie_gene_table_domain_status_update_data_1()
@@ -349,9 +349,9 @@ class TestFindDomains2(unittest.TestCase):
 
         statements = [statement1, statement2, statement3]
         result = find_domains.execute_transaction(self.connection, statements)
-        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
-        gene_domain_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_domain_table_query)
-        domain_table_results2 = pdm_utils_mock_db.get_data(pdm_utils_mock_db.domain_table_query)
+        gene_table_results = test_db_utils.get_data(test_db_utils.gene_table_query)
+        gene_domain_table_results = test_db_utils.get_data(test_db_utils.gene_domain_table_query)
+        domain_table_results2 = test_db_utils.get_data(test_db_utils.domain_table_query)
         domain_status = gene_table_results[0]["DomainStatus"]
         with self.subTest():
             self.assertEqual(len(domain_table_results1), 1)
@@ -369,13 +369,13 @@ class TestFindDomains2(unittest.TestCase):
         """Verify list of three valid statements and one invalid statement
         are NOT inserted. All statements rolled back."""
         # Valid
-        domain_data1 = pdm_utils_mock_data.get_trixie_domain_data()
+        domain_data1 = test_data_utils.get_trixie_domain_data()
         statement1 = get_domain_insert_statement(domain_data1)
         # Valid
-        gene_domain_data = pdm_utils_mock_data.get_trixie_gene_domain_data()
+        gene_domain_data = test_data_utils.get_trixie_gene_domain_data()
         statement2 = get_gene_domain_insert_statement(gene_domain_data)
         # Invalid
-        domain_data2 = pdm_utils_mock_data.get_trixie_domain_data()
+        domain_data2 = test_data_utils.get_trixie_domain_data()
         statement3 = get_domain_insert_statement(domain_data2)
         statement3 = statement3.replace("HitID", "unique_id")
         statement3 = statement3.replace("Name", "Name_invalid")
@@ -385,9 +385,9 @@ class TestFindDomains2(unittest.TestCase):
 
         statements = [statement1, statement2, statement3, statement4]
         result = find_domains.execute_transaction(self.connection, statements)
-        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
-        gene_domain_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_domain_table_query)
-        domain_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.domain_table_query)
+        gene_table_results = test_db_utils.get_data(test_db_utils.gene_table_query)
+        gene_domain_table_results = test_db_utils.get_data(test_db_utils.gene_domain_table_query)
+        domain_table_results = test_db_utils.get_data(test_db_utils.domain_table_query)
         domain_status = gene_table_results[0]["DomainStatus"]
         with self.subTest():
             self.assertEqual(len(domain_table_results), 0)
@@ -403,13 +403,13 @@ class TestFindDomains2(unittest.TestCase):
         """Verify list of three valid statements and one invalid statement
         (containing '%') are inserted (since '%' replaced with '%%')."""
         # Valid
-        domain_data1 = pdm_utils_mock_data.get_trixie_domain_data()
+        domain_data1 = test_data_utils.get_trixie_domain_data()
         statement1 = get_domain_insert_statement(domain_data1)
         # Valid
-        gene_domain_data = pdm_utils_mock_data.get_trixie_gene_domain_data()
+        gene_domain_data = test_data_utils.get_trixie_gene_domain_data()
         statement2 = get_gene_domain_insert_statement(gene_domain_data)
         # Invalid '%'
-        domain_data2 = pdm_utils_mock_data.get_trixie_domain_data()
+        domain_data2 = test_data_utils.get_trixie_domain_data()
         # "Description": "ParB-like nuclease domain"
         description = domain_data2["Description"]
         description = description.replace("nuclease domain", "nuclease % domain")
@@ -422,9 +422,9 @@ class TestFindDomains2(unittest.TestCase):
 
         statements = [statement1, statement2, statement3, statement4]
         result = find_domains.execute_transaction(self.connection, statements)
-        gene_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_table_query)
-        gene_domain_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_domain_table_query)
-        domain_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.domain_table_query)
+        gene_table_results = test_db_utils.get_data(test_db_utils.gene_table_query)
+        gene_domain_table_results = test_db_utils.get_data(test_db_utils.gene_domain_table_query)
+        domain_table_results = test_db_utils.get_data(test_db_utils.domain_table_query)
         domain_status = gene_table_results[0]["DomainStatus"]
         with self.subTest():
             self.assertEqual(len(domain_table_results), 2)
@@ -455,16 +455,16 @@ class TestFindDomains2(unittest.TestCase):
         mock_result2 = (stmt_result2, type_error2, msg2)
         es_mock.side_effect = [mock_result1, mock_result2]
         # Valid
-        domain_data1 = pdm_utils_mock_data.get_trixie_domain_data()
+        domain_data1 = test_data_utils.get_trixie_domain_data()
         statement1 = get_domain_insert_statement(domain_data1)
         # Valid
-        gene_domain_data = pdm_utils_mock_data.get_trixie_gene_domain_data()
+        gene_domain_data = test_data_utils.get_trixie_gene_domain_data()
         statement2 = get_gene_domain_insert_statement(gene_domain_data)
 
         statements = [statement1, statement2]
         result = find_domains.execute_transaction(self.connection, statements)
-        gene_domain_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.gene_domain_table_query)
-        domain_table_results = pdm_utils_mock_db.get_data(pdm_utils_mock_db.domain_table_query)
+        gene_domain_table_results = test_db_utils.get_data(test_db_utils.gene_domain_table_query)
+        domain_table_results = test_db_utils.get_data(test_db_utils.domain_table_query)
         with self.subTest():
             self.assertEqual(len(domain_table_results), 0)
         with self.subTest():

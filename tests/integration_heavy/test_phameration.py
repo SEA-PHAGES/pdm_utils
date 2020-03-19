@@ -35,22 +35,22 @@ unittest_file = Path(__file__)
 test_dir = unittest_file.parent.parent
 if str(test_dir) not in set(sys.path):
     sys.path.append(str(test_dir))
-import pdm_utils_mock_db
+import test_db_utils
 
 # Standard pdm_anon user/pwd and test_db
-engine_string = pdm_utils_mock_db.create_engine_string()
+engine_string = test_db_utils.create_engine_string()
 
 
 class TestPhamerationFunctions(unittest.TestCase):
     def setUp(self):
         self.engine = sqlalchemy.create_engine(engine_string, echo=False)
         self.temp_dir = "/tmp/pdm_utils_tests_phamerate"
-        pdm_utils_mock_db.create_filled_test_db()
+        test_db_utils.create_filled_test_db()
 
 
     def tearDown(self):
         self.engine.dispose()
-        pdm_utils_mock_db.remove_db()
+        test_db_utils.remove_db()
 
         run_dir = Path.cwd()
         err_file = run_dir.joinpath("error.log")

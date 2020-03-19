@@ -17,7 +17,7 @@ unittest_file = Path(__file__)
 test_dir = unittest_file.parent.parent
 if str(test_dir) not in set(sys.path):
     sys.path.append(str(test_dir))
-import pdm_utils_mock_data
+import test_data_utils
 
 
 
@@ -26,11 +26,11 @@ class TestCdsClass(unittest.TestCase):
     def setUp(self):
         self.feature = cds.Cds()
         self.seq1 = Seq("AATTCGAGCT")
-        self.seqfeature1 = pdm_utils_mock_data.create_simple_seqfeature(
+        self.seqfeature1 = test_data_utils.create_simple_seqfeature(
                                 1, 5, 1, "CDS")
-        self.seqfeature2 = pdm_utils_mock_data.create_simple_seqfeature(
+        self.seqfeature2 = test_data_utils.create_simple_seqfeature(
                                 1, 5, -1, "CDS")
-        self.seqfeature3 = pdm_utils_mock_data.create_two_compound_seqfeature(
+        self.seqfeature3 = test_data_utils.create_two_compound_seqfeature(
                                 1, 5, 1, 3, 7, 1, "CDS")
 
     def test_set_locus_tag_1(self):

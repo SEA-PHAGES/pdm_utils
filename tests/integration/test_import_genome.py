@@ -18,8 +18,8 @@ unittest_file = Path(__file__)
 test_dir = unittest_file.parent.parent
 if str(test_dir) not in set(sys.path):
     sys.path.append(str(test_dir))
-import pdm_utils_mock_db
-import pdm_utils_mock_data
+import test_db_utils
+import test_data_utils
 
 # Create the main test directory in which all files will be
 # created and managed.
@@ -55,13 +55,13 @@ def count_status_from_dict(dict, *args):
 
 # The following integration tests user the 'pdm_anon' MySQL user.
 # It is expected that this user has all privileges for 'test_db' database.
-user = pdm_utils_mock_db.USER
-pwd = pdm_utils_mock_db.PWD
-db = pdm_utils_mock_db.DB
+user = test_db_utils.USER
+pwd = test_db_utils.PWD
+db = test_db_utils.DB
 
 #sqlalchemy setup
-engine_string1 = pdm_utils_mock_db.create_engine_string()
-engine_string2 = pdm_utils_mock_db.create_engine_string(db="Actinobacteriophage")
+engine_string1 = test_db_utils.create_engine_string()
+engine_string2 = test_db_utils.create_engine_string(db="Actinobacteriophage")
 
 test_file_dir = Path(test_dir, "test_files")
 
@@ -75,7 +75,7 @@ class TestImportGenome1(unittest.TestCase):
 
 
     def setUp(self):
-        pdm_utils_mock_db.create_empty_test_db()
+        test_db_utils.create_empty_test_db()
         self.base_dir = Path(test_root_dir, "test_import")
         self.base_dir.mkdir()
 
@@ -120,7 +120,7 @@ class TestImportGenome1(unittest.TestCase):
         self.engine.dispose()
 
         # Remove the MySQL database created for the test.
-        pdm_utils_mock_db.remove_db()
+        test_db_utils.remove_db()
 
     def test_prepare_bundle_1(self):
         """Verify bundle is returned from a flat file with:
@@ -283,13 +283,13 @@ class TestImportGenome1(unittest.TestCase):
         # Use host_genus and accession to confirm that only attributes
         # in the data_retain set are copied.
 
-        phage_data1 = pdm_utils_mock_data.get_l5_phage_data()
-        phage_data2 = pdm_utils_mock_data.get_trixie_phage_data()
-        phage_data3 = pdm_utils_mock_data.get_d29_phage_data()
+        phage_data1 = test_data_utils.get_l5_phage_data()
+        phage_data2 = test_data_utils.get_trixie_phage_data()
+        phage_data3 = test_data_utils.get_d29_phage_data()
 
-        pdm_utils_mock_db.insert_phage_data(phage_data1)
-        pdm_utils_mock_db.insert_phage_data(phage_data2)
-        pdm_utils_mock_db.insert_phage_data(phage_data3)
+        test_db_utils.insert_phage_data(phage_data1)
+        test_db_utils.insert_phage_data(phage_data2)
+        test_db_utils.insert_phage_data(phage_data3)
 
         self.tkt1.type = "replace"
         self.tkt1.data_dict["host_genus"] = "retain"
@@ -325,14 +325,14 @@ class TestImportGenome1(unittest.TestCase):
         one record, one 'replace' ticket, no MySQL data,
         and no PhagesDB data."""
 
-        phage_data1 = pdm_utils_mock_data.get_l5_phage_data()
+        phage_data1 = test_data_utils.get_l5_phage_data()
         phage_data1["PhageID"] = "L5x"
-        phage_data2 = pdm_utils_mock_data.get_trixie_phage_data()
-        phage_data3 = pdm_utils_mock_data.get_d29_phage_data()
+        phage_data2 = test_data_utils.get_trixie_phage_data()
+        phage_data3 = test_data_utils.get_d29_phage_data()
 
-        pdm_utils_mock_db.insert_phage_data(phage_data1)
-        pdm_utils_mock_db.insert_phage_data(phage_data2)
-        pdm_utils_mock_db.insert_phage_data(phage_data3)
+        test_db_utils.insert_phage_data(phage_data1)
+        test_db_utils.insert_phage_data(phage_data2)
+        test_db_utils.insert_phage_data(phage_data3)
 
         self.tkt1.type = "replace"
         self.tkt1.data_dict["host_genus"] = "retain"
@@ -359,13 +359,13 @@ class TestImportGenome1(unittest.TestCase):
         one record, one 'replace' ticket, with MySQL data,
         no MySQL engine, and no PhagesDB data."""
 
-        phage_data1 = pdm_utils_mock_data.get_l5_phage_data()
-        phage_data2 = pdm_utils_mock_data.get_trixie_phage_data()
-        phage_data3 = pdm_utils_mock_data.get_d29_phage_data()
+        phage_data1 = test_data_utils.get_l5_phage_data()
+        phage_data2 = test_data_utils.get_trixie_phage_data()
+        phage_data3 = test_data_utils.get_d29_phage_data()
 
-        pdm_utils_mock_db.insert_phage_data(phage_data1)
-        pdm_utils_mock_db.insert_phage_data(phage_data2)
-        pdm_utils_mock_db.insert_phage_data(phage_data3)
+        test_db_utils.insert_phage_data(phage_data1)
+        test_db_utils.insert_phage_data(phage_data2)
+        test_db_utils.insert_phage_data(phage_data3)
 
         self.tkt1.type = "replace"
         self.tkt1.data_dict["host_genus"] = "retain"
@@ -470,9 +470,9 @@ class TestImportGenome1(unittest.TestCase):
 
     def test_get_mysql_reference_sets_1(self):
         """Verify data dictionary is constructed properly."""
-        phage_data1 = pdm_utils_mock_data.get_alice_genome_draft_data_in_db(seq=False)
-        phage_data2 = pdm_utils_mock_data.get_alice_genome_draft_data_in_db(seq=False)
-        phage_data3 = pdm_utils_mock_data.get_alice_genome_draft_data_in_db(seq=False)
+        phage_data1 = test_data_utils.get_alice_genome_draft_data_in_db(seq=False)
+        phage_data2 = test_data_utils.get_alice_genome_draft_data_in_db(seq=False)
+        phage_data3 = test_data_utils.get_alice_genome_draft_data_in_db(seq=False)
 
         phage_data1["PhageID"] = "D29"
         phage_data1["Accession"] = "ABC"
@@ -495,9 +495,9 @@ class TestImportGenome1(unittest.TestCase):
         phage_data3["Cluster"] = "B"
         phage_data3["Subcluster"] = "NULL"
 
-        pdm_utils_mock_db.insert_phage_data(phage_data1)
-        pdm_utils_mock_db.insert_phage_data(phage_data2)
-        pdm_utils_mock_db.insert_phage_data(phage_data3)
+        test_db_utils.insert_phage_data(phage_data1)
+        test_db_utils.insert_phage_data(phage_data2)
+        test_db_utils.insert_phage_data(phage_data3)
 
         ref_dict = import_genome.get_mysql_reference_sets(self.engine)
         exp_keys = {"phage_id_set", "accession_set", "seq_set",
@@ -647,7 +647,7 @@ class TestImportGenome3(unittest.TestCase):
     def setUp(self):
         # The empty test_db is only needed to test shema compatibility.
         # Otherwise, Actinobacteriophage is sufficient.
-        pdm_utils_mock_db.create_empty_test_db()
+        test_db_utils.create_empty_test_db()
 
         self.import_table = Path(test_file_dir, "test_import_table_1.csv")
         self.base_dir = Path(test_root_dir, "test_folder")
@@ -675,7 +675,7 @@ class TestImportGenome3(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.base_dir)
         self.engine.dispose()
-        pdm_utils_mock_db.remove_db()
+        test_db_utils.remove_db()
 
 
 
@@ -754,7 +754,7 @@ class TestImportGenome3(unittest.TestCase):
     @patch("pdm_utils.functions.mysqldb.connect_to_db")
     def test_main_6(self, ctd_mock, sys_exit_mock, data_io_mock):
         """Verify that invalid database schema version calls sys exit."""
-        pdm_utils_mock_db.execute("UPDATE version SET SchemaVersion = 0")
+        test_db_utils.execute("UPDATE version SET SchemaVersion = 0")
         self.input_folder.mkdir()
         self.output_folder.mkdir()
         ctd_mock.return_value = self.engine
