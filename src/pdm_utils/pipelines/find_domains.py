@@ -476,16 +476,17 @@ def insert_domain_data(engine, results):
         rolled_back += exe_result
 
     if rolled_back > 0:
-        msg = (f"\n\n\nError executing {rolled_back} transaction(s). "
+        msg = (f"Error executing {rolled_back} transaction(s). "
               "Unable to complete pipeline. "
               "Some genes may still contain unidentified domains.")
         logger.error(msg)
     else:
         msg = "All genes successfully searched for conserved domains."
         logger.info(msg)
-        print("\n\n\n" + msg)
+    print("\n\n\n" + msg)
 
 
+# TODO unittest after adding ValueError
 def execute_transaction(connection, statement_list=[]):
     trans = connection.begin()
     failed = 0
@@ -502,8 +503,14 @@ def execute_transaction(connection, statement_list=[]):
         # Once one statement fails, don't try to execute any other statements.
         while (failed == 0 and index < len(statement_list)):
             statement = statement_list[index]
-            stmt_result, type_error, msg = execute_statement(connection,
-                                                             statement)
+            # stmt_result, type_error, msg = execute_statement(connection,
+            #                                                  statement)
+            result_tup = execute_statement(connection, statement)
+            stmt_result = result_tup[0]
+            type_error = result_tup[1]
+            value_error = result_tup[2]
+            msg = result_tup[3]
+
             msg = msg + "Statement: " + statement
             if stmt_result == 0:
                 logger.info(msg)
@@ -531,8 +538,17 @@ def execute_transaction(connection, statement_list=[]):
                         logger.warning(msg)
                         logger.info("Attempting to resolve '%' error(s).")
                         statement = statement.replace("%", "%%")
-                        stmt_result, type_error, msg = execute_statement(
-                                                        connection, statement)
+                        # stmt_result, type_error, msg = execute_statement(
+                        #                                 connection, statement)
+                        #
+                        result_tup = execute_statement(connection, statement)
+                        stmt_result = result_tup[0]
+                        type_error = result_tup[1]
+                        value_error = result_tup[2]
+                        msg = result_tup[3]
+
+
+
                         if stmt_result == 0:
                             logger.info(("The '%' replacement resolved the "
                                          "error(s)."))
@@ -568,6 +584,7 @@ def execute_transaction(connection, statement_list=[]):
 
 def execute_statement(connection, statement):
     type_error = False
+    value_error = False
     try:
         connection.execute(statement)
     except sqlalchemy.exc.DBAPIError as err:
@@ -590,16 +607,21 @@ def execute_statement(connection, statement):
         type_error = True
         msg = "Unable to execute statement due to a TypeError. "
         result = 1
-    # TODO not sure how to test this block. Would need to construct a
-    # statement that causes a Python built-in exception other than TypeError.
+    except ValueError as err:
+        value_error = True
+        msg = "Unable to execute statement due to a ValueError. "
+        result = 1
     except:
+        # TODO not sure how to test this block. Would need to construct a
+        # statement that causes a Python built-in exception other
+        # than TypeError or ValueError.
         msg = "Unable to execute statement. "
         result = 1
     else:
         msg = "Successful statement execution. "
         result = 0
 
-    return result, type_error, msg
+    return result, type_error, value_error, msg
 
 
 

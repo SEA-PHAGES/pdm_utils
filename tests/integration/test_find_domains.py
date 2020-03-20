@@ -83,8 +83,11 @@ class TestFindDomains1(unittest.TestCase):
         gene_table_results1 = test_db_utils.get_data(test_db_utils.gene_table_query)
         update_data = get_trixie_gene_table_domain_status_update_data_1()
         statement = get_gene_update_statement(update_data)
-        result, type_error, msg = find_domains.execute_statement(
-                                    self.connection, statement)
+        results_tup = find_domains.execute_statement(self.connection, statement)
+        result = results_tup[0]
+        type_error = results_tup[1]
+        value_error = results_tup[2]
+        msg = results_tup[3]
         self.trans.commit()
         phage_table_results = test_db_utils.get_data(test_db_utils.phage_table_query)
         gene_table_results2 = test_db_utils.get_data(test_db_utils.gene_table_query)
@@ -109,6 +112,8 @@ class TestFindDomains1(unittest.TestCase):
         with self.subTest():
             self.assertFalse(type_error)
         with self.subTest():
+            self.assertFalse(value_error)
+        with self.subTest():
             self.assertIsInstance(msg, str)
 
 
@@ -116,8 +121,11 @@ class TestFindDomains1(unittest.TestCase):
         """Verify valid data can be inserted into domain table."""
         domain_data = test_data_utils.get_trixie_domain_data()
         statement = get_domain_insert_statement(domain_data)
-        result, type_error, msg = find_domains.execute_statement(
-                                    self.connection, statement)
+        results_tup = find_domains.execute_statement(self.connection, statement)
+        result = results_tup[0]
+        type_error = results_tup[1]
+        value_error = results_tup[2]
+        msg = results_tup[3]
         self.trans.commit()
         domain_table_results = test_db_utils.get_data(test_db_utils.domain_table_query)
         with self.subTest():
@@ -126,23 +134,31 @@ class TestFindDomains1(unittest.TestCase):
             self.assertEqual(result, 0)
         with self.subTest():
             self.assertFalse(type_error)
+        with self.subTest():
+            self.assertFalse(value_error)
 
 
     def test_execute_statement_3(self):
         """Verify valid data can be inserted into domain and gene_domain tables."""
         domain_data = test_data_utils.get_trixie_domain_data()
         statement1 = get_domain_insert_statement(domain_data)
-        result1, type_error1, msg1 = find_domains.execute_statement(
-                                    self.connection, statement1)
-
+        results_tup1 = find_domains.execute_statement(self.connection, statement1)
+        result1 = results_tup1[0]
+        type_error1 = results_tup1[1]
+        value_error1 = results_tup1[2]
+        msg1 = results_tup1[3]
         gene_domain_data = test_data_utils.get_trixie_gene_domain_data()
         statement2 = get_gene_domain_insert_statement(gene_domain_data)
-        result2, type_error2, msg2 = find_domains.execute_statement(
-                                    self.connection, statement2)
-
+        results_tup2 = find_domains.execute_statement(self.connection, statement2)
+        result2 = results_tup2[0]
+        type_error2 = results_tup2[1]
+        value_error2 = results_tup2[2]
+        msg2 = results_tup2[3]
         self.trans.commit()
-        gene_domain_table_results = test_db_utils.get_data(test_db_utils.gene_domain_table_query)
-        domain_table_results = test_db_utils.get_data(test_db_utils.domain_table_query)
+        gene_domain_table_results = test_db_utils.get_data(
+                                        test_db_utils.gene_domain_table_query)
+        domain_table_results = test_db_utils.get_data(
+                                        test_db_utils.domain_table_query)
         with self.subTest():
             self.assertEqual(len(domain_table_results), 1)
         with self.subTest():
@@ -155,6 +171,10 @@ class TestFindDomains1(unittest.TestCase):
             self.assertFalse(type_error1)
         with self.subTest():
             self.assertFalse(type_error2)
+        with self.subTest():
+            self.assertFalse(value_error1)
+        with self.subTest():
+            self.assertFalse(value_error2)
 
 
     def test_execute_statement_4(self):
@@ -162,16 +182,22 @@ class TestFindDomains1(unittest.TestCase):
         when there is no matching 'HitID' in the domain table."""
         gene_domain_data = test_data_utils.get_trixie_gene_domain_data()
         statement = get_gene_domain_insert_statement(gene_domain_data)
-        result, type_error, msg = find_domains.execute_statement(
-                                    self.connection, statement)
+        results_tup = find_domains.execute_statement(self.connection, statement)
+        result = results_tup[0]
+        type_error = results_tup[1]
+        value_error = results_tup[2]
+        msg = results_tup[3]
         self.trans.commit()
-        gene_domain_table_results = test_db_utils.get_data(test_db_utils.gene_domain_table_query)
+        gene_domain_table_results = test_db_utils.get_data(
+                                        test_db_utils.gene_domain_table_query)
         with self.subTest():
             self.assertEqual(len(gene_domain_table_results), 0)
         with self.subTest():
             self.assertEqual(result, 1)
         with self.subTest():
             self.assertFalse(type_error)
+        with self.subTest():
+            self.assertFalse(value_error)
 
 
     def test_execute_statement_5(self):
@@ -179,15 +205,24 @@ class TestFindDomains1(unittest.TestCase):
         there is a duplicated HitID."""
         domain_data = test_data_utils.get_trixie_domain_data()
         statement = get_domain_insert_statement(domain_data)
-        result1, type_error1, msg1 = find_domains.execute_statement(
-                                    self.connection, statement)
+        results_tup1 = find_domains.execute_statement(self.connection, statement)
+        result1 = results_tup1[0]
+        type_error1 = results_tup1[1]
+        value_error1 = results_tup1[2]
+        msg1 = results_tup1[3]
         self.trans.commit()
-        domain_table_results1 = test_db_utils.get_data(test_db_utils.domain_table_query)
+        domain_table_results1 = test_db_utils.get_data(
+                                        test_db_utils.domain_table_query)
         new_trans = self.connection.begin()
-        result2, type_error2, msg2 = find_domains.execute_statement(
-                                    self.connection, statement)
+        results_tup2 = find_domains.execute_statement(
+                                        self.connection, statement)
+        result2 = results_tup2[0]
+        type_error2 = results_tup2[1]
+        value_error2 = results_tup2[2]
+        msg2 = results_tup2[3]
         new_trans.commit()
-        domain_table_results2 = test_db_utils.get_data(test_db_utils.domain_table_query)
+        domain_table_results2 = test_db_utils.get_data(
+                                        test_db_utils.domain_table_query)
         with self.subTest():
             self.assertEqual(len(domain_table_results1), 1)
         with self.subTest():
@@ -201,6 +236,10 @@ class TestFindDomains1(unittest.TestCase):
         with self.subTest():
             self.assertFalse(type_error2)
         with self.subTest():
+            self.assertFalse(value_error1)
+        with self.subTest():
+            self.assertFalse(value_error2)
+        with self.subTest():
             self.assertFalse(error_msg in msg1)
         with self.subTest():
             self.assertTrue(error_msg in msg2)
@@ -212,10 +251,14 @@ class TestFindDomains1(unittest.TestCase):
         domain_data = test_data_utils.get_trixie_domain_data()
         statement = get_domain_insert_statement(domain_data)
         statement = statement.replace("Name", "Name_invalid")
-        result, type_error, msg = find_domains.execute_statement(
-                                    self.connection, statement)
+        results_tup = find_domains.execute_statement(self.connection, statement)
+        result = results_tup[0]
+        type_error = results_tup[1]
+        value_error = results_tup[2]
+        msg = results_tup[3]
         self.trans.commit()
-        domain_table_results = test_db_utils.get_data(test_db_utils.domain_table_query)
+        domain_table_results = test_db_utils.get_data(
+                                        test_db_utils.domain_table_query)
         with self.subTest():
             self.assertEqual(len(domain_table_results), 0)
         with self.subTest():
@@ -224,6 +267,8 @@ class TestFindDomains1(unittest.TestCase):
             self.assertTrue(error_msg in msg)
         with self.subTest():
             self.assertFalse(type_error)
+        with self.subTest():
+            self.assertFalse(value_error)
 
 
     def test_execute_statement_7(self):
@@ -234,10 +279,14 @@ class TestFindDomains1(unittest.TestCase):
         description = description.replace("nuclease domain", "nuclease % domain")
         domain_data["Description"] = description
         statement = get_domain_insert_statement(domain_data)
-        result, type_error, msg = find_domains.execute_statement(
-                                    self.connection, statement)
+        results_tup = find_domains.execute_statement(self.connection, statement)
+        result = results_tup[0]
+        type_error = results_tup[1]
+        value_error = results_tup[2]
+        msg = results_tup[3]
         self.trans.commit()
-        domain_table_results = test_db_utils.get_data(test_db_utils.domain_table_query)
+        domain_table_results = test_db_utils.get_data(
+                                        test_db_utils.domain_table_query)
         with self.subTest():
             self.assertEqual(len(domain_table_results), 0)
         with self.subTest():
@@ -246,6 +295,8 @@ class TestFindDomains1(unittest.TestCase):
             self.assertFalse(error_msg in msg)
         with self.subTest():
             self.assertTrue(type_error)
+        with self.subTest():
+            self.assertFalse(value_error)
 
 
     def test_execute_statement_8(self):
@@ -258,16 +309,78 @@ class TestFindDomains1(unittest.TestCase):
         domain_data["Description"] = description
         statement = get_domain_insert_statement(domain_data)
         statement = statement.replace("%", "%%")
-        result, type_error, msg = find_domains.execute_statement(
-                                    self.connection, statement)
+        results_tup = find_domains.execute_statement(self.connection, statement)
+        result = results_tup[0]
+        type_error = results_tup[1]
+        value_error = results_tup[2]
+        msg = results_tup[3]
         self.trans.commit()
-        domain_table_results = test_db_utils.get_data(test_db_utils.domain_table_query)
+        domain_table_results = test_db_utils.get_data(
+                                            test_db_utils.domain_table_query)
         with self.subTest():
             self.assertEqual(len(domain_table_results), 1)
         with self.subTest():
             self.assertEqual(result, 0)
         with self.subTest():
             self.assertFalse(type_error)
+        with self.subTest():
+            self.assertFalse(value_error)
+
+
+    def test_execute_statement_9(self):
+        """Verify invalid data can NOT be inserted due to '% w'."""
+        domain_data = test_data_utils.get_trixie_domain_data()
+        # "Description": "ParB-like nuclease domain"
+        description = domain_data["Description"]
+        description = description.replace("nuclease domain", "nuclease % wdomain")
+        domain_data["Description"] = description
+        statement = get_domain_insert_statement(domain_data)
+        results_tup = find_domains.execute_statement(self.connection, statement)
+        result = results_tup[0]
+        type_error = results_tup[1]
+        value_error = results_tup[2]
+        msg = results_tup[3]
+        self.trans.commit()
+        domain_table_results = test_db_utils.get_data(
+                                            test_db_utils.domain_table_query)
+        with self.subTest():
+            self.assertEqual(len(domain_table_results), 0)
+        with self.subTest():
+            self.assertEqual(result, 1)
+        with self.subTest():
+            self.assertFalse(error_msg in msg)
+        with self.subTest():
+            self.assertFalse(type_error)
+        with self.subTest():
+            self.assertTrue(value_error)
+
+
+    def test_execute_statement_10(self):
+        """Verify invalid data can be inserted after to '% w' is.
+        replaced with '%% w'."""
+        domain_data = test_data_utils.get_trixie_domain_data()
+        # "Description": "ParB-like nuclease domain"
+        description = domain_data["Description"]
+        description = description.replace("nuclease domain", "nuclease % wdomain")
+        domain_data["Description"] = description
+        statement = get_domain_insert_statement(domain_data)
+        statement = statement.replace("%", "%%")
+        results_tup = find_domains.execute_statement(self.connection, statement)
+        result = results_tup[0]
+        type_error = results_tup[1]
+        value_error = results_tup[2]
+        msg = results_tup[3]
+        self.trans.commit()
+        domain_table_results = test_db_utils.get_data(
+                                            test_db_utils.domain_table_query)
+        with self.subTest():
+            self.assertEqual(len(domain_table_results), 1)
+        with self.subTest():
+            self.assertEqual(result, 0)
+        with self.subTest():
+            self.assertFalse(type_error)
+        with self.subTest():
+            self.assertFalse(value_error)
 
 
 
@@ -445,14 +558,20 @@ class TestFindDomains2(unittest.TestCase):
         """Verify error inside try/except block is executed."""
         stmt_result1 = 0
         type_error1 = False
+        # TODO make sure this is set correctly
+        value_error1 = False
+
         msg1 = "empty"
-        mock_result1 = (stmt_result1, type_error1, msg1)
+        mock_result1 = (stmt_result1, type_error1, value_error1, msg1)
 
         stmt_result2 = 0
         type_error2 = False
+        # TODO make sure this is set correctly
+        value_error2 = False
+
         msg2 = 2 # the function expects this to be a string, so this should
                  # break the code and trigger the except block.
-        mock_result2 = (stmt_result2, type_error2, msg2)
+        mock_result2 = (stmt_result2, type_error2, value_error2, msg2)
         es_mock.side_effect = [mock_result1, mock_result2]
         # Valid
         domain_data1 = test_data_utils.get_trixie_domain_data()
