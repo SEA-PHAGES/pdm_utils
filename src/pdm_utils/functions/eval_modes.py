@@ -36,7 +36,15 @@ EVAL_MODES = {
     }
 
 def get_eval_flag_dict(eval_mode):
-    """."""
+    """Get a dictionary of evaluation flags.
+
+    :param eval_mode:
+        Valid evaluation mode (base, draft, final, auto, misc, custom)
+    :type eval_mode: str
+    :returns: Dictionary of boolean values.
+    :rtype: dict
+    """
+
     # Base dictionary with all flags set to True.
     dict = {}
     for key in EVAL_FLAGS:

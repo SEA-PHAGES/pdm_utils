@@ -11,13 +11,24 @@ def set_log_file(filepath):
 
     This is a soft requirement for compliance with Paramiko standards.
     If it is not set, paramiko throws an error.
+
+    :param filepath: Path to file to log Paramiko results.
+    :type filepath: Path
     """
     paramiko.util.log_to_file(filepath)
 
 
 # TODO unittest (but manually tested).
 def get_transport(host):
-    """Create paramiko Transport with the server name."""
+    """Create paramiko Transport with the server name.
+
+    :param host: Server to connect to.
+    :type host: str
+    :returns:
+        Paramiko Transport object. If the server is not available,
+        None is returned.
+    :rtype: Transport
+    """
     # If the host name is not valid, paramiko is unable to find the host
     # and throws an error.
     try:
@@ -30,7 +41,17 @@ def get_transport(host):
 
 # TODO unittest (but manually tested).
 def setup_sftp_conn(transport, attempts=1):
-    """Get credentials and setup connection to the server."""
+    """Get credentials and setup connection to the server.
+
+    :param transport: Paramiko Transport object directed towards a valid server.
+    :type transport: Transport
+    :param attempts: Number of attempts to connect to the server.
+    :type attempts: int
+    :returns:
+        Paramiko SFTPClient connection. If no connection can be made,
+        None is returned.
+    :rtype: SFTPClient
+    """
     sftp = None
     # Note: the way paramiko manages the connectionn, this loop
     # doesn't seem to work with multiple attempts.
@@ -51,7 +72,17 @@ def setup_sftp_conn(transport, attempts=1):
 
 # TODO unittest (but manually tested).
 def upload_file(sftp, local_filepath, remote_filepath):
-    """Upload a file to the server."""
+    """Upload a file to the server.
+
+    :param sftp: Paramiko SFTPClient connection to a server.
+    :type sftp: SFTPClient
+    :param local_filepath: Absoluate path to file to be uploaded.
+    :type local_filepath: str
+    :param remote_filepath: Absoluate path to server destination.
+    :type remote_filepath: str
+    :returns: Indicates whether upload was successful.
+    :rtype: bool
+    """
     try:
         sftp.put(local_filepath, remote_filepath)
         result = True

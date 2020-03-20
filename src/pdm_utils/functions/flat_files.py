@@ -294,6 +294,12 @@ def parse_genome_data(seqrecord, filepath=pathlib.Path(),
         The SeqRecord attribute from which the unique genome
         identifier/name is stored.
     :type genome_id_field: str
+    :param host_genus_field:
+        The SeqRecord attribute from which the unique host genus
+        identifier/name is stored.
+    :type host_genus_field: str
+    :param gnm_type: Identifier for the type of genome.
+    :type gnm_type: str
     :returns: A pdm_utils Genome object.
     :rtype: Genome
     """
@@ -450,14 +456,12 @@ def parse_genome_data(seqrecord, filepath=pathlib.Path(),
 
 
 def genome_to_seqrecord(phage_genome):
-    """Creates a SeqRecord object from a Genome object.
+    """Creates a SeqRecord object from a pdm_utils Genome object.
 
-    :param phage_genome:
-        Input a Genome object.a
-    :type phage_genome: genome
-    :returns:
-        record is a SeqRecord object parsed from
-        genome data
+    :param phage_genome: A pdm_utils Genome object.
+    :type phage_genome: Genome
+    :returns: A BioPython SeqRecord object
+    :rtype: SeqRecord
     """
 
     assert phage_genome != None,\
@@ -604,3 +608,18 @@ def parse_tmrna_seqfeature(seqfeature):
     """
     tmrna = ""
     return tmrna
+
+
+def create_fasta_seqrecord(header, sequence_string):
+    """Create a fasta-formatted Biopython SeqRecord object.
+
+    :param header: Description of the sequence.
+    :type header: str
+    :param sequence_string: Nucleotide sequence.
+    :type sequence_string: str
+    :returns: Biopython SeqRecord containing the nucleotide sequence.
+    :rtype: SeqRecord
+    """
+    seq = Seq(sequence_string, alphabet=IUPAC.unambiguous_dna)
+    seqrecord = SeqRecord(seq, description=header)
+    return seqrecord

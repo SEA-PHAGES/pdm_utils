@@ -1,13 +1,11 @@
 """Functions to interact with PhagesDB"""
 
-from pdm_utils.classes import genome
-from pdm_utils.classes import genomepair
-from pdm_utils.functions import basic
-from pdm_utils.constants import constants
-import urllib.request
 import json
-from pdm_utils.functions import misc
 import pathlib
+import urllib.request
+
+from pdm_utils.classes import genome
+from pdm_utils.constants import constants
 
 def parse_phage_name(data_dict):
     """Retrieve Phage Name from PhagesDB.
@@ -178,15 +176,16 @@ def parse_fasta_data(fasta_data):
 
 
 def parse_genome_data(data_dict, gnm_type="", seq=False):
-    """Parses a dictionary of genome data retrieved from PhagesDB into a
-    Genome object.
+    """Parses a dictionary of PhagesDB genome data into a pdm_utils Genome object.
 
     :param data_dict: Dictionary of data retrieved from PhagesDB.
     :type data_dict: dict
+    :param gnm_type: Identifier for the type of genome.
+    :type gnm_type: str
     :param seq: Indicates whether the genome sequence should be retrieved.
     :type seq: bool
-    :returns: A pdm_utils genome object with the parsed data.
-    :rtype: genome
+    :returns: A pdm_utils Genome object with the parsed data.
+    :rtype: Genome
     """
     gnm = genome.Genome()
     gnm.type = gnm_type
@@ -264,14 +263,18 @@ def construct_phage_url(phage_name):
 
 
 def get_genome(phage_id, gnm_type="", seq=False):
-    """Get genome data from 'phagesdb'.
+    """Get genome data from PhagesDB.
 
-    :param phage_id:
-        The name of the phage to be retrieved from PhagesDB.
+    :param phage_id: The name of the phage to be retrieved from PhagesDB.
     :type phage_id: str
-    :param gnm_type:
-        Indicates the type of genome.
+    :param gnm_type: Identifier for the type of genome.
     :type gnm_type: str
+    :param seq: Indicates whether the genome sequence should be retrieved.
+    :type seq: bool
+    :returns:
+        A pdm_utils Genome object with the parsed data.
+        If not genome is retrieved, None is returned.
+    :rtype: Genome
     """
     phage_url = construct_phage_url(phage_id)
     data_dict = retrieve_genome_data(phage_url)
@@ -284,7 +287,16 @@ def get_genome(phage_id, gnm_type="", seq=False):
 
 # TODO unittest.
 def get_phagesdb_data(url):
-    """Retrieve all sequenced genome data from PhagesDB."""
+    """Retrieve all sequenced genome data from PhagesDB.
+
+    :param url: URL to connect to PhagesDB API.
+    :type url: str
+    :returns:
+        List of dictionaries, where each dictionary contains
+        data for each phage. If a problem is encountered during retrieval,
+        an empty list is returned.
+    :rtype: list
+    """
     data_json = urllib.request.urlopen(url)
     # Response is a bytes object that json.loads can't read without first
     # being decoded to a UTF-8 string.
@@ -306,10 +318,23 @@ def get_phagesdb_data(url):
 
 # TODO unittest.
 def parse_genomes_dict(data_dict, gnm_type="", seq=False):
-    """Returns a dictionary of pdm_utils genome objects
+    """Returns a dictionary of pdm_utils Genome objects
 
-    Key = PhageID
-    Value = Genome object."""
+    :param data_dict:
+        Dictionary of dictionaries.
+        Key = PhageID.
+        Value = Dictionary of genome data retrieved from PhagesDB.
+    :type data_dict: dict
+    :param gnm_type: Identifier for the type of genome.
+    :type gnm_type: str
+    :param seq: Indicates whether the genome sequence should be retrieved.
+    :type seq: bool
+    :returns:
+        Dictionary of pdm_utils Genome object.
+        Key = PhageID.
+        Value = Genome object.
+    :rtype: dict
+    """
     genome_dict = {}
     for key in data_dict.keys():
         gnm = parse_genome_data(data_dict[key], gnm_type=gnm_type, seq=seq)
@@ -391,9 +416,16 @@ def create_cluster_subcluster_sets(url=constants.API_CLUSTERS):
 def get_unphamerated_phage_list(url):
     """Retreive list of unphamerated phages from PhagesDB.
 
-    Retrieved file is a tab-delimited text file.
-    Each row is a newly-sequenced phage.
+    :param url:
+        A URL from which to retrieve a list of PhagesDB genomes that are not
+        in the most up-to-date instance of the Actinobacteriophage
+        MySQL database.
+    :type url: str
+    :returns: List of PhageIDs.
+    :rtype: list
     """
+    # Retrieved file is a tab-delimited text file.
+    # Each row is a newly-sequenced phage.
     response = urllib.request.urlopen(url)
     processed_list = []
     for new_phage in response:
@@ -401,5 +433,3 @@ def get_unphamerated_phage_list(url):
         new_phage = new_phage.decode("utf-8")  # convert bytes object to str
         processed_list.append(new_phage)
     return processed_list
-
-###

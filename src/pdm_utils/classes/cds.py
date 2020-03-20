@@ -153,7 +153,7 @@ class Cds:
 
 
     def set_description(self, value):
-        """Set the description and description attributes.
+        """Set the raw and processed description attributes.
 
         :param value:
             Indicates which reference attributes are used
@@ -175,7 +175,13 @@ class Cds:
 
 
     def get_begin_end(self):
-        """Return the coordinates in transcription begin-end format."""
+        """Get feature coordinates in transcription begin-end format.
+
+        :returns:
+            (Begin, End) Start and stop coordinates ordered by which coordinate
+            indicates the transcriptional beginning and end of the feature.
+        :rtype: tuple
+        """
 
         # Ensure format of orientation info.
         orientation = basic.reformat_strand(self.orientation, "fr_long")
@@ -444,7 +450,17 @@ class Cds:
 
     # Evaluations.
     def set_eval(self, eval_id, definition, result, status):
-        """Constructs and adds an Eval object to the evaluations list."""
+        """Constructs and adds an Eval object to the evaluations list.
+
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        :param definition: Description of the evaluation.
+        :type definition: str
+        :param result: Description of the outcome of the evaluation.
+        :type result: str
+        :param status: Outcome of the evaluation.
+        :type status: str
+        """
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
@@ -462,9 +478,14 @@ class Cds:
             Indicates whether the attribute value is expected to be present
             in the check set.
         :type expect: bool
-        :param eval_id:
-            Unique identifier for the evaluation.
+        :param eval_id: Unique identifier for the evaluation.
         :type eval_id: str
+        :param success: Default status if the outcome is a success.
+        :type success: str
+        :param fail: Default status if the outcome is not a success.
+        :type fail: str
+        :param eval_def: Description of the evaluation.
+        :type eval_def: str
         """
         try:
             test = True
@@ -494,12 +515,18 @@ class Cds:
 
     def check_magnitude(self, attribute, expect, ref_value, eval_id=None,
                         success="correct", fail="error", eval_def=None):
-        """
-        expect = (>, =, <).
+        """Check that the magnitude of a numerical attribute is valid.
 
-        :param eval_id:
-            Unique identifier for the evaluation.
-        :type eval_id: str
+        :param attribute: same as for check_attribute().
+        :param expect:
+            Comparison symbol indicating direction of magnitude (>, =, <).
+        :type expect: str
+        :param ref_value: Numerical value for comparison.
+        :type ref_value: int, float, datetime
+        :param eval_id: same as for check_attribute().
+        :param success: same as for check_attribute().
+        :param fail: same as for check_attribute().
+        :param eval_def: same as for check_attribute().
         """
         try:
             test = True
@@ -537,8 +564,10 @@ class Cds:
                           fail="error", eval_def=None):
         """Check that the current and expected translations match.
 
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
+        :param eval_id: same as for check_attribute().
+        :param success: same as for check_attribute().
+        :param fail: same as for check_attribute().
+        :param eval_def: same as for check_attribute().
         """
 
         translation = self.translate_seq()
@@ -569,8 +598,10 @@ class Cds:
 
         :param check_set: Set of valid amino acids.
         :type check_set: set
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
+        :param eval_id: same as for check_attribute().
+        :param success: same as for check_attribute().
+        :param fail: same as for check_attribute().
+        :param eval_def: same as for check_attribute().
         """
         amino_acid_set = set(self.translation)
         amino_acid_error_set = amino_acid_set - check_set
@@ -598,8 +629,10 @@ class Cds:
         :type format: str
         :param case: Indicates whether the orientation data should be cased.
         :type case: bool
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
+        :param eval_id: same as for check_attribute().
+        :param success: same as for check_attribute().
+        :param fail: same as for check_attribute().
+        :param eval_def: same as for check_attribute().
         """
         expected_orient = basic.reformat_strand(self.orientation,
                                                 format=format,
@@ -634,8 +667,10 @@ class Cds:
         :param case:
             Indicates whether the locus_tag is expected to be capitalized.
         :type case: bool
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
+        :param eval_id: same as for check_attribute().
+        :param success: same as for check_attribute().
+        :param fail: same as for check_attribute().
+        :param eval_def: same as for check_attribute().
         """
         if check_value is None:
             check_value = self.genome_id
@@ -674,13 +709,15 @@ class Cds:
         self.set_eval(eval_id, definition, result, status)
 
 
-    def check_gene_structure(self, eval_id=None, success="correct", fail="error", eval_def=None):
+    def check_gene_structure(self, eval_id=None, success="correct",
+                             fail="error", eval_def=None):
         """Check if the gene qualifier contains an integer.
 
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
+        :param eval_id: same as for check_attribute().
+        :param success: same as for check_attribute().
+        :param fail: same as for check_attribute().
+        :param eval_def: same as for check_attribute().
         """
-
         try:
             value = int(self.gene)
         except:
@@ -699,12 +736,14 @@ class Cds:
 
 
     def check_compatible_gene_and_locus_tag(self, eval_id=None,
-                                            success="correct", fail="error", eval_def=None):
-        """Check if the gene and locus_tag attributes contain the same
-        gene number.
+                                            success="correct", fail="error",
+                                            eval_def=None):
+        """Check if gene and locus_tag attributes contain identical numbers.
 
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
+        :param eval_id: same as for check_attribute().
+        :param success: same as for check_attribute().
+        :param fail: same as for check_attribute().
+        :param eval_def: same as for check_attribute().
         """
         result = (f"The numbers in the gene ({self.gene}) and "
                   f"locus_tag ({self._locus_tag_num}) qualifiers are ")
@@ -730,9 +769,10 @@ class Cds:
             Indicates the reference attribute for the evaluation
             ('product', 'function', 'note').
         :type attribute: str
-        :param eval_id:
-            Unique identifier for the evaluation.
-        :type eval_id: str
+        :param eval_id: same as for check_attribute().
+        :param success: same as for check_attribute().
+        :param fail: same as for check_attribute().
+        :param eval_def: same as for check_attribute().
         """
 
         description = ""
@@ -781,8 +821,10 @@ class Cds:
             Indicates the attribute for the evaluation
             ('product', 'function', 'note').
         :type attribute: str
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
+        :param eval_id: same as for check_attribute().
+        :param success: same as for check_attribute().
+        :param fail: same as for check_attribute().
+        :param eval_def: same as for check_attribute().
         """
 
         if attribute == "product":

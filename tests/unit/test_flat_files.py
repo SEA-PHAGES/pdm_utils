@@ -359,6 +359,20 @@ class TestFlatFileFunctions1(unittest.TestCase):
 
 
 
+    def test_create_fasta_seqrecord_1(self):
+        """Verify SeqRecord is created."""
+        header = "Mycobacterium phage Trixie"
+        sequence = "ATCGC"
+        record = flat_files.create_fasta_seqrecord(header, sequence)
+        with self.subTest():
+            self.assertTrue(isinstance(record, SeqRecord))
+        with self.subTest():
+            self.assertTrue(isinstance(record.seq, Seq))
+        with self.subTest():
+            self.assertEqual(record.description, header)
+        with self.subTest():
+            self.assertEqual(record.seq, sequence)
+
 
 class TestFlatFileFunctions2(unittest.TestCase):
 

@@ -30,27 +30,6 @@ class TestBasicFunctions1(unittest.TestCase):
 
 
 
-    def test_close_files_1(self):
-        """Verify one handle is closed."""
-        handle1 = open(self.test_filepath1, "r")
-        handle_list = [handle1]
-        basic.close_files(handle_list)
-        self.assertTrue(handle1.closed)
-
-    def test_close_files_2(self):
-        """Verify multiple handles are closed."""
-        handle1 = open(self.test_filepath1, "r")
-        handle2 = open(self.test_filepath1, "r")
-
-        handle_list = [handle1, handle2]
-        basic.close_files(handle_list)
-        with self.subTest():
-            self.assertTrue(handle1.closed)
-        with self.subTest():
-            self.assertTrue(handle2.closed)
-
-
-
 
     @patch("builtins.input", return_value = "YES")
     def test_ask_yes_no_1(self, input_mock):

@@ -361,7 +361,17 @@ class GenomePair:
 
     # Evaluations
     def set_eval(self, eval_id, definition, result, status):
-        """Constructs and adds an Eval object to the evaluations list."""
+        """Constructs and adds an Eval object to the evaluations list.
+
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        :param definition: Description of the evaluation.
+        :type definition: str
+        :param result: Description of the outcome of the evaluation.
+        :type result: str
+        :param status: Outcome of the evaluation.
+        :type status: str
+        """
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
@@ -370,8 +380,20 @@ class GenomePair:
                           success="correct", fail="error", eval_def=None):
         """Compare values of the specified attribute in each genome.
 
+        :param attribute: Name of the GenomePair object attribute to evaluate.
+        :type attribute: str
+        :param expect_same:
+            Indicates whether the two attribute values are expected to be
+            the same.
+        :type expect_same: bool
         :param eval_id: Unique identifier for the evaluation.
         :type eval_id: str
+        :param success: Default status if the outcome is a success.
+        :type success: str
+        :param fail: Default status if the outcome is not a success.
+        :type fail: str
+        :param eval_def: Description of the evaluation.
+        :type eval_def: str
         """
         try:
             test = True
@@ -427,8 +449,10 @@ class GenomePair:
             Is the first genome expected to be "newer", "equal", or "older"
             than the second genome.
         :type expect: str
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
+        :param eval_id: same as for compare_attribute().
+        :param success: same as for compare_attribute().
+        :param fail: same as for compare_attribute().
+        :param eval_def: same as for compare_attribute().
         """
 
         if expect in set(["newer", "equal", "older"]):

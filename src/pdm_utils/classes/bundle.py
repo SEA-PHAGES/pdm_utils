@@ -56,15 +56,28 @@ class Bundle:
 
     # Evaluations.
     def set_eval(self, eval_id, definition, result, status):
-        """Constructs and adds an Eval object to the evaluations list."""
-        evl = eval.Eval(eval_id, definition, result, status)
-        self.evaluations.append(evl)
-
-    def check_ticket(self, eval_id=None, success="correct", fail="error", eval_def=None):
-        """Check for whether a Ticket object is present.
+        """Constructs and adds an Eval object to the evaluations list.
 
         :param eval_id: Unique identifier for the evaluation.
         :type eval_id: str
+        :param definition: Description of the evaluation.
+        :type definition: str
+        :param result: Description of the outcome of the evaluation.
+        :type result: str
+        :param status: Outcome of the evaluation.
+        :type status: str
+        """
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
+
+    def check_ticket(self, eval_id=None, success="correct", fail="error",
+                     eval_def=None):
+        """Check for whether a Ticket object is present.
+
+        :param eval_id: same as for check_genome_dict().
+        :param success: same as for check_genome_dict().
+        :param fail: same as for check_genome_dict().
+        :param eval_def: same as for check_genome_dict().
         """
         if self.ticket is not None:
             result = ("A ticket is present. "
@@ -93,8 +106,13 @@ class Bundle:
         :type expect: bool
         :param eval_id: Unique identifier for the evaluation.
         :type eval_id: str
+        :param success: Default status if the outcome is a success.
+        :type success: str
+        :param fail: Default status if the outcome is not a success.
+        :type fail: str
+        :param eval_def: Description of the evaluation.
+        :type eval_def: str
         """
-
         if key in self.genome_dict.keys():
             result = f"The '{key}' genome is present."
             if expect:
@@ -116,16 +134,12 @@ class Bundle:
                                success="correct", fail="error", eval_def=None):
         """Check if a genome_pair is present in the genome_pair dictionary.
 
-        :param key:
-            The value to be evaluated if it is a valid key
-            in the genome_pair dictionary.
-        :type key: str
-        :param expect:
-            Indicates whether the key is expected
-            to be a valid key in the genome_pair dictionary.
-        :type expect: bool
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
+        :param key: same as for check_genome_dict().
+        :param expect: same as for check_genome_dict().
+        :param eval_id: same as for check_genome_dict().
+        :param success: same as for check_genome_dict().
+        :param fail: same as for check_genome_dict().
+        :param eval_def: same as for check_genome_dict().
         """
 
         if key in self.genome_pair_dict.keys():
@@ -148,6 +162,17 @@ class Bundle:
     def check_statements(self, execute_result, execute_msg, eval_id=None,
                          success="correct", fail="error", eval_def=None):
         """Check if MySQL statements were successfully executed.
+
+        :param execute_result:
+            Indication if MySQL statements were successfully execute.
+        :type execute_result: int
+        :param execute_msg:
+            Description of MySQL statement execution result.
+        :type execute_msg: str
+        :param eval_id: same as for check_genome_dict().
+        :param success: same as for check_genome_dict().
+        :param fail: same as for check_genome_dict().
+        :param eval_def: same as for check_genome_dict().
         """
         if execute_result == 0:
             status = success
@@ -207,8 +232,10 @@ class Bundle:
 
 
     def get_evaluations(self):
-        """Iterate through the various objects stored in the Bundle
-        object and return a dictionary of evaluation lists.
+        """Get all evaluations for all objects stored in the Bundle.
+
+        :returns: Dictionary of evaluation lists for each feature.
+        :rtype: dict
         """
         eval_dict = {}
         if len(self.evaluations) > 0:

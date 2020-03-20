@@ -96,8 +96,8 @@ class Genome:
     def set_filename(self, filepath):
         """Set the filename. Discard the path and file extension.
 
-        :param value: name of the file reference.
-        :type value: Path
+        :param filepath: name of the file reference.
+        :type filepath: Path
         """
         self.filename = filepath.stem
         # split_filepath = value.split('/')
@@ -297,13 +297,8 @@ class Genome:
     def set_subcluster(self, value):
         """Set the subcluster.
 
-        :param value:
-            Subcluster designation of the genome.
+        :param value: Subcluster designation of the genome.
         :type value: str
-        :param format:
-            indicates the format of the data if there is no
-            subcluster data. Default is ''.
-        :type format: misc
         """
         if isinstance(value, str):
             self.subcluster = value.strip()
@@ -325,7 +320,11 @@ class Genome:
 
 
     def set_annotation_author(self, value):
-        """Convert annotation_author to integer value if possible."""
+        """Convert annotation_author to integer value if possible.
+
+        :param value: Numeric value.
+        :type value: str, int
+        """
         try:
             self.annotation_author = int(value)
         except:
@@ -333,7 +332,11 @@ class Genome:
 
 
     def set_retrieve_record(self, value):
-        """Convert retrieve_record to integer value if possible."""
+        """Convert retrieve_record to integer value if possible.
+
+        :param value: Numeric value.
+        :type value: str, int
+        """
         try:
             self.retrieve_record = int(value)
         except:
@@ -341,12 +344,14 @@ class Genome:
 
 
     def set_cds_descriptions(self, value):
-        """Set each CDS processed description as indicated."""
-        x = 0
-        while x < len(self.cds_features):
+        """Set each CDS processed description as indicated.
+
+        :param value: Name of the description field.
+        :type value: str
+        """
+        for x in range(len(self.cds_features)):
             cds_ftr = self.cds_features[x]
             cds_ftr.set_description(value)
-            x += 1
 
 
     def tally_cds_descriptions(self):
@@ -393,23 +398,22 @@ class Genome:
         the method sorts all features and generates systematic IDs based on
         feature order in the genome.
 
-
         :param use_type:
             Indicates whether the type of object should be
             added to the feature id.
         :type use_type: bool
         :param use_cds:
-            Indicates whether ids for CDS features should be
-            generated.
+            Indicates whether ids for CDS features should be generated.
         :type use_cds: bool
         :param use_trna:
-            Indicates whether ids for tRNA features should be
-            generated.
+            Indicates whether ids for tRNA features should be generated.
         :type use_trna: bool
         :param use_tmrna:
-            Indicates whether ids for tmRNA features should be
-            generated.
+            Indicates whether ids for tmRNA features should be generated.
         :type use_tmrna: bool
+        :param use_source:
+            Indicates whether ids for source features should be generated.
+        :type use_source: bool
         """
 
         # Both coordinates are used to control the order of features
@@ -473,6 +477,12 @@ class Genome:
     # TODO unittest
     def set_feature_genome_ids(self, feature_type, value=None):
         """Sets the genome_id of each feature.
+
+        :param feature_type:
+            Type of features to set genome_id for (CDS, tRNA, etc.)
+        :type feature_type: str
+        :param value: Genome identifier.
+        :type value: str
         """
         if value is None:
             value = self.id
@@ -495,7 +505,17 @@ class Genome:
 
     # Evaluations.
     def set_eval(self, eval_id, definition, result, status):
-        """Constructs and adds an Eval object to the evaluations list."""
+        """Constructs and adds an Eval object to the evaluations list.
+
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        :param definition: Description of the evaluation.
+        :type definition: str
+        :param result: Description of the outcome of the evaluation.
+        :type result: str
+        :param status: Outcome of the evaluation.
+        :type status: str
+        """
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
@@ -504,18 +524,22 @@ class Genome:
                         success="correct", fail="error", eval_def=None):
         """Check that the attribute value is valid.
 
-        :param attribute: Name of the genome object attribute to evaluate.
+        :param attribute: Name of the Genome object attribute to evaluate.
         :type attribute: str
-        :param check_set:
-            Set of reference ids.
+        :param check_set: Set of reference ids.
         :type check_set: set
         :param expect:
             Indicates whether the attribute value is expected to be present
             in the check set.
         :type expect: bool
-        :param eval_id:
-            Unique identifier for the evaluation.
+        :param eval_id: Unique identifier for the evaluation.
         :type eval_id: str
+        :param success: Default status if the outcome is a success.
+        :type success: str
+        :param fail: Default status if the outcome is not a success.
+        :type fail: str
+        :param eval_def: Description of the evaluation.
+        :type eval_def: str
         """
         try:
             test = True
@@ -548,8 +572,18 @@ class Genome:
                                success="correct", fail="error", eval_def=None):
         """Determine if two attributes are the same.
 
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
+        :param attribute1: First attribute to compare.
+        :type attribute1: str
+        :param attribute2: Second attribute to compare.
+        :type attribute2: str
+        :param expect_same:
+            Indicates whether the two attribute values are expected to be
+            the same.
+        :type expect_same: bool
+        :param eval_id: same as for check_attribute().
+        :param success: same as for check_attribute().
+        :param fail: same as for check_attribute().
+        :param eval_def: same as for check_attribute().
         """
         try:
             test = True
@@ -598,8 +632,10 @@ class Genome:
                                 fail="error", eval_def=None):
         """Check whether the cluster attribute is structured appropriately.
 
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
+        :param eval_id: same as for check_attribute().
+        :param success: same as for check_attribute().
+        :param fail: same as for check_attribute().
+        :param eval_def: same as for check_attribute().
         """
         result = f"The Cluster is '{self.cluster}'. "
         if self.cluster != "none":
@@ -624,8 +660,10 @@ class Genome:
                                    fail="error", eval_def=None):
         """Check whether the subcluster attribute is structured appropriately.
 
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
+        :param eval_id: same as for check_attribute().
+        :param success: same as for check_attribute().
+        :param fail: same as for check_attribute().
+        :param eval_def: same as for check_attribute().
         """
         result = f"The Subcluster is '{self.subcluster}'. "
         if (self.subcluster != "none" and self.subcluster != ""):
@@ -646,11 +684,13 @@ class Genome:
 
 
     def check_compatible_cluster_and_subcluster(self, eval_id=None,
-                                            success="correct", fail="error", eval_def=None):
+                        success="correct", fail="error", eval_def=None):
         """Check compatibility of cluster and subcluster attributes.
 
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
+        :param eval_id: same as for check_attribute().
+        :param success: same as for check_attribute().
+        :param fail: same as for check_attribute().
+        :param eval_def: same as for check_attribute().
         """
         result = (f"The Cluster is '{self.cluster}', "
                   f"the Subcluster is '{self.subcluster}', and they are ")
@@ -670,16 +710,12 @@ class Genome:
                           success="correct", fail="error", eval_def=None):
         """Check if all nucleotides in the sequence are expected.
 
-        :param check_set:
-            Set of reference nucleotides.
+        :param check_set: Set of reference nucleotides.
         :type check_set: set
-        :param expect:
-            Indicates whether all nucleotides in the sequence
-            are expected to be present in the check set.
-        :type expect: bool
-        :param eval_id:
-            Unique identifier for the evaluation.
-        :type eval_id: str
+        :param eval_id: same as for check_attribute().
+        :param success: same as for check_attribute().
+        :param fail: same as for check_attribute().
+        :param eval_def: same as for check_attribute().
         """
         # When Biopython SeqIO parses the GenBank record, it automatically
         # determines that it is a DNA sequence. It assigns the Seq object
@@ -711,16 +747,16 @@ class Genome:
         Evaluates whether at least one author in the in the list of
         authors is present in a set of reference authors.
 
-        :param check_set:
-            Set of reference authors.
+        :param check_set: Set of reference authors.
         :type check_set: set
         :param expect:
             Indicates whether at least one author in the
             list of authors is expected to be present in the check set.
         :type expect: bool
-        :param eval_id:
-            Unique identifier for the evaluation.
-        :type eval_id: str
+        :param eval_id: same as for check_attribute().
+        :param success: same as for check_attribute().
+        :param fail: same as for check_attribute().
+        :param eval_def: same as for check_attribute().
         """
         authors = self.authors.lower()
         authors = authors.replace(";", ",")
@@ -756,12 +792,18 @@ class Genome:
 
     def check_magnitude(self, attribute, expect, ref_value, eval_id=None,
                         success="correct", fail="error", eval_def=None):
-        """
-        expect = (>, =, <).
+        """Check that the magnitude of a numerical attribute is valid.
 
-        :param eval_id:
-            Unique identifier for the evaluation.
-        :type eval_id: str
+        :param attribute: same as for check_attribute().
+        :param expect:
+            Comparison symbol indicating direction of magnitude (>, =, <).
+        :type expect: str
+        :param ref_value: Numerical value for comparison.
+        :type ref_value: int, float, datetime
+        :param eval_id: same as for check_attribute().
+        :param success: same as for check_attribute().
+        :param fail: same as for check_attribute().
+        :param eval_def: same as for check_attribute().
         """
         try:
             test = True
@@ -802,8 +844,10 @@ class Genome:
         Duplicated start-end coordinates may represent
         unintentional duplicate CDS features.
 
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
+        :param eval_id: same as for check_attribute().
+        :param success: same as for check_attribute().
+        :param fail: same as for check_attribute().
+        :param eval_def: same as for check_attribute().
         """
 
         if len(self._cds_duplicate_start_end_ids) > 0:
@@ -828,8 +872,10 @@ class Genome:
         unintentional duplicate CDS features with slightly
         different start coordinates.
 
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
+        :param eval_id: same as for check_attribute().
+        :param success: same as for check_attribute().
+        :param fail: same as for check_attribute().
+        :param eval_def: same as for check_attribute().
         """
 
         if len(self._cds_duplicate_end_orient_ids) > 0:
@@ -863,8 +909,10 @@ class Genome:
         :type other: list
         :param strand: Indicates if feature orientation should be included.
         :type strand: bool
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
+        :param eval_id: same as for check_attribute().
+        :param success: same as for check_attribute().
+        :param fail: same as for check_attribute().
+        :param eval_def: same as for check_attribute().
         """
         unsorted_feature_lists = []
         unsorted_features = []

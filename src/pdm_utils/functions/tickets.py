@@ -7,14 +7,21 @@ from pdm_utils.classes import ticket
 from pdm_utils.classes import genome
 
 def modify_import_data(data_dict, required_keys, optional_keys, keywords):
-    """Checks and modifies a data dictionary to conform to requirements
-    for a ticket object.
+    """Modifies ticket data to conform to requirements for an ImportTicket object.
 
+    :param data_dict: Dictionary of import ticket data.
     :type data_dict: dict
-    :returns:
-        If successful, a Ticket object is returned.
-        If the keys are not correct, None object is returned.
-    :rtype: Ticket or None
+    :param required_keys: Set of keys required to be in the data dictionary.
+    :type required_keys: set
+    :param optional_keys:
+        Set of optional keys that are not required to be in the data dictionary.
+    :type optional_keys: set
+    :param keywords:
+        Set of valid keyword values that are handled differently
+        than other values.
+    :type keywords: set
+    :returns: Indicates if the ticket is structured properly.
+    :rtype: bool
     """
     # Some import table fields are required. Others are optional.
     # First check if all required fields are present.
@@ -62,7 +69,7 @@ def modify_import_data(data_dict, required_keys, optional_keys, keywords):
 
 
 def parse_import_ticket_data(data_dict):
-    """Converts import ticket data to a Ticket object.
+    """Converts import ticket data to a ImportTicket object.
 
     :param data_dict:
         A dictionary of data with the following keys:
@@ -80,8 +87,8 @@ def parse_import_ticket_data(data_dict):
             10. Eval mode
 
     :type data_dict: dict
-    :returns: A pdm_utils Ticket object.
-    :rtype: Ticket
+    :returns: A pdm_utils ImportTicket object.
+    :rtype: ImportTicket
     """
     ticket_attributes = constants.IMPORT_TABLE_STRUCTURE["valid_ticket"]
     other_attributes = data_dict.keys() - ticket_attributes
@@ -120,13 +127,25 @@ def parse_import_ticket_data(data_dict):
 
 
 def set_empty(data_dict):
-    """Convert None values to an empty string."""
+    """Convert None values to an empty string.
+
+    :param data_dict: Dictionary of import ticket data.
+    :type data_dict: dict
+    """
     for key in data_dict.keys():
         if data_dict[key] is None:
             data_dict[key] = ""
 
 def set_keywords(data_dict, keywords):
-    """Convert specific values in a dictionary to lowercase."""
+    """Convert specific values in a dictionary to lowercase.
+
+    :param data_dict: Dictionary of import ticket data.
+    :type data_dict: dict
+    :param keywords:
+        Set of valid keyword values that are handled differently
+        than other values.
+    :type keywords: set
+    """
     for key in data_dict.keys():
         value = data_dict[key]
         if isinstance(value, str):
@@ -135,7 +154,13 @@ def set_keywords(data_dict, keywords):
 
 
 def set_missing_keys(data_dict, expected_keys):
-    """Add a list of keys-values to a dictionary if it doesn't have those keys."""
+    """Add a list of keys-values to a dictionary if it doesn't have those keys.
+
+    :param data_dict: Dictionary of import ticket data.
+    :type data_dict: dict
+    :param expected_keys: Set of keys expected to be in the dictionary.
+    :type expected_keys: set
+    """
     missing_keys = expected_keys - data_dict.keys()
     for key in missing_keys:
         data_dict[key] = ""
@@ -143,8 +168,15 @@ def set_missing_keys(data_dict, expected_keys):
 def set_dict_value(data_dict, key, first, second):
     """Set the value for a specific key based on 'type' key-value.
 
-    It expects that the dictionary contains the indicated key, as well as
-    a "type" key."""
+    :param data_dict: Dictionary of import ticket data.
+    :type data_dict: dict
+    :param key: Dictionary key to change value of.
+    :type key: str
+    :param first: Value to assign to 'key' if 'type' == 'add'.
+    :type first: str
+    :param second: Value to assign to 'key' if 'type' != 'add'.
+    :type second: str
+    """
     if data_dict[key] == "":
         if data_dict["type"] == "add":
             data_dict[key] = first
@@ -157,7 +189,28 @@ def set_dict_value(data_dict, key, first, second):
 # revised import table file when the script completes.
 def construct_tickets(list_of_data_dict, eval_data_dict, description_field,
                       required_keys, optional_keys, keywords):
-    """Construct tickets from parsed data dictionaries."""
+    """Construct pdm_utils ImportTickets from parsed data dictionaries.
+
+    :param list_of_data_dict: List of import ticket data dictionaries.
+    :type list_of_data_dict: list
+    :param eval_data_dict: Dictionary of boolean evaluation flags.
+    :type eval_data_dict: dict
+    :param description_field:
+        Default value to set ticket.description_field attribute if not
+        present in the data dictionary.
+    :type description_field: str
+    :param required_keys: Set of keys required to be in the data dictionary.
+    :type required_keys: set
+    :param optional_keys:
+        Set of optional keys that are not required to be in the data dictionary.
+    :type optional_keys: set
+    :param keywords:
+        Set of valid keyword values that are handled differently
+        than other values.
+    :type keywords: set
+    :returns: List of pdm_utils ImportTicket objects.
+    :rtype: list
+    """
 
     tkt_id = 0
     list_of_tickets = []
@@ -203,7 +256,7 @@ def identify_duplicates(list_of_tickets, null_set=set()):
     is present in multiple tickets.
 
     :param list_of_tickets:
-        A list of pdm_utils Ticket objects.
+        A list of pdm_utils ImportTicket objects.
     :type list_of_tickets: list
     :param null_set:
         A set of values that may be expected to be duplicated, that
@@ -231,46 +284,15 @@ def identify_duplicates(list_of_tickets, null_set=set()):
     return (tkt_id_dupe_set, phage_id_dupe_set)
 
 
-
-# TODO re-evaluate the structure of this function. Replace tickets
-# may not instantiate more than one Genome object.
-def copy_ticket_to_genome(bndl):
-    """Construct genome objects from tickets.
-
-    This function operates on a Bundle object
-    instead of a Genome object because some tickets (such as 'replace')
-    need to instantiate more than one Genome object.
-
-    :param bndl: A pdm_utils Bundle object.
-    :type bndl: Bundle
-    """
-
-    tkt = bndl.ticket
-    if (tkt.type == "add" or tkt.type == "replace"):
-        genome1 = genome.Genome()
-        genome1.type = "add"
-        genome1.set_id(value=tkt.phage_id)
-        genome1.name = tkt.phage_id
-        genome1.set_host_genus(tkt.host_genus)
-        genome1.set_accession(tkt.accession)
-        genome1.annotation_status = tkt.annotation_status
-        genome1.set_cluster(tkt.cluster)
-        genome1.set_subcluster(tkt.subcluster)
-        genome1.set_annotation_author(tkt.annotation_author)
-        genome1.set_retrieve_record(tkt.retrieve_record)
-
-        bndl.genome_dict[genome1.type] = genome1
-
-
-    else:
-        pass
-
-# TODO this will probably replace the first copy_ticket_to_genome()
 def get_genome(tkt, gnm_type=""):
-    """Construct a genome object from a ticket.
+    """Construct a pdm_utils Genome object from a pdm_utils ImportTicket object.
 
-    :param tkt: A pdm_utils Ticket object.
-    :type tkt: Ticket
+    :param tkt: A pdm_utils ImportTicket object.
+    :type tkt: ImportTicket
+    :param gnm_type: Identifier for the type of genome.
+    :type gnm_type: str
+    :returns: A pdm_utils Genome object.
+    :rtype: Genome
     """
     gnm = genome.Genome()
     gnm.type = gnm_type
@@ -291,33 +313,3 @@ def get_genome(tkt, gnm_type=""):
     if "retrieve_record" in tkt.data_add:
         gnm.set_retrieve_record(tkt.data_dict["retrieve_record"])
     return gnm
-
-
-# TODO re-evaluate if needed, since updates and add/replaces are
-# run in different scripts now.
-def create_bundle_dict(bndl_list):
-    """Create a dictionary of Bundle objects based on their ticket type.
-
-    :param bndl_list: A list of pdm_utils Bundle objects.
-    :type bndl_list: list
-    :returns:
-        A dictionary
-        WHERE
-        key = ticket type (e.g. 'update', 'add', etc.).
-        value = list of Bundle objects.
-    :rtype: dict
-    """
-    type_set = set()
-    for bndl in bndl_list:
-        type_set.add(bndl.ticket.type)
-    ticket_type_dict = {}
-    for type in type_set:
-        bundle_object_list = []
-        index = 0
-        while index < len(bndl_list):
-            bndl = bndl_list[index]
-            if bndl.ticket.type == type:
-                bundle_object_list.append(bndl)
-            index += 1
-        ticket_type_dict[type] = bundle_object_list
-    return ticket_type_dict

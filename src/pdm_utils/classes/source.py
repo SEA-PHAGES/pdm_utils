@@ -50,7 +50,17 @@ class Source:
 
     # Evaluations
     def set_eval(self, eval_id, definition, result, status):
-        """Constructs and adds an Eval object to the evaluations list."""
+        """Constructs and adds an Eval object to the evaluations list.
+
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        :param definition: Description of the evaluation.
+        :type definition: str
+        :param result: Description of the outcome of the evaluation.
+        :type result: str
+        :param status: Outcome of the evaluation.
+        :type status: str
+        """
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
@@ -59,18 +69,22 @@ class Source:
                         success="correct", fail="error", eval_def=None):
         """Check that the attribute value is valid.
 
-        :param attribute: Name of the source feature object attribute to evaluate.
+        :param attribute: Name of the Source feature object attribute to evaluate.
         :type attribute: str
-        :param check_set:
-            Set of reference values.
+        :param check_set: Set of reference ids.
         :type check_set: set
         :param expect:
-            Indicates whether the value is expected to be present
+            Indicates whether the attribute value is expected to be present
             in the check set.
         :type expect: bool
-        :param eval_id:
-            Unique identifier for the evaluation.
+        :param eval_id: Unique identifier for the evaluation.
         :type eval_id: str
+        :param success: Default status if the outcome is a success.
+        :type success: str
+        :param fail: Default status if the outcome is not a success.
+        :type fail: str
+        :param eval_def: Description of the evaluation.
+        :type eval_def: str
         """
         try:
             test = True

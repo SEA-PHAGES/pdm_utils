@@ -63,7 +63,17 @@ class ImportTicket:
 
     # Evaluations
     def set_eval(self, eval_id, definition, result, status):
-        """Constructs and adds an Eval object to the evaluations list."""
+        """Constructs and adds an Eval object to the evaluations list.
+
+        :param eval_id: Unique identifier for the evaluation.
+        :type eval_id: str
+        :param definition: Description of the evaluation.
+        :type definition: str
+        :param result: Description of the outcome of the evaluation.
+        :type result: str
+        :param status: Outcome of the evaluation.
+        :type status: str
+        """
         evl = eval.Eval(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
@@ -72,18 +82,22 @@ class ImportTicket:
                         success="correct", fail="error", eval_def=None):
         """Check that the id is valid.
 
-        :param attribute: Name of the ticket object attribute to evaluate.
+        :param attribute: Name of the ImportTicket object attribute to evaluate.
         :type attribute: str
-        :param check_set:
-            Set of reference ids.
+        :param check_set: Set of reference ids.
         :type check_set: set
         :param expect:
-            Indicates whether the id is expected to be present
+            Indicates whether the attribute value is expected to be present
             in the check set.
         :type expect: bool
-        :param eval_id:
-            Unique identifier for the evaluation.
+        :param eval_id: Unique identifier for the evaluation.
         :type eval_id: str
+        :param success: Default status if the outcome is a success.
+        :type success: str
+        :param fail: Default status if the outcome is not a success.
+        :type fail: str
+        :param eval_def: Description of the evaluation.
+        :type eval_def: str
         """
         try:
             test = True
@@ -115,8 +129,10 @@ class ImportTicket:
         :param expect:
             Indicates whether the eval_flags is expected to contain data.
         :type expect: bool
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
+        :param eval_id: same as for check_attribute().
+        :param success: same as for check_attribute().
+        :param fail: same as for check_attribute().
+        :param eval_def: same as for check_attribute().
         """
         keys = len(self.eval_flags)
         msg = f"There are {keys} eval flags present, which is "
@@ -139,14 +155,16 @@ class ImportTicket:
 
 
     def check_compatible_type_and_data_retain(self, eval_id=None,
-                                              success="correct", fail="error", eval_def=None):
+                          success="correct", fail="error", eval_def=None):
         """Check if the ticket type and data_retain are compatible.
 
         If the ticket type is 'add', then the data_retain set is not
         expected to have any data.
 
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
+        :param eval_id: same as for check_attribute().
+        :param success: same as for check_attribute().
+        :param fail: same as for check_attribute().
+        :param eval_def: same as for check_attribute().
         """
         msg = (f"The ticket type is '{self.type}' and "
                f"there are {len(self.data_retain)} values in the database "
@@ -173,8 +191,10 @@ class ImportTicket:
         :type ref_set_attr: str
         :param check_set: Set of valid field names.
         :type check_set: set
-        :param eval_id: Unique identifier for the evaluation.
-        :type eval_id: str
+        :param eval_id: same as for check_attribute().
+        :param success: same as for check_attribute().
+        :param fail: same as for check_attribute().
+        :param eval_def: same as for check_attribute().
         """
         if ref_set_attr == "data_add":
             ref_set = self.data_add

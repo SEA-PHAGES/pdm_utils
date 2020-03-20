@@ -45,7 +45,12 @@ def main(unparsed_args_list):
     """Runs the complete import pipeline.
 
     This is the only function of the pipeline that requires user input.
-    All other functions can be implemented from other scripts."""
+    All other functions can be implemented from other scripts.
+
+    :param unparsed_args_list:
+        List of strings representing command line arguments.
+    :type unparsed_args_list: list
+    """
 
     args = parse_args(unparsed_args_list)
 
@@ -101,7 +106,14 @@ def main(unparsed_args_list):
 
 
 def parse_args(unparsed_args_list):
-    """Verify the correct arguments are selected for import new genomes."""
+    """Verify the correct arguments are selected for import new genomes.
+
+    :param unparsed_args_list:
+        List of strings representing command line arguments.
+    :type unparsed_args_list: list
+    :returns: ArgumentParser Namespace object containing the parsed args.
+    :rtype: Namespace
+    """
 
     IMPORT_HELP = ("Pipeline to import new genome data into "
                    "a MySQL database.")
@@ -194,7 +206,35 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
     import_table_file=pathlib.Path(), genome_id_field="", host_genus_field="",
     prod_run=False, description_field="", eval_mode="",
     output_folder=pathlib.Path(), interactive=False):
-    """Set up output directories, log files, etc. for import."""
+    """Set up output directories, log files, etc. for import.
+
+    :param engine: SQLAlchemy Engine object able to connect to a MySQL database.
+    :type engine: Engine
+    :param genome_folder: Path to the folder of flat files.
+    :type genome_folder: Path
+    :param import_table_file: Path to the import table file.
+    :type import_table_file: Path
+    :param genome_id_field:
+        The SeqRecord attribute that stores the genome identifier/name.
+    :type genome_id_field: str
+    :param host_genus_field:
+        The SeqRecord attribute that stores the host genus identifier/name.
+    :type host_genus_field: str
+    :param prod_run: Indicates whether MySQL statements will be executed.
+    :type prod_run: bool
+    :param description_field:
+        The SeqFeature attribute that stores the feature's description.
+    :type description_field: str
+    :param eval_mode:
+        Name of the evaluation mode to evaluation genomes.
+    :type eval_mode: str
+    :param output_folder: Path to the folder to store results.
+    :type output_folder: Path
+    :param interactive:
+        Indicates whether user is able to interact with genome evaluations
+        at run time.
+    :type interactive: bool
+    """
 
     logger.info("Setting up environment.")
     # Get the files to process.
@@ -316,12 +356,22 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
 
 def log_evaluations(dict_of_dict_of_lists, logfile_path=None):
     """Export evaluations to log.
+
+    :param dict_of_dict_of_lists:
+        Dictionary of evaluation dictionaries.
+        Key1 = Bundle ID.
+        Value1 = dictionary for each object in the Bundle.
+        Key2 = object type ('bundle', 'ticket', etc.)
+        Value2 = List of evaluation objects.
+        Example structure:
+            {1: {"bundle": [eval_object1, ...],
+                 "ticket": [eval_object1, ...],
+                 "genome": [eval_object1, ...]},
+             2: {...}}
+    :type dict_of_dict_of_lists: dict
+    :param logfile_path: Path to the log file.
+    :type logfile_path: Path
     """
-    # Structure of the evaluation dictionary:
-    #     {1: {"bundle": [eval_object1, ...],
-    #          "ticket": [eval_object1, ...],
-    #          "genome": [eval_object1, ...]},
-    #      2: {...}}
 
     # Create a new logging filehandle to only capture errors
     # specific to the particular flatfile.
@@ -358,7 +408,25 @@ def log_evaluations(dict_of_dict_of_lists, logfile_path=None):
 
 def prepare_tickets(import_table_file=pathlib.Path(), eval_data_dict=None,
         description_field="", table_structure_dict={}):
-    """Prepare dictionary of pdm_utils Tickets."""
+    """Prepare dictionary of pdm_utils ImportTickets.
+
+    :param import_table_file: same as for data_io().
+    :param description_field: same as for data_io().
+    :param eval_data_dict:
+        Evaluation data dictionary
+        Key1 = "eval_mode"
+        Value1 = Name of the eval_mode
+        Key2 = "eval_flag_dict"
+        Value2 = Dictionary of evaluation flags.
+    :type eval_data_dict: dict
+    :param table_structure_dict:
+        Dictionary describing structure of the import table.
+    :type table_structure_dict: dict
+    :returns:
+        Dictionary of pdm_utils ImportTicket objects.
+        If a problem was encountered parsing the import table, None is returned.
+    :rtype: dict
+    """
     # 1. Parse ticket data from table.
     # 2. Set case for certain fields and set default values for missing fields.
     # 3. Add the eval_flag dictionary and description_field to each ticket
@@ -437,7 +505,7 @@ def process_files_and_tickets(ticket_dict, files_in_folder, engine=None,
                               prod_run=False, genome_id_field="",
                               host_genus_field="", interactive=False,
                               log_folder_paths_dict=None):
-    """Process GenBank-formatted flat files.
+    """Process GenBank-formatted flat files and import tickets.
 
     :param ticket_dict:
         A dictionary
@@ -447,16 +515,26 @@ def process_files_and_tickets(ticket_dict, files_in_folder, engine=None,
     :type ticket_dict: dict
     :param files_in_folder: A list of filepaths to be parsed.
     :type files_in_folder: list
-    :param engine:
-        A sqlalchemy Engine object containing
-        information on which database to connect to.
-    :type engine: Engine
-    :param prod_run:
-        Indicates whether the database should be updated from the
-        import tickets.
-    :type prod_run: bool
+    :param engine: same as for data_io().
+    :param prod_run: same as for data_io().
+    :param genome_id_field: same as for data_io().
+    :param host_genus_field: same as for data_io().
+    :param interactive: same as for data_io().
+    :param log_folder_paths_dict:
+        Dictionary indicating paths to success and fail folders.
+    :type log_folder_paths_dict: dict
     :returns:
-    :rtype:
+        tuple (success_ticket_list, failed_ticket_list, success_filepath_list,
+                failed_filepath_list, evaluation_dict)
+        WHERE
+        success_ticket_list (list) is a list of successful ImportTickets.
+        failed_ticket_list (list) is a list of failed ImportTickets.
+        success_filepath_list (list) is a list of successfully parsed flat files.
+        failed_filepath_list (list) is a list of unsuccessfully parsed flat files.
+        evaluation_dict (dict) is a dictionary from each Bundle,
+            containing dictionaries for each bundled object,
+            containing lists of evaluation objects.
+    :rtype: tuple
     """
     # Alias for different types of genomes gathered and processed.
     file_ref = "flat_file"
@@ -577,7 +655,13 @@ def process_files_and_tickets(ticket_dict, files_in_folder, engine=None,
 
 
 def get_phagesdb_reference_sets():
-    """Get multiple sets of data from PhagesDB for reference."""
+    """Get multiple sets of data from PhagesDB for reference.
+
+    :returns:
+        Dictionary of unique clusters, subclusters, and host genera
+        stored on PhagesDB.
+    :rtype: dict
+    """
 
     # Retrieve data from PhagesDB to create sets of
     # valid host genera, clusters, and subclusters.
@@ -593,7 +677,14 @@ def get_phagesdb_reference_sets():
 
 
 def get_mysql_reference_sets(engine):
-    """Get multiple sets of data from the MySQL database for reference."""
+    """Get multiple sets of data from the MySQL database for reference.
+
+    :param engine: same as for data_io().
+    :returns:
+        Dictionary of unique PhageIDs, clusters, subclusters,
+        host genera, accessions, and sequences stored in the MySQL database.
+    :rtype: dict
+    """
     phage_ids = mysqldb.get_distinct_data(engine, "phage", "PhageID")
     accessions = mysqldb.get_distinct_data(engine, "phage", "Accession")
     clusters = mysqldb.get_distinct_data(engine, "phage", "Cluster",
@@ -615,7 +706,20 @@ def get_mysql_reference_sets(engine):
 
 
 def get_logfile_path(bndl, paths_dict=None, filepath=None, file_ref=None):
-    """Choose the path to output the file-specific log."""
+    """Choose the path to output the file-specific log.
+
+    :param bndl: same as for run_checks().
+    :param paths_dict:
+        Dictionary indicating paths to success and fail folders.
+    :type paths_dict: dict
+    :param filepath: Path to flat file.
+    :type filepath: Path
+    :param file_ref: same as for prepare_bundle().
+    :returns:
+        Path to log file to store flat-file-specific evaluations.
+        If paths_dict is set to None, then None is returned instead of a path.
+    :rtype: Path
+    """
     # Filename refers to the file that was attempted to be parsed.
     # The genome object contains the filename data only if the file was
     # successfully parsed. If it is not successfully parsed, there would
@@ -653,14 +757,24 @@ def prepare_bundle(filepath=pathlib.Path(), ticket_dict={}, engine=None,
 
     :param filepath: Name of a GenBank-formatted flat file.
     :type filepath: Path
-    :param ticket_dict: A dictionary of Tickets.
+    :param ticket_dict: A dictionary of pdm_utils ImportTicket objects.
     :type ticket_dict: dict
-    :param engine:
-        A sqlalchemy Engine object containing
-        information on which database to connect to.
-    :type engine: Engine
-    :param id: Identifier to be assigned to the bundled dataset.
+    :param engine: same as for data_io().
+    :param genome_id_field: same as for data_io().
+    :param host_genus_field: same as for data_io().
+    :param id: Identifier to be assigned to the Bundle object.
     :type id: int
+    :param file_ref: Identifier for Genome objects derived from flat files.
+    :type file_ref: str
+    :param ticket_ref: Identifier for Genome objects derived from ImportTickets.
+    :type ticket_ref: str
+    :param retrieve_ref: Identifier for Genome objects derived from PhagesDB.
+    :type retrieve_ref: str
+    :param retain_ref: Identifier for Genome objects derived from MySQL.
+    :type retain_ref: str
+    :param id_conversion_dict: Dictionary of PhageID conversions.
+    :type id_conversion_dict: dict
+    :param interactive: same as for data_io().
     :returns:
         A pdm_utils Bundle object containing all data required to
         evaluate a flat file.
@@ -781,7 +895,27 @@ def run_checks(bndl, accession_set=set(), phage_id_set=set(),
                seq_set=set(), host_genus_set=set(), cluster_set=set(),
                subcluster_set=set(), file_ref="", ticket_ref="",
                retrieve_ref="", retain_ref=""):
-    """Run checks on the different elements of a bundle object."""
+    """Run checks on the different types of data in a Bundle object.
+
+    :param bndl: A pdm_utils Bundle object containing bundled data.
+    :type bndl: Bundle
+    :param accession_set: Set of accessions to check against.
+    :type accession_set: set
+    :param phage_id_set: Set of PhageIDs to check against.
+    :type phage_id_set: set
+    :param seq_set: Set of nucleotide sequences to check against.
+    :type seq_set: set
+    :param host_genus_set: Set of host genera to check against.
+    :type host_genus_set: set
+    :param cluster_set: Set of Clusters to check against.
+    :type cluster_set: set
+    :param subcluster_set: Set of Subclusters to check against.
+    :type subcluster_set: set
+    :param file_ref: same as for prepare_bundle().
+    :param ticket_ref: same as for prepare_bundle().
+    :param retrieve_ref: same as for prepare_bundle().
+    :param retain_ref: same as for prepare_bundle().
+    """
     logger.info("Checking data.")
     check_bundle(bndl, ticket_ref=ticket_ref, file_ref=file_ref,
                  retrieve_ref=retrieve_ref, retain_ref=retain_ref)
@@ -824,8 +958,14 @@ def run_checks(bndl, accession_set=set(), phage_id_set=set(),
 
 
 def review_bundled_objects(bndl, interactive=False):
-    """Iterate through all objects stored in the bundle.
-    If there are warnings, review whether status should be changed."""
+    """Review all evaluations of all bundled objects.
+
+    Iterate through all objects stored in the bundle.
+    If there are warnings, review whether status should be changed.
+
+    :param bndl: same as for run_checks().
+    :param interactive: same as for data_io().
+    """
 
     # Bundle-level evaluations.
     review_object_list([bndl], "Bundle", ["id"], interactive=interactive)
@@ -874,19 +1014,28 @@ def review_bundled_objects(bndl, interactive=False):
                        ["genome1","genome2"], interactive=interactive)
 
 
-def review_object_list(object_list, type, attr_list, interactive=False):
-    """Determine if evaluations are present and record results."""
+def review_object_list(object_list, object_type, attr_list, interactive=False):
+    """Determine if evaluations are present and record results.
+
+    :param object_list: List of pdm_utils objects containing evaluations.
+    :type object_list: list
+    :param object_type: Name of the pdm_utils object.
+    :type object_type: str
+    :param attr_list:
+        List of attributes used to log data about the object instance.
+    :type attr_list: list
+    :param interactive: same as for data_io().
+    """
     # Test for None, since tkt data can be missing and be None.
     if (len(object_list) > 0 and object_list[0] is not None):
         # Capture the exit status for each CDS feature. If user exits
         # the review at any point, skip all of the other CDS features.
         exit = False
-        x = 0
-        while x < len(object_list):
+        for x in range(len(object_list)):
             object = object_list[x]
             # Compile description of the object being reviewed.
             string = get_result_string(object, attr_list)
-            partial_msg = f"evaluations for {type}: {string}."
+            partial_msg = f"evaluations for {object_type}: {string}."
             if len(object.evaluations) > 0:
                 log_and_print("Reviewing " + partial_msg, interactive)
                 if exit == False:
@@ -898,22 +1047,26 @@ def review_object_list(object_list, type, attr_list, interactive=False):
                     review_evaluation_list(object.evaluations, interactive=False)
             else:
                 log_and_print("No " + partial_msg, False)
-            x += 1
         if exit:
             msg = ("Not all evaluations were reviewed, "
                    "since the review was exited.")
             log_and_print(msg, False)
     else:
-        log_and_print(f"No evaluations for {type}(s)", False)
+        log_and_print(f"No evaluations for {object_type}(s)", False)
 
 
 def review_evaluation_list(evaluation_list, interactive=False):
     """Iterate through all evaluations and review 'warning' results.
+
+    :param evaluation_list: List of pdm_utils Eval objects.
+    :type evaluation_list: list
+    :param interactive: same as for data_io().
+    :returns: Indicates whether user selected to exit the review process.
+    :rtype: bool
     """
     exit = False
-    x = 0
     y = 0
-    while x < len(evaluation_list):
+    for x in range(len(evaluation_list)):
         evl = evaluation_list[x]
         if exit == False:
             exit, correct = review_evaluation(evl, interactive=interactive)
@@ -923,7 +1076,6 @@ def review_evaluation_list(evaluation_list, interactive=False):
             exit2, correct = review_evaluation(evl, interactive=False)
         if not correct:
             y += 1
-        x += 1
 
     if y == 0:
         log_and_print(f"No warnings or errors encountered.", interactive)
@@ -932,6 +1084,16 @@ def review_evaluation_list(evaluation_list, interactive=False):
 
 def review_evaluation(evl, interactive=False):
     """Review an evaluation object.
+
+    :param evl: A pdm_utils Eval object.
+    :type evl: Eval
+    :param interactive: same as for data_io().
+    :returns:
+        tuple (exit, message)
+        WHERE
+        exit (bool) indicates whether user selected to exit the review process.
+        correct(bool) indicates whether the evalution status is accurate.
+    :rtype: tuple
     """
     exit = False
     msg = " Status was changed from 'warning' to 'error' {}."
@@ -978,14 +1140,29 @@ def review_evaluation(evl, interactive=False):
 
 
 def log_and_print(msg, terminal=False):
-    """Print message to terminal in addition to logger if needed."""
+    """Print message to terminal in addition to logger if needed.
+
+    :param msg: Message to print.
+    :type msg: str
+    :param terminal: Indicates if message should be printed to terminal.
+    :type terminal: bool
+    """
     logger.info(msg)
     if terminal:
         print(f"{msg}")
 
 
 def get_result_string(object, attr_list):
-    """Construct string of values from several object attributes."""
+    """Construct string of values from several object attributes.
+
+    :param object: A object from which to retrieve values.
+    :type object: misc
+    :param attr_list:
+        List of strings indicating attributes to retrieve from the object.
+    :type attr_list: list
+    :returns: A concatenated string representing values from all attributes.
+    :rtype: str
+    """
     strings = []
     for attr in attr_list:
         attr_value = getattr(object, attr)
@@ -996,6 +1173,12 @@ def get_result_string(object, attr_list):
 
 def set_cds_descriptions(gnm, tkt, interactive=False):
     """Set the primary CDS descriptions.
+
+    :param gnm: A pdm_utils Genome object.
+    :type gnm: Genome
+    :param tkt: A pdm_utils ImportTicket object.
+    :type tkt: ImportTicket
+    :param interactive: same as for data_io().
     """
     # If interactive is selected, the user can review the CDS descriptions.
     # The ticket indicates where the CDS descriptions are stored.
@@ -1009,6 +1192,12 @@ def set_cds_descriptions(gnm, tkt, interactive=False):
 
 def review_cds_descriptions(feature_list, description_field):
     """Iterate through all CDS features and review descriptions.
+
+    :param feature_list: A list of pdm_utils Cds objects.
+    :type feature_list: list
+    :param description_field: same as for data_io().
+    :returns: Name of the primary description_field after review.
+    :rtype: str
     """
     logger.info("Reviewing CDS description fields.")
 
@@ -1086,8 +1275,11 @@ def check_bundle(bndl, ticket_ref="", file_ref="", retrieve_ref="", retain_ref="
     Based on the ticket type, there are expected to be certain
     types of genomes and pairs of genomes in the bundle.
 
-    :param bndl: A pdm_utils Bundle object.
-    :type bndl: Bundle
+    :param bndl: same as for run_checks().
+    :param ticket_ref: same as for prepare_bundle().
+    :param file_ref: same as for prepare_bundle().
+    :param retrieve_ref: same as for prepare_bundle().
+    :param retain_ref: same as for prepare_bundle().
     """
     logger.info(f"Checking bundle: {bndl.id}.")
 
@@ -1124,19 +1316,29 @@ def check_ticket(tkt, type_set=set(), description_field_set=set(),
         eval_mode_set=set(), id_dupe_set=set(), phage_id_dupe_set=set(),
         retain_set=set(), retrieve_set=set(), add_set=set(), parse_set=set()):
     """Evaluate a ticket to confirm it is structured appropriately.
+
     The assumptions for how each field is populated varies depending on
     the type of ticket.
 
-    :param tkt: A pdm_utils Ticket object.
-    :type tkt: Ticket
-    :param description_field_set: Valid description_field options.
+    :param tkt: same as for set_cds_descriptions().
+    :param type_set: Set of ImportTicket types to check against.
+    :type type_set: set
+    :param description_field_set: Set of description fields to check against.
     :type description_field_set: set
-    :param eval_mode_set: Valid eval mode options.
+    :param eval_mode_set: Set of evaluation modes to check against.
     :type eval_mode_set: set
-    :param id_dupe_set: Predetermined duplicate ticket ids.
+    :param id_dupe_set: Set of duplicated ImportTicket ids to check against.
     :type id_dupe_set: set
-    :param phage_id_dupe_set: Predetermined duplicate PhageIDs.
+    :param phage_id_dupe_set: Set of duplicated ImportTicket PhageIDs to check against.
     :type phage_id_dupe_set: set
+    :param retain_set: Set of retain values to check against.
+    :type retain_set: set
+    :param retrieve_set: Set of retrieve values to check against.
+    :type retrieve_set: set
+    :param add_set: Set of add values to check against.
+    :type add_set: set
+    :param parse_set: Set of parse values to check against.
+    :type parse_set: set
     """
     # This function simply evaluates whether there is data in the
     # appropriate ticket attributes given the type of ticket.
@@ -1193,17 +1395,19 @@ def check_genome(gnm, tkt_type, eval_flags, phage_id_set=set(),
     :type gnm: Genome
     :param tkt: A pdm_utils Ticket object.
     :type tkt: Ticket
-    :param phage_id_set: A set PhageIDs.
+    :param eval_flags: Dictionary of boolean evaluation flags.
+    :type eval_flags: dicts
+    :param phage_id_set: Set of PhageIDs to check against.
     :type phage_id_set: set
-    :param seq_set: A set of genome sequences.
+    :param seq_set: Set of genome sequences to check against.
     :type seq_set: set
-    :param host_set: A set of host genera.
-    :type host_set: set
-    :param cluster_set: A set of clusters.
+    :param host_genus_set: Set of host genera to check against.
+    :type host_genus_set: set
+    :param cluster_set: Set of clusters to check against.
     :type cluster_set: set
-    :param subcluster_set: A set of subclusters.
+    :param subcluster_set: Set of subclusters to check against.
     :type subcluster_set: set
-    :param accession_set: A set of accessions.
+    :param accession_set: Set of accessions to check against.
     :type accession_set: set
     """
     logger.info(f"Checking genome: {gnm.id}, {gnm.type}.")
@@ -1371,8 +1575,10 @@ def check_retain_genome(gnm, tkt_type, eval_flags):
 
     :param gnm: A pdm_utils Genome object.
     :type gnm: Genome
-    :param tkt: A pdm_utils Ticket object.
-    :type tkt: Ticket
+    :param tkt_type: ImportTicket type
+    :type tkt_type: str
+    :param eval_flags: Dictionary of boolean evaluation flags.
+    :type eval_flags: dicts
     """
     logger.info(f"Checking genome: {gnm.id}, {gnm.type}.")
     if eval_flags["check_replace"]:
@@ -1382,7 +1588,15 @@ def check_retain_genome(gnm, tkt_type, eval_flags):
 
 
 def check_source(src_ftr, eval_flags, host_genus=""):
-    """Check a Source object for errors."""
+    """Check a Source object for errors.
+
+    :param src_ftr: A pdm_utils Source object.
+    :type src_ftr: Source
+    :param eval_flags: Dictionary of boolean evaluation flags.
+    :type eval_flags: dicts
+    :param host_genus: Host genus to check against.
+    :type host_genus: str
+    """
     logger.info(f"Checking source feature: {src_ftr.id}.")
 
     if eval_flags["check_id_typo"]:
@@ -1416,11 +1630,16 @@ def check_source(src_ftr, eval_flags, host_genus=""):
                                     fail="warning", eval_def=EDD["SRC_004"])
 
 
-
-
-
 def check_cds(cds_ftr, eval_flags, description_field="product"):
-    """Check a Cds object for errors."""
+    """Check a Cds object for errors.
+
+    :param cds_ftr: A pdm_utils Cds object.
+    :type cds_ftr: Cds
+    :param eval_flags: Dictionary of boolean evaluation flags.
+    :type eval_flags: dicts
+    :param description_field: Description field to check against.
+    :type description_field: str
+    """
     logger.info(f"Checking CDS feature: {cds_ftr.id}.")
 
     cds_ftr.check_attribute("translation", {constants.EMPTY_PROTEIN_SEQ},
@@ -1470,7 +1689,13 @@ def check_cds(cds_ftr, eval_flags, description_field="product"):
                                         eval_def=EDD["CDS_012"])
 
 def compare_genomes(genome_pair, eval_flags):
-    """Compare two genomes to identify discrepancies."""
+    """Compare two genomes to identify discrepancies.
+
+    :param genome_pair: A pdm_utils GenomePair object.
+    :type genome_pair: GenomePair
+    :param eval_flags: Dictionary of boolean evaluation flags.
+    :type eval_flags: dicts
+    """
     logger.info("Comparing data between two genomes: "
                 f"Genome 1. ID: {genome_pair.genome1.id}. "
                 f"Type: {genome_pair.genome1.type}. "
@@ -1555,8 +1780,15 @@ def check_trna(trna_obj, eval_flags):
 
 
 def import_into_db(bndl, engine=None, gnm_key="", prod_run=False):
-    """Import data into the MySQL database."""
+    """Import data into the MySQL database.
 
+    :param bndl: same as for run_checks().
+    :param engine: same as for data_io().
+    :param gnm_key:
+        Identifier for the Genome object in the Bundle's genome dictionary.
+    :type gnm_key: str
+    :param prod_run: same as for data_io().
+    """
     if bndl._errors == 0:
         import_gnm = bndl.genome_dict[gnm_key]
 
@@ -1602,10 +1834,3 @@ def import_into_db(bndl, engine=None, gnm_key="", prod_run=False):
         logger.info("Data contains errors, so it will not be imported.")
 
     return result
-
-
-
-
-
-
-###

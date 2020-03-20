@@ -1412,40 +1412,6 @@ class TestBasicFunctions1(unittest.TestCase):
 
 
 
-
-
-
-    def test_get_synonyms_1(self):
-        """Check that a set of synonyms is returned from list of 1 set."""
-        search_value = "Mycobacterium"
-        set1 = {"Mycobacterium", "Mycobacterio"}
-        list_of_synonyms = [set1]
-        output_value = basic.get_synonyms(search_value, list_of_synonyms)
-        self.assertEqual(len(output_value), 2)
-
-    def test_get_synonyms_2(self):
-        """Check that a set of synonyms is returned from list of 3 sets."""
-        search_value = "Mycobacterium"
-        set1 = {"Mycobacterium", "Mycobacterio"}
-        set2 = {"blank1", "blank2", "blank3"}
-        set3 = {"null1", "null2", "null3", "null4"}
-        list_of_synonyms = [set3, set2, set1]
-        output_value = basic.get_synonyms(search_value, list_of_synonyms)
-        self.assertEqual(len(output_value), 2)
-
-    def test_get_synonyms_3(self):
-        """Check that a set of synonyms is not returned."""
-        search_value = "Mycobacterium"
-        set1 = {"Mycobacteriu", "Mycobacterio"}
-        set2 = {"blank1", "blank2", "blank3"}
-        set3 = {"null1", "null2", "null3", "null4"}
-        list_of_synonyms = [set3, set2, set1]
-        output_value = basic.get_synonyms(search_value, list_of_synonyms)
-        self.assertEqual(output_value, {search_value})
-
-
-
-
     def test_truncate_value_1(self):
         """Verify short value is not changed."""
         input_value = "short"

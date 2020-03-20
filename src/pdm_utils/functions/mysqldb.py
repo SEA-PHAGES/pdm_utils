@@ -16,7 +16,16 @@ from pdm_utils.functions import basic
 
 # TODO unittest.
 def query_dict_list(engine, query):
-    """Get the results of a MySQL query as a list of dictionaries."""
+    """Get the results of a MySQL query as a list of dictionaries.
+
+    :param engine: SQLAlchemy Engine object able to connect to a MySQL database.
+    :type engine: Engine
+    :param query: MySQL query statement.
+    :type query: str
+    :returns:
+        List of dictionaries, where each dictionary represents a row of data.
+    :rtype: list
+    """
     result_list = engine.execute(query).fetchall()
     result_dict_list = []
     for row in result_list:
@@ -33,6 +42,8 @@ def parse_phage_table_data(data_dict, trans_table=11, gnm_type=""):
     :param trans_table:
         The translation table that can be used to translate CDS features.
     :type trans_table: int
+    :param gnm_type: Identifier for the type of genome.
+    :type gnm_type: str
     :returns: A pdm_utils genome object.
     :rtype: genome
     """
@@ -130,8 +141,8 @@ def parse_gene_table_data(data_dict, trans_table=11):
     :param trans_table:
         The translation table that can be used to translate CDS features.
     :type trans_table: int
-    :returns: A pdm_utils cds object.
-    :rtype: cds
+    :returns: A pdm_utils Cds object.
+    :rtype: Cds
     """
 
     cds_ftr = cds.Cds()
@@ -215,9 +226,7 @@ def retrieve_data(engine, column=None, query=None, phage_id_list=None):
 
     The query is modified to include one or more PhageIDs
 
-    :param engine:
-        A sqlalchemy Engine object containing
-        information on which database to connect to.
+    :param engine: SQLAlchemy Engine object able to connect to a MySQL database.
     :type engine: Engine
     :param query:
         A MySQL query that selects valid, specific columns
@@ -309,6 +318,8 @@ def parse_genome_data(engine, phage_id_list=None, phage_query=None,
         empty list,  genome objects for all phages in the
         database will be constructed.
     :type phage_id_list: list
+    :param gnm_type: Identifier for the type of genome.
+    :type gnm_type: str
     :returns: A list of pdm_utils Genome objects.
     :rtype: list
     """
@@ -322,10 +333,9 @@ def parse_genome_data(engine, phage_id_list=None, phage_query=None,
             cds_list = parse_cds_data(engine, column="PhageID",
                                       phage_id_list=[gnm.id],
                                       query=gene_query)
-            x = 0
-            while x < len(cds_list):
+
+            for x in range(len(cds_list)):
                 cds_list[x].genome_length = gnm.length
-                x += 1
             gnm.cds_features = cds_list
         if trna_query is not None:
             # TODO develop this step once tRNA table and objects are built.
@@ -339,11 +349,15 @@ def parse_genome_data(engine, phage_id_list=None, phage_query=None,
 def get_distinct_data(engine, table, column, null=None):
     """Get set of distinct values currently in a MySQL database.
 
-    :param engine:
-        A sqlalchemy Engine object containing
-        information on which database to connect to.
+    :param engine: SQLAlchemy Engine object able to connect to a MySQL database.
     :type engine: Engine
-    :returns: A set of .
+    :param table: A valid table in the database.
+    :type table: str
+    :param column: A valid column in the table.
+    :type column: str
+    :param null: Replacement value for NULL data.
+    :type null: misc
+    :returns: A set of distinct values from the database.
     :rtype: set
     """
     query = f"SELECT DISTINCT({column}) FROM {table}"
@@ -359,11 +373,9 @@ def get_distinct_data(engine, table, column, null=None):
 def create_seq_set(engine):
     """Create set of genome sequences currently in a MySQL database.
 
-    :param engine:
-        A sqlalchemy Engine object containing
-        information on which database to connect to.
+    :param engine: SQLAlchemy Engine object able to connect to a MySQL database.
     :type engine: Engine
-    :returns: A set of genome sequences.
+    :returns: A set of unique values from phage.Sequence.
     :rtype: set
     """
     query = "SELECT Sequence FROM phage"
@@ -383,12 +395,20 @@ def create_seq_set(engine):
     return result_set
 
 
-
-
-
-
 def convert_for_sql(value, check_set=set(), single=True):
-    """Convert a value for inserting into MySQL."""
+    """Convert a value for inserting into MySQL.
+
+    :param value: Value that should be checked for conversion.
+    :type value: misc
+    :param check_set: Set of values to check against.
+    :type check_set: set
+    :param single: Indicates whether single quotes should be used.
+    :type single: bool
+    :returns:
+        Returns either "NULL" or the value encapsulated in quotes
+        ("'value'" or '"value"')
+    :rtype: str
+    """
     if value in check_set:
         value = "NULL"
     else:
@@ -514,7 +534,18 @@ def create_phage_table_insert(gnm):
 
 
 def create_genome_statements(gnm, tkt_type=""):
-    """Create list of MySQL statements based on the ticket type."""
+    """Create list of MySQL statements based on the ticket type.
+
+    :param gnm: A pdm_utils Genome object.
+    :type gnm: Genome
+    :param tkt_type: 'add' or 'replace'.
+    :type tkt_type: str
+    :returns:
+        List of MySQL statements to INSERT all data
+        from a genome into the database
+        (DELETE FROM genome, INSERT INTO phage, INSERT INTO gene, ...).
+    :rtype: list
+    """
 
     sql_statements = []
     if tkt_type == "replace":
@@ -532,7 +563,13 @@ def create_genome_statements(gnm, tkt_type=""):
 
 
 def get_phage_table_count(engine):
-    """Get the current number of genomes in the database."""
+    """Get the current number of genomes in the database.
+
+    :param engine: SQLAlchemy Engine object able to connect to a MySQL database.
+    :type engine: Engine
+    :returns: Number of rows from the phage table.
+    :rtype: int
+    """
     query = "SELECT COUNT(*) FROM phage"
     result_list = engine.execute(query).fetchall()
     count = result_list[0][0]
@@ -540,7 +577,13 @@ def get_phage_table_count(engine):
 
 
 def change_version(engine, amount=1):
-    """Change the database version number."""
+    """Change the database version number.
+
+    :param engine: SQLAlchemy Engine object able to connect to a MySQL database.
+    :type engine: Engine
+    :param amount: Amount to increment/decrement version number.
+    :type amount: int
+    """
     result = get_version_table_data(engine)
     current = result["Version"]
     new = current + amount
@@ -554,13 +597,10 @@ def change_version(engine, amount=1):
 def get_version_table_data(engine):
     """Retrieves data from the version table.
 
-    :param engine:
-        Input a sqlalchemy engine object.
+    :param engine: SQLAlchemy Engine object able to connect to a MySQL database.
     :type engine: Engine
-    :returns:
-        database_versions_list(dictionary) is a dictionary
-        of size 2 that contains values tied to keys
-        "Version" and "SchemaVersion"
+    :returns: Dictionary containing keys "Version" and "SchemaVersion".
+    :rtype: dict
     """
     query = "SELECT * FROM version"
     result_dict_list = query_dict_list(engine, query)
@@ -571,7 +611,11 @@ def get_version_table_data(engine):
 def get_mysql_dbs(engine):
     """Retrieve database names from MySQL.
 
-    Returns a set of database names."""
+    :param engine: SQLAlchemy Engine object able to connect to a MySQL database.
+    :type engine: Engine
+    :returns: Set of database names.
+    :rtype: set
+    """
     query = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA"
     databases = query_set(engine, query)
     return databases
@@ -581,7 +625,11 @@ def get_mysql_dbs(engine):
 def get_db_tables(engine, database):
     """Retrieve tables names from the database.
 
-    Returns a set of table names."""
+    :param engine: SQLAlchemy Engine object able to connect to a MySQL database.
+    :type engine: Engine
+    :returns: Set of table names.
+    :rtype: set
+    """
     query = ("SELECT table_name FROM information_schema.tables "
              f"WHERE table_schema = '{database}'")
     db_tables = query_set(engine, query)
@@ -592,7 +640,15 @@ def get_db_tables(engine, database):
 def get_table_columns(engine, database, table_name):
     """Retrieve columns names from a table.
 
-    Returns a set of column names."""
+    :param engine: SQLAlchemy Engine object able to connect to a MySQL database.
+    :type engine: Engine
+    :param database: Name of the database to query.
+    :type database: str
+    :param table_name: Name of the table to query.
+    :type table_name: str
+    :returns: Set of column names.
+    :rtype: set
+    """
     query = ("SELECT column_name FROM information_schema.columns WHERE "
               f"table_schema = '{database}' AND "
               f"table_name = '{table_name}'")
@@ -602,7 +658,15 @@ def get_table_columns(engine, database, table_name):
 
 
 def query_set(engine, query):
-    """Retrieve set of data from MySQL query."""
+    """Retrieve set of data from MySQL query.
+
+    :param engine: SQLAlchemy Engine object able to connect to a MySQL database.
+    :type engine: Engine
+    :param query: MySQL query statement.
+    :type query: str
+    :returns: Set of queried data.
+    :rtype: set
+    """
     result_list = engine.execute(query).fetchall()
     set_of_data = basic.get_values_from_tuple_list(result_list)
     return set_of_data
@@ -610,12 +674,22 @@ def query_set(engine, query):
 
 # TODO unittest.
 def get_schema_version(engine):
-    """Identify the schema version of the database_versions_list."""
-    # If version table does not exist, schema_version = 0.
-    # If no schema_version or SchemaVersion field,
-    # it is either schema_version = 1 or 2.
-    # If AnnotationAuthor, Program, AnnotationQC, and RetrieveRecord
-    # columns are in phage table, schema_version = 2.
+    """Identify the schema version of the database_versions_list.
+
+    Schema version data has not been persisted in every schema version,
+    so if schema version data is not found, it is deduced from other
+    parts of the schema:
+    1. If the version table does not exist, schema_version = 0.
+    2. If there is no schema_version or SchemaVersion field,
+        it is either schema_version = 1 or 2.
+    3. If AnnotationAuthor, Program, AnnotationQC, and RetrieveRecord
+        columns are in phage table, schema_version = 2.
+
+    :param engine: SQLAlchemy Engine object able to connect to a MySQL database.
+    :type engine: Engine
+    :returns: The version of the pdm_utils database schema.
+    :rtype: int
+    """
     db_tables = get_db_tables(engine, engine.url.database)
     if "version" in db_tables:
         version_table = True
@@ -643,20 +717,41 @@ def get_schema_version(engine):
     return schema_version
 
 # TODO unittest.
-def check_schema_compatibility(engine, tool):
-    """Confirm database schema is compatible with code."""
+def check_schema_compatibility(engine, pipeline, code_version=None):
+    """Confirm database schema is compatible with code.
+
+    If schema version is not compatible, sys.exit is called.
+
+    :param engine: SQLAlchemy Engine object able to connect to a MySQL database.
+    :type engine: Engine
+    :param pipeline: Description of the pipeline checking compatibility.
+    :type pipeline: str
+    :param code_version:
+        Schema version on which the pipeline operates. If no schema version is
+        provided, the package-wide schema version value is used.
+    :type code_version: int
+    """
     schema_version = get_schema_version(engine)
-    code_version = constants.CODE_SCHEMA_VERSION
+    if code_version is None:
+        code_version = constants.CODE_SCHEMA_VERSION
     if code_version != schema_version:
         print(f"The database schema version is {schema_version}, but "
-              f"{tool} is compatible with "
+              f"{pipeline} is compatible with "
               f"schema version {code_version}.")
         sys.exit(1)
 
 
 # TODO unittest.
 def drop_create_db(engine, database):
-    """Creates a new, empty database."""
+    """Creates a new, empty database.
+
+    :param engine: SQLAlchemy Engine object able to connect to a MySQL database.
+    :type engine: Engine
+    :param database: Name of the database to drop and create.
+    :type database: str
+    :returns: Indicates if drop/create was successful (0) or failed (1).
+    :rtype: int
+    """
     # First, test if the database already exists within mysql.
     # If there is, delete it so that a new database is installed.
     databases = get_mysql_dbs(engine)
@@ -671,7 +766,15 @@ def drop_create_db(engine, database):
 
 # TODO unittest.
 def drop_db(engine, database):
-    """Drops a database."""
+    """Delete a database.
+
+    :param engine: SQLAlchemy Engine object able to connect to a MySQL database.
+    :type engine: Engine
+    :param database: Name of the database to drop.
+    :type database: str
+    :returns: Indicates if drop was successful (0) or failed (1).
+    :rtype: int
+    """
     statement = f"DROP DATABASE {database}"
     try:
         engine.execute(statement)
@@ -681,7 +784,15 @@ def drop_db(engine, database):
 
 # TODO unittest.
 def create_db(engine, database):
-    """Create a new, empty database."""
+    """Create a new, empty database.
+
+    :param engine: SQLAlchemy Engine object able to connect to a MySQL database.
+    :type engine: Engine
+    :param database: Name of the database to create.
+    :type database: str
+    :returns: Indicates if create was successful (0) or failed (1).
+    :rtype: int
+    """
     statement = f"CREATE DATABASE {database}"
     try:
         engine.execute(statement)
@@ -694,8 +805,15 @@ def create_db(engine, database):
 def copy_db(engine, new_database):
     """Copies a database.
 
-    The engine contains pointer to the name of the database
-    that will be copied into the new_database parameter.
+    :param engine:
+        SQLAlchemy Engine object able to connect to a MySQL database, which
+        contains the name of the database that will be copied into
+        the new database.
+    :type engine: Engine
+    :param new_database: Name of the new copied database.
+    :type new_database: str
+    :returns: Indicates if copy was successful (0) or failed (1).
+    :rtype: int
     """
     #mysqldump -u root -pPWD database1 | mysql -u root -pPWD database2
     command_string1 = ("mysqldump "
@@ -728,7 +846,15 @@ def copy_db(engine, new_database):
 
 
 def connect_to_db(database):
-    """Connect to a MySQL database."""
+    """Connect to a MySQL database.
+
+    :param database: Name of the database to connect to.
+    :type database: str
+    :returns:
+        SQLAlchemy Engine object able to connect to a MySQL database.
+        If unable to connect to the database, sys.exit is called.
+    :rtype: Engine
+    """
     engine, msg = get_engine(database=database, echo=False)
     if engine is None:
         print(msg)
@@ -739,7 +865,14 @@ def connect_to_db(database):
 
 # TODO unittest.
 def install_db(engine, schema_filepath):
-    """Install a MySQL file into the indicated database."""
+    """Install a MySQL file into the indicated database.
+
+    :param engine:
+        SQLAlchemy Engine object able to connect to a MySQL databas.
+    :type engine: Engine
+    :param schema_filepath: Path to the MySQL database file.
+    :type schema_filepath: Path
+    """
     command_string = (f"mysql -u {engine.url.username} "
                       f"-p{engine.url.password} {engine.url.database}")
     command_list = command_string.split(" ")
@@ -753,8 +886,33 @@ def install_db(engine, schema_filepath):
 
 
 # TODO function is to replace MySQLConnectionHandler usage.
-def get_engine(username=None, password=None, database=None, echo=True, attempts=5):
-    """Create SQLAlchemy Engine object."""
+def get_engine(username=None, password=None, database=None,
+               echo=True, attempts=5):
+    """Create SQLAlchemy Engine object.
+
+    If username, password, or database is None, user is
+    prompted to provide values. To connect to MySQL without specifying
+    a database, set database="".
+
+    :param username: Username to login to MySQL.
+    :type username: str
+    :param password: Password to login to MySQL.
+    :type password: str
+    :param database: Name of the database to connect to.
+    :type database: str
+    :param echo:
+        This parameter is passed directly to sqlalchemy.create_engine().
+    :type echo: bool
+    :param attempts: Number of login attempts allowed, before returning.
+    :type attempts: int
+    :returns:
+        tuple (SQLAlchemy Engine, message)
+        WHERE
+        SQLAlchemy Engine(Engine) is a SQLAlchemy Engine object
+        able to connect to a MySQL database.
+        message(str) is the result of the attempt to create the engine.
+    :rtype: tuple
+    """
     attempt = 0
     valid = False
     msg = "Setting up MySQL connection. "
@@ -804,6 +962,21 @@ def get_engine(username=None, password=None, database=None, echo=True, attempts=
 
 def construct_engine_string(db_type="mysql", driver="pymysql",
                             username="", password="", database=""):
+    """Construct a SQLAlchemy engine URL.
+
+    :param db_type: Type of SQL database.
+    :type db_type: str
+    :param driver: Name of the Python DBAPI used to connect to the SQL database.
+    :type driver: str
+    :param username: Username to login to SQL database.
+    :type username: str
+    :param password: Password to login to SQL database.
+    :type password: str
+    :param database: Name of the database to connect to.
+    :type database: str
+    :returns: URL string to create SQLAlchemy engine.
+    :rtype: str
+    """
     engine_string = f"{db_type}+{driver}://{username}:{password}@localhost/{database}"
     return engine_string
 
@@ -815,14 +988,17 @@ def execute_transaction(engine, statement_list=[]):
     """Execute list of MySQL statements within a single defined transaction.
 
     :param engine:
-        a sqlalchemy Engine object containing
-        information on which database to connect to.
+        SQLAlchemy Engine object able to connect to a MySQL databas.
     :type engine: Engine
     :param statement_list:
         a list of any number of MySQL statements with
         no expectation that anything will return
-    :return: 0 or 1 status code. 0 means no problems, 1 means problems
-    :rtype: int
+    :returns:
+        tuple (result, message)
+        WHERE
+        result (int) is 0 or 1 status code. 0 means no problems, 1 means problems
+        message(str) is a description of the result.
+    :rtype: tuple
     """
     msg = "Unable to execute MySQL statements. "
     connection = engine.connect()

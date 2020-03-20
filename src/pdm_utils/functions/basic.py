@@ -57,7 +57,15 @@ def edit_suffix(value, option, suffix=constants.NAME_SUFFIX):
 
 
 def create_indices(input_list, batch_size):
-    """Create list of start and stop indices to split a list into batches."""
+    """Create list of start and stop indices to split a list into batches.
+
+    :param input_list: List from which to generate batch indices.
+    :type input_list: list
+    :param batch_size: Size of each batch.
+    :type batch_size: int
+    :returns: List of 2-element tuples (start index, stop index).
+    :rtype: list
+    """
     index_list = []
     for start in range(0, len(input_list), batch_size):
         if start + batch_size > len(input_list):
@@ -748,16 +756,6 @@ def lower_case(value):
     return value
 
 
-def close_files(list_of_filehandles):
-    """Closes all the files in a list of open file handles.
-
-    :param list_of_filehandles: A list of open file handles.
-    :type list_of_filehandles: list
-    """
-    for handle in list_of_filehandles:
-        handle.close()
-
-
 def ask_yes_no(prompt="", response_attempt=1):
     """Function to get the user's yes/no response to a question.
 
@@ -891,10 +889,24 @@ def verify_path(filepath, kind=None):
 
 
 def verify_path2(path, kind=None, expect=True):
-    """Confirm validity of path argument.
+    """Verifies that a given path exists.
 
     :param path: path
-    :type path: Path object
+    :type path: Path
+    :param kind:
+
+        ("file", "dir"), corresponding with paths to be
+        checked as either files or directories.
+
+    :type kind: str
+    :param expect: Indicates if the path is expected to the indicated kind.
+    :type expect: bool
+    :returns:
+        tuple (result, message)
+        WHERE
+        result(bool) indicates if the expectation was satisfied.
+        message(str) is a description of the result.
+    :rtype: tuple
     """
     if kind == "file":
         exists = path.is_file()
@@ -938,7 +950,21 @@ def verify_path2(path, kind=None, expect=True):
 
 
 def set_path(path, kind=None, expect=True):
-    """Confirm validity of path argument."""
+    """Confirm validity of path argument.
+
+    :param path: path
+    :type path: Path
+    :param kind:
+
+        ("file", "dir"), corresponding with paths to be
+        checked as either files or directories.
+
+    :type kind: str
+    :param expect: Indicates if the path is expected to the indicated kind.
+    :type expect: bool
+    :returns: Absolute path if valid, otherwise sys.exit is called.
+    :rtype: Path
+    """
     path = path.expanduser()
     path = path.resolve()
     result, msg = verify_path2(path, kind=kind, expect=expect)
@@ -1020,14 +1046,33 @@ def parse_flag_file(flag_file):
 
 
 def get_user_pwd(user_prompt="Username: ", pwd_prompt="Password: "):
-    """Get username and password."""
+    """Get username and password.
+
+    :param user_prompt: Displayed description when prompted for username.
+    :type user_prompt: str
+    :param pwd_prompt: Displayed description when prompted for password.
+    :type pwd_prompt: str
+    :returns:
+        tuple (username, password)
+        WHERE
+        username(str) is the user-supplied username.
+        password(str) is the user-supplied password.
+    :rtype: tuple
+    """
     username = getpass.getpass(prompt=user_prompt)
     password = getpass.getpass(prompt=pwd_prompt)
     return (username, password)
 
 
 def choose_from_list(options):
-    """Choose a value from a list of values."""
+    """Iterate through a list of values and choose a value.
+
+    :param options: List of options to choose from.
+    :type options: list
+    :returns:
+        the user select option of None
+    :rtype: option or None
+    """
     exit = False
     result = False
     option = None
@@ -1047,17 +1092,18 @@ def choose_from_list(options):
         return None
 
 
-def get_synonyms(search_value, list_of_synonyms):
-    """Search for a set of values from a list of sets."""
-    syn_set = {search_value}
-    for x in range(len(list_of_synonyms)):
-        if search_value in list_of_synonyms[x]:
-            syn_set = list_of_synonyms[x]
-    return syn_set
-
-
 def truncate_value(value, length, suffix):
-    """."""
+    """Truncate a string.
+
+    :param value: String that should be truncated.
+    :type value: str
+    :param length: Final length of truncated string.
+    :type length: int
+    :param suffix: String that should be appended to truncated string.
+    :type suffix: str
+    :returns: the truncated string
+    :rtype: str
+    """
     if len(value) > length:
         if len(suffix) > length:
             suffix = suffix[:length]
@@ -1069,7 +1115,16 @@ def truncate_value(value, length, suffix):
 # TODO this needs to be improved.
 # TODO unittest.
 def select_option(prompt, valid_response_set):
-    """Select a specific option from a list."""
+    """Select an option from a set of options.
+
+    :param prompt: Message to display before displaying option.
+    :type prompt: str
+    :param valid_response_set: Set of valid options to choose.
+    :type valid_response_set: set
+    :returns: option
+    :rtype: str, int
+    """
+
     response_valid = False
     while response_valid == False:
         response = input(prompt)
@@ -1116,7 +1171,13 @@ def parse_config_file(path, delimiter="="):
 
 # TODO unittest.
 def get_values_from_dict_list(list_of_dicts):
-    """Convert a list of dictionaries to a set of the values."""
+    """Convert a list of dictionaries to a set of the dictionary values.
+
+    :param list_of_dicts: List of dictionaries.
+    :type list_of_dicts: list
+    :returns: Set of values from all dictionaries in the list.
+    :rtype: set
+    """
     output_set = set()
     for dict in list_of_dicts:
         output_set = output_set | set(dict.values())
@@ -1124,7 +1185,13 @@ def get_values_from_dict_list(list_of_dicts):
 
 # TODO unittest.
 def get_values_from_tuple_list(list_of_tuples):
-    """Convert a list of tuples to a set of the values."""
+    """Convert a list of tuples to a set of the tuple values.
+
+    :param list_of_tuples: List of tuples.
+    :type list_of_tuples: list
+    :returns: Set of values from all tuples in the list.
+    :rtype: set
+    """
     output_set = set()
     for tup in list_of_tuples:
         output_set.add(tup[0])
@@ -1134,7 +1201,15 @@ def get_values_from_tuple_list(list_of_tuples):
 def convert_list_to_dict(data_list, key):
     """Convert list of dictionaries to a dictionary of dictionaries
 
-    Returns an empty dictionary if all intended keys are not unique."""
+    :param data_list: List of dictionaries.
+    :type data_list: list
+    :param key: key in each dictionary to become the returned dictionary key.
+    :type key: str
+    :returns:
+        Dictionary of all dictionaries. Returns an empty dictionary if
+        all intended keys are not unique.
+    :rtype: dict
+    """
     data_dict = {}
     for element_dict in data_list:
         if element_dict[key] not in data_dict.keys():
@@ -1149,7 +1224,17 @@ def convert_list_to_dict(data_list, key):
 
 # TODO unittest
 def prepare_filepath(folder_path, file_name, folder_name=None):
-    """Prepare output folder."""
+    """Prepare path to new file.
+
+    :param folder_path: Path to the directory to contain the file.
+    :type folder_path: Path
+    :param file_name: Name of the file.
+    :type file_name: str
+    :param folder_name: Name of sub-directory to create.
+    :type folder_name: Path
+    :returns: Path to file in directory.
+    :rtype: Path
+    """
     if folder_name is not None:
         subfolder_path = Path(folder_path, folder_name)
         subfolder_path.mkdir()
@@ -1233,6 +1318,15 @@ def retrieve_data_dict(filepath):
 
 
 def join_strings(input_list, delimiter=" "):
+    """Open file and retrieve a dictionary of data.
+
+    :param input_list: List of values to join.
+    :type input_list: list
+    :param delimiter: Delimiter used between values.
+    :type delimiter: str
+    :returns: Concatenated values, excluding all None and '' values.
+    :rtype: str
+    """
     concat_list = []
     for value in input_list:
         if (value is not None and value != ""):
@@ -1247,8 +1341,14 @@ def join_strings(input_list, delimiter=" "):
 def merge_set_dicts(dict1, dict2):
     """Merge two dictionaries of sets.
 
-    Each dictionary elements is a set. The merged dictionary will contain
-    all keys from both dictionaries, and shared keys will result in merged sets.
+    :param dict1: First dictionary of sets.
+    :type dict1: dict
+    :param dict2: Second dictionary of sets.
+    :type dict2: dict
+    :returns:
+        Merged dictionary containing all keys from both dictionaries,
+        and for each shared key the value is a set of merged values.
+    :rtype: dict
     """
     keys = dict1.keys() | dict2.keys()
     dict3 = {}

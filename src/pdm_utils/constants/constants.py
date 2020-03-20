@@ -193,10 +193,6 @@ PHAGE_ID_DICT = {
     "Rockyhorror": "RockyHorror",
     "Ta17a": "TA17a",
 
-    # TODO may be able to correct back to normal
-    "Wait": "Waits",
-
-
     # Remove host data from phage name
     "ReqiDocB7": "DocB7",
     "ReqiPepy6": "Pepy6",
