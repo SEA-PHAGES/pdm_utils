@@ -439,15 +439,13 @@ def parse_names_from_record_field(description):
     split_description = description.split()
 
     # Trim leading and trailing generic characters.
-    index = 0
-    while index < len(split_description):
+    for index in range(len(split_description)):
         split_description[index] = trim_characters(split_description[index])
-        index += 1
 
     # Iterate through the list of processed words and attempt to
     # identify the host_genus name and phage name.
-    index = 0
-    while index < len(split_description):
+
+    for index in range(len(split_description)):
         word = split_description[index]
         word_lower = word.lower()
 
@@ -493,7 +491,6 @@ def parse_names_from_record_field(description):
                         name = word
                 else:
                     pass
-        index += 1
     return (name, host_genus)
 
 

@@ -728,8 +728,7 @@ def check_record_date(record_list, accession_dict):
     # For any records that were retrieved, mark their data in the NCBI
     # results file, and save their records as Genbank files, and create
     # import table entries for them.
-    index = 0
-    while index < len(record_list):
+    for index in range(len(record_list)):
         record = record_list[index]
         date = record.annotations["date"]
         date = datetime.strptime(date, '%d-%b-%Y')
@@ -757,7 +756,6 @@ def check_record_date(record_list, accession_dict):
         else:
             data_dict = create_results_dict(gnm, date, "record date not new")
             results.append(data_dict)
-        index += 1
 
     return (new_record_list, results)
 

@@ -432,8 +432,8 @@ class Genome:
             list_to_sort.extend(self.tmrna_features)
 
         sorted_list = sorted(list_to_sort, key=attrgetter("start", "stop"))
-        index = 0
-        while index < len(sorted_list):
+
+        for index in range(len(sorted_list)):
             if use_type:
                 if isinstance(sorted_list[index], cds.Cds):
                     delimiter = "_CDS_"
@@ -451,7 +451,6 @@ class Genome:
                 delimiter = "_"
 
             sorted_list[index].id = self.id + delimiter + str(index + 1)
-            index += 1
 
     # TODO add parameters to specify which feature types (e.g. cds=True, trna=True, ...)
     def clear_locus_tags(self):
@@ -933,8 +932,7 @@ class Genome:
             s_info = "were"
             unsorted_f_features = [] # Forward orientation
             unsorted_r_features = [] # Reverse orientation
-            index = 0
-            while index < len(unsorted_features):
+            for index in range(len(unsorted_features)):
                 feature = unsorted_features[index]
                 strand = basic.reformat_strand(feature.orientation,
                                                format="fr_short")
@@ -942,7 +940,6 @@ class Genome:
                     unsorted_f_features.append(feature)
                 else:
                     unsorted_r_features.append(feature)
-                index += 1
             unsorted_feature_lists.append(unsorted_f_features)
             unsorted_feature_lists.append(unsorted_r_features)
         else:

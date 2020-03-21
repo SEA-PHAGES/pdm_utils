@@ -261,12 +261,10 @@ def create_seqfeature_dictionary(seqfeature_list):
         seqfeature_type_set.add(seqfeature.type)
     for type in seqfeature_type_set:
         sublist = []
-        index = 0
-        while index < len(seqfeature_list):
+        for index in range(len(seqfeature_list)):
             seqfeature = seqfeature_list[index]
             if seqfeature.type == type:
                 sublist.append(seqfeature)
-            index += 1
         seqfeature_dict[type] = sublist
     return seqfeature_dict
 

@@ -167,11 +167,9 @@ def parse_fasta_data(fasta_data):
         if header[0] == ">":
             header = header[1:] # Remove '>' symbol.
         header = header.strip() # Remove any whitespace
-        index = 1
-        while index < len(split_fasta_data):
+        for index in range(1, len(split_fasta_data)):
             # Strip off potential whitespace before appending, such as '\r'.
             sequence = sequence + split_fasta_data[index].strip()
-            index += 1
     return (header, sequence)
 
 
