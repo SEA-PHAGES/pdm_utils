@@ -356,7 +356,7 @@ class TestFindDomains1(unittest.TestCase):
 
 
     def test_execute_statement_10(self):
-        """Verify invalid data can be inserted after to '% w' is.
+        """Verify invalid data can be inserted after '% w' is
         replaced with '%% w'."""
         domain_data = test_data_utils.get_trixie_domain_data()
         # "Description": "ParB-like nuclease domain"
@@ -549,12 +549,49 @@ class TestFindDomains2(unittest.TestCase):
             self.assertEqual(domain_status, 1)
 
 
+    def test_execute_transaction_7(self):
+        """Verify list of three valid statements and one invalid statement
+        (containing '% w') are inserted (since '% w' replaced with '%% w')."""
+        # Valid
+        domain_data1 = test_data_utils.get_trixie_domain_data()
+        statement1 = get_domain_insert_statement(domain_data1)
+        # Valid
+        gene_domain_data = test_data_utils.get_trixie_gene_domain_data()
+        statement2 = get_gene_domain_insert_statement(gene_domain_data)
+        # Invalid '% w'
+        domain_data2 = test_data_utils.get_trixie_domain_data()
+        # "Description": "ParB-like nuclease domain"
+        description = domain_data2["Description"]
+        description = description.replace("nuclease domain", "nuclease % wdomain")
+        domain_data2["Description"] = description
+        domain_data2["HitID"] = "unique_id"
+        statement3 = get_domain_insert_statement(domain_data2)
+        # Valid
+        update_data = get_trixie_gene_table_domain_status_update_data_1()
+        statement4 = get_gene_update_statement(update_data)
+
+        statements = [statement1, statement2, statement3, statement4]
+        result = find_domains.execute_transaction(self.connection, statements)
+        gene_table_results = test_db_utils.get_data(test_db_utils.gene_table_query)
+        gene_domain_table_results = test_db_utils.get_data(test_db_utils.gene_domain_table_query)
+        domain_table_results = test_db_utils.get_data(test_db_utils.domain_table_query)
+        domain_status = gene_table_results[0]["DomainStatus"]
+        with self.subTest():
+            self.assertEqual(len(domain_table_results), 2)
+        with self.subTest():
+            self.assertEqual(len(gene_domain_table_results), 1)
+        with self.subTest():
+            self.assertEqual(result, 0)
+        with self.subTest():
+            self.assertEqual(domain_status, 1)
+
+
     # TODO this isn't the best way to test the rolllback in the
     # try/except block. The execute_statement is patched, so no changes are
     # actually made to the database. This test just confirms that the except
     # block is entered.
     @patch("pdm_utils.pipelines.find_domains.execute_statement")
-    def test_execute_transaction_7(self, es_mock):
+    def test_execute_transaction_8(self, es_mock):
         """Verify error inside try/except block is executed."""
         stmt_result1 = 0
         type_error1 = False

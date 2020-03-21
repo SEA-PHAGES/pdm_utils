@@ -486,7 +486,6 @@ def insert_domain_data(engine, results):
     print("\n\n\n" + msg)
 
 
-# TODO unittest after adding ValueError
 def execute_transaction(connection, statement_list=[]):
     trans = connection.begin()
     failed = 0
@@ -503,8 +502,6 @@ def execute_transaction(connection, statement_list=[]):
         # Once one statement fails, don't try to execute any other statements.
         while (failed == 0 and index < len(statement_list)):
             statement = statement_list[index]
-            # stmt_result, type_error, msg = execute_statement(connection,
-            #                                                  statement)
             result_tup = execute_statement(connection, statement)
             stmt_result = result_tup[0]
             type_error = result_tup[1]
@@ -515,7 +512,7 @@ def execute_transaction(connection, statement_list=[]):
             if stmt_result == 0:
                 logger.info(msg)
             else:
-                if type_error == False:
+                if (type_error == False and value_error == False):
                     logger.error(msg)
                 else:
                     # If the insertion failed due to a TypeError, it could be
@@ -538,16 +535,11 @@ def execute_transaction(connection, statement_list=[]):
                         logger.warning(msg)
                         logger.info("Attempting to resolve '%' error(s).")
                         statement = statement.replace("%", "%%")
-                        # stmt_result, type_error, msg = execute_statement(
-                        #                                 connection, statement)
-                        #
                         result_tup = execute_statement(connection, statement)
                         stmt_result = result_tup[0]
                         type_error = result_tup[1]
                         value_error = result_tup[2]
                         msg = result_tup[3]
-
-
 
                         if stmt_result == 0:
                             logger.info(("The '%' replacement resolved the "
