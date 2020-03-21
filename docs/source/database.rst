@@ -38,7 +38,7 @@ This table contains information that pertains to the entire phage genome, such a
 
 
 
-**PhageID** This field is the primary key of the *phage* table and is the unique identifier for all phages in the database.  There is a direct correspondence between phage names in PhagesDB or phage names in GenBank records to PhageIDs in the Actinobacteriophage database (although there are a few exceptions, due to naming restrictions in different databases).
+**PhageID** This field is the primary key of the *phage* table and is the unique identifier for all phages in the database.  There is a direct correspondence between phage names in PhagesDB or phage names in GenBank records to PhageIDs in the Actinobacteriophage database (although there are a few exceptions, due to naming restrictions in different external databases).
 
 **Name** This field also reflects the phage name, but it is not as constrained as the PhageID, and does not have to be unique. For all 'draft' genomes, the Name contains the PhageID with a '_Draft' suffix appended, indicating the annotations have been automatically annotated. For all other genomes, the Name corresponds to the PhageID. In some downstream applications, such as Phamerator, this serves as the phage's display name.
 
@@ -48,19 +48,19 @@ This table contains information that pertains to the entire phage genome, such a
 
 **Sequence** This genome nucleotide sequence of the phage.
 
-**Length** The length of the phage’s genome sequence, computed by the import script.
+**Length** The length of the phage’s genome sequence.
 
-**GC** The GC% of the genome sequence, computed by the import script.
+**GC** The GC% of the genome sequence.
 
 **Cluster** This field indicates the phage’s cluster designation if it has been clustered. If the phage is a singleton, it remains empty (NULL).
 
 **Subcluster** This field indicates the phage’s subcluster designation if it has been subclustered, otherwise it remains empty (NULL).
 
-**DateLastModified** This field records the date in which a genome and its annotations have been imported. This is valuable to keep track of which annotation version has been imported, and it also facilitates automated updating of the database. It is important to note that the date stored in this field reflects the date the annotation data were imported, and not the date that the annotation data were created. Although the field is a DATETIME data type, only date data is stored, and no time data is retained.
+**DateLastModified** This field records the date in which a genome and its annotations have been imported. This keeps track of which annotation version has been imported, and it facilitates automated updating of the database. It is important to note that the date stored in this field reflects the date the annotation data were imported, and not the date that the annotation data were created. Although the field is a DATETIME data type, only date data is stored, and no time data is retained.
 
 **AnnotationAuthor** This field indicates if the genome sequence and annotations are (1) or are not (0) maintained by the SEA-PHAGES program, and it facilitates automatic updates from GenBank. If a genome has been sequenced and annotated through the SEA-PHAGES program, its GenBank record is actively updated/maintained.  In this case, “Graham Hatfull” is expected to be a listed author in the GenBank record. (All genomes through the SEA-PHAGES program should have "Graham Hatfull" as a listed author, but not all GenBank records listing "Graham Hatfull" as an author are derived from the SEA-PHAGES program.)
 
-**RetrieveRecord** This field facilitates automatic updates from GenBank records. Most SEA-PHAGES genomes are expected to be automatically updated from GenBank once they are assigned a unique GenBank accession. However, some genomes, such as those generated from non-SEA-PHAGES researchers, may not need to be automatically updated. This field is set to 1 for genomes that are to be automatically updated and set to 0 for those genomes that are not to be automatically updated. Initially, this field is indirectly determined by the AnnotationAuthor field. For newly added genomes, if AnnotationAuthor = hatfull in the import ticket, this field is set to 1, otherwise it is set to 0. For genomes being replaced (by automatic updates from GenBank or by the creation of manual tickets), the value in this field is retained. Note: this field will be either 0 or 1.
+**RetrieveRecord** This field will be 0 or 1, and it facilitates automatic updates from GenBank records . Most SEA-PHAGES genomes are expected to be automatically updated from GenBank once they are assigned a unique GenBank accession. However, some genomes, such as those generated from non-SEA-PHAGES researchers, may not need to be automatically updated. This field is set to 1 for genomes that are to be automatically updated and set to 0 for those genomes that are not to be automatically updated. Initially, this field is indirectly determined by the AnnotationAuthor field. For newly added genomes, if AnnotationAuthor = 1 in the import ticket, this field is set to 1, otherwise it is set to 0. For genomes being replaced (by automatic updates from GenBank or by the creation of manual tickets), the value in this field is retained.
 
 **Status** This field indicates whether the gene annotations have automatically (draft) or manually (final) annotated, or whether the annotation strategy is unknown (unknown).
 
@@ -74,9 +74,9 @@ This table contains information that pertains to individual genes, including coo
     :file: images/database_structure/gene_table.csv
 
 
-**GeneID** Unique identifier for the gene annotation in the database. This can be derived three ways. First, it can simply be synonymous with the LOCUS_TAG of the CDS feature in the flat file. For SEA-PHAGES flat files, this is usually the case. However, for non-SEA-PHAGES flat files, there may not be a LOCUS_TAG for every, or any, CDS feature. As a result, the GeneID can be computed by concatenating the PhageID with the CDS count (which indicates the order that the CDS was parsed from the feature list during import). However, neither of these naming strategies guarantee a unique identifier, and naming conflicts may arise with features already present in the *gene* table. In this case, a _duplicateID[0123] suffix is appended to the GeneID (where [0123] is an integer).
+**GeneID** Unique identifier for the gene feature in the entire database. It is distinct from other common gene identifiers in a flat file such as LOCUS_TAG or GENE.
 
-**Name** This field is an identifier for the annotation but does not need to be unique, analogous to the distinction between the PhageID and Name fields in the *phage* table. Most of the time (but not always), it is a number. This field is displayed on Phamerator genome maps.
+**Name** This field is an identifier for the annotation but does not need to be unique, analogous to the distinction between the PhageID and Name fields in the *phage* table. Most of the time (but not always), it is a number. This field is displayed on Phamerator genome maps. This can be derived two ways. If the CDS feature in the flat file contains a GENE qualifier, this is set to the Name. Not all features contain this qualifier though. If this is the case, if the CDS feature contains an integer in the LOCUS_TAG qualifier, this is set to the Name. Not all features contain an integer in the qualifier, or even a qualifier at all, though. If neither of these conditions are met, this field remains empty.
 
 **PhageID** The name of the phage genome from which the gene is derived, matching one of the phage names in the PhageID of the *phage* table.
 
@@ -84,9 +84,9 @@ This table contains information that pertains to individual genes, including coo
 
 **Orientation** This field indicates the strand in which the feature is encoded.
 
-**Parts** This field indicates the number of regions in the genome that define the feature. Only two coordinates are stored for each feature, which is an accurate representation of the majority of features. However, the definition of some features, such as those that extend across the genome termini or those that contain a frameshift, are not completely represented with this strategy. The *Parts* field is used to discriminate between these types of features.
+**Parts** This field indicates the number of regions in the genome that define the feature. Only two coordinates are stored for each feature, which is an accurate representation of the majority of features. However, the definition of some features, such as those that extend across the genome termini or those that contain a frameshift, are not completely represented with this strategy. This field is used to discriminate between these types of features.
 
-**Length** This field indicates the nucleotide length of the gene, computed by the length of the amino acid sequence. Note: this field needs to be improved to maintain data integrity.
+**Length** This field indicates the length of the translation.
 
 **Translation** This field contains the translated amino acid sequence and is derived directly from the GenBank record. Note: currently, the maximum length of the translation product is 5,000 amino acids.
 
@@ -94,7 +94,7 @@ This table contains information that pertains to individual genes, including coo
 
 **Notes** This field contains data on the gene function, and is derived from one of several fields of the GenBank feature.
 
-**DomainStatus** Indicates whether conserved domain data has been retrieved for this feature. When new phage genomes are added to the *gene* table, the DomainStatus field for each new gene is set to 0. The cdd_script.py script retrieves gene products (stored in the Translation field of the *gene* table) for all genes with DomainStatus < 1. The rpsblast+ package is used to identity conserved domains using BLAST with an e-value threshold = 0.001. For each gene, retrieved CDD data is inserted into the *domain* and *gene_domain* tables, and the DomainStatus field in the *gene* table is set to 1 so that this gene is not re-processed during subsequent rounds of updates. Note: this field will be either 0 or 1.
+**DomainStatus** Indicates whether the ``find_domains`` pipeline has searched for conserved domain data for this feature (0 or 1). When new phage genomes are added to the *gene* table, the DomainStatus field for each new gene is set to 0. The ``find_domains`` pipeline updates this to 1 after searching for conserved domains (regardless of whether the feature contains any conserved domains).
 
 **PhamID** Pham designation for the translation, matching one of the PhamIDs in the *pham* table.
 
