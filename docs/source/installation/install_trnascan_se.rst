@@ -4,12 +4,10 @@
 tRNAScan-SE v2.0
 ================
 
-tRNAScan-SE v2.0 is used to evaluate tRNA features when importing data into the database.
+:trna_scan_se:`tRNAScan-SE v2.0 <>` (:ref:`Chan & Lowe, 2019 <bibliography>`) is used to evaluate tRNA features when importing data into the database.
 
-
-
-MacOS installation
-******************
+MacOS and Ubuntu installation
+*****************************
 
 #. Open a Terminal window and start the Conda environment::
 
@@ -34,7 +32,7 @@ MacOS installation
 
 #. Navigate to the new subdirectory and compile the program::
 
-    (pdm_utils)> cd trnascan-se-2.0
+    (pdm_utils)> cd tRNAscan-SE-2.0/
     (pdm_utils)> ./configure
     (pdm_utils)> make
 

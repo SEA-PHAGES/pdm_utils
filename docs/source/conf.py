@@ -62,7 +62,7 @@ master_doc = "index"
 # External link library
 extlinks = {
     'anaconda': ('https://www.anaconda.com/%s', ''),
-    'aragorn': ('https://www.ncbi.nlm.nih.gov/pubmed/14704338/%s', ''),
+    'aragorn': ('http://130.235.244.92/ARAGORN/%s', ''),
     'biopython': ('https://biopython.org/%s', ''),
     'blastplus': ('https://blast.ncbi.nlm.nih.gov/'
         'Blast.cgi?CMD=Web&PAGE_TYPE=BlastDocs&DOC_TYPE=Download%s', ''),
@@ -75,7 +75,7 @@ extlinks = {
     'git': ('https://git-scm.com/%s', ''),
     'hatfullserver': ('http://phamerator.webfactional.com/databases_Hatfull/%s',
         ''),
-    'inferal': ('https://www.ncbi.nlm.nih.gov/pubmed/24008419/%s', ''),
+    'infernal': ('http://eddylab.org/infernal/%s', ''),
     'mysql': ('https://www.mysql.com/%s', ''),
     'mysql_docs': ('https://dev.mysql.com/doc/refman/5.7/en/%s', ''),
     'mmseqs2': ('https://github.com/soedinglab/MMseqs2%s', ''),
@@ -89,6 +89,6 @@ extlinks = {
     'seaphages': ('https://seaphages.org/%s', ''),
     'sqlalchemy': ('https://www.sqlalchemy.org/%s', ''),
     'tabulate': ('https://github.com/astanin/python-tabulate/%s', ''),
-    'trna_scan_se': ('https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6768409/%s', ''),
+    'trna_scan_se': ('http://lowelab.ucsc.edu/tRNAscan-SE/%s', ''),
     'webpham': ('https://phamerator.org/%s', '')
 }

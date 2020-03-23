@@ -4,12 +4,10 @@
 ARAGORN
 =======
 
-ARAGORN is used to evaluate tRNA features when importing data into the database.
+:aragorn:`ARAGORN <>` (:ref:`Laslett & Canback, 2004 <bibliography>`) is used to evaluate tRNA features when importing data into the database.
 
-
-
-MacOS installation
-******************
+MacOS and Ubuntu installation
+*****************************
 
 #. Open a Terminal window and start the Conda environment::
 
@@ -27,10 +25,6 @@ MacOS installation
     (pdm_utils)> curl http://130.235.244.92/ARAGORN/Downloads/aragorn1.2.38.tgz > aragorn1.2.38.tgz
 
 
-
-
-
-
 #. Uncompress the tarball, then delete the original archive:
 
     - Enter the following commands::
@@ -38,18 +32,14 @@ MacOS installation
         (pdm_utils)> tar -xvzf aragorn1.2.38.tgz
         (pdm_utils)> rm aragorn1.2.38.tgz
 
-
-
 #. Navigate to the new subdirectory and compile the program::
 
         (pdm_utils)> cd aragorn1.2.38
         (pdm_utils)> gcc -O3 -ffast-math -finline-functions -o aragorn aragorn1.2.38.c
 
-
 #. Make ARAGORN globally executable. This can be accomplished one of two ways:
 
     - Get the full path to the installed software::
-
 
         (pdm_utils)> pwd
 
@@ -70,15 +60,21 @@ MacOS installation
         C. Open a new Terminal window so that the changes are implemented.
 
 
-    - Alternatively, edit Terminal's '.bash_profile' configuration file using the Nano text editor.
+    - Alternatively, edit Terminal's configuration file using the Nano text editor.
 
         A. Navigate to the home directory::
 
             (pdm_utils)> cd
 
-        B. Open the configuration file::
+        B. Open the configuration file:
 
-            (pdm_utils)> nano .bash_profile
+            - For MacOS::
+
+                (pdm_utils)> nano .bash_profile
+
+            - For Ubuntu::
+
+                (pdm_utils)> nano .bashrc
 
         C. Navigate the cursor to the bottom of the file.
         D. Press <enter> to add a new line.
