@@ -363,15 +363,16 @@ def log_evaluations(dict_of_dict_of_lists, logfile_path=None):
         Value1 = dictionary for each object in the Bundle.
         Key2 = object type ('bundle', 'ticket', etc.)
         Value2 = List of evaluation objects.
-        Example structure:
-            {1: {"bundle": [eval_object1, ...],
-                 "ticket": [eval_object1, ...],
-                 "genome": [eval_object1, ...]},
-             2: {...}}
     :type dict_of_dict_of_lists: dict
     :param logfile_path: Path to the log file.
     :type logfile_path: Path
     """
+    # Example structure:
+    #
+    #     {1: {"bundle": [eval_object1, ...],
+    #          "ticket": [eval_object1, ...],
+    #          "genome": [eval_object1, ...]},
+    #      2: {...}}
 
     # Create a new logging filehandle to only capture errors
     # specific to the particular flatfile.
@@ -524,16 +525,16 @@ def process_files_and_tickets(ticket_dict, files_in_folder, engine=None,
         Dictionary indicating paths to success and fail folders.
     :type log_folder_paths_dict: dict
     :returns:
-        tuple (success_ticket_list, failed_ticket_list, success_filepath_list,
-                failed_filepath_list, evaluation_dict)
+        tuple of five objects
         WHERE
-        success_ticket_list (list) is a list of successful ImportTickets.
-        failed_ticket_list (list) is a list of failed ImportTickets.
-        success_filepath_list (list) is a list of successfully parsed flat files.
-        failed_filepath_list (list) is a list of unsuccessfully parsed flat files.
-        evaluation_dict (dict) is a dictionary from each Bundle,
-            containing dictionaries for each bundled object,
-            containing lists of evaluation objects.
+        [0] success_ticket_list (list) is a list of successful ImportTickets.
+        [1] failed_ticket_list (list) is a list of failed ImportTickets.
+        [2] success_filepath_list (list) is a list of successfully parsed flat files.
+        [3] failed_filepath_list (list) is a list of unsuccessfully parsed flat files.
+        [4] evaluation_dict (dict):
+        dictionary from each Bundle,
+        containing dictionaries for each bundled object,
+        containing lists of evaluation objects.
     :rtype: tuple
     """
     # Alias for different types of genomes gathered and processed.

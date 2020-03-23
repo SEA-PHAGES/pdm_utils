@@ -678,18 +678,20 @@ def get_schema_version(engine):
 
     Schema version data has not been persisted in every schema version,
     so if schema version data is not found, it is deduced from other
-    parts of the schema:
-    1. If the version table does not exist, schema_version = 0.
-    2. If there is no schema_version or SchemaVersion field,
-        it is either schema_version = 1 or 2.
-    3. If AnnotationAuthor, Program, AnnotationQC, and RetrieveRecord
-        columns are in phage table, schema_version = 2.
+    parts of the schema.
 
     :param engine: SQLAlchemy Engine object able to connect to a MySQL database.
     :type engine: Engine
     :returns: The version of the pdm_utils database schema.
     :rtype: int
     """
+    # 1. If the version table does not exist, schema_version = 0.
+    # 2. If there is no schema_version or SchemaVersion field,
+    #    it is either schema_version = 1 or 2.
+    # 3. If AnnotationAuthor, Program, AnnotationQC, and RetrieveRecord
+    #    columns are in phage table, schema_version = 2.
+
+
     db_tables = get_db_tables(engine, engine.url.database)
     if "version" in db_tables:
         version_table = True

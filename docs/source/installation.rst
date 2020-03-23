@@ -36,6 +36,10 @@ ________
   ./installation/install_ncbi_tools
   ./installation/install_legacy_blast
   ./installation/install_pdm_utils_repo
+  ./installation/install_trnascan_se
+  ./installation/install_aragorn
+  ./installation/install_infernal
+
 
 Several ``pdm_utils`` tools have specific dependencies. Install the following software as needed:
 
@@ -44,4 +48,7 @@ Several ``pdm_utils`` tools have specific dependencies. Install the following so
 - :ref:`NCBI Blast+ (finding conserved domains) <install_ncbi_tools>`
 - :ref:`NCBI Conserved Domain Database (finding conserved domains) <install_ncbi_tools>`
 - :ref:`NCBI Legacy Blast (creating gene phamilies) <install_legacy_blast>`
+- :ref:`tRNAScan-SE (importing tRNA and tmRNA data) <install_trnascan_se>`
+- :ref:`ARAGORN (importing tRNA and tmRNA data) <install_aragorn>`
+- :ref:`Infernal (importing tRNA and tmRNA data) <install_infernal>`
 - :ref:`pdm_utils repository (source code, MySQL scripts, tests) <install_pdm_utils_repo>`

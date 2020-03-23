@@ -18,14 +18,6 @@ functions
    :undoc-members:
    :show-inheritance:
 
-``misc``
---------
-
-.. automodule:: pdm_utils.functions.misc
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 ``phagesdb``
 ------------
 
