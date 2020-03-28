@@ -23,7 +23,9 @@ def parse_in_ends(unparsed_string_list):
     if not isinstance(unparsed_string_list, list):
         raise TypeError(f"Parameter type required is of type list.")
 
-    joined_string = ""
+    joined_string = unparsed_string_list[0]
+    unparsed_string_list = unparsed_string_list[1:]
+
     for string in unparsed_string_list:
         joined_string = (f"{joined_string} {string}")
 
@@ -56,7 +58,7 @@ def parse_cmd_string(unparsed_cmd_string):
 
 def parse_cmd_list(unparsed_string_list):
     joined_string = parse_in_ends(unparsed_string_list)
-    parsed_cmd_filters = parse_cmd_filters(joined_string)
+    parsed_cmd_filters = parse_cmd_string(joined_string)
 
     return parsed_cmd_filters
 

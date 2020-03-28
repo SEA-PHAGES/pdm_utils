@@ -193,8 +193,7 @@ def parse_export(unparsed_args_list):
                                 help=IMPORT_FILE_HELP, dest="input",
                                 default=[])
         parser.add_argument("-in", "--import_names", nargs="*",
-                                help=SINGLE_GENOMES_HELP, dest="input",
-                                default=[])
+                                help=SINGLE_GENOMES_HELP, dest="input")
         parser.add_argument("-f", "--filter", nargs="?",
                                 type=parsing.parse_cmd_string,
                                 help=FILTERS_HELP,
@@ -275,7 +274,7 @@ def execute_export(alchemist, output_path, output_name,
         for column in table_obj.primary_key.columns:
             primary_key = column
 
-        db_filter = Filter(loader=alchemist, key=primary_key)
+        db_filter = Filter(alchemist=alchemist, key=primary_key)
         db_filter.values = values
 
         for or_filters in filters:
@@ -535,9 +534,8 @@ def append_database_version(genome_seqrecord: SeqRecord, version_data: Dict):
     """
     version_keys = version_data.keys()
     if "Version" not in version_keys or "SchemaVersion" not in version_keys:
-        print("Version of selected database "
-        "is outdated.\nVersion data is incompatable")
-        raise ValueError
+        raise ValueError("Version of selected database is outdated. "
+                         "Version data is incompatable.")
     try:
         genome_seqrecord.annotations["comment"] =\
                 genome_seqrecord.annotations["comment"] + (

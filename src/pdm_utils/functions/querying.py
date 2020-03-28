@@ -9,10 +9,14 @@ from sqlalchemy.sql import distinct
 from sqlalchemy.sql import func
 from sqlalchemy.sql import functions
 from sqlalchemy.sql.elements import BinaryExpression
+from sqlalchemy.sql.elements import Grouping
 from sqlalchemy.sql.elements import UnaryExpression
 from datetime import datetime
 from decimal import Decimal
 import re
+
+#GLOBAL CONSTANTS
+COLUMN_TYPES = [Column, functions.count, BinaryExpression, UnaryExpression]
 
 def get_table(metadata, table):
     table = parsing.translate_table(metadata, table)
@@ -21,16 +25,20 @@ def get_table(metadata, table):
 
 def get_column(metadata, column):
     parsed_column = parsing.parse_column(column)
-    table = get_table(metadata, parsed_column[0])
+    table_obj = get_table(metadata, parsed_column[0])
     column = parsing.translate_column(metadata, column)
 
-    columns_dict = dict(table.columns)
+    columns_dict = dict(table_obj.columns)
     column = columns_dict[parsed_column[1]]
 
     return column
 
 def build_graph(metadata):
-    graph = Graph()
+    if not isinstance(metadata, MetaData):
+        raise TypeError("Graph requires MetaData object, "
+                       f"object passed was of type {type(metadata)}.")
+
+    graph = Graph(metadata=metadata)
     for table in metadata.tables.keys():
         table_object = metadata.tables[table]
         graph.add_node(table_object.name, table=table_object) 
@@ -48,7 +56,7 @@ def build_graph(metadata):
 
     return graph
 
-def build_whereclause(db_graph, filter_expression): 
+def build_where_clause(db_graph, filter_expression): 
     filter_params = parsing.parse_filter(filter_expression)
 
     table_object = db_graph.nodes[filter_params[0]]["table"]
@@ -61,26 +69,35 @@ def build_whereclause(db_graph, filter_expression):
     if column_object.type.python_type == bytes:
         right = right.encode("utf-8")
 
-    whereclause = None
+    where_clause = None
 
     if filter_params[2] == "=":
-        whereclause = (column_object  ==  right)
+        where_clause = (column_object  ==  right)
     elif filter_params[2] == "LIKE":
-        whereclause = (column_object.like(right))
+        where_clause = (column_object.like(right))
     elif filter_params[2] == "!=" or filter_params[2] == "IS NOT":
-        whereclause = (column_object  !=  right)
+        where_clause = (column_object  !=  right)
     elif filter_params[2] == ">" :
-        whereclause = (column_object  >   right)
+        where_clause = (column_object  >   right)
     elif filter_params[2] == ">=":
-        whereclause = (column_object  >=  right)
+        where_clause = (column_object  >=  right)
     elif filter_params[2] == "<" :
-        whereclause = (column_object  <   right)
+        where_clause = (column_object  <   right)
     elif filter_params[2] == "<=":
-        whereclause = (column_object  <=  right)
+        where_clause = (column_object  <=  right)
 
-    return whereclause 
+    return where_clause 
 
 def build_onclause(db_graph, source_table, adjacent_table):
+    source_table = parsing.translate_table(db_graph.graph["metadata"], 
+                                           source_table)
+    adjacent_table = parsing.translate_table(db_graph.graph["metadata"],
+                                           adjacent_table)
+
+    if source_table == adjacent_table:
+        source_table = db_graph.nodes[source_table]["table"]
+        return source_table
+
     edge = db_graph[source_table][adjacent_table]
     foreign_key = edge["key"]
 
@@ -89,43 +106,103 @@ def build_onclause(db_graph, source_table, adjacent_table):
     onclause = referent_column == referenced_column
 
     return onclause
- 
+
+def extract_column(column, check=None):
+    if check != None:
+        if not isinstance(column, check):
+            raise TypeError(f"Type {type(column)} object passed as column "
+                             "failed a specified type check.")
+
+    if isinstance(column, Column): 
+        pass
+    #For handling SQLAlchemy count(Column) expressions
+    elif isinstance(column, functions.count):
+        column = column.clauses.clauses[0]
+    #For handling SQLAlchemy Column.distinct expressions
+    elif isinstance(column, UnaryExpression):
+        column = column.element
+    #For handling SQLAlchemy comparison expressions
+    elif isinstance(column, BinaryExpression):
+        expression = column.left
+        #For handling SQLAlchemy Column.in_() expressions
+        if isinstance(expression, UnaryExpression):        
+            column = expression.element
+        #For handling SQLAlchemy count(Column) comparisons
+        elif isinstance(expression, functions.count):
+            column = expression.clauses.clauses[0]
+        #For handling SQLAlchemy Column.distinct() comparisons
+        elif isinstance(expression, Grouping):
+            column = expression.element.element
+        elif isinstance(expression, Column):
+            column = expression
+        else:
+            raise TypeError(f"BinaryExpression type {type(expression)} "
+                            f"of expression {expression} is not supported.")
+
+    else:
+        raise TypeError(f"Input type {column} is not a derivative "
+                         "of a SqlAlchemy Column.")
+    
+    return column
+
+def extract_columns(columns, check=None):
+    extracted_columns = []
+
+    if isinstance(columns, list):
+        for column in columns:
+            extracted_columns.append(extract_column(column, check=check))
+
+    else:
+        extracted_columns.append(extract_column(columns, check=check))
+
+    return extracted_columns
+
+def extract_where_clauses(where_clauses):
+    where_columns = []
+    if not where_clauses is None:
+        where_columns = extract_columns(where_clauses, check=BinaryExpression)
+
+    return where_columns
+
+def extract_order_by_clauses(order_by_clauses):
+    order_by_columns = []
+    if not order_by_clauses is None:
+        order_by_columns = extract_columns(order_by_clauses, check=Column)
+
+    return order_by_columns
+
 def get_table_list(columns):
     table_set = set()
-    for column in  columns:
-        if isinstance(column, Column): 
-            table_set.add(column.table)
-        elif isinstance(column, functions.count):
-            for column_clause in column.clauses.clauses:
-                table_set.add(column_clause.table)
-        elif isinstance(column, UnaryExpression):
-            table_set.add(column.element.table)
-        elif isinstance(column, BinaryExpression):
-            expression = column.left
-            if isinstance(expression, UnaryExpression):
-                table_set.add(unary_expression.element.table)
-            elif isinstance(expression, Column):
-                table_set.add(expression.table)
+   
+    if not isinstance(columns, list):
+        columns = [columns]
 
-        else:
-            raise TypeError(f"Column {column} is not a SqlAlchemy Column.")
+    for column in columns:
+        table_set.add(extract_column(column).table)
                             
     table_list = list(table_set)
     return table_list
 
 def get_table_pathing(db_graph, table_list, center_table=None):
-    if not center_table:
-        center_table = table_list[0]
+    table_list = table_list.copy()
 
-    table_list = table_list[1:]
+    if not center_table is None:
+        table_list.remove(center_table)
+
+    else:
+        center_table = table_list[0]
+        table_list.remove(center_table)
+
 
     table_paths = []
     for table in table_list:
         path = shortest_path(db_graph, center_table.name, table.name)
 
         if not path:
-            raise ValueError(f"Table {table_node} is not connected by any "
+            raise ValueError( "Operation cannot be performed. "
+                             f"Table {table.name} is not connected by any "
                              f"foreign keys to table {center_table}.")
+
         table_paths.append(path)
 
     table_pathing = [center_table, table_paths]
@@ -160,37 +237,52 @@ def build_fromclause(db_graph, columns):
 
     return joined_table
 
-def build_select(db_graph, columns, where=None, order_by=None):
-    where_columns = []
-    if where != None:
-        for clause in where:
-            where_columns.append(clause.left) 
+def append_where_clauses(executable, where_clauses):
+    if where_clauses is None:
+        return executable
 
-    order_by_columns = []
+    if isinstance(where_clauses, list):
+        for clause in where_clauses:
+            executable = executable.where(clause)
+    else:
+        executable = executable.where(where_clauses)
+
+    return executable
+    
+def append_order_by_clauses(executable, order_by_clauses):
+    if order_by_clauses is None:
+        return executable
+
+    if isinstance(order_by_clauses, list):
+        for clause in order_by_clauses:
+            executable = executable.order_by(clause)
+    else:
+        executable = executable.order_by(order_by_clauses)
+
+    return executable
+
+def build_select(db_graph, columns, where=None, order_by=None):
+    where_columns = extract_where_clauses(where)
+    order_by_columns = extract_order_by_clauses(order_by)
+
+    if not isinstance(columns, list):
+        columns = [columns]
 
     total_columns = columns + where_columns + order_by_columns
     fromclause = build_fromclause(db_graph, total_columns) 
 
     select_query = select(columns).select_from(fromclause)
-
-    if where != None:
-        for clause in where:
-            select_query = select_query.where(clause)
-
-    if order_by != None:
-        for clause in order_by:
-            select_query = select_query.order_by(clause)
+    select_query = append_where_clauses(select_query, where)
+    select_query = append_order_by_clauses(select_query, order_by)
 
     return select_query
 
 def build_count(db_graph, columns, where=None, order_by=None):
-    where_columns = []
-
-    if where != None:
-        for clause in where:
-            where_columns.append(clause.left) 
-
-    order_by_columns = []
+    where_columns = extract_where_clauses(where)
+    order_by_columns = extract_order_by_clauses(order_by)
+   
+    if not isinstance(columns, list):
+        columns = [columns]
 
     total_columns = columns + where_columns + order_by_columns
     fromclause = build_fromclause(db_graph, total_columns)
@@ -200,15 +292,9 @@ def build_count(db_graph, columns, where=None, order_by=None):
         column_params.append(func.count(column_param))
 
     count_query = select(column_params).select_from(fromclause)
+    count_query = append_where_clauses(count_query, where)
+    count_query = append_order_by_clauses(count_query, order_by)
 
-    if where != None:
-        for clause in where:
-            count_query = count_query.where(clause)
-
-    if order_by != None:
-        for clause in order_by:
-            count_query = count_query.order_by(clause)
-    
     return count_query
 
 def build_distinct(db_graph, columns, where=None, order_by=None):

@@ -18,39 +18,24 @@ from pdm_utils.functions import querying as q
 from sqlalchemy import Column
 from sqlalchemy.engine.base import Engine
 
-def load_filter(db_filter, loader):
-    if loader != None:
-        if isinstance(loader, AlchemyHandler):
-            if not loader.connected:
-                loader.connect(ask_database=True)
-
-            if loader.graph == None:
-                loader.build_graph()
-            
-            db_filter.engine = loader.engine
-            db_filter.graph = loader.graph
-
-        elif isinstance(loader, Engine):
-            db_filter.engine = loader
-            alchemist = AlchemyHandler()
-            alchemist.engine = loader
-
-            alchemist.build_graph()
-            db_filter.graph = alchemist.graph
-            
-        else:
-            raise TypeError("Loader type is not supported.")
-
 class Filter:
-    def __init__(self, loader=None, key=None):
+    def __init__(self, alchemist=None, key=None):
         self._engine=None
         self._graph=None
 
         self._updated = True 
         self._values_valid = True
+
+        if isinstance(alchemist, AlchemyHandler):
+            if not alchemist.connected:
+                alchemist.connect(ask_database=True)
+
+            if alchemist.graph == None:
+                alchemist.build_graph()
+                
+            self._engine = alchemist.engine
+            self._graph = alchemist.graph
        
-        load_filter(self, loader)        
-        
         if isinstance(key, Column):
             self._key = key
         else:
@@ -134,16 +119,17 @@ class Filter:
         load_filter(self, loader)
     
     def check(self):
-        if self.engine == None or self.graph == None:
-            return False
+        if not isinstance(self.engine, Engine): 
+            raise AttributeError("Filter object is missing valid engine.")
+
+        if not isinstance(self.graph, Graph):
+            raise AttributeError("Filter object is missing valid graph.")
 
         if not isinstance(self._key, Column):
-            return False
-
-        return True
+            raise AttributeError("Filter object is missing valid column key.")
 
     def add(self, filter):
-        where_clause = q.build_whereclause(self.graph, filter)
+        where_clause = q.build_where_clause(self.graph, filter)
         parsed_filter = parsing.parse_filter(filter)
         filter_left = parsed_filter[0] + "." + parsed_filter[1]\
                     + parsed_filter[2]
@@ -181,8 +167,7 @@ class Filter:
         return where_clauses
 
     def build_values(self, where=None, order_by=None):
-        if not self.check():
-            return []
+        self.check()
 
         values = []
 
@@ -207,17 +192,24 @@ class Filter:
 
         return values
   
-    def transpose(self, column):
+    def transpose(self, column, return_dict=False):
+        self.check()
+
         if not self.values:
-            return 
-        
+            return []
+       
+        name = ""
+
         if isinstance(column, str):
-            column = self.graph.get_column(column)
+            column = q.get_column(self.graph.graph["metadata"], column)
+            name = column.name
+
         elif isinstance(column, Column):
-            pass
+            name = column.name         
+    
         else:
             raise TypeError
-
+    
         where_clause = (self.key.in_(self.values))
         query = q.build_distinct(self.graph, [column], where=[where_clause])
         
@@ -228,29 +220,39 @@ class Filter:
         for result in results:
             values.append(result[0])
 
+        if return_dict:
+            values = {name : values}
+
         return values
 
-    def retrieve(self, selectable):
+    def retrieve(self, selectables):
+        self.check()
+
         if not self.values:
             return {}
 
-        where_clause = (self.key.in_self.values)
-
-        query = q.build_select(self.graph, selectable, where=where_clause)
-        proxy = self.engine.execute(query)
-        results = proxy.fetchall()
+        where_clause = (self.key.in_(self.values))
+    
+        results = {}
+        for selectable in selectables:
+            values = self.transpose(selectable, return_dict=True) 
+            results.update(values)            
 
         return results
 
     def refresh(self):
+        self.check()
+
         if self._values_valid:
             return
 
         values = self.build_values()
         self._values = values
-        self._valid_values = True
+        self._values_valid = True
 
     def update(self):
+        self.check()
+
         if not self._values_valid:
             self.refresh()
 
@@ -262,7 +264,7 @@ class Filter:
         self._values = values
 
         self._updated = True
-        self._valid_values = True
+        self._values_valid = True
 
     def sort(self, column):
         if isinstance(column, Column):
@@ -271,7 +273,7 @@ class Filter:
         elif isinstance(column, str):
             order_by_clause = self._graph.get_column(column)
         else:
-            raise
+            raise TypeError("Sort column must be either a string or a Column object")
 
         values = self.build_values(order_by=order_by_clause)
         self._values = values
@@ -313,17 +315,16 @@ class Filter:
    
     def hits(self):
         if self.values == None:
-            if verbose:
-                print("Database results currently empty.")
             return 0
 
-        if verbose:
-            print(f"Database hits: {len(self.values)}")
         return len(self._values)    
 
     def group(self, column): 
+        self.check()
+
         if isinstance(column, str):
-            column = self.graph.get_column(column)
+            column = q.get_column(self.graph.graph["metadata"], column)
+
         elif isinstance(column, Column):
             pass
         else:

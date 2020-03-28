@@ -24,8 +24,9 @@ class AlchemyHandler:
         self.session = None
             
         self.connected = False
-        self.has_database = False
+        self.connected_database = False
         self.has_credentials = False
+        self.has_database = False
   
         if database != None:
             self.has_database = True
@@ -42,7 +43,7 @@ class AlchemyHandler:
     def database(self, database):
         if database == None:
             self.has_database = False
-            self.connected = False
+            self.connected_database = False
             return
 
         if not isinstance(database, str):
@@ -51,7 +52,7 @@ class AlchemyHandler:
         self._database = database
 
         self.has_database = True
-        self.connected = False
+        self.connected_database = False
 
     @property
     def username(self):
@@ -117,8 +118,9 @@ class AlchemyHandler:
 
     @engine.setter
     def engine(self, engine):
-        if engine == None:
+        if engine is None:
             self.connected = False
+            self._engine = None
             return 
 
         if not isinstance(engine, Engine):
@@ -146,6 +148,22 @@ class AlchemyHandler:
 
         self.has_credentials = True
         self.connected = False
+    
+    def validate_database(self):
+        if not self.has_database:
+            raise IndexError("No database in AlchemyHandler to validate")
+
+        proxy = self._engine.execute("SHOW DATABASES")   
+
+        results = proxy.fetchall()
+
+        databases = []
+        for result in results:
+            databases.append(result[0])
+
+        if self._database not in databases:
+            raise ValueError("User does not have access to "
+                            f"database {self._database}")
 
     def build_engine(self):
         if self.connected:
@@ -154,28 +172,33 @@ class AlchemyHandler:
         if not self.has_credentials:
             self.ask_credentials()
 
-        try: 
-            database = ""
-            if self.has_database:
-                database = self._database
+        login_string = mysqldb.construct_engine_string(
+                                        username=self._username,
+                                        password=self._password)
+
+        self._engine = sqlalchemy.create_engine(login_string)
+        self._engine.connect()
+       
+        if self.has_database:
+            database = self._database
+
+            self.validate_database()
 
             login_string = mysqldb.construct_engine_string(
-                                            username=self._username,
-                                            password=self._password,
-                                            database=database)
+                                        username=self._username,
+                                        password=self._password,
+                                        database=self._database)
 
             self._engine = sqlalchemy.create_engine(login_string)
             self._engine.connect()
             
-            self.connected = True
+            self.connected_database = True
+        
+        self.connected = True
 
-            self.metadata = None
-            self.graph = None
-            return
-
-        except OperationalError: 
-            raise
-
+        self.metadata = None
+        self.graph = None
+        
     def connect(self, ask_database=False, login_attempts=5):
         if ask_database:
             if not self.has_database:
@@ -202,12 +225,11 @@ class AlchemyHandler:
             self.ask_credentials()
 
         if not self.connected:
-            print("Maximum logout attempts reached.\n"
-                  "Please check your credentials and try again")
-            exit(1)
+            raise ValueError("Maximum logout attempts reached.\n"
+                             "Please check your credentials and try again")
 
     def execute(self, executable, return_dict=True):
-        if not self.engine:
+        if self.engine is None:
             self.build_engine()
 
         proxy = self.engine.execute(executable)
@@ -224,7 +246,7 @@ class AlchemyHandler:
         return results
 
     def scalar(self, executable):
-        if not self.engine:
+        if self.engine is None:
             self.build_engine()
 
         proxy = self.engine.execute(executable)
@@ -239,10 +261,11 @@ class AlchemyHandler:
 
         if not self.connected:
             self.build_engine()
-
+        
         self.metadata = MetaData(bind=self.engine)
         self.metadata.reflect()
-        return True 
+        
+        return True
 
     def translate_table(self, raw_table): 
         if not self.metadata:
@@ -271,7 +294,7 @@ class AlchemyHandler:
     def build_graph(self):
         if not self.metadata:
             self.build_metadata()
-       
+        
         self.graph = querying.build_graph(self.metadata)
 
     #For when necessary
