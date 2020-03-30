@@ -53,9 +53,11 @@ def main(unparsed_args_list):
             print("Unable to create results folder.")
             sys.exit(1)
         else:
-            version_filepath, status1 = get_data(results_path, constants.DB_WEBSITE,
-                                                 args.database, "version")
-            db_filepath, status2 = get_data(results_path, constants.DB_WEBSITE,
+            version_filepath, status1 = prepare_download(results_path,
+                                            constants.DB_WEBSITE,
+                                            args.database, "version")
+            db_filepath, status2 = prepare_download(results_path,
+                                            constants.DB_WEBSITE,
                                             args.database, "sql")
         if (status1 == False or status2 == False):
             print("Unable to download data from server.")
@@ -75,7 +77,7 @@ def main(unparsed_args_list):
 
 # TODO test.
 def install_db(database, db_filepath=None, schema_version=None):
-    """Install database."""
+    """Install database. If database already exists, it is first removed."""
     engine1, msg = mysqldb.get_engine(database="", echo=False)
     if engine1 is None:
         print("Invalid MySQL credentials.")
@@ -105,8 +107,8 @@ def install_db(database, db_filepath=None, schema_version=None):
         engine1.dispose()
 
 # TODO test.
-def get_data(local_folder, url_folder, db_name, extension):
-    """."""
+def prepare_download(local_folder, url_folder, db_name, extension):
+    """Construct filepath and check if it already exists, then download."""
     filename = ".".join([db_name, extension])
     url_path = url_folder + filename
     local_path = pathlib.Path(local_folder, filename)
@@ -114,16 +116,15 @@ def get_data(local_folder, url_folder, db_name, extension):
         print(f"The file {filename} already exists.")
         status = False
     else:
-        status = get_file(url_path, local_path)
+        status = download_file(url_path, local_path)
     return local_path, status
 
 
-# TODO if the file is not found on the server,
-# a file will still be created with text indicating
-# there was an error. So this step needs to catch that
-# error.
+# TODO if the file is not found on the server, a file will still be
+# created with text indicating there was an error.
+# So this step needs to catch that error.
 # TODO test.
-def get_file(file_url, filepath):
+def download_file(file_url, filepath):
     """Retrieve a file from the server."""
     print(f"Downloading {filepath.name} file.")
     # Command line structure: curl website > output_file

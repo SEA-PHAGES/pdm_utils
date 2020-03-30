@@ -115,43 +115,32 @@ def parse_args(unparsed_args_list):
     :rtype: Namespace
     """
 
-    IMPORT_HELP = ("Pipeline to import new genome data into "
-                   "a MySQL database.")
-    DATABASE_HELP = "Name of the MySQL database to import the genomes."
-    INPUT_FOLDER_HELP = ("Path to the folder containing GenBank-formatted "
-                         "flat files to be processed.")
-    OUTPUT_FOLDER_HELP = ("Path to the folder to store results.")
-    IMPORT_TABLE_HELP = """
-        Path to the CSV-formatted table containing
-        instructions to process each genome.
-        Structure of import ticket table:
-            1. Action to implement on the database (add, remove)
-            2. PhageID
-            3. Host genus
-            4. Cluster
-            5. Subcluster
-            6. Annotation status (draft, final, unknown)
-            7. Annotation authorship (hatfull, gbk)
-            8. Gene description field (product, note, function)
-            9. Accession
-            10. Eval mode
-        """
-    GENOME_ID_FIELD_HELP = """
-        Indicates the flat file field that should be used
-        as the unique identifier for the genome during import.
-        """
-    HOST_GENUS_FIELD_HELP = """
-        Indicates the flat file field that should be used
-        to identify the host genus for the genome during import.
-        """
+    IMPORT_HELP = \
+        "Pipeline to import new genome data into a MySQL database."
+    DATABASE_HELP = \
+        "Name of the MySQL database to import the genomes."
+    INPUT_FOLDER_HELP = \
+        ("Path to the folder containing GenBank-formatted "
+        "flat files to be processed.")
+    OUTPUT_FOLDER_HELP = \
+        ("Path to the folder to store results. "
+        f"Default is {DEFAULT_OUTPUT_FOLDER}")
+    IMPORT_TABLE_HELP = \
+        ("Path to the CSV-formatted table containing "
+        "instructions to process each genome.")
+    GENOME_ID_FIELD_HELP = \
+        ("Indicates the flat file field that should be used "
+        "as the unique identifier for the genome during import.")
+    HOST_GENUS_FIELD_HELP = \
+        ("Indicates the flat file field that should be used "
+        "to identify the host genus for the genome during import.")
     PROD_RUN_HELP = \
         ("Indicates whether the script should make any changes to the database. "
          "If True, the production run will implement all changes in the "
          "indicated database. If False, the test run will not "
          "implement any changes.")
     EVAL_MODE_HELP = \
-        ("Indicates the evaluation configuration "
-         "for importing genomes.")
+        "Indicates the evaluation configuration for importing genomes."
     DESCRIPTION_FIELD_HELP = \
         ("Indicates the field in CDS features that is expected "
          "to store the gene description.")
@@ -159,7 +148,7 @@ def parse_args(unparsed_args_list):
         ("Indicates the name of the file to log the import results. "
          "This will be created in the output folder.")
     INTERACTIVE_HELP = \
-        ("Indicates whether interactive evaluation of data is permitted.")
+        "Indicates whether interactive evaluation of data is permitted."
 
     parser = argparse.ArgumentParser(description=IMPORT_HELP)
     parser.add_argument("database", type=str, help=DATABASE_HELP)

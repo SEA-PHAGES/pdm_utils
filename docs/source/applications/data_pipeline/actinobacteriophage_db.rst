@@ -59,62 +59,70 @@ The most up-to-date version of Actinobacteriophage is stored on the Hatfull lab'
 
 
 
-    1. **Retrieving the newest version of Actinobacteriophage.** Ensure the newest version of the database is locally installed::
+    #. **Retrieve the newest version of Actinobacteriophage.** Ensure the newest version of the database is locally installed::
 
-        > python3 -m pdm_utils get_db Actinobacteriophage ./ -a
+        > python3 -m pdm_utils get_db Actinobacteriophage server
 
-    2. **Retrieving new data to import into the database.** New data that needs to be added to the database is retrieved from various sources and staged in a structured local directory for import. *get_data* creates separate staged directories and import tables for different types of data to be imported to minimize potential ticket conflicts::
+    #. **Retrieve new data to import into the database.** New data that needs to be added to the database is retrieved from various sources and staged in a structured local directory for import. *get_data* creates separate staged directories and import tables for different types of data to be imported to minimize potential ticket conflicts::
 
-        > python3 -m pdm_utils get_data Actinobacteriophage ./ -a -c get_data_config.txt
+        > python3 -m pdm_utils get_data Actinobacteriophage ./ -a -c config.txt
 
 
-    3. **Update specific fields.** New updates are implemented predominantly in the *phage* table::
+    #. **Update specific fields.** New updates are implemented predominantly in the *phage* table::
 
         > python3 -m pdm_utils update Actinobacteriophage -f update_table.csv
 
 
 
-    4. **Import new and replacement genome data.** New data (mostly in the form of flat files) is parsed and imported into the *phage* and *gene* tables. The *import* tool should be run separately for different types of genome data, in the following order:
+    #. **Import new and replacement genome data.** New data (mostly in the form of flat files) is parsed and imported into the *phage* and *gene* tables. The *import* tool should be run separately for different types of genome data, in the following order:
 
-        1. Auto-annotated genomes::
+        A. Auto-annotated genomes::
 
-            > python3 -m pdm_utils import Actinobacteriophage ./pecaan/genomes/ ./pecaan/import_table.csv -p
+            > python3 -m pdm_utils import Actinobacteriophage ./pecaan/genomes/ ./pecaan/import_table.csv -o ./ -p
 
-        2. New final annotations::
+        B. New final annotations::
 
-            > python3 -m pdm_utils import Actinobacteriophage ./phagesdb/genomes/ ./phagesdb/import_table.csv -p
-
-
-        3. Auto-updated SEA-PHAGES final annotations from GenBank::
-
-            > python3 -m pdm_utils import Actinobacteriophage ./genbank/genomes/ ./genbank/import_table.csv -p
+            > python3 -m pdm_utils import Actinobacteriophage ./phagesdb/genomes/ ./phagesdb/import_table.csv -o ./ -p
 
 
-        4. Other miscellaneous genomes::
+        C. Auto-updated SEA-PHAGES final annotations from GenBank::
 
-            > python3 -m pdm_utils import Actinobacteriophage ./misc/genomes/ ./misc/import_table.csv -p
+            > python3 -m pdm_utils import Actinobacteriophage ./genbank/genomes/ ./genbank/import_table.csv -o ./ -p
+
+
+        D. Other miscellaneous genomes::
+
+            > python3 -m pdm_utils import Actinobacteriophage ./misc/genomes/ ./misc/import_table.csv -o ./ -p
 
 
 
-    5. **Group gene products into phamilies.** Phamilies are created using MMseqs and stored in the *gene* and *pham* tables::
+    #. **Group gene products into phamilies.** Phamilies are created using MMseqs and stored in the *gene* and *pham* tables::
 
         > python3 -m pdm_utils phamerate Actinobacteriophage --steps 2
 
-    6. **Identifying conserved domains.** Conserved domain data is retrieved from a local copy of the NCBI CDD and stored in the *gene*, *domain*, and *gene_domain* tables::
+    #. **Identifying conserved domains.** Conserved domain data is retrieved from a local copy of the NCBI CDD and stored in the *gene*, *domain*, and *gene_domain* tables::
 
         > python3 -m pdm_utils find_domains Actinobacteriophage ./cdd/
 
-    7. **Increment database version.** After the database's content has changed, the database version number is updated in the *version* table::
+    #. **Increment database version.** After the database's content has changed, the database version number is updated in the *version* table::
 
         > python3 -m pdm_utils update Actinobacteriophage -v
 
-    8. **Export the updated database to a single file.** The updated Actinobacteriophage database is exported from MySQL into a single file, Actinobacteriophage.sql, with a corresponding Actinobacteriophage.version file that stores the database version number::
+    #. **Export the updated database to a single file.** The updated Actinobacteriophage database is exported from MySQL into a single file, Actinobacteriophage.sql, with a corresponding Actinobacteriophage.version file that stores the database version number::
 
         > python3 -m pdm_utils export sql Actinobacteriophage
 
-    9. **Upload the database for public access.** The SQL file is uploaded to that Hatfull lab's public server, where it can be retrieved by end-users for downstream applications and data analysis tools::
+    #. **Upload the database for public access.** The SQL file is uploaded to the Hatfull lab's public server, where it can be retrieved by end-users for downstream applications and data analysis tools::
 
         > python3 -m pdm_utils push -d ./new_version/
+
+
+    #. **Prepare downgraded database and upload to server.** A copy of the database is generated with a downgraded schema that is compliant with several downstream tools::
+
+        > python3 -m pdm_utils convert Actinobacteriophage -n Actino_Draft -s 6 -v
+        > python3 -m pdm_utils export sql Actino_Draft
+        > python3 -m pdm_utils push -d ./downgraded_version/
+
 
 
 
