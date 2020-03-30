@@ -1,23 +1,22 @@
 import sqlalchemy
 import pymysql
 from getpass import getpass
+from networkx import Graph
 from sqlalchemy import create_engine
 from sqlalchemy import MetaData
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.engine.base import Engine
 from sqlalchemy.exc import OperationalError
-from pdm_utils.classes.schemagraph import SchemaGraph
-from pdm_utils.functions import querying
 from pdm_utils.functions import cartography
+from pdm_utils.functions import querying
+from pdm_utils.functions import mysqldb
+from pdm_utils.functions import parsing
 
 class AlchemyHandler:
-    def __init__(self, database=None, username=None, password=None, 
-                 attempts=5, verbose=False):
-
+    def __init__(self, database=None, username=None, password=None):
         self._database = database
         self._username = username
         self._password = password
-        self._login_attempts = attempts
 
         self._engine = None
         self.metadata = None
@@ -25,8 +24,9 @@ class AlchemyHandler:
         self.session = None
             
         self.connected = False
-        self.has_database = False
+        self.connected_database = False
         self.has_credentials = False
+        self.has_database = False
   
         if database != None:
             self.has_database = True
@@ -43,7 +43,7 @@ class AlchemyHandler:
     def database(self, database):
         if database == None:
             self.has_database = False
-            self.connected = False
+            self.connected_database = False
             return
 
         if not isinstance(database, str):
@@ -52,7 +52,7 @@ class AlchemyHandler:
         self._database = database
 
         self.has_database = True
-        self.connected = False
+        self.connected_database = False
 
     @property
     def username(self):
@@ -118,11 +118,23 @@ class AlchemyHandler:
 
     @engine.setter
     def engine(self, engine):
-        if engine == None:
+        if engine is None:
             self.connected = False
+            self._engine = None
             return 
 
+        if not isinstance(engine, Engine):
+            raise TypeError
+
         self._engine = engine
+        self.connected = True
+
+    @property
+    def tables(self):
+        if not self.metadata:
+            self.build_metadata()
+           
+        return self.metadata.tables
 
     def ask_database(self):
         self._database = input("MySQL database: ")
@@ -136,6 +148,22 @@ class AlchemyHandler:
 
         self.has_credentials = True
         self.connected = False
+    
+    def validate_database(self):
+        if not self.has_database:
+            raise IndexError("No database in AlchemyHandler to validate")
+
+        proxy = self._engine.execute("SHOW DATABASES")   
+
+        results = proxy.fetchall()
+
+        databases = []
+        for result in results:
+            databases.append(result[0])
+
+        if self._database not in databases:
+            raise ValueError("User does not have access to "
+                            f"database {self._database}")
 
     def build_engine(self):
         if self.connected:
@@ -144,25 +172,34 @@ class AlchemyHandler:
         if not self.has_credentials:
             self.ask_credentials()
 
-        try:
-            login_string = ("mysql+pymysql://"
-                           f"{self.username}:{self.password}@localhost")
-            if self.has_database:
-                login_string = login_string + f"/{self.database}"
+        login_string = mysqldb.construct_engine_string(
+                                        username=self._username,
+                                        password=self._password)
 
-            self.engine = sqlalchemy.create_engine(login_string)
-            self.engine.connect()
+        self._engine = sqlalchemy.create_engine(login_string)
+        self._engine.connect()
+       
+        if self.has_database:
+            database = self._database
+
+            self.validate_database()
+
+            login_string = mysqldb.construct_engine_string(
+                                        username=self._username,
+                                        password=self._password,
+                                        database=self._database)
+
+            self._engine = sqlalchemy.create_engine(login_string)
+            self._engine.connect()
             
-            self.connected = True
+            self.connected_database = True
+        
+        self.connected = True
 
-            self.metadata = None
-            self.graph = None
-            return
-
-        except OperationalError: 
-            raise
-
-    def connect(self, ask_database=False):
+        self.metadata = None
+        self.graph = None
+        
+    def connect(self, ask_database=False, login_attempts=5):
         if ask_database:
             if not self.has_database:
                 self.ask_database()
@@ -178,7 +215,7 @@ class AlchemyHandler:
         except:
             pass
 
-        while(not self.connected and attempts < self.login_attempts):
+        while(not self.connected and attempts < login_attempts):
             try:
                 self.build_engine()
             except:
@@ -188,88 +225,11 @@ class AlchemyHandler:
             self.ask_credentials()
 
         if not self.connected:
-            print("Maximum logout attempts reached.\n"
-                  "Please check your credentials and try again")
-            exit(1)
-    def build_metadata(self):
-        if not self.has_database:
-            self.ask_database()
-
-        if not self.connected:
-            self.build_engine()
-
-        self.metadata = MetaData(bind=self.engine)
-        self.metadata.reflect()
-        return True 
-
-    def get_map(self, template):
-        if not self.metadata:
-            self.build_metadata()
-
-        return cartography.get_map(self.metadata, template)
-
-    def build_schemagraph(self):
-        if not self.metadata:
-            self.build_metadata()
-
-        graph = SchemaGraph()
-        graph.setup(self.metadata)
-        self.graph = graph
-        
-        return True
-
-    def build_session(self):
-        if not self.has_database:
-            raise
-        if not self.connected:
-            self.build_engine()
-            
-
-        session_maker = sessionmaker()
-        self.session = session_maker(bind=self.engine)
-        return 
-
-    def where(self, filter_expression):
-        if not self.graph:
-            self.build_schemagraph()
-         
-        return querying.build_whereclause(self.graph, filter_expression)
-
-    def build_select(self, columns, where=None, order_by=None,
-                                                        from_=None, in_=None):
-        if not self.graph:
-            self.build_schemagraph()
-
-        return querying.build_select(self.graph, columns,
-                                                        where=where,
-                                                        order_by=order_by,
-                                                        from_=from_,
-                                                        in_=in_)
-
-    def build_count(self, columns, where=None, order_by=None,
-                                                        from_=None, in_=None):
-        if not self.graph:
-            self.build_schemagraph()
-
-        return querying.build_count(self.graph, columns,
-                                                        where=where,
-                                                        order_by=order_by,
-                                                        from_=from_,
-                                                        in_=in_)
-
-    def build_distinct(self, columns, where=None, order_by=None,
-                                                        from_=None, in_=None):
-        if not self.graph:
-            self.build_schemagraph()
-
-        return querying.build_distinct(self.graph, columns,
-                                                        where=where,
-                                                        order_by=order_by,
-                                                        from_=None,
-                                                        in_=None)
+            raise ValueError("Maximum logout attempts reached.\n"
+                             "Please check your credentials and try again")
 
     def execute(self, executable, return_dict=True):
-        if not self.engine:
+        if self.engine is None:
             self.build_engine()
 
         proxy = self.engine.execute(executable)
@@ -286,7 +246,7 @@ class AlchemyHandler:
         return results
 
     def scalar(self, executable):
-        if not self.engine:
+        if self.engine is None:
             self.build_engine()
 
         proxy = self.engine.execute(executable)
@@ -295,20 +255,64 @@ class AlchemyHandler:
 
         return scalar
 
-    def show_tables(self):
-        if not self.graph:
-            self.build_schemagraph()
+    def build_metadata(self):
+        if not self.has_database:
+            self.ask_database()
 
-        return self.graph.show_tables()
+        if not self.connected:
+            self.build_engine()
+        
+        self.metadata = MetaData(bind=self.engine)
+        self.metadata.reflect()
+        
+        return True
 
-    def get_table(self, table):
-        if not self.graph:
-            self.build_schemagraph()
+    def translate_table(self, raw_table): 
+        if not self.metadata:
+            self.build_metadata()
 
-        return self.graph.get_table(table)
+        return parsing.translate_table(self.metadata, raw_table)  
+
+    def translate_column(self, raw_column):
+        if not self.metadata:
+            self.build_metadata()
+
+        return parsing.translate_column(self.metadata, raw_column) 
+
+    def get_table(self, table): 
+        if not self.metadata:
+            self.build_metadata() 
+
+        return querying.get_table(self.metadata, table)
 
     def get_column(self, column):
-        if not self.graph:
-            self.build_schemagraph()
+        if not self.metadata:
+            self.build_metadata() 
 
-        return self.graph.get_column(column)
+        return querying.get_column(self.metadata, column) 
+
+    def build_graph(self):
+        if not self.metadata:
+            self.build_metadata()
+        
+        self.graph = querying.build_graph(self.metadata)
+
+    #For when necessary
+    #def build_session(self):
+    #    if not self.has_database:
+    #        self.connect(ask_database=True)
+    #    if not self.connected:
+    #        self.build_engine()
+            
+
+    #    session_maker = sessionmaker()
+    #    self.session = session_maker(bind=self.engine)
+    #    return 
+    
+    def get_map(self, template):
+        if not self.metadata:
+            self.build_metadata()
+
+        return cartography.get_map(self.metadata, template)
+
+

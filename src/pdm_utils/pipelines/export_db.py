@@ -23,6 +23,8 @@ from pdm_utils.classes.filter import Filter
 from pdm_utils.functions import basic
 from pdm_utils.functions import flat_files
 from pdm_utils.functions import mysqldb
+from pdm_utils.functions import parsing
+from pdm_utils.functions import querying
 
 # Valid file formats using Biopython
 BIOPYTHON_CHOICES = ["gb", "fasta", "clustal", "fasta-2line", "nexus",
@@ -48,7 +50,6 @@ def run_export(unparsed_args_list):
     if args.verbose:
         print("Please input database credentials:")
     alchemist = establish_database_connection(args.database)
-    engine = alchemist.engine
 
     csvx = False
     ffx = None
@@ -78,8 +79,7 @@ def run_export(unparsed_args_list):
         raise ValueError
 
     if not ix:
-        #Alchemist to be removed
-        execute_export(engine, alchemist, args.output_path, args.output_name,
+        execute_export(alchemist, args.output_path, args.output_name,
                             values=values, verbose=args.verbose,
                             csv_export=csvx, ffile_export=ffx, db_export=dbx,
                             table=args.table,
@@ -193,9 +193,9 @@ def parse_export(unparsed_args_list):
                                 help=IMPORT_FILE_HELP, dest="input",
                                 default=[])
         parser.add_argument("-in", "--import_names", nargs="*",
-                                help=SINGLE_GENOMES_HELP, dest="input",
-                                default=[])
-        parser.add_argument("-f", "--filter", nargs="*",
+                                help=SINGLE_GENOMES_HELP, dest="input")
+        parser.add_argument("-f", "--filter", nargs="?",
+                                type=parsing.parse_cmd_string,
                                 help=FILTERS_HELP,
                                 dest="filters")
         parser.add_argument("-g", "--group", nargs="*",
@@ -216,7 +216,7 @@ def parse_export(unparsed_args_list):
     parsed_args = parser.parse_args(unparsed_args_list[3:])
     return parsed_args
 
-def execute_export(engine, alchemist, output_path, output_name,
+def execute_export(alchemist, output_path, output_name,
                         values=[], verbose=False,
                         csv_export=False, ffile_export=None, db_export=False,
                         table="phage", filters=[], groups=[]):
@@ -256,7 +256,7 @@ def execute_export(engine, alchemist, output_path, output_name,
 
     if verbose:
         print("Retrieving database version...")
-    db_version = mysqldb.get_version_table_data(engine)
+    db_version = mysqldb.get_version_table_data(alchemist.engine)
 
     if verbose:
         print("Creating export folder...")
@@ -274,10 +274,13 @@ def execute_export(engine, alchemist, output_path, output_name,
         for column in table_obj.primary_key.columns:
             primary_key = column
 
-        db_filter = Filter(loader=alchemist, key=primary_key)
+        db_filter = Filter(alchemist=alchemist, key=primary_key)
         db_filter.values = values
-        for filter in filters:
-            db_filter.add(filter)
+
+        for or_filters in filters:
+            for filter in or_filters:
+                db_filter.add(filter)
+
         db_filter.update()
 
         if filters and not db_filter.values:
@@ -295,13 +298,13 @@ def execute_export(engine, alchemist, output_path, output_name,
             values = values_map[export_path]
 
             if csv_export:
-                execute_csv_export(alchemist, engine,
+                execute_csv_export(alchemist,
                                         export_path,
                                         table=table, values=values,
                                         verbose=verbose)
 
             elif ffile_export != None:
-                execute_ffx_export(engine,
+                execute_ffx_export(alchemist,
                                         export_path, ffile_export,
                                         db_version,
                                         table=table, values=values,
@@ -325,7 +328,7 @@ def build_groups_map(db_filter, export_path, groups=[], values_map={},
         else:
             values_map.update({group_path : groups_dict[group]})
 
-def execute_csv_export(alchemist, engine, export_path,
+def execute_csv_export(alchemist, export_path,
                                         table="phage", values=[],
                                         verbose=False):
     remove_fields = {"phage"           : ["Sequence"],
@@ -350,7 +353,7 @@ def execute_csv_export(alchemist, engine, export_path,
     for column in table_obj.primary_key.columns:
         primary_key = column
 
-    query = alchemist.build_select(select_columns)
+    query = querying.build_select(alchemist.graph, select_columns)
 
     if values:
         query = query.where(primary_key.in_(values))
@@ -361,7 +364,7 @@ def execute_csv_export(alchemist, engine, export_path,
     basic.export_data_dict(results, file_path, headers,
                                                include_headers=True)
 
-def execute_ffx_export(engine, output_path, file_format,
+def execute_ffx_export(alchemist, output_path, file_format,
                        db_version, table="phage", values=[],
                        verbose=False):
 
@@ -371,7 +374,7 @@ def execute_ffx_export(engine, output_path, file_format,
 
     if table == "phage":
         genomes = mysqldb.parse_genome_data(
-                                engine,
+                                alchemist.engine,
                                 phage_id_list=values,
                                 phage_query="SELECT * FROM phage",
                                 gene_query="SELECT * FROM gene")
@@ -531,9 +534,8 @@ def append_database_version(genome_seqrecord: SeqRecord, version_data: Dict):
     """
     version_keys = version_data.keys()
     if "Version" not in version_keys or "SchemaVersion" not in version_keys:
-        print("Version of selected database "
-        "is outdated.\nVersion data is incompatable")
-        raise ValueError
+        raise ValueError("Version of selected database is outdated. "
+                         "Version data is incompatable.")
     try:
         genome_seqrecord.annotations["comment"] =\
                 genome_seqrecord.annotations["comment"] + (
