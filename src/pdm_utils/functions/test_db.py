@@ -8,12 +8,13 @@ USER = "pdm_anon"
 PASSWORD = "pdm_anon"
 DATABASE = "test_db"
 CONNECTION_STRING = f"mysql+pymysql://{USER}:{PASSWORD}@localhost/{DATABASE}"
-TEST_DB_PATH = Path("../tests/integration_heavy/test_files/test_db.sql")
+# TEST_DB_PATH = Path("../tests/integration_heavy/test_files/test_db.sql")
+TEST_DB_PATH = Path("../tests/test_files/test_db.sql")
 TEMP_DIR = Path.cwd()
 
 def setup_test_db():
-    connection = pymysql.connect(host="localhost", 
-                                 user=USER, 
+    connection = pymysql.connect(host="localhost",
+                                 user=USER,
                                  password=PASSWORD,
                                  cursorclass=pymysql.cursors.DictCursor)
     cur = connection.cursor()
@@ -24,7 +25,7 @@ def setup_test_db():
                f"WHERE SCHEMA_NAME = '{DATABASE}'"
     cur.execute(sql_query)
     result = cur.fetchall()
-    
+
     if len(result) != 0:
         cur.execute(f"DROP DATABASE {DATABASE}")
         connection.commit()
@@ -50,13 +51,13 @@ def connect_test_db():
     return engine
 
 def teardown_test_db():
-    connection = pymysql.connect(host="localhost", 
-                                     user=USER, 
+    connection = pymysql.connect(host="localhost",
+                                     user=USER,
                                      password=PASSWORD,
                                      cursorclass=pymysql.cursors.DictCursor)
     cur = connection.cursor()
 
     cur.execute(f"DROP DATABASE {DATABASE}")
-    connection.commit()   
-    
+    connection.commit()
+
     connection.close()
