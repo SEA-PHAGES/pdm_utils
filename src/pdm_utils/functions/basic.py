@@ -298,7 +298,6 @@ def reformat_description(raw_description):
     raw_description = raw_description.strip()
     processed_description = raw_description.lower()
     split_description = processed_description.split(" ")
-
     generic_set = {"hypothetical protein",
                    "phage protein",
                    "unknown",
@@ -314,31 +313,37 @@ def reformat_description(raw_description):
                    "regulatory protein",
                    "integral membrane protein",
                    "\\n",
-                   "."
+                   ".",
+                   "gp",
+                   "orf",
+                   "putative",
+                   "protein",
+                   "hypothetical"
                    }
 
     if processed_description in generic_set:
         processed_description = ""
-    elif processed_description.isdigit():
+    elif is_float(processed_description):
         processed_description = ""
     elif len(split_description) == 1:
-        if split_description[0][:2] == "gp" and \
-            split_description[0][2:].isdigit():
-            processed_description = ""
-        elif split_description[0][:3] == "orf" and \
-            split_description[0][3:].isdigit():
+
+        # Check if similar to gp10, ORF10, ORF10.1
+        first_left, first_right = split_string(split_description[0])
+        if (first_left in generic_set and first_right != ""):
             processed_description = ""
         else:
             processed_description = raw_description
+
     elif len(split_description) == 2:
-        if split_description[0] == "gp" and \
-            split_description[1].isdigit():
+
+        first_left, first_right = split_string(split_description[0])
+        second_left, second_right = split_string(split_description[1])
+
+        # gp 10
+        if (first_left in generic_set and second_right != ""):
             processed_description = ""
-        elif split_description[0] == "orf" and \
-            split_description[1].isdigit():
-            processed_description = ""
-        elif (split_description[0] == "putative" and \
-            split_description[1][:7] == "protein"):
+        # putative protein, hypothetical protein, putative gp10)
+        elif (first_left in generic_set and second_left in generic_set):
             processed_description = ""
         else:
             processed_description = raw_description
@@ -557,11 +562,21 @@ def match_items(list1, list2):
             set2_duplicate_items)
 
 
+def is_float(string):
+    """Check if string can be converted to float."""
+    try:
+        float(string)
+    except:
+        return False
+    else:
+        return True
+
+
 def split_string(string):
     """Split a string based on alphanumeric characters.
 
     Iterates through a string, identifies the first position
-    in which the character is a digit, and creates two strings at this
+    in which the character is a float, and creates two strings at this
     position.
 
     :param string: The value to be split.
@@ -581,18 +596,17 @@ def split_string(string):
     right = ""
     if string.isalpha():
         left = string
-    elif string.isdigit():
+    elif is_float(string):
         right = string
     else:
-        index = 0
+        x = 0
         value = False
-        while (value == False and index < len(string)):
-            if (string[:index].isalpha() and \
-                string[index:].isdigit()):
-                left = string[:index]
-                right = string[index:]
+        while (value == False and x < len(string)):
+            if (string[:x].isalpha() and is_float(string[x:])):
+                left = string[:x]
+                right = string[x:]
                 value = True
-            index += 1
+            x += 1
     return (left, right)
 
 

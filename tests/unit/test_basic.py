@@ -613,6 +613,24 @@ class TestBasicFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(value2, "")
 
+    def test_reformat_description_13(self):
+        """Verify 'gp10.1' raw_description is converted properly."""
+        raw_description = " gp10.1 "
+        value1, value2 = basic.reformat_description(raw_description)
+        with self.subTest():
+            self.assertEqual(value1, "gp10.1")
+        with self.subTest():
+            self.assertEqual(value2, "")
+
+    def test_reformat_description_14(self):
+        """Verify 'gp10.1 protein' raw_description is converted properly."""
+        raw_description = " gp10.1 protein "
+        value1, value2 = basic.reformat_description(raw_description)
+        with self.subTest():
+            self.assertEqual(value1, "gp10.1 protein")
+        with self.subTest():
+            self.assertEqual(value2, "")
+
 
 
 
@@ -1125,51 +1143,52 @@ class TestBasicFunctions1(unittest.TestCase):
 
     def test_split_string_1(self):
         """Verify non-numeric string is not split."""
-
-        input = "ABCD"
-        left, right = basic.split_string(input)
-        expected_left = "ABCD"
-        expected_right = ""
+        left, right = basic.split_string("ABCD")
         with self.subTest():
-            self.assertEqual(left, expected_left)
+            self.assertEqual(left, "ABCD")
         with self.subTest():
-            self.assertEqual(right, expected_right)
+            self.assertEqual(right, "")
 
     def test_split_string_2(self):
         """Verify numeric string is not split."""
-
-        input = "1234"
-        left, right = basic.split_string(input)
-        expected_left = ""
-        expected_right = "1234"
+        left, right = basic.split_string("1234")
         with self.subTest():
-            self.assertEqual(left, expected_left)
+            self.assertEqual(left, "")
         with self.subTest():
-            self.assertEqual(right, expected_right)
+            self.assertEqual(right, "1234")
 
     def test_split_string_3(self):
         """Verify alphanumeric string is split correctly."""
-
-        input = "ABC123"
-        left, right = basic.split_string(input)
-        expected_left = "ABC"
-        expected_right = "123"
+        left, right = basic.split_string("ABC123")
         with self.subTest():
-            self.assertEqual(left, expected_left)
+            self.assertEqual(left, "ABC")
         with self.subTest():
-            self.assertEqual(right, expected_right)
+            self.assertEqual(right, "123")
 
     def test_split_string_4(self):
         """Verify mixed alphanumeric string is not split."""
+        left, right = basic.split_string("A1B2C3")
+        with self.subTest():
+            self.assertEqual(left, "")
+        with self.subTest():
+            self.assertEqual(right, "")
 
-        input = "A1B2C3"
+    def test_split_string_5(self):
+        """Verify float string is not split."""
+        left, right = basic.split_string("1234.5")
+        with self.subTest():
+            self.assertEqual(left, "")
+        with self.subTest():
+            self.assertEqual(right, "1234.5")
+
+    def test_split_string_6(self):
+        """Verify alphanumeric string with float is split correctly."""
+        input = "ABC123.5"
         left, right = basic.split_string(input)
-        expected_left = ""
-        expected_right = ""
         with self.subTest():
-            self.assertEqual(left, expected_left)
+            self.assertEqual(left, "ABC")
         with self.subTest():
-            self.assertEqual(right, expected_right)
+            self.assertEqual(right, "123.5")
 
 
 
@@ -1495,6 +1514,23 @@ class TestBasicFunctions1(unittest.TestCase):
         expected = "string1; string2"
         self.assertEqual(output, expected)
 
+
+
+
+    def test_is_float_1(self):
+        """Verify integer string is True."""
+        output = basic.is_float("1")
+        self.assertTrue(output)
+
+    def test_is_float_2(self):
+        """Verify alpha string is False."""
+        output = basic.is_float("ABC")
+        self.assertFalse(output)
+
+    def test_is_float_3(self):
+        """Verify decimal string is False."""
+        output = basic.is_float("1.1")
+        self.assertTrue(output)
 
 
 
