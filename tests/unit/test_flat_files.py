@@ -380,10 +380,11 @@ class TestFlatFileFunctions2(unittest.TestCase):
         self.qualifier_dict = {"locus_tag": ["SEA_L5_1"],
                                "translation": ["ABCDE"],
                                "transl_table": ["11"],
-                               "product": [" unknown "],
-                               "function": [" hypothetical protein "],
-                               "note": [" gp5 "],
+                               "product": [" gp3; terminase "],
+                               "function": [" orf4; repressor "],
+                               "note": [" ORF5; lysin "],
                                "gene": ["2"]}
+
         self.seqfeature = test_data_utils.create_1_part_seqfeature(
                                 2, 10, 1, "CDS", qualifiers=self.qualifier_dict)
 
@@ -414,23 +415,30 @@ class TestFlatFileFunctions2(unittest.TestCase):
         with self.subTest():
             self.assertEqual(cds_ftr.translation_table, 11)
         with self.subTest():
-            self.assertEqual(cds_ftr.raw_product, "unknown")
+            self.assertEqual(cds_ftr.raw_product, "gp3; terminase")
         with self.subTest():
-            self.assertEqual(cds_ftr.product, "")
+            self.assertEqual(cds_ftr.product, "gp3; terminase")
         with self.subTest():
-            self.assertEqual(cds_ftr.raw_function, "hypothetical protein")
+            self.assertEqual(cds_ftr._product_num, "3")
         with self.subTest():
-            self.assertEqual(cds_ftr.function, "")
+            self.assertEqual(cds_ftr.raw_function, "orf4; repressor")
         with self.subTest():
-            self.assertEqual(cds_ftr.raw_note, "gp5")
+            self.assertEqual(cds_ftr.function, "orf4; repressor")
         with self.subTest():
-            self.assertEqual(cds_ftr.note, "")
+            self.assertEqual(cds_ftr._function_num, "4")
+        with self.subTest():
+            self.assertEqual(cds_ftr.raw_note, "ORF5; lysin")
+        with self.subTest():
+            self.assertEqual(cds_ftr._note_num, "5")
+        with self.subTest():
+            self.assertEqual(cds_ftr.note, "ORF5; lysin")
         with self.subTest():
             self.assertEqual(cds_ftr.gene, "2")
         with self.subTest():
             self.assertTrue(isinstance(cds_ftr.seqfeature, SeqFeature))
         with self.subTest():
             self.assertEqual(cds_ftr.name, "2")
+
 
     def test_parse_cds_seqfeature_2(self):
         """Verify CDS feature is parsed with no locus tag."""
@@ -468,8 +476,10 @@ class TestFlatFileFunctions2(unittest.TestCase):
             self.assertEqual(cds_ftr.translation_table, 0)
 
     def test_parse_cds_seqfeature_5(self):
-        """Verify CDS feature is parsed with no product."""
+        """Verify CDS feature is parsed with no product, function, and note."""
         self.qualifier_dict.pop("product")
+        self.qualifier_dict.pop("note")
+        self.qualifier_dict.pop("function")
         cds_ftr = flat_files.parse_cds_seqfeature(self.seqfeature)
         with self.subTest():
             self.assertEqual(cds_ftr.locus_tag, "SEA_L5_1")
@@ -477,28 +487,76 @@ class TestFlatFileFunctions2(unittest.TestCase):
             self.assertEqual(cds_ftr.raw_product, "")
         with self.subTest():
             self.assertEqual(cds_ftr.product, "")
-
-    def test_parse_cds_seqfeature_6(self):
-        """Verify CDS feature is parsed with no function."""
-        self.qualifier_dict.pop("function")
-        cds_ftr = flat_files.parse_cds_seqfeature(self.seqfeature)
         with self.subTest():
-            self.assertEqual(cds_ftr.locus_tag, "SEA_L5_1")
+            self.assertEqual(cds_ftr._product_num, "")
         with self.subTest():
             self.assertEqual(cds_ftr.raw_function, "")
         with self.subTest():
             self.assertEqual(cds_ftr.function, "")
-
-    def test_parse_cds_seqfeature_7(self):
-        """Verify CDS feature is parsed with no note."""
-        self.qualifier_dict.pop("note")
-        cds_ftr = flat_files.parse_cds_seqfeature(self.seqfeature)
         with self.subTest():
-            self.assertEqual(cds_ftr.locus_tag, "SEA_L5_1")
+            self.assertEqual(cds_ftr._function_num, "")
         with self.subTest():
             self.assertEqual(cds_ftr.raw_note, "")
         with self.subTest():
             self.assertEqual(cds_ftr.note, "")
+        with self.subTest():
+            self.assertEqual(cds_ftr._note_num, "")
+
+    def test_parse_cds_seqfeature_6(self):
+        """Verify CDS feature is parsed with generic description and
+        numbers in various qualifiers."""
+        self.seqfeature.qualifiers["product"] = [" ORF2 "]
+        self.seqfeature.qualifiers["function"] = [" GP003 "]
+        self.seqfeature.qualifiers["note"] = [" 10.4 "]
+        cds_ftr = flat_files.parse_cds_seqfeature(self.seqfeature)
+        with self.subTest():
+            self.assertEqual(cds_ftr.locus_tag, "SEA_L5_1")
+        with self.subTest():
+            self.assertEqual(cds_ftr.raw_product, "ORF2")
+        with self.subTest():
+            self.assertEqual(cds_ftr.product, "")
+        with self.subTest():
+            self.assertEqual(cds_ftr._product_num, "2")
+        with self.subTest():
+            self.assertEqual(cds_ftr.raw_function, "GP003")
+        with self.subTest():
+            self.assertEqual(cds_ftr.function, "")
+        with self.subTest():
+            self.assertEqual(cds_ftr._function_num, "003")
+        with self.subTest():
+            self.assertEqual(cds_ftr.raw_note, "10.4")
+        with self.subTest():
+            self.assertEqual(cds_ftr.note, "")
+        with self.subTest():
+            self.assertEqual(cds_ftr._note_num, "10.4")
+
+    def test_parse_cds_seqfeature_7(self):
+        """Verify CDS feature is parsed with non-generic description and
+        no numbers in various qualifiers."""
+        self.seqfeature.qualifiers["product"] = [" terminase "]
+        self.seqfeature.qualifiers["function"] = [" repressor "]
+        self.seqfeature.qualifiers["note"] = [" lysin "]
+        cds_ftr = flat_files.parse_cds_seqfeature(self.seqfeature)
+        with self.subTest():
+            self.assertEqual(cds_ftr.locus_tag, "SEA_L5_1")
+        with self.subTest():
+            self.assertEqual(cds_ftr.raw_product, "terminase")
+        with self.subTest():
+            self.assertEqual(cds_ftr.product, "terminase")
+        with self.subTest():
+            self.assertEqual(cds_ftr._product_num, "")
+        with self.subTest():
+            self.assertEqual(cds_ftr.raw_function, "repressor")
+        with self.subTest():
+            self.assertEqual(cds_ftr.function, "repressor")
+        with self.subTest():
+            self.assertEqual(cds_ftr._function_num, "")
+        with self.subTest():
+            self.assertEqual(cds_ftr.raw_note, "lysin")
+        with self.subTest():
+            self.assertEqual(cds_ftr.note, "lysin")
+        with self.subTest():
+            self.assertEqual(cds_ftr._note_num, "")
 
     def test_parse_cds_seqfeature_8(self):
         """Verify CDS feature is parsed with no gene."""

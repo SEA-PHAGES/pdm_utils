@@ -128,6 +128,7 @@ def parse_cds_seqfeature(seqfeature):
     :returns: A  pdm_utils Cds object
     :rtype: Cds
     """
+    generic_words = {"gp", "orf", ""}
     cds_ftr = cds.Cds()
     cds_ftr.seqfeature = seqfeature
 
@@ -135,7 +136,8 @@ def parse_cds_seqfeature(seqfeature):
         locus_tag = seqfeature.qualifiers["locus_tag"][0]
     except:
         locus_tag = ""
-    cds_ftr.set_locus_tag(locus_tag)
+    finally:
+        cds_ftr.set_locus_tag(locus_tag)
 
     cds_ftr.set_orientation(seqfeature.strand, "fr_short", case = True)
     cds_ftr.start, cds_ftr.stop, cds_ftr.parts = parse_coordinates(seqfeature)
@@ -144,42 +146,44 @@ def parse_cds_seqfeature(seqfeature):
     # are 0-based half open intervals.
     cds_ftr.coordinate_format = "0_half_open"
 
-
     # For translation, convert it to a Biopython Seq object.
     try:
         translation = seqfeature.qualifiers["translation"][0]
     except:
         translation = ""
-    translation = Seq(translation, Alphabet.IUPAC.protein)
-    cds_ftr.set_translation(translation)
+    finally:
+        translation = Seq(translation, Alphabet.IUPAC.protein)
+        cds_ftr.set_translation(translation)
+
     cds_ftr.set_nucleotide_length()
 
     try:
         translation_table = seqfeature.qualifiers["transl_table"][0]
     except:
         translation_table = 0
-    cds_ftr.set_translation_table(translation_table)
+    finally:
+        cds_ftr.set_translation_table(translation_table)
 
     try:
-        cds_ftr.raw_product, cds_ftr.product = \
-            basic.reformat_description(seqfeature.qualifiers["product"][0])
+        product = seqfeature.qualifiers["product"][0]
     except:
-        cds_ftr.raw_product = ""
-        cds_ftr.product = ""
+        product = ""
+    finally:
+        cds_ftr.set_description_field("product", product, generic_words)
 
     try:
-        cds_ftr.raw_function, cds_ftr.function = \
-            basic.reformat_description(seqfeature.qualifiers["function"][0])
+        function = seqfeature.qualifiers["function"][0]
     except:
-        cds_ftr.raw_function = ""
-        cds_ftr.function = ""
+        function = ""
+    finally:
+        cds_ftr.set_description_field("function", function, generic_words)
 
     try:
-        cds_ftr.raw_note, cds_ftr.note = \
-            basic.reformat_description(seqfeature.qualifiers["note"][0])
+        note = seqfeature.qualifiers["note"][0]
     except:
-        cds_ftr.raw_note = ""
-        cds_ftr.note = ""
+        note = ""
+    finally:
+        cds_ftr.set_description_field("note", note, generic_words)
 
     try:
         cds_ftr.gene = seqfeature.qualifiers["gene"][0]
@@ -188,7 +192,6 @@ def parse_cds_seqfeature(seqfeature):
 
     cds_ftr.set_name()
     return cds_ftr
-
 
 
 def parse_source_seqfeature(seqfeature):

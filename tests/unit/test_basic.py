@@ -1159,11 +1159,11 @@ class TestBasicFunctions1(unittest.TestCase):
 
     def test_split_string_3(self):
         """Verify alphanumeric string is split correctly."""
-        left, right = basic.split_string("ABC123")
+        left, right = basic.split_string("ABC0123")
         with self.subTest():
             self.assertEqual(left, "ABC")
         with self.subTest():
-            self.assertEqual(right, "123")
+            self.assertEqual(right, "0123")
 
     def test_split_string_4(self):
         """Verify mixed alphanumeric string is not split."""

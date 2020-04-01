@@ -56,6 +56,12 @@ class Cds:
         self.function = ""
         self.note = ""
 
+
+        # TODO test.
+        self._product_num = ""
+        self._function_num = ""
+        self._note_num = ""
+
         # The following attributes are usefule for processing data
         # from various data sources.
         self.evaluations = []
@@ -107,8 +113,11 @@ class Cds:
                 value = parts[-1]
         else:
             value = parts[-1]
-        if value.isdigit():
-            self._locus_tag_num = value
+
+        # Remove generic 'gp' prefix if present (e.g. TRIXIE_gp10)
+        left, right = basic.split_string(value)
+        if (left.lower() == "gp" or left == ""):
+            self._locus_tag_num = right
 
 
 
@@ -141,15 +150,41 @@ class Cds:
         #    it may or may not have an integer.
         #    The 'locus_tag' qualifier may or may not be present,
         #    and may or may not have an integer.
-
         if value is not None:
             self.name = value
         elif self.gene != "":
             self.name = self.gene
         elif self._locus_tag_num != "":
             self.name = self._locus_tag_num
+        elif self._product_num != "":
+            self.name = self._product_num
+        elif self._note_num != "":
+            self.name = self._note_num
+        elif self._function_num != "":
+            self.name = self._function_num
         else:
             self.name = ""
+
+
+    def set_description_field(self, attr, value, generic_set=set()):
+        """Parse a gene description field and set several attributes."""
+        proc_attr = attr
+        raw_attr = "raw_" + attr
+        num_attr = "_" + attr + "_num"
+        raw, processed = basic.reformat_description(value)
+        left, right = basic.split_string(raw)
+
+        # Set raw and processed strings
+        setattr(self, proc_attr, processed)
+        setattr(self, raw_attr, raw)
+
+        # Sometimes feature number is stored within the description
+        # (e.g. 'gp10; terminase')
+        first_value = value.split(";")[0]
+        first_raw, first_processed = basic.reformat_description(first_value)
+        first_left, first_right = basic.split_string(first_raw)
+        if first_left.lower() in generic_set:
+            setattr(self, num_attr, first_right)
 
 
     def set_description(self, value):
