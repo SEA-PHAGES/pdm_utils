@@ -790,7 +790,12 @@ def prepare_bundle(filepath=pathlib.Path(), ticket_dict={}, engine=None,
         # in the database), the genome ID needs to be changed.
         # id_conversion_dict key = incorrect spelling; value = correct spelling
         if ff_gnm.id in id_conversion_dict.keys():
-            ff_gnm.id = id_conversion_dict[ff_gnm.id]
+
+            # Treat the new value as a name, which could have '_Draft' suffix,
+            # then use set_id() to remove suffix.
+            new_name = id_conversion_dict[ff_gnm.id]
+            ff_gnm.name = new_name
+            ff_gnm.set_id(value=new_name)
 
             # Need to recompute the feature ids using the new genome id.
             ff_gnm.set_feature_ids(use_type=True, use_cds=True)

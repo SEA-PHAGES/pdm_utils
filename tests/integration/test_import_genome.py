@@ -392,7 +392,7 @@ class TestImportGenome1(unittest.TestCase):
     def test_prepare_bundle_10(self):
         """Verify bundle is returned with the genome id converted using
         the id dictionary. Several attributes in the genome object should
-        be updated, including the genome's 'id' attribute,
+        be updated, including the genome's 'id' and 'name' attributes,
         the 'genome_id' of each feature (which should match the new 'id'),
         and the 'id' of each feature (which should begin with the new 'id')."""
         id_dict = {"L5": "new_id"}
@@ -418,7 +418,7 @@ class TestImportGenome1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(ff_gnm.id, "new_id")
         with self.subTest():
-            self.assertEqual(ff_gnm.name, "L5")
+            self.assertEqual(ff_gnm.name, "new_id")
         with self.subTest():
             self.assertEqual(ff_gnm.cluster, "B")
         with self.subTest():
