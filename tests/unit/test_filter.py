@@ -1,9 +1,13 @@
+from networkx import Graph
+from sqlalchemy import Column
 from sqlalchemy.engine.base import Engine
 from sqlalchemy.sql.elements import BinaryExpression
 from pdm_utils.classes.filter import Filter
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
-from sqlalchemy import Column
-from unittest.mock import patch, Mock, PropertyMock, call
+from unittest.mock import call
+from unittest.mock import patch
+from unittest.mock import Mock 
+from unittest.mock import PropertyMock
 import unittest
 
 class TestFilter(unittest.TestCase):
@@ -11,14 +15,18 @@ class TestFilter(unittest.TestCase):
     def setUp(self, IsInstance):
         IsInstance.return_value = True
 
-        alchemist = Mock()
-        engine = Mock()
-        graph = Mock()
-        key = Mock()
+        alchemist = Mock(spec=AlchemyHandler)
+        engine = Mock(spec=Engine)
+        graph = Mock(spec=Graph)
+        key = Mock(spec=Column)
+        proxy = Mock()
+        
+        type(alchemist).engine = PropertyMock(return_value=engine)
+        type(alchemist).graph  = PropertyMock(return_value=graph)
+        type(alchemist).connected = PropertyMock(return_value=True)
 
-        alchemist.engine.return_value =  engine
-        alchemist.graph.return_value = graph
-        alchemist.connected.return_value = True
+        engine.execute.return_value = proxy
+        proxy.fetchall.return_value = []
       
         self.mock_isinstance = IsInstance
         self.mock_alchemist = alchemist
@@ -28,7 +36,6 @@ class TestFilter(unittest.TestCase):
 
         self.db_filter = Filter(alchemist=alchemist, key=key) 
 
-
     def test_constructor_1(self):
         db_filter = Filter()
        
@@ -37,6 +44,23 @@ class TestFilter(unittest.TestCase):
                                              AlchemyHandler)
         self.mock_isinstance.assert_any_call(self.mock_key, Column)
 
+    def test_engine_1(self):
+        self.db_filter.engine = self.mock_engine
+
+        self.assertEqual(self.db_filter.engine, self.mock_engine)
+
+    def test_engine_2(self):
+        with self.assertRaises(TypeError):
+            self.db_filter.engine = Mock()
+
+    def test_graph_1(self):
+        self.db_filter.graph = self.mock_graph
+
+        self.assertEqual(self.db_filter.graph, self.mock_graph)
+
+    def test_graph_2(self):
+        with self.assertRaises(TypeError):
+            self.db_filter.graph = Mock()
 
     def test_values_1(self):
         self.db_filter.values = ["Test1", "Test2"]
@@ -46,6 +70,49 @@ class TestFilter(unittest.TestCase):
         with self.assertRaises(TypeError):
             self.db_filter.values = "Hello"
 
+    def test_key_1(self):
+        self.db_filter.key = self.mock_key  
+
+        self.assertEqual(self.db_filter.key, self.mock_key)
+
+    def test_key_2(self):
+        with self.assertRaises(TypeError):
+            self.db_filter.key = Mock()
+
+    @patch("pdm_utils.classes.filter.isinstance")
+    def test_check_1(self, IsInstance):
+        IsInstance.return_value = True
+
+        self.db_filter.check()
+
+        IsInstance.assert_any_call(self.mock_engine, Engine)
+        IsInstance.assert_any_call(self.mock_graph, Graph)
+        IsInstance.assert_any_call(self.mock_key, Column)
+
+    def test_check_2(self):
+        self.db_filter._key = "Not a valid key"
+
+        with self.assertRaises(AttributeError):
+            self.db_filter.check()
+
+    @patch("pdm_utils.classes.filter.q.build_distinct")
+    @patch("pdm_utils.classes.filter.isinstance")
+    def test_build_values_1(self, IsInstance):
+        IsInstance.return_value = False
+        self.db_filter.build_values(where="Not a list")
+
+        BuildDistinct.assert_called_once_with(self.mock_graph, [self.mock_key],
+                                                        where=["Not a list"],
+                                                        order_by=None)
+
+    @patch("pdm_utils.classes.filter.q.build_distinct")
+    def test_build_values_1(self, BuildDistinct):
+        self.db_filter.build_values(order_by="Column")
+
+        BuildDistinct.assert_called_once_with(self.mock_graph, [self.mock_key],
+                                                        where=[],
+                                                        order_by="Column")
+    
     @patch("pdm_utils.classes.filter.Filter.check")
     @patch("pdm_utils.classes.filter.q.build_distinct")
     def test_transpose_2(self, BuildDistinct, Check):

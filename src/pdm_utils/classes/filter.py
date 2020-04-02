@@ -110,14 +110,8 @@ class Filter:
         if not isinstance(key, Column):
             raise TypeError("Filter key value must be of type SqlAlchemy Column.")
         
-        table = self._graph.nodes[key.table.name]["table"]
-        column = table.columns[key.name]
-
         self._key = key
 
-    def setup(loader): 
-        load_filter(self, loader)
-    
     def check(self):
         if not isinstance(self.engine, Engine): 
             raise AttributeError("Filter object is missing valid engine.")
@@ -170,19 +164,20 @@ class Filter:
         self.check()
 
         values = []
-
-        if where == None:
-            where_clauses = []
+        
+        if not where is None:
+            if isinstance(where, list):
+                where_clauses = where
+            else:
+                where_clauses = [where]
         else:
-            where_clauses = where
+            where_clauses = []
 
         if self.values != []:
             where_clauses.append(self.key.in_(self.values))
 
-        query = q.build_select(self.graph, [self._key], where=where_clauses)
-
-        if isinstance(order_by, Column):
-            query = query.order_by(order_by)
+        query = q.build_distinct(self.graph, [self._key], where=where_clauses, 
+                                                          order_by=order_by)
 
         proxy = self.engine.execute(query)
         results = proxy.fetchall()
@@ -192,7 +187,7 @@ class Filter:
 
         return values
   
-    def transpose(self, column, return_dict=False):
+    def transpose(self, column, return_dict=False, set_values=False):
         self.check()
 
         if not self.values:
@@ -220,22 +215,30 @@ class Filter:
         for result in results:
             values.append(result[0])
 
+        if set_values:
+            self._key = column
+            self._values = values
+            values_valid = True
+
         if return_dict:
             values = {name : values}
 
         return values
 
-    def retrieve(self, selectables):
+    def retrieve(self, columns):
         self.check()
 
         if not self.values:
             return {}
 
+        if not isinstance(columns, list):
+            columns = [columns]
+
         where_clause = (self.key.in_(self.values))
     
         results = {}
-        for selectable in selectables:
-            values = self.transpose(selectable, return_dict=True) 
+        for column in columns:
+            values = self.transpose(column, return_dict=True) 
             results.update(values)            
 
         return results
