@@ -4,8 +4,9 @@ from sqlalchemy import Column
 import re
 
 #Global file constants
-COMPARATIVE_OPERATORS = [">", ">=", "<", "<="]
-OPERATORS             = ["=", "!=", "IS NOT", "LIKE"] + COMPARATIVE_OPERATORS
+NUMERIC_OPERATORS     = [">", ">=", "<", "<="]
+NONNUMERIC_OPERATORS  = ["=", "!=", "IS NOT", "LIKE"]
+OPERATORS             = NUMERIC_OPERATORS + NONNUMERIC_OPERATORS
 COMPARABLE_TYPES      = [int, Decimal, float, datetime]
 TYPES                 = [str, bytes] + COMPARABLE_TYPES
 GROUP_OPTIONS = ["limited_set", "num_set", "str_set"]
@@ -142,7 +143,7 @@ def check_operator(operator, column_object):
         if column_type not in TYPES:
             raise ValueError(f"Column '{column_object.name}' "
                              f"has an unsupported type, {column_type}.")
-        if operator in COMPARATIVE_OPERATORS and \
+        if operator in NUMERIC_OPERATORS and \
            column_type not in COMPARABLE_TYPES:
             raise ValueError(f"Column '{column_object.name}' "
                              f"is not comparable with '{operator}'.")

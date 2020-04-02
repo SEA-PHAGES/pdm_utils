@@ -215,7 +215,7 @@ class TestCheckOperator(unittest.TestCase):
                 parsing.check_operator(operator, self.num_column)
 
     def test_check_operator_4(self):
-        for operator in parsing.COMPARATIVE_OPERATORS:
+        for operator in parsing.NUMERIC_OPERATORS:
             with self.subTest(comparative_operator=operator):
                 with self.assertRaises(ValueError):
                     parsing.check_operator(operator, self.str_column)
