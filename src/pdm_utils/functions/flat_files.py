@@ -137,7 +137,7 @@ def parse_cds_seqfeature(seqfeature):
     except:
         locus_tag = ""
     finally:
-        cds_ftr.set_locus_tag(locus_tag)
+        cds_ftr.set_locus_tag(locus_tag, delimiter=None)
 
     cds_ftr.set_orientation(seqfeature.strand, "fr_short", case = True)
     cds_ftr.start, cds_ftr.stop, cds_ftr.parts = parse_coordinates(seqfeature)

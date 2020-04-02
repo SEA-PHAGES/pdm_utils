@@ -88,11 +88,16 @@ class Cds:
             is provided, the genome_id attribute is used.
         :type check_value: str
         """
+        # List of delimiters found in locus tags
+        # "_" is the most common. The others are rare.
+        delimiters = ["_", "-", "."]
 
         # MySQL database-output format
         if tag is None:
             tag = ""
         self.locus_tag = tag
+        if delimiter is None:
+            delimiter = basic.choose_most_common(tag, delimiters)
         if check_value is None:
             check_value = self.genome_id
         pattern = re.compile(check_value.lower())
@@ -115,10 +120,21 @@ class Cds:
             value = parts[-1]
 
         # Remove generic 'gp' prefix if present (e.g. TRIXIE_gp10)
-        left, right = basic.split_string(value)
-        if (left.lower() == "gp" or left == ""):
-            self._locus_tag_num = right
+        # Sometimes locus tags contain number with character (e.g. TRIXIE_10A)
+        if value.lower().startswith("gp"):
+            value = value[2:]
+        elif value.lower().startswith("orf"):
+            value = value[3:]
+        else:
+            pass
 
+        # If a numeric value can be identified, take it, other wise
+        # take the entire value
+        left, right = basic.split_string(value)
+        if right != "":
+            self._locus_tag_num = right
+        else:
+            self._locus_tag_num = value
 
 
     def set_name(self, value=None):
@@ -168,9 +184,9 @@ class Cds:
 
     def set_description_field(self, attr, value, generic_set=set()):
         """Parse a gene description field and set several attributes."""
-        proc_attr = attr
-        raw_attr = "raw_" + attr
-        num_attr = "_" + attr + "_num"
+        proc_attr = attr  # e.g. self.product
+        raw_attr = "raw_" + attr  # e.g. self.raw_product
+        num_attr = "_" + attr + "_num"  # e.g. self._product_num
         raw, processed = basic.reformat_description(value)
         left, right = basic.split_string(raw)
 
@@ -178,6 +194,8 @@ class Cds:
         setattr(self, proc_attr, processed)
         setattr(self, raw_attr, raw)
 
+        # TODO below could probably be separated into a separate method
+        # like set_description_field_num()
         # Sometimes feature number is stored within the description
         # (e.g. 'gp10; terminase')
         first_value = value.split(";")[0]

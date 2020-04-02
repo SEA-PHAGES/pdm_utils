@@ -1534,6 +1534,40 @@ class TestBasicFunctions1(unittest.TestCase):
 
 
 
+
+    def test_choose_most_common_1(self):
+        """Verify higher ranked most common is returned."""
+        value = basic.choose_most_common("SEA.TRIXIE_DRAFT_1", ["_", "."])
+        self.assertEqual(value, "_")
+
+    def test_choose_most_common_2(self):
+        """Verify lower ranked most common is returned."""
+        value = basic.choose_most_common("SEA_TRIXIE.DRAFT.1", ["_", "."])
+        self.assertEqual(value, ".")
+
+    def test_choose_most_common_3(self):
+        """Verify higher ranked tied for most common from two is returned."""
+        value = basic.choose_most_common("SEA.GENE.TRIXIE_DRAFT_1", ["_", "."])
+        self.assertEqual(value, "_")
+
+    def test_choose_most_common_4(self):
+        """Verify higher ranked tied for most common from three is returned."""
+        value = basic.choose_most_common("SEA-GENE.TRIXIE_1", ["_", ".", "-"])
+        self.assertEqual(value, "_")
+
+    def test_choose_most_common_5(self):
+        """Verify higher ranked middle value is returned."""
+        value = basic.choose_most_common("SEA-GENE.TRIXIE.DRAFT_1", ["_", ".", "-"])
+        self.assertEqual(value, ".")
+
+    def test_choose_most_common_6(self):
+        """Verify higher ranked is returned when none are found."""
+        value = basic.choose_most_common("SEA-GENE-TRIXIE-DRAFT-1", ["_", "."])
+        self.assertEqual(value, "_")
+
+
+
+
 class TestBasicFunctions2(unittest.TestCase):
 
     def setUp(self):

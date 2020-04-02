@@ -33,10 +33,13 @@ class TestCdsClass(unittest.TestCase):
         self.seqfeature3 = test_data_utils.create_2_part_seqfeature(
                                 1, 5, 1, 3, 7, 1, "CDS")
 
+
+
+
     def test_set_locus_tag_1(self):
         """Verify that standard 3-part locus_tag is parsed correctly."""
         self.feature.genome_id = "Trixie"
-        self.feature.set_locus_tag(tag="SEA_TRIXIE_20")
+        self.feature.set_locus_tag(tag="SEA_TRIXIE_20", delimiter=None)
         with self.subTest():
             self.assertEqual(self.feature.locus_tag, "SEA_TRIXIE_20")
         with self.subTest():
@@ -53,29 +56,30 @@ class TestCdsClass(unittest.TestCase):
         """Verify that standard 3-part locus_tag is parsed correctly
         when custom genome ID is provided."""
         self.feature.genome_id = "L5"
-        self.feature.set_locus_tag(tag="SEA_TRIXIE_20", check_value="Trixie")
+        self.feature.set_locus_tag(tag="SEA_TRIXIE_20", delimiter=None,
+                                   check_value="Trixie")
         self.assertEqual(self.feature._locus_tag_num, "20")
 
     def test_set_locus_tag_4(self):
         """Verify that non-standard 4-part locus_tag is
         parsed correctly."""
         self.feature.genome_id = "Trixie"
-        self.feature.set_locus_tag(tag="SEA_TRIXIE_DRAFT_20")
+        self.feature.set_locus_tag(tag="SEA_TRIXIE_DRAFT_20", delimiter=None)
         self.assertEqual(self.feature._locus_tag_num, "20")
 
     def test_set_locus_tag_5(self):
         """Verify that non-standard 4-part locus_tag
         with no number is parsed correctly."""
         self.feature.genome_id = "Trixie"
-        self.feature.set_locus_tag(tag="SEA_TRIXIE_DRAFT_ABCD")
-        self.assertEqual(self.feature._locus_tag_num, "")
+        self.feature.set_locus_tag(tag="SEA_TRIXIE_DRAFT_ABCD", delimiter=None)
+        self.assertEqual(self.feature._locus_tag_num, "ABCD")
 
     def test_set_locus_tag_6(self):
         """Verify that non-standard 2-part locus_tag
         with correct genome ID merged with number
         is partially parsed correctly."""
         self.feature.genome_id = "Trixie"
-        self.feature.set_locus_tag(tag="SEA_TRIXIE20")
+        self.feature.set_locus_tag(tag="SEA_TRIXIE20", delimiter=None)
         self.assertEqual(self.feature._locus_tag_num, "20")
 
     def test_set_locus_tag_7(self):
@@ -83,15 +87,15 @@ class TestCdsClass(unittest.TestCase):
         with correct genome ID merged with no number
         is partially parsed correctly."""
         self.feature.genome_id = "Trixie"
-        self.feature.set_locus_tag(tag="SEA_TRIXIEABCD")
-        self.assertEqual(self.feature._locus_tag_num, "")
+        self.feature.set_locus_tag(tag="SEA_TRIXIEABCD", delimiter=None)
+        self.assertEqual(self.feature._locus_tag_num, "ABCD")
 
     def test_set_locus_tag_8(self):
         """Verify that standard 3-part locus_tag
         with incorrect genome ID
         is partially parsed correctly."""
         self.feature.genome_id = "Trixie"
-        self.feature.set_locus_tag(tag="SEA_TRIXI_20")
+        self.feature.set_locus_tag(tag="SEA_TRIXI_20", delimiter=None)
         self.assertEqual(self.feature._locus_tag_num, "20")
 
     def test_set_locus_tag_9(self):
@@ -99,13 +103,13 @@ class TestCdsClass(unittest.TestCase):
         with incorrect genome ID and no number
         is partially parsed correctly."""
         self.feature.genome_id = "Trixie"
-        self.feature.set_locus_tag(tag="SEA_TRIXI_AB20")
-        self.assertEqual(self.feature._locus_tag_num, "")
+        self.feature.set_locus_tag(tag="SEA_TRIXI_AB20", delimiter=None)
+        self.assertEqual(self.feature._locus_tag_num, "20")
 
     def test_set_locus_tag_10(self):
         """Verify that empty locus_tag data from database
         is stored correctly."""
-        self.feature.set_locus_tag(tag=None)
+        self.feature.set_locus_tag(tag=None, delimiter=None)
         with self.subTest():
             self.assertEqual(self.feature.locus_tag, "")
         with self.subTest():
@@ -114,20 +118,61 @@ class TestCdsClass(unittest.TestCase):
     def test_set_locus_tag_11(self):
         """Verify that locus_tag with float is stored correctly."""
         self.feature.genome_id = "Trixie"
-        self.feature.set_locus_tag(tag="TRIXIE_20.1")
+        self.feature.set_locus_tag(tag="TRIXIE_20.1", delimiter=None)
         with self.subTest():
             self.assertEqual(self.feature.locus_tag, "TRIXIE_20.1")
         with self.subTest():
             self.assertEqual(self.feature._locus_tag_num, "20.1")
 
     def test_set_locus_tag_12(self):
-        """Verify that locus_tag with generic prefix and float is stored correctly."""
+        """Verify that locus_tag with generic 'GP' prefix and
+        float is stored correctly."""
         self.feature.genome_id = "Trixie"
-        self.feature.set_locus_tag(tag="TRIXIE_GP020.1")
+        self.feature.set_locus_tag(tag="TRIXIE_GP020.1", delimiter=None)
         with self.subTest():
             self.assertEqual(self.feature.locus_tag, "TRIXIE_GP020.1")
         with self.subTest():
             self.assertEqual(self.feature._locus_tag_num, "020.1")
+
+    def test_set_locus_tag_13(self):
+        """Verify that locus_tag with generic 'ORF' prefix and
+        float is stored correctly."""
+        self.feature.genome_id = "Trixie"
+        self.feature.set_locus_tag(tag="TRIXIE_ORF020.1", delimiter=None)
+        with self.subTest():
+            self.assertEqual(self.feature.locus_tag, "TRIXIE_ORF020.1")
+        with self.subTest():
+            self.assertEqual(self.feature._locus_tag_num, "020.1")
+
+    def test_set_locus_tag_14(self):
+        """Verify that locus_tag with number that includes alpha suffix
+        is stored correctly."""
+        self.feature.genome_id = "Trixie"
+        self.feature.set_locus_tag(tag="TRIXIE_ORF20a", delimiter=None)
+        with self.subTest():
+            self.assertEqual(self.feature.locus_tag, "TRIXIE_ORF20a")
+        with self.subTest():
+            self.assertEqual(self.feature._locus_tag_num, "20a")
+
+    def test_set_locus_tag_15(self):
+        """Verify that locus_tag with multiple potential delimiters
+        is stored correctly with explicit '_' delimiter."""
+        self.feature.genome_id = "Trixie"
+        self.feature.set_locus_tag(tag="TRIXIE_GP020.1", delimiter="_")
+        with self.subTest():
+            self.assertEqual(self.feature.locus_tag, "TRIXIE_GP020.1")
+        with self.subTest():
+            self.assertEqual(self.feature._locus_tag_num, "020.1")
+
+    def test_set_locus_tag_16(self):
+        """Verify that locus_tag with multiple potential delimiters
+        is stored correctly with explicit '.' delimiter."""
+        self.feature.genome_id = "Trixie"
+        self.feature.set_locus_tag(tag="TRIXIE_GP020.1", delimiter=".")
+        with self.subTest():
+            self.assertEqual(self.feature.locus_tag, "TRIXIE_GP020.1")
+        with self.subTest():
+            self.assertEqual(self.feature._locus_tag_num, "1")
 
 
 

@@ -1376,3 +1376,34 @@ def merge_set_dicts(dict1, dict2):
 
         dict3[key] = set1 | set2
     return dict3
+
+
+def choose_most_common(string, values):
+    """Identify most common occurrence of several values in a string.
+
+    :param string: String to search.
+    :type string: str
+    :param values:
+        List of string characters. The order in the list indicates preference,
+        in the case of a tie.
+    :type values: list
+    :returns: Value from values that occurs most.
+    :rtype: str
+    """
+    # In case no value is found, default is to choose the first value.
+    value1 = values[0]
+    count1 = 0
+    # Since order reflects ranking, with values deeper in the list
+    # reflecting lower ranked values, reverse the order to search.
+    for i in reversed(range(len(values))):
+        value2 = values[i]
+        count2 = string.count(value2)
+        if count2 >= count1:
+            value1 = value2
+            count1 = count2
+    return value1
+
+
+
+
+#
