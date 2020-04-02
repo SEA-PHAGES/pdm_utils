@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from networkx import Graph
 from networkx import shortest_path
 from pdm_utils.functions import parsing
@@ -29,9 +30,9 @@ def get_column(metadata, column):
     column = parsing.translate_column(metadata, column)
 
     columns_dict = dict(table_obj.columns)
-    column = columns_dict[parsed_column[1]]
+    column_obj = columns_dict[column]
 
-    return column
+    return column_obj
 
 def build_graph(metadata):
     if not isinstance(metadata, MetaData):
@@ -103,6 +104,7 @@ def build_onclause(db_graph, source_table, adjacent_table):
 
     referent_column = foreign_key.column
     referenced_column = foreign_key.parent
+
     onclause = referent_column == referenced_column
 
     return onclause
@@ -172,15 +174,16 @@ def extract_order_by_clauses(order_by_clauses):
     return order_by_columns
 
 def get_table_list(columns):
-    table_set = set()
-   
+    table_list = []
+
     if not isinstance(columns, list):
         columns = [columns]
 
     for column in columns:
-        table_set.add(extract_column(column).table)
+        table_list.append(extract_column(column).table)
+
+    table_list = list(OrderedDict.fromkeys(table_list))
                             
-    table_list = list(table_set)
     return table_list
 
 def get_table_pathing(db_graph, table_list, center_table=None):
@@ -277,14 +280,13 @@ def build_select(db_graph, columns, where=None, order_by=None):
 
     return select_query
 
-def build_count(db_graph, columns, where=None, order_by=None):
+def build_count(db_graph, columns, where=None):
     where_columns = extract_where_clauses(where)
-    order_by_columns = extract_order_by_clauses(order_by)
    
     if not isinstance(columns, list):
         columns = [columns]
 
-    total_columns = columns + where_columns + order_by_columns
+    total_columns = columns + where_columns
     fromclause = build_fromclause(db_graph, total_columns)
 
     column_params = []
@@ -293,7 +295,6 @@ def build_count(db_graph, columns, where=None, order_by=None):
 
     count_query = select(column_params).select_from(fromclause)
     count_query = append_where_clauses(count_query, where)
-    count_query = append_order_by_clauses(count_query, order_by)
 
     return count_query
 

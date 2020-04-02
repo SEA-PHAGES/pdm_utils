@@ -582,36 +582,30 @@ class TestBuildClauses(unittest.TestCase):
         AppendOrderByClauses.assert_called_once_with(ExecutableMock,
                                                    self.columns)
 
-    @patch("pdm_utils.functions.querying.append_order_by_clauses")
     @patch("pdm_utils.functions.querying.append_where_clauses")
     @patch("pdm_utils.functions.querying.select")
     @patch("pdm_utils.functions.querying.func.count")
     @patch("pdm_utils.functions.querying.build_fromclause")
-    @patch("pdm_utils.functions.querying.extract_order_by_clauses")
     @patch("pdm_utils.functions.querying.extract_where_clauses")
-    def test_build_count_1(self, ExtractWhereClauses, ExtractOrderByClauses,
+    def test_build_count_1(self, ExtractWhereClauses, 
                                  BuildFromClause, Count, Select,
-                                 AppendWhereClauses, AppendOrderByClauses):
+                                 AppendWhereClauses):
         ExecutableMock = Mock()
         SelectFromMock = Mock()
         type(ExecutableMock).select_from = SelectFromMock
         SelectFromMock.return_value = ExecutableMock
 
         ExtractWhereClauses.return_value = self.columns
-        ExtractOrderByClauses.return_value = self.columns
         BuildFromClause.return_value = self.phage
         Count.return_value = self.count_column
         Select.return_value = ExecutableMock
         AppendWhereClauses.return_value = ExecutableMock
-        AppendOrderByClauses.return_value = ExecutableMock
 
         querying.build_count(self.graph, self.columns, 
-                                            where=self.whereclauses, 
-                                            order_by=self.columns)
+                                            where=self.whereclauses)
 
         ExtractWhereClauses.assert_called_once_with(self.whereclauses)
-        ExtractOrderByClauses.assert_called_once_with(self.columns)
-        total_columns = self.columns + self.columns + self.columns
+        total_columns = self.columns + self.columns
         BuildFromClause.assert_called_once_with(self.graph, total_columns)
         
         for index in range(len(self.columns)):
@@ -623,8 +617,6 @@ class TestBuildClauses(unittest.TestCase):
         SelectFromMock.assert_called_once_with(self.phage)
         AppendWhereClauses.assert_called_once_with(ExecutableMock, 
                                                    self.whereclauses)
-        AppendOrderByClauses.assert_called_once_with(ExecutableMock,
-                                                   self.columns)
 
     @patch("pdm_utils.functions.querying.build_select")
     def test_build_distinct_1(self, BuildSelect):
