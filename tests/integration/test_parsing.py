@@ -35,11 +35,17 @@ class TestParsing(unittest.TestCase):
         self.Notes = self.gene.c.Notes
 
     def test_check_operator_1(self):
+        """Verify check_operator() recognizes all operators.
+        """
         for operator in parsing.OPERATORS:
             with self.subTest(operator=operator):
                 parsing.check_operator(operator, self.PhamID)
 
     def test_check_operator_2(self):
+        """Verify check_operator() raises ValueError from invalid pairing.
+        check_operator() should recognize when an operator is inappropriate
+        for a given Column.
+        """
         for operator in parsing.NUMERIC_OPERATORS:
             with self.subTest(operator=operator):
                 with self.assertRaises(ValueError):
@@ -51,6 +57,8 @@ class TestParsing(unittest.TestCase):
                     parsing.check_operator(operator, self.Notes)
 
     def test_check_operator_3(self):
+        """Verify check_operator() recognizes valid pairings.
+        """
         for operator in parsing.NONNUMERIC_OPERATORS:
             with self.subTest(operator=operator):
                 parsing.check_operator(operator, self.PhageID)
@@ -60,39 +68,55 @@ class TestParsing(unittest.TestCase):
                 parsing.check_operator(operator, self.Notes)
 
     def test_translate_table_1(self):
+        """Verify translate_table() conserves case-sensitive table names.
+        """
         table = parsing.translate_table(self.metadata, "phage")
   
         self.assertEqual(table, "phage")
 
     def test_translate_table_2(self):
+        """Verify translate_table() returns case-sensitive table names.
+        """
         table = parsing.translate_table(self.metadata, "GENE")
 
         self.assertEqual(table, "gene")
 
     def test_translate_table_3(self):
+        """Verify translate_table() returns case-sensitive table names.
+        """
         table = parsing.translate_table(self.metadata, "tRNA")
         self.assertEqual(table, "trna")
 
     def test_translate_table_4(self):
+        """Verify translate_table() raises ValueError from invalid table name.
+        """
         with self.assertRaises(ValueError):
             parsing.translate_table(self.metadata, "not_table")
 
     def test_translate_column_1(self):
+        """Verify translate_column() conserves case-sensitive table names.
+        """
         column = parsing.translate_column(self.metadata, "phage.PhageID")
 
         self.assertEqual(column, "PhageID")
 
     def test_translate_column_2(self):
+        """Verify translate_column() returns case-sensitive column names.
+        """
         column = parsing.translate_column(self.metadata, "GENE.GENEID")
 
         self.assertEqual(column, "GeneID")
 
     def test_translate_column_3(self):
+        """Verify translate_column() returns case-sensitive column names.
+        """
         column = parsing.translate_column(self.metadata, "tRNA.tRNAid")
         
         self.assertEqual(column, "TrnaID")
 
     def test_translate_column_4(self):
+        """Verify translate_column() raises ValueError from invalid column name.
+        """
         with self.assertRaises(ValueError):
             parsing.translate_column(self.metadata, "phage.not_column")
 
