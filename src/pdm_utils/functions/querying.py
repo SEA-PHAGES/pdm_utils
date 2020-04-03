@@ -20,52 +20,96 @@ import re
 COLUMN_TYPES = [Column, functions.count, BinaryExpression, UnaryExpression]
 
 def get_table(metadata, table):
+    """Get a SQLAlchemy Table object, with a case-insensitive input.
+
+    :param metadata: Reflected SQLAlchemy MetaData object.
+    :type metadata: MetaData
+    :param table: Case-insensitive table name.
+    :type table: str
+    :returns:
+        Corresponding SQLAlchemy Table object.
+    :rtype: Table
+    """
+    #Ensures table name is accurate before indexing metadata.
     table = parsing.translate_table(metadata, table)
     table_obj = metadata.tables[table]
     return table_obj
 
 def get_column(metadata, column):
+    """Get a SQLAlchemy Column object, with a case-insensitive input.
+    Input must be formatted {Table_name}.{Column_name}.
+   
+    :param metadata: Reflected SQLAlchemy MetaData object.
+    :type metadata: MetaData
+    :param table: Case-insensitive column name.
+    :type table: str
+    :returns: Corresponding SQLAlchemy Column object.
+    :rtype: Column
+    """
     parsed_column = parsing.parse_column(column)
-    table_obj = get_table(metadata, parsed_column[0])
+
+    table_obj = get_table(metadata, parsed_column[0])#Retrieves SQL Table.
+    #Ensures column name is accurate before indexing Table.
     column = parsing.translate_column(metadata, column)
 
-    columns_dict = dict(table_obj.columns)
+    columns_dict = dict(table_obj.columns) #Converts to indexable object.
     column_obj = columns_dict[column]
 
     return column_obj
 
 def build_graph(metadata):
+    """Get a NetworkX Graph object populated from a SQLAlchemy MetaData object.
+
+    :param metadata: Reflected SQLAlchemy MetaData object.
+    :type metadata: MetaData
+    :returns: Populated and structured NetworkX Graph object.
+    :rtype: Column
+    """
     if not isinstance(metadata, MetaData):
         raise TypeError("Graph requires MetaData object, "
                        f"object passed was of type {type(metadata)}.")
 
-    graph = Graph(metadata=metadata)
-    for table in metadata.tables.keys():
+    graph = Graph(metadata=metadata) #Stores metadata in Graph object.
+    for table in metadata.tables.keys(): #Creates nodes from all Tables.
         table_object = metadata.tables[table]
         graph.add_node(table_object.name, table=table_object) 
 
-    for target_table in metadata.tables.keys():
+    for target_table in metadata.tables.keys(): #Stores Table objects in Nodes
         target_table_obj  = metadata.tables[target_table]
-    
+   
+        #Uses the Table object foreign keys to create Graph edges.
         for foreign_key in target_table_obj.foreign_keys:   
-            referent_column = foreign_key.column
-            referent_table_obj = referent_column.table
-            referent_table = referent_table_obj.name
+            referent_column = foreign_key.column #Retreives source Column
+            referent_table_obj = referent_column.table #Retrieves source Table
+            referent_table = referent_table_obj.name 
 
+            #Stores the foreign key as a table name key pair [Target][Source]
             graph.add_edge(target_table, referent_table, 
                                          key=foreign_key)
 
     return graph
 
 def build_where_clause(db_graph, filter_expression): 
-    filter_params = parsing.parse_filter(filter_expression)
+    """Creates a SQLAlchemy BinaryExpression object from a MySQL WHERE 
+       clause expression.
 
+    :param db_graph: SQLAlchemy structured NetworkX Graph object.
+    :type db_graph: Graph
+    :param filter_expression: MySQL where clause expression.
+    :type filter_expression: str
+    :returns: MySQL expression-related SQLAlchemy BinaryExpression object.
+    :rtype: BinaryExpression
+    """
+    filter_params = parsing.parse_filter(filter_expression) 
+
+    #Retrieve Table and Column objects from split filter expression strings
     table_object = db_graph.nodes[filter_params[0]]["table"]
     column_object = table_object.columns[filter_params[1]]
- 
+
+    #Checks the operator and Column type compatability
     parsing.check_operator(filter_params[2], column_object)
 
-    right = filter_params[3]
+    right = filter_params[3] #Stores the expressions 'right' value
 
     if column_object.type.python_type == bytes:
         right = right.encode("utf-8")
@@ -90,6 +134,19 @@ def build_where_clause(db_graph, filter_expression):
     return where_clause 
 
 def build_onclause(db_graph, source_table, adjacent_table):
+    """Creates a SQLAlchemy BinaryExpression object for a MySQL ON clause 
+       expression
+
+    :param db_graph: SQLAlchemy structured NetworkX Graph object.
+    :type db_graph: Graph
+    :param source_table: Case-insensitive MySQL table name.
+    :type source_table: str
+    :param adjacent_table: Case-insensitive MySQL table name.
+    :type source_table: str
+    :returns: MySQL foreign key related SQLAlchemy BinaryExpression object.
+    :rtype: BinaryExpression
+    """
+    #Retrieves accurate table names
     source_table = parsing.translate_table(db_graph.graph["metadata"], 
                                            source_table)
     adjacent_table = parsing.translate_table(db_graph.graph["metadata"],
@@ -97,19 +154,34 @@ def build_onclause(db_graph, source_table, adjacent_table):
 
     if source_table == adjacent_table:
         source_table = db_graph.nodes[source_table]["table"]
-        return source_table
+        return source_table 
 
-    edge = db_graph[source_table][adjacent_table]
-    foreign_key = edge["key"]
+    edge = db_graph[source_table][adjacent_table] #Indexes for graph edge.
+    foreign_key = edge["key"] #Retreives the stored foreign key object
 
-    referent_column = foreign_key.column
-    referenced_column = foreign_key.parent
+    referent_column = foreign_key.column #Gets the original primary key
+    referenced_column = foreign_key.parent #Gets the foreign key
 
-    onclause = referent_column == referenced_column
+    onclause = referent_column == referenced_column 
 
     return onclause
 
 def extract_column(column, check=None):
+    """Get a column from a supported SQLAlchemy Column-related object.
+
+    :param column: SQLAlchemy Column-related object.
+    :type column: BinaryExpression
+    :type column: Column
+    :type column: count
+    :type column: UnaryExpression
+    :param check: SQLAlchemy Column-related object type.
+    :type check: <type Column>
+    :type check: <type count>
+    :type check: <type UnaryExpression>
+    :type check: <type BinaryExpression>
+    :returns: Corresponding SQLAlchemy Column object.
+    :rtype: Column
+    """
     if check != None:
         if not isinstance(column, check):
             raise TypeError(f"Type {type(column)} object passed as column "
@@ -148,6 +220,22 @@ def extract_column(column, check=None):
     return column
 
 def extract_columns(columns, check=None):
+    """Get a column from a supported SQLAlchemy Column-related object(s).
+
+    :param column: SQLAlchemy Column-related object.
+    :type column: BinaryExpression
+    :type column: Column
+    :type column: count
+    :type column: list
+    :type column: UnaryExpression
+    :param check: SQLAlchemy Column-related object type.
+    :type check: <type Column>
+    :type check: <type count>
+    :type check: <type UnaryExpression>
+    :type check: <type BinaryExpression>
+    :returns: List of SQLAlchemy Column objects.
+    :rtype: list[Column]
+    """
     extracted_columns = []
 
     if isinstance(columns, list):
@@ -160,6 +248,14 @@ def extract_columns(columns, check=None):
     return extracted_columns
 
 def extract_where_clauses(where_clauses):
+    """Get the column from WHERE clause-related BinaryExpression objects.
+
+    :param where_clauses: SQLAlchemy BinaryExpression object(s).
+    :type where_clauses: BinaryExpression
+    :type where_clauses: list
+    :returns: List of SQLAlchemy Column objects.
+    :rtype: list[Column] 
+    """
     where_columns = []
     if not where_clauses is None:
         where_columns = extract_columns(where_clauses, check=BinaryExpression)
@@ -167,6 +263,14 @@ def extract_where_clauses(where_clauses):
     return where_columns
 
 def extract_order_by_clauses(order_by_clauses):
+    """Get the column from ORDER BY clause-related Column objects.
+
+    :param where_clauses: SQLAlchemy Column object(s).
+    :type where_clauses: Column
+    :type where_clauses: list
+    :returns: List of SQLAlchemy Column objects.
+    :rtype: list[Column] 
+    """
     order_by_columns = []
     if not order_by_clauses is None:
         order_by_columns = extract_columns(order_by_clauses, check=Column)
@@ -174,6 +278,14 @@ def extract_order_by_clauses(order_by_clauses):
     return order_by_columns
 
 def get_table_list(columns):
+    """Get a nonrepeating list SQLAlchemy Table objects from Column objects.
+
+    :param columns: SQLAlchemy Column object(s).
+    :type columns: Column
+    :type columns: list
+    :returns: List of corresponding SQLAlchemy Table objects.
+    :rtype: list
+    """
     table_list = []
 
     if not isinstance(columns, list):
@@ -182,16 +294,29 @@ def get_table_list(columns):
     for column in columns:
         table_list.append(extract_column(column).table)
 
+    #OrderedDict is onlt used for the python mapping functions to remove repeats
     table_list = list(OrderedDict.fromkeys(table_list))
                             
     return table_list
 
 def get_table_pathing(db_graph, table_list, center_table=None):
+    """Get pathing instructions for joining MySQL Table objects.
+
+    :param db_graph: SQLAlchemy structured NetworkX Graph object.
+    :type db_graph: Graph
+    :param table_list: List of SQLAlchemy Table objects.
+    :type table_list: list[Table]
+    :param center_table: SQLAlchemy Table object to begin traversals from.
+    :type center_table: Table
+    :returns: 2-D list containing the center table and pathing instructions.
+    :rtype: list
+    """
     table_list = table_list.copy()
 
+    #Removes the center_table from the list, if specified
     if not center_table is None:
         table_list.remove(center_table)
-
+    #Creates a random center_table
     else:
         center_table = table_list[0]
         table_list.remove(center_table)
@@ -199,6 +324,7 @@ def get_table_pathing(db_graph, table_list, center_table=None):
 
     table_paths = []
     for table in table_list:
+        #NetworkX traversal algorithm finds path
         path = shortest_path(db_graph, center_table.name, table.name)
 
         if not path:
@@ -212,21 +338,32 @@ def get_table_pathing(db_graph, table_list, center_table=None):
     return table_pathing
 
 def join_pathed_tables(db_graph, table_pathing):
-    center_table = table_pathing[0]
-    joined_tables = center_table
+    """Get a joined table from pathing instructions for joining MySQL Tables.
+
+    :param db_graph: SQLAlchemy structured NetworkX Graph object.
+    :type db_graph: Graph
+    :param table_pathing: 2-D list containing a Table and pathing lists.
+    :type table_pathing: list
+    :returns: SQLAlchemy Table object containing left outer-joined tables.
+    :rtype: Table
+    """
+    center_table = table_pathing[0] #The center_table from table pathing
+    joined_tables = center_table #Creates a Table 'base' to add to
 
     joined_table_set = set()
-    joined_table_set.add(center_table.name)
+    joined_table_set.add(center_table.name) #Creates running table history
 
     for path in table_pathing[1]:
-        for index in range(len(path)):
+        for index in range(len(path)): 
             table = path[index]
             previous_table = path[index-1]
-            if table not in joined_table_set:
-                joined_table_set.add(table)
-                table_object = db_graph.nodes[table]["table"]
 
-                onclause = build_onclause(db_graph, previous_table, table)
+            #If the table has not already been added:
+            if table not in joined_table_set:
+                joined_table_set.add(table) 
+                table_object = db_graph.nodes[table]["table"] # Get Table object
+                #Build a MySQL ON clause to left outer-join the table
+                onclause = build_onclause(db_graph, previous_table, table) 
                 joined_tables = join(joined_tables, table_object, 
                                                             isouter=True, 
                                                             onclause=onclause)
@@ -234,6 +371,15 @@ def join_pathed_tables(db_graph, table_pathing):
     return joined_tables
 
 def build_fromclause(db_graph, columns):
+    """Get a joined table from pathing instructions for joining MySQL Tables.
+    :param db_graph: SQLAlchemy structured NetworkX Graph object.
+    :type db_graph: Graph
+    :param columns: SQLAlchemy Column object(s).
+    :type columns: Column
+    :type columns: list
+    :returns: SQLAlchemy Table object containing left outer-joined tables.
+    :rtype: Table
+    """
     table_list = get_table_list(columns)
     table_pathing = get_table_pathing(db_graph, table_list)
     joined_table = join_pathed_tables(db_graph, table_pathing)
@@ -241,6 +387,16 @@ def build_fromclause(db_graph, columns):
     return joined_table
 
 def append_where_clauses(executable, where_clauses):
+    """Add WHERE SQLAlchemy BinaryExpression objects to a Select object.
+
+    :param executable: SQLAlchemy executable query object.
+    :type executable: Select
+    :param where_clauses: MySQL WHERE clause-related SQLAlchemy object(s).
+    :type where_clauses: Column
+    :type where_clauses: list
+    :returns: MySQL expression-related SQLAlchemy exectuable.
+    :rtype: Select
+    """
     if where_clauses is None:
         return executable
 
@@ -253,6 +409,16 @@ def append_where_clauses(executable, where_clauses):
     return executable
     
 def append_order_by_clauses(executable, order_by_clauses):
+    """Add ORDER BY SQLAlchemy Column objects to a Select object.
+
+    :param executable: SQLAlchemy executable query object.
+    :type executable: Select
+    :param order_by_clauses: MySQL ORDER BY clause-related SQLAlchemy object(s).
+    :type order_by_clauses: Column
+    :type order_by_clauses: list
+    :returns: MySQL expression-related SQLAlchemy exectuable.
+    :rtype: Select
+    """
     if order_by_clauses is None:
         return executable
 
@@ -265,12 +431,29 @@ def append_order_by_clauses(executable, order_by_clauses):
     return executable
 
 def build_select(db_graph, columns, where=None, order_by=None):
+    """Get MySQL SELECT expression SQLAlchemy executable.
+
+    :param db_graph: SQLAlchemy structured NetworkX Graph object.
+    :type db_graph: Graph
+    :param columns: SQLAlchemy Column object(s).
+    :type columns: Column
+    :type columns: list
+    :param where: MySQL WHERE clause-related SQLAlchemy object(s).
+    :type where: Column
+    :type where: list
+    :param order_by: MySQL ORDER BY clause-related SQLAlchemy object(s).
+    :type order_by: Column
+    :type order_by: list
+    :returns: MySQL SELECT expression-related SQLAlchemy executable.
+    :rtype: Select
+    """
     where_columns = extract_where_clauses(where)
     order_by_columns = extract_order_by_clauses(order_by)
 
     if not isinstance(columns, list):
         columns = [columns]
-
+    
+    #Gathers all the tables from the SELECT, WHERE, and ORDER BY clauses
     total_columns = columns + where_columns + order_by_columns
     fromclause = build_fromclause(db_graph, total_columns) 
 
@@ -281,14 +464,29 @@ def build_select(db_graph, columns, where=None, order_by=None):
     return select_query
 
 def build_count(db_graph, columns, where=None):
+    """Get MySQL COUNT() expression SQLAlchemy executable.
+
+    :param db_graph: SQLAlchemy structured NetworkX Graph object.
+    :type db_graph: Graph
+    :param columns: SQLAlchemy Column object(s).
+    :type columns: Column
+    :type columns: list
+    :param where: MySQL WHERE clause-related SQLAlchemy object(s).
+    :type where: Column
+    :type where: list
+    :returns: MySQL COUNT() expression-related SQLAlchemy executable.
+    :rtype: Select
+    """
     where_columns = extract_where_clauses(where)
    
     if not isinstance(columns, list):
         columns = [columns]
-
+    
+    #Gathers all the tables from the SELECT, WHERE, and ORDER BY clauses
     total_columns = columns + where_columns
     fromclause = build_fromclause(db_graph, total_columns)
 
+    #Converts SQLAlchemy Columns into SQLAlchemy COUNT-related objects
     column_params = []
     for column_param in columns:
         column_params.append(func.count(column_param))
@@ -299,9 +497,25 @@ def build_count(db_graph, columns, where=None):
     return count_query
 
 def build_distinct(db_graph, columns, where=None, order_by=None):
+    """Get MySQL DISTINCT expression SQLAlchemy executable.
+
+    :param db_graph: SQLAlchemy structured NetworkX Graph object.
+    :type db_graph: Graph
+    :param columns: SQLAlchemy Column object(s).
+    :type columns: Column
+    :type columns: list
+    :param where: MySQL WHERE clause-related SQLAlchemy object(s).
+    :type where: Column
+    :type where: list
+    :param order_by: MySQL ORDER BY clause-related SQLAlchemy object(s).
+    :type order_by: Column
+    :type order_by: list
+    :returns: MySQL DISTINCT expression-related SQLAlchemy executable.
+    :rtype: Select
+    """
     query = build_select(db_graph, columns, where=where, 
                                                     order_by=order_by)
-
-    distinct_query = query.distinct()
+    
+    distinct_query = query.distinct() #Converts a SELECT to a DISTINCT
     return distinct_query
 

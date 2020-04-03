@@ -65,6 +65,8 @@ class TestUseMetadata(unittest.TestCase):
 
     @patch("pdm_utils.functions.querying.parsing.translate_table")
     def test_get_table_1(self, TranslateTable):
+        """Verify translate_table() is called with the correct parameters.
+        """
         TranslateTable.return_value = "phage"
 
         querying.get_table(self.metadata, "phage") 
@@ -72,20 +74,26 @@ class TestUseMetadata(unittest.TestCase):
         TranslateTable.assert_called_with(self.metadata, "phage")
 
     def test_get_table_2(self):
+        """Verify get_table() returns the correct Table object.
+        """
         table_obj = querying.get_table(self.metadata, "phage")
 
         self.assertEqual(table_obj, self.phage)
-    
+   
     @patch("pdm_utils.functions.querying.parsing.parse_column")
-    def test_get_column_1(self, TranslateColumn):
-        TranslateColumn.return_value = ["phage", "PhageID"]
+    def test_get_column_1(self, ParseColumn):
+        """Verify parse_column() is called with the correct parameters.
+        """
+        ParseColumn.return_value = ["phage", "PhageID"]
 
         querying.get_column(self.metadata, "phage.PhageID")
 
-        TranslateColumn.assert_called_with("phage.PhageID")
+        ParseColumn.assert_called_with("phage.PhageID")
 
     @patch("pdm_utils.functions.querying.get_table")
     def test_get_column_2(self, GetTable):
+        """Verify get_table() is called with the correct parameters.
+        """
         GetTable.return_value = self.phage
 
         querying.get_column(self.metadata, "phage.PhageID")
@@ -94,6 +102,8 @@ class TestUseMetadata(unittest.TestCase):
 
     @patch("pdm_utils.functions.querying.parsing.translate_column")
     def test_get_column_3(self, TranslateColumn):
+        """Verify translate_column() is called with the correct parameters.
+        """
         TranslateColumn.return_value = "PhageID"
 
         querying.get_column(self.metadata, "phage.PhageID")
@@ -101,12 +111,17 @@ class TestUseMetadata(unittest.TestCase):
         TranslateColumn.assert_called_with(self.metadata, "phage.PhageID")
 
     def test_get_column_4(self):
+        """Verify get_column() returns the correct Column object.
+        """
         column_obj = querying.get_column(self.metadata, "phage.PhageID")
 
         self.assertEqual(column_obj, self.PhageID)
 
     @patch("pdm_utils.functions.querying.extract_column")
     def test_get_table_list_1(self, ExtractColumn):  
+        """Verify extract_column() is called with the correct parameters. 
+        extract_column() should take Column objects as well as lists.
+        """
         ExtractColumn.return_value = self.PhageID
 
         querying.get_table_list([self.PhageID])
@@ -115,6 +130,9 @@ class TestUseMetadata(unittest.TestCase):
     
     @patch("pdm_utils.functions.querying.extract_column")
     def test_get_table_list_2(self, ExtractColumn):
+        """Verify extract_column() is called with the correct parameters.
+        extract_column() should take Column objects as well as lists.
+        """
         ExtractColumn.return_value = self.PhageID
 
         querying.get_table_list(self.PhageID)
@@ -122,12 +140,17 @@ class TestUseMetadata(unittest.TestCase):
         ExtractColumn.assert_called_with(self.PhageID)
     
     def test_get_table_list_3(self):
+        """Verify get_table_list() retrieves specified Table objects.
+        get_table_list() should exclude unspecified Tables.
+        """
         table_list = querying.get_table_list(self.PhageID)
 
         self.assertTrue(self.phage in table_list)
         self.assertFalse(self.gene in table_list)
 
     def test_get_table_list_4(self):
+        """Verify get_table_list() retrieves specified Table objects.
+        """
         columns = [self.PhageID, self.GeneID]
         table_list = querying.get_table_list(columns)
 
@@ -135,11 +158,15 @@ class TestUseMetadata(unittest.TestCase):
         self.assertTrue(self.gene in table_list)
 
     def test_build_graph_1(self):
+        """Verify build_graph() creates a NetworkX Graph object.
+        """
         graph = querying.build_graph(self.metadata)
 
         self.assertTrue(isinstance(graph, Graph))
  
     def test_build_graph_2(self):
+        """Verify build_graph() stores Table objects with correct structure.
+        """
         graph = querying.build_graph(self.metadata)
 
         self.assertTrue("phage" in graph.nodes)
@@ -151,6 +178,8 @@ class TestUseMetadata(unittest.TestCase):
         self.assertEqual(graph.nodes["trna"]["table"],  self.trna)
 
     def test_build_graph_3(self):
+        """Verify build_graph() stores foreign keys with correct structure.
+        """
         graph = querying.build_graph(self.metadata)
         
         phage = graph.nodes["phage"]["table"]
@@ -165,18 +194,23 @@ class TestUseMetadata(unittest.TestCase):
    
     @patch("pdm_utils.functions.querying.parsing.translate_table")
     def test_build_onclause_1(self, TranslateTable):
+        """Verify translate_table() is called with the correct parameters.
+        """
         TranslateTable.return_value = "phage"
         graph = querying.build_graph(self.metadata)
         
         table = querying.build_onclause(graph, "phage", "phage")
 
         TranslateTable.assert_called_with(self.metadata, "phage")
-        self.assertEqual(table, self.phage)
 
     def test_build_onclause_2(self):
+        """Verify build_onclause() detects table redundencies
+        """
         graph = querying.build_graph(self.metadata) 
        
-        querying.build_onclause(graph, "phage", "gene")
+        table = querying.build_onclause(graph, "phage", "phage")
+
+        self.assertEqual(table, self.phage)
 
 class TestExtract(unittest.TestCase):
     def setUp(self):
@@ -186,6 +220,10 @@ class TestExtract(unittest.TestCase):
     
     @patch("pdm_utils.functions.querying.isinstance")
     def test_extract_column_1(self, IsInstance):
+        """Verify extract_column() raises a TypeError from innate type checks.
+        extract_column() should throw an exception when the object is not
+        any expected Column-related SQLAlchemy object.
+        """
         with self.assertRaises(TypeError):
             IsInstance.return_value = False
             querying.extract_column(self.column)
@@ -196,9 +234,13 @@ class TestExtract(unittest.TestCase):
         IsInstance.assert_any_call(self.column, BinaryExpression)
 
     def test_extract_column_2(self):
+        """Verify extract_column() returns received Column object.
+        """
         self.assertEqual(querying.extract_column(self.column), self.column)
         
     def test_extract_column_3(self):
+        """Verify extract_column() converts received func.count object.
+        """
         column_list = PropertyMock(return_value=self.columns)
         clause_list = Mock()
         count = Mock(spec=functions.count)
@@ -209,6 +251,8 @@ class TestExtract(unittest.TestCase):
         self.assertEqual(querying.extract_column(count), self.column)
 
     def test_extract_column_4(self):
+        """Verify extract_column() converts received UnaryExpression object.
+        """
         unary_expression = Mock(spec=UnaryExpression)
 
         type(unary_expression).element = self.column
@@ -217,6 +261,8 @@ class TestExtract(unittest.TestCase):
                                                  self.column)
 
     def test_extract_column_5(self):
+        """Verify extract_column() converts received BinaryExpression object.
+        """
         binary_expression = Mock(spec=BinaryExpression)
 
         type(binary_expression).left = self.column
@@ -224,7 +270,10 @@ class TestExtract(unittest.TestCase):
         self.assertEqual(querying.extract_column(binary_expression), 
                                                  self.column)
 
-    def test_extract_column_6(self):
+    def test_extract_column_6(self): 
+        """Verify extract_column() converts received BinaryExpression object.
+        extract_column() should detect embedded UnaryExpression objects.
+        """
         unary_expression = Mock(spec=UnaryExpression)
         binary_expression = Mock(spec=BinaryExpression)
 
@@ -236,6 +285,8 @@ class TestExtract(unittest.TestCase):
     
     @patch("pdm_utils.functions.querying.isinstance")
     def test_extract_column_7(self, IsInstance):
+        """Verify isinstance() is called with correct parameters.
+        """
         IsInstance.return_value = True
 
         querying.extract_column(self.column, check=self.check_type)
@@ -243,45 +294,63 @@ class TestExtract(unittest.TestCase):
         IsInstance.assert_any_call(self.column, self.check_type)
 
     def test_extract_column_8(self):
+        """Verify extract_column() raises TypeError from imposed type check.
+        """
         with self.assertRaises(TypeError):
             querying.extract_column(self.column, check=str)
 
     @patch("pdm_utils.functions.querying.isinstance")
     def test_extract_columns_1(self, IsInstance):
+        """Verify isinstance() is called with correct parameters.
+        """
         querying.extract_columns(self.columns)
 
         IsInstance.assert_any_call(self.columns, list)
 
     @patch("pdm_utils.functions.querying.extract_column")
     def test_extract_columns_2(self, ExtractColumn):
+        """Verify extract_column() is called with correct parameters.
+        extract_columns() should accept both Column and list parameters.
+        """
         querying.extract_columns(self.columns)
 
         ExtractColumn.assert_called_with(self.column, check=None)
 
     @patch("pdm_utils.functions.querying.extract_column")
     def test_extract_columns_3(self, ExtractColumn):
+        """Verify extract_column() is called with correct parameters. 
+        extract_columns() should accept both Column and list parameters.
+        """
         querying.extract_columns(self.column)
 
         ExtractColumn.assert_called_with(self.column, check=None)
 
     def test_extract_where_clauses_1(self):
+        """Verify extract_where_clauses() accepts NoneType parameter.
+        """
         where_columns = querying.extract_where_clauses(None)
         
         self.assertEqual(where_columns, []) 
 
     @patch("pdm_utils.functions.querying.extract_columns")
     def test_extract_where_clauses_2(self, ExtractColumns):
+        """Verify extract_columns() is called with correct parameters.
+        """
         querying.extract_where_clauses(self.columns)
 
         ExtractColumns.assert_called_with(self.columns, check=BinaryExpression)
     
     def test_extract_order_by_clauses_1(self):
+        """Verify extract_order_by_clauses() accepts NoneType parameter.
+        """
         order_by_columns = querying.extract_order_by_clauses(None)
 
         self.assertEqual(order_by_columns, [])
 
     @patch("pdm_utils.functions.querying.extract_columns")
     def test_extract_order_by_clauses_2(self, ExtractColumns):
+        """Verify extract_columns() is called with correct parameters.
+        """
         querying.extract_order_by_clauses(self.columns)
 
         ExtractColumns.assert_called_with(self.columns, check=Column)
@@ -358,6 +427,8 @@ class TestUseGraph(unittest.TestCase):
 
     @patch("pdm_utils.functions.querying.shortest_path")
     def test_get_table_pathing_1(self, ShortestPath):
+        """Verify shortest_path() is called with correct parameters.
+        """
         ShortestPath.return_value = self.table_path_1
 
         for index in range(len(self.table_names_1)):
@@ -372,6 +443,8 @@ class TestUseGraph(unittest.TestCase):
 
     @patch("pdm_utils.functions.querying.shortest_path")
     def test_get_table_pathing_2(self, ShortestPath):
+        """Verify center_table parameter influences shortest_path() parameters.
+        """
         ShortestPath.return_value = self.table_path_1
 
         for index in range(len(self.table_names_2)):
@@ -388,6 +461,8 @@ class TestUseGraph(unittest.TestCase):
     @patch("pdm_utils.functions.querying.build_onclause")
     @patch("pdm_utils.functions.querying.join")
     def test_join_pathed_tables_1(self, Join, BuildOnClause):
+        """Verify build_onclause() influences join() parameters.
+        """
         Join.return_value = self.center
         BuildOnClause.return_value = "onclause"
 
@@ -400,7 +475,10 @@ class TestUseGraph(unittest.TestCase):
     
     @patch("pdm_utils.functions.querying.build_onclause")
     @patch("pdm_utils.functions.querying.join")
-    def test_join_pathed_tables_2(self, Join, BuildOnClause):         
+    def test_join_pathed_tables_2(self, Join, BuildOnClause):
+        """Verify join_pathed_tables() recognizes different Table connections.
+        join_pathed_tables() should recognized multiple connections to center.
+        """
         Join.return_value = self.center
         BuildOnClause.return_value = "onclause"
         
@@ -414,6 +492,8 @@ class TestUseGraph(unittest.TestCase):
     @patch("pdm_utils.functions.querying.build_onclause")
     @patch("pdm_utils.functions.querying.join")
     def test_join_pathed_tables_3(self, Join, BuildOnClause):       
+        """Verify join_pathed_tables() recognizes already pathed Tables.
+        """
         Join.return_value = self.center
         BuildOnClause.return_value = "onclause"
 
@@ -426,7 +506,10 @@ class TestUseGraph(unittest.TestCase):
 
     @patch("pdm_utils.functions.querying.build_onclause")
     @patch("pdm_utils.functions.querying.join")
-    def test_join_pathed_tables_4(self, Join, BuildOnClause):       
+    def test_join_pathed_tables_4(self, Join, BuildOnClause):  
+        """Verify join_pathed_tables() recognizes different Table connections.
+        join_pathed_tables() should recognize connections to non-center Tables.
+        """
         Join.return_value = self.center
         BuildOnClause.return_value = "onclause"
 
@@ -440,6 +523,8 @@ class TestUseGraph(unittest.TestCase):
     @patch("pdm_utils.functions.querying.build_onclause")
     @patch("pdm_utils.functions.querying.join")
     def test_join_pathed_tables_5(self, Join, BuildOnClause):
+        """Verify join_pathed_tables() recognizes empty pathing.
+        """
         Join.return_value = self.center
         BuildOnClause.return_value = "onclause"
 
@@ -518,6 +603,8 @@ class TestBuildClauses(unittest.TestCase):
  
     @patch("pdm_utils.functions.querying.parsing.parse_filter")
     def test_build_where_clause_1(self, ParseFilter): 
+        """Verify parse_filter() is called with correct parameters.
+        """
         ParseFilter.return_value = ["phage", "Cluster", "!=", "A"]
 
         querying.build_where_clause(self.graph, "phage.Cluster != A")
@@ -526,6 +613,8 @@ class TestBuildClauses(unittest.TestCase):
 
     @patch("pdm_utils.functions.querying.parsing.check_operator")
     def test_build_where_clause_2(self, CheckOperator):
+        """Verify check_operator() is called with correct parameters.
+        """
         querying.build_where_clause(self.graph, "gene.PhamID = 2")
 
         CheckOperator.assert_called_with("=", self.PhamID)
@@ -535,6 +624,8 @@ class TestBuildClauses(unittest.TestCase):
     @patch("pdm_utils.functions.querying.get_table_list")
     def test_build_fromclause_1(self, GetTableList, GetTablePathing, 
                                                             JoinPathedTables):
+        """Verify function structure of build_fromclause().
+        """
         GetTableList.return_value = self.table_names
         GetTablePathing.return_value = self.pathing
         JoinPathedTables.return_value  = Mock()
@@ -554,6 +645,8 @@ class TestBuildClauses(unittest.TestCase):
     def test_build_select_1(self, ExtractWhereClauses, ExtractOrderByClauses,
                                   BuildFromClause, Select,
                                   AppendWhereClauses, AppendOrderByClauses):
+        """Verify function structure of build_count().
+        """
         ExecutableMock = Mock()
         SelectFromMock = Mock()
         type(ExecutableMock).select_from = SelectFromMock
@@ -590,6 +683,8 @@ class TestBuildClauses(unittest.TestCase):
     def test_build_count_1(self, ExtractWhereClauses, 
                                  BuildFromClause, Count, Select,
                                  AppendWhereClauses):
+        """Verify function structure of build_count().
+        """
         ExecutableMock = Mock()
         SelectFromMock = Mock()
         type(ExecutableMock).select_from = SelectFromMock
@@ -620,6 +715,8 @@ class TestBuildClauses(unittest.TestCase):
 
     @patch("pdm_utils.functions.querying.build_select")
     def test_build_distinct_1(self, BuildSelect):
+        """Verify function structure of build_distinct()
+        """
         ExecutableMock = Mock()
         DistinctMock = Mock()
         type(ExecutableMock).distinct = DistinctMock
