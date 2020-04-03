@@ -140,8 +140,7 @@ class Cds:
 
         Ideally, the name of the CDS will be an integer. This information
         can be stored in multiple fields in the GenBank-formatted flat file.
-        The name is first derived from the 'gene' qualifier, then
-        the 'locus_tag' qualifier, and finally left empty.
+        The name is derived from one of several qualifiers.
 
         :param value:
             Indicates a value that should be used to directly set
@@ -149,54 +148,48 @@ class Cds:
             attributes.
         :type value: str
         """
-
-        # 1. PECAAN Draft:
+        # The CDS feature number may be stored in several places in the
+        # gene, product, note, function, and locus_tag qualifiers of a
+        # flat file, but it is unpredictable. Not all of these qualifiers
+        # are always present.
+        # 1. PECAAN Draft and new SEA-PHAGES Final:
         #    The 'gene' qualifier should be present and contain an integer.
-        # 2. New SEA-PHAGES Final:
-        #    The 'gene' qualifier should be present and contain an integer.
-        # 3. SEA-PHAGES Final in GenBank:
+        # 2. SEA-PHAGES Final in GenBank:
         #    The 'gene' qualifier may or may not be present, and
         #    it may or may not have an integer.
         #    The 'locus_tag' qualifier may or may not be present,
         #    and may or may not have an integer.
-        # 4. Non-SEA-PHAGES in GenBank:
+        # 3. Non-SEA-PHAGES in GenBank:
         #    The 'gene' qualifier may or may not be present, and
         #    it may or may not have an integer.
         #    The 'locus_tag' qualifier may or may not be present,
         #    and may or may not have an integer.
-        # if value is not None:
-        #     self.name = value
-        # elif self._locus_tag_num != "":
-        #     self.name = self._locus_tag_num
-        # elif self._gene_num != "":
-        #     self.name = self._gene_num
-        # elif self._product_num != "":
-        #     self.name = self._product_num
-        # elif self._note_num != "":
-        #     self.name = self._note_num
-        # elif self._function_num != "":
-        #     self.name = self._function_num
-        # elif self.gene != "":
-        #     self.name = self.gene
-        # else:
-        #     self.name = ""
+        if value is None:
+            name = ""
+            list1 = ["_locus_tag_num", "_gene_num", "_product_num",
+                     "_note_num", "_function_num"]
 
+            # First see if any num attributes have a float.
+            x = 0
+            while (name == "" and x < len(list1)):
+                value = getattr(self, list1[x])
+                if basic.is_float(value):
+                    name = value
+                x += 1
 
-        if value is not None:
-            self.name = value
-        elif self.gene != "":
-            self.name = self.gene
-        elif self._locus_tag_num != "":
-            self.name = self._locus_tag_num
-        elif self._product_num != "":
-            self.name = self._product_num
-        elif self._note_num != "":
-            self.name = self._note_num
-        elif self._function_num != "":
-            self.name = self._function_num
-        else:
-            self.name = ""
-
+            # Second see if any num attributes have non-empty values.
+            # At this point, it's very unpredictable. Values could be like
+            # 'terL' in the gene or like '10a' in the locus_tag.
+            if name == "":
+                list2 = ["gene"]
+                list2.extend(list1)
+                y = 0
+                while (name == "" and y < len(list2)):
+                    value = getattr(self, list2[y])
+                    if value != "":
+                        name = value
+                    y += 1
+        self.name = value
 
 
     def set_gene(self, value, delimiter=None, prefix_set=None):
