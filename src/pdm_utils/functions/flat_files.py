@@ -128,7 +128,6 @@ def parse_cds_seqfeature(seqfeature):
     :returns: A  pdm_utils Cds object
     :rtype: Cds
     """
-    generic_words = {"gp", "orf", ""}
     cds_ftr = cds.Cds()
     cds_ftr.seqfeature = seqfeature
 
@@ -169,26 +168,28 @@ def parse_cds_seqfeature(seqfeature):
     except:
         product = ""
     finally:
-        cds_ftr.set_description_field("product", product, generic_words)
+        cds_ftr.set_description_field("product", product)
 
     try:
         function = seqfeature.qualifiers["function"][0]
     except:
         function = ""
     finally:
-        cds_ftr.set_description_field("function", function, generic_words)
+        cds_ftr.set_description_field("function", function)
 
     try:
         note = seqfeature.qualifiers["note"][0]
     except:
         note = ""
     finally:
-        cds_ftr.set_description_field("note", note, generic_words)
+        cds_ftr.set_description_field("note", note)
 
     try:
-        cds_ftr.gene = seqfeature.qualifiers["gene"][0]
+        gene = seqfeature.qualifiers["gene"][0]
     except:
-        cds_ftr.gene = ""
+        gene = ""
+    finally:
+        cds_ftr.set_gene(gene)
 
     cds_ftr.set_name()
     return cds_ftr

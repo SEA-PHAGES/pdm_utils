@@ -1131,10 +1131,172 @@ class TestCdsClass(unittest.TestCase):
 
 
 
+    def test_set_num_1(self):
+        """Verify non-generic product with no number description
+        is parsed correctly."""
+        attr = "_product_num"
+        value = " terminase "
+        self.feature.set_num(attr, value, None, None)
+        self.assertEqual(self.feature._product_num, "")
+
+    def test_set_num_2(self):
+        """Verify non-generic product with number description
+        is parsed correctly."""
+        attr = "_product_num"
+        value = " terminase10 "
+        self.feature.set_num(attr, value, None, None)
+        self.assertEqual(self.feature._product_num, "")
+
+    def test_set_num_3(self):
+        """Verify non-generic product description with generic 'GP' number
+        is parsed correctly."""
+        attr = "_product_num"
+        value = " GP10; terminase "
+        self.feature.set_num(attr, value, None, None)
+        self.assertEqual(self.feature._product_num, "10")
+
+    def test_set_num_4(self):
+        """Verify non-generic product description with generic 'GP' number
+        at end of string is parsed correctly."""
+        attr = "_product_num"
+        value = " terminase; GP10 "
+        self.feature.set_num(attr, value, None, None)
+        self.assertEqual(self.feature._product_num, "10")
+
+    def test_set_num_5(self):
+        """Verify non-generic product description with generic 'GP' number
+        but with new delimiter is parsed correctly."""
+        attr = "_product_num"
+        value = " GP10; terminase "
+        self.feature.set_num(attr, value, "-", None)
+        self.assertEqual(self.feature._product_num, "")
+
+    def test_set_num_6(self):
+        """Verify non-generic product description with generic 'GP' number
+        but incorrect prefix_set is parsed correctly."""
+        attr = "_product_num"
+        value = " GP10; terminase "
+        self.feature.set_num(attr, value, None, {"xyz"})
+        self.assertEqual(self.feature._product_num, "")
+
+    def test_set_num_7(self):
+        """Verify non-generic product description with generic 'XYZ' number
+        and correct prefix_set is parsed correctly."""
+        attr = "_product_num"
+        value = " XYZ10; terminase "
+        self.feature.set_num(attr, value, None, {"xyz"})
+        self.assertEqual(self.feature._product_num, "10")
+
+    def test_set_num_8(self):
+        """Verify non-generic product description with generic 'ORF' number
+        is parsed correctly."""
+        attr = "_product_num"
+        value = " ORF10; terminase "
+        self.feature.set_num(attr, value, None, None)
+        self.assertEqual(self.feature._product_num, "10")
+
+    def test_set_num_9(self):
+        """Verify generic product description with generic 'GP' number
+        is parsed correctly."""
+        attr = "_product_num"
+        value = " GP10 "
+        self.feature.set_num(attr, value, None, None)
+        self.assertEqual(self.feature._product_num, "10")
+
+    def test_set_num_10(self):
+        """Verify generic product description with only number
+        is parsed correctly."""
+        attr = "_product_num"
+        value = " 10 "
+        self.feature.set_num(attr, value, None, None)
+        self.assertEqual(self.feature._product_num, "10")
+
+    def test_set_num_11(self):
+        """Verify correct ';' delimiter is selected."""
+        attr = "_product_num"
+        value = " GP10; terminase, GP11 "
+        self.feature.set_num(attr, value, None, None)
+        self.assertEqual(self.feature._product_num, "10")
+
+    def test_set_num_12(self):
+        """Verify correct ', delimiter is selected."""
+        attr = "_product_num"
+        value = " GP10; terminase, lysin, GP11 "
+        self.feature.set_num(attr, value, None, None)
+        self.assertEqual(self.feature._product_num, "11")
+
+    def test_set_num_13(self):
+        """Verify correct number is selected when more than one is present."""
+        attr = "_product_num"
+        value = " GP10; GP11; terminase "
+        self.feature.set_num(attr, value, None, None)
+        self.assertEqual(self.feature._product_num, "10")
+
+
+
+
+    def test_set_gene_1(self):
+        """Verify gene and gene_num is set correctly when gene is int."""
+        value = " 10 "
+        self.feature.set_gene(value, None, None)
+        with self.subTest():
+            self.assertEqual(self.feature.gene, "10")
+        with self.subTest():
+            self.assertEqual(self.feature._gene_num, "10")
+
+    def test_set_gene_2(self):
+        """Verify gene and gene_num is set correctly when gene is float."""
+        value = " 10.1 "
+        self.feature.set_gene(value, None, None)
+        with self.subTest():
+            self.assertEqual(self.feature.gene, "10.1")
+        with self.subTest():
+            self.assertEqual(self.feature._gene_num, "10.1")
+
+    def test_set_gene_3(self):
+        """Verify gene and gene_num is set correctly when gene contains prefix."""
+        value = " GP10.1 "
+        self.feature.set_gene(value, None, None)
+        with self.subTest():
+            self.assertEqual(self.feature.gene, "GP10.1")
+        with self.subTest():
+            self.assertEqual(self.feature._gene_num, "10.1")
+
+    def test_set_gene_4(self):
+        """Verify gene_num is not set when gene contains invalid prefix."""
+        value = " XYZ10.1 "
+        self.feature.set_gene(value, None, None)
+        with self.subTest():
+            self.assertEqual(self.feature.gene, "XYZ10.1")
+        with self.subTest():
+            self.assertEqual(self.feature._gene_num, "")
+
+    def test_set_gene_5(self):
+        """Verify gene_num is set correctly when new prefix is provided."""
+        value = " XYZ10.1 "
+        self.feature.set_gene(value, None, {"xyz"})
+        with self.subTest():
+            self.assertEqual(self.feature.gene, "XYZ10.1")
+        with self.subTest():
+            self.assertEqual(self.feature._gene_num, "10.1")
+
+    def test_set_gene_6(self):
+        """Verify gene_num is not set when gene does not contain a number."""
+        value = " terL "
+        self.feature.set_gene(value, None, None)
+        with self.subTest():
+            self.assertEqual(self.feature.gene, "terL")
+        with self.subTest():
+            self.assertEqual(self.feature._gene_num, "")
+
+
+
+
     def test_set_description_field_1(self):
         """Verify non-generic product with no number description
         is parsed correctly."""
-        self.feature.set_description_field("product", " terminase ", {"gp"})
+        value = " terminase "
+        self.feature.set_description_field("product", value, None, None)
         with self.subTest():
             self.assertEqual(self.feature.raw_product, "terminase")
         with self.subTest():
@@ -1143,20 +1305,10 @@ class TestCdsClass(unittest.TestCase):
             self.assertEqual(self.feature._product_num, "")
 
     def test_set_description_field_2(self):
-        """Verify non-generic product with number description
-        is parsed correctly."""
-        self.feature.set_description_field("product", " terminase10 ", {"gp"})
-        with self.subTest():
-            self.assertEqual(self.feature.raw_product, "terminase10")
-        with self.subTest():
-            self.assertEqual(self.feature.product, "terminase10")
-        with self.subTest():
-            self.assertEqual(self.feature._product_num, "")
-
-    def test_set_description_field_3(self):
         """Verify non-generic product description with generic 'GP' number
         is parsed correctly."""
-        self.feature.set_description_field("product", " GP10; terminase ", {"gp"})
+        value = " GP10; terminase "
+        self.feature.set_description_field("product", value, None, None)
         with self.subTest():
             self.assertEqual(self.feature.raw_product, "GP10; terminase")
         with self.subTest():
@@ -1164,10 +1316,24 @@ class TestCdsClass(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.feature._product_num, "10")
 
+    def test_set_description_field_3(self):
+        """Verify non-generic product description with generic 'GP' number
+        but different prefix_set is parsed correctly."""
+        value = " GP10; terminase "
+        self.feature.set_description_field("product", value, None, {"xyz"})
+        with self.subTest():
+            self.assertEqual(self.feature.raw_product, "GP10; terminase")
+        with self.subTest():
+            self.assertEqual(self.feature.product, "GP10; terminase")
+        with self.subTest():
+            self.assertEqual(self.feature._product_num, "")
+
+
     def test_set_description_field_4(self):
         """Verify non-generic product description with generic 'GP' number
-        but no generic set is parsed correctly."""
-        self.feature.set_description_field("product", " GP10; terminase ")
+        but different delimiter is parsed correctly."""
+        value = " GP10; terminase "
+        self.feature.set_description_field("product", value, "-", None)
         with self.subTest():
             self.assertEqual(self.feature.raw_product, "GP10; terminase")
         with self.subTest():
@@ -1176,20 +1342,10 @@ class TestCdsClass(unittest.TestCase):
             self.assertEqual(self.feature._product_num, "")
 
     def test_set_description_field_5(self):
-        """Verify non-generic product description with generic 'ORF' number
-        is parsed correctly."""
-        self.feature.set_description_field("product", " ORF10; terminase ", {"gp"})
-        with self.subTest():
-            self.assertEqual(self.feature.raw_product, "ORF10; terminase")
-        with self.subTest():
-            self.assertEqual(self.feature.product, "ORF10; terminase")
-        with self.subTest():
-            self.assertEqual(self.feature._product_num, "")
-
-    def test_set_description_field_6(self):
         """Verify non-generic function description with generic 'GP' number
         is parsed correctly."""
-        self.feature.set_description_field("function", " GP10; terminase ", {"gp"})
+        value = " GP10; terminase "
+        self.feature.set_description_field("function", value, None, None)
         with self.subTest():
             self.assertEqual(self.feature.raw_function, "GP10; terminase")
         with self.subTest():
@@ -1197,10 +1353,11 @@ class TestCdsClass(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.feature._function_num, "10")
 
-    def test_set_description_field_7(self):
+    def test_set_description_field_6(self):
         """Verify non-generic note description with generic 'GP' number
         is parsed correctly."""
-        self.feature.set_description_field("note", " GP10; terminase ", {"gp"})
+        value = " GP10; terminase "
+        self.feature.set_description_field("note", value, None, None)
         with self.subTest():
             self.assertEqual(self.feature.raw_note, "GP10; terminase")
         with self.subTest():
@@ -1208,10 +1365,11 @@ class TestCdsClass(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.feature._note_num, "10")
 
-    def test_set_description_field_8(self):
-        """Verify generic product description with generic 'ORF' number
+    def test_set_description_field_7(self):
+        """Verify generic product description with generic 'GP' number
         is parsed correctly."""
-        self.feature.set_description_field("product", " GP10 ", {"gp"})
+        value = " GP10 "
+        self.feature.set_description_field("product", value, None, None)
         with self.subTest():
             self.assertEqual(self.feature.raw_product, "GP10")
         with self.subTest():
@@ -1219,10 +1377,11 @@ class TestCdsClass(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.feature._product_num, "10")
 
-    def test_set_description_field_9(self):
+    def test_set_description_field_8(self):
         """Verify generic product description with only number
         is parsed correctly."""
-        self.feature.set_description_field("product", " 10 ", {""})
+        value = " 10 "
+        self.feature.set_description_field("product", value, None, None)
         with self.subTest():
             self.assertEqual(self.feature.raw_product, "10")
         with self.subTest():

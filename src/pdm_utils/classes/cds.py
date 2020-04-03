@@ -55,12 +55,10 @@ class Cds:
         self.product = ""
         self.function = ""
         self.note = ""
-
-
-        # TODO test.
         self._product_num = ""
         self._function_num = ""
         self._note_num = ""
+        self._gene_num = ""
 
         # The following attributes are usefule for processing data
         # from various data sources.
@@ -166,6 +164,24 @@ class Cds:
         #    it may or may not have an integer.
         #    The 'locus_tag' qualifier may or may not be present,
         #    and may or may not have an integer.
+        # if value is not None:
+        #     self.name = value
+        # elif self._locus_tag_num != "":
+        #     self.name = self._locus_tag_num
+        # elif self._gene_num != "":
+        #     self.name = self._gene_num
+        # elif self._product_num != "":
+        #     self.name = self._product_num
+        # elif self._note_num != "":
+        #     self.name = self._note_num
+        # elif self._function_num != "":
+        #     self.name = self._function_num
+        # elif self.gene != "":
+        #     self.name = self.gene
+        # else:
+        #     self.name = ""
+
+
         if value is not None:
             self.name = value
         elif self.gene != "":
@@ -182,31 +198,91 @@ class Cds:
             self.name = ""
 
 
-    def set_description_field(self, attr, value, generic_set=set()):
-        """Parse a gene description field and set several attributes."""
-        proc_attr = attr  # e.g. self.product
+
+    def set_gene(self, value, delimiter=None, prefix_set=None):
+        """Set the gene attribute.
+
+        :param value: Gene data to parse. Also passed to set_num().
+        :type value: str
+        :param delimiter: Passed to set_num().
+        :type delimiter: str
+        :param prefix_set: Passed to set_num().
+        :type prefix_set: set
+        """
+        value = value.strip()
+        self.gene = value
+        self.set_num("_gene_num", value,
+                     delimiter=delimiter, prefix_set=prefix_set)
+
+
+    def set_description_field(self, attr, description,
+                              delimiter=None, prefix_set=None):
+        """Set a description attribute parsed from a description.
+
+        :param attr: Attribute to set the description.
+        :type attr: str
+        :param description: Description data to parse. Also passed to set_num().
+        :type description: str
+        :param delimiter: Passed to set_num().
+        :type delimiter: str
+        :param prefix_set: Passed to set_num().
+        :type prefix_set: set
+        """
+        # Used to set product/raw_product, function/raw_function, note/raw_note.
+        # attr  # e.g. self.product
         raw_attr = "raw_" + attr  # e.g. self.raw_product
         num_attr = "_" + attr + "_num"  # e.g. self._product_num
-        raw, processed = basic.reformat_description(value)
-        left, right = basic.split_string(raw)
-
-        # Set raw and processed strings
-        setattr(self, proc_attr, processed)
+        raw, processed = basic.reformat_description(description)
+        setattr(self, attr, processed)
         setattr(self, raw_attr, raw)
+        self.set_num(num_attr, description,
+                     delimiter=delimiter, prefix_set=prefix_set)
 
-        # TODO below could probably be separated into a separate method
-        # like set_description_field_num()
+
+    def set_num(self, attr, description, delimiter=None, prefix_set=None):
+        """Set a number attribute from a description.
+
+        :param attr: Attribute to set the number.
+        :type attr: str
+        :param description: Description data from which to parse the number.
+        :type description: str
+        :param delimiter: Value used to split the description data.
+        :type delimiter: str
+        :param prefix_set: Valid possible delimiters in the description.
+        :type prefix_set: set
+        """
+        # Used to set product_num, function_num, note_num, gene_num
         # Sometimes feature number is stored within the description
-        # (e.g. 'gp10; terminase')
-        first_value = value.split(";")[0]
-        first_raw, first_processed = basic.reformat_description(first_value)
-        first_left, first_right = basic.split_string(first_raw)
-        if first_left.lower() in generic_set:
-            setattr(self, num_attr, first_right)
+        # (e.g. 'gp10; terminase' or 'terminase; gp10')
+        # List of delimiters found in description fields
+        # ";" is probably the most common.
+        delimiters = [";", ","]
+        if delimiter is None:
+            delimiter = basic.choose_most_common(description, delimiters)
+        if prefix_set is None:
+            prefix_set = {"gp", "orf", ""}
+
+        # Iterate through the list of strings, and select the first
+        # string that looks like a gene number.
+        split_value = description.split(delimiter)
+        num = ""
+        x = 0
+        while (num == "" and x < len(split_value)):
+            string = split_value[x]
+            string = string.strip()
+            left, right = basic.split_string(string)
+            # Possible returns:
+            # 1. left is alpha and right is number or float (gp10 = gp, 10),
+            # 2. string is alpha (terminase = terminase, ""),
+            # 3. string is number (10 = "", 10).
+            if left.lower() in prefix_set:
+                num = right
+            x += 1
+        setattr(self, attr, num)
 
 
     def set_description(self, value):
-        """Set the raw and processed description attributes.
+        """Set the primary raw and processed description attributes.
 
         :param value:
             Indicates which reference attributes are used

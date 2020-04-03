@@ -383,7 +383,7 @@ class TestFlatFileFunctions2(unittest.TestCase):
                                "product": [" gp3; terminase "],
                                "function": [" orf4; repressor "],
                                "note": [" ORF5; lysin "],
-                               "gene": ["2"]}
+                               "gene": ["GP2"]}
 
         self.seqfeature = test_data_utils.create_1_part_seqfeature(
                                 2, 10, 1, "CDS", qualifiers=self.qualifier_dict)
@@ -433,11 +433,13 @@ class TestFlatFileFunctions2(unittest.TestCase):
         with self.subTest():
             self.assertEqual(cds_ftr.note, "ORF5; lysin")
         with self.subTest():
-            self.assertEqual(cds_ftr.gene, "2")
+            self.assertEqual(cds_ftr.gene, "GP2")
+        with self.subTest():
+            self.assertEqual(cds_ftr._gene_num, "2")
         with self.subTest():
             self.assertTrue(isinstance(cds_ftr.seqfeature, SeqFeature))
         with self.subTest():
-            self.assertEqual(cds_ftr.name, "2")
+            self.assertEqual(cds_ftr.name, "GP2")
 
 
     def test_parse_cds_seqfeature_2(self):
@@ -451,9 +453,9 @@ class TestFlatFileFunctions2(unittest.TestCase):
         with self.subTest():
             self.assertEqual(cds_ftr._locus_tag_num, "")
         with self.subTest():
-            self.assertEqual(cds_ftr.gene, "2")
+            self.assertEqual(cds_ftr.gene, "GP2")
         with self.subTest():
-            self.assertEqual(cds_ftr.name, "2")
+            self.assertEqual(cds_ftr.name, "GP2")
 
     def test_parse_cds_seqfeature_3(self):
         """Verify CDS feature is parsed with no translation."""
@@ -476,10 +478,11 @@ class TestFlatFileFunctions2(unittest.TestCase):
             self.assertEqual(cds_ftr.translation_table, 0)
 
     def test_parse_cds_seqfeature_5(self):
-        """Verify CDS feature is parsed with no product, function, and note."""
+        """Verify CDS feature is parsed with no product, function, note, and gene."""
         self.qualifier_dict.pop("product")
         self.qualifier_dict.pop("note")
         self.qualifier_dict.pop("function")
+        self.qualifier_dict.pop("gene")
         cds_ftr = flat_files.parse_cds_seqfeature(self.seqfeature)
         with self.subTest():
             self.assertEqual(cds_ftr.locus_tag, "SEA_L5_1")
@@ -501,6 +504,10 @@ class TestFlatFileFunctions2(unittest.TestCase):
             self.assertEqual(cds_ftr.note, "")
         with self.subTest():
             self.assertEqual(cds_ftr._note_num, "")
+        with self.subTest():
+            self.assertEqual(cds_ftr.gene, "")
+        with self.subTest():
+            self.assertEqual(cds_ftr._gene_num, "")
 
     def test_parse_cds_seqfeature_6(self):
         """Verify CDS feature is parsed with generic description and
