@@ -298,28 +298,30 @@ def reformat_description(raw_description):
     raw_description = raw_description.strip()
     processed_description = raw_description.lower()
     split_description = processed_description.split(" ")
-    generic_set = {"hypothetical protein",
-                   "phage protein",
-                   "unknown",
-                   "conserved hypothetical protein",
-                   "conserved phage protein",
-                   "hypothetical phage protein",
-                   "hypothetical phage membrane protein",
-                   "conserved phage membrane protein",
-                   "hypothetical phageprotein",
-                   "phage membrane protein",
-                   "membrane protein",
-                   "structural protein",
-                   "regulatory protein",
-                   "integral membrane protein",
-                   "\\n",
-                   ".",
-                   "gp",
-                   "orf",
-                   "putative",
-                   "protein",
-                   "hypothetical"
-                   }
+    generic_set = {
+        "conserved hypothetical protein",
+        "conserved phage membrane protein",
+        "conserved phage protein",
+        "conserved protein",
+        "gp",
+        "hypothetical",
+        "hypothetical phage protein",
+        "hypothetical phageprotein",
+        "hypothetical phage membrane protein",
+        "hypothetical protein",
+        "integral membrane protein",
+        "membrane protein",
+        "orf",
+        "phage membrane protein",
+        "phage protein",
+        "protein",
+        "putative",
+        "regulatory protein",
+        "structural protein",
+        "unknown",
+        "\\n",
+        "."
+        }
 
     if processed_description in generic_set:
         processed_description = ""
