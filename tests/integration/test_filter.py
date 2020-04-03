@@ -48,35 +48,39 @@ class TestFilter(unittest.TestCase):
         self.TrnaID = self.trna.c.TrnaID
         self.Product = self.trna.c.Product
 
-    def test_constructor_1(self):
-        db_filter = Filter(alchemist=self.alchemist)
-
-    def test_constructor_2(self):
-        self.assertTrue(isinstance(self.db_filter.graph, Graph))
-        self.assertTrue(isinstance(self.db_filter.engine, Engine))
-
     def test_add_1(self):
+        """Verify that add() creates a dictionary key as expected.
+        """
         self.db_filter.add("phage.PhageID=Myrna")
         self.assertTrue("phage.PhageID=" in self.db_filter.filters.keys())
 
     def test_add_2(self):
+        """Verify that add() stores BinaryExpression data as expected.
+        """
+
         self.db_filter.add("phage.PhageID=Myrna")
         where_clauses = self.db_filter.filters["phage.PhageID="]
         self.assertTrue(isinstance(where_clauses, list))
         self.assertTrue(isinstance(where_clauses[0], BinaryExpression))
 
     def test_add_3(self):
+        """Verify that add() recognizes previous add() data.
+        """
         self.db_filter.add("phage.PhageID=Myrna")
         self.db_filter.add("phage.PhageID=D29")
         where_clauses = self.db_filter.filters["phage.PhageID="]
         self.assertEqual(len(where_clauses), 2)
 
     def test_remove_1(self):
+        """Verify that remove() removes dictionary entry after depleted.
+        """
         self.db_filter.add("phage.PhageID=Myrna")
         self.db_filter.remove("phage.PhageID=Myrna")
         self.assertEqual(self.db_filter.filters, {})
 
     def test_remove_2(self):
+        """Verify that remove() conserves dictionary entry if not depleted.
+        """
         self.db_filter.add("phage.PhageID=Myrna")
         self.db_filter.add("phage.PhageID=D29")
         self.db_filter.remove("phage.PhageID=Myrna")
@@ -84,7 +88,37 @@ class TestFilter(unittest.TestCase):
         self.assertTrue(len(where_clauses) == 1)
         self.assertEqual(where_clauses[0].right.value, "D29")
 
+    def test_convert_column_input_1(self):
+        """Verify that convert_column_input() converts string column input.
+        """
+        self.db_filter.key = self.Cluster
+
+        column = self.db_filter.convert_column_input("phage.PhageID") 
+
+        self.assertEqual(column, self.PhageID)
+
+    def test_convert_column_input_2(self):
+        """Verify that convert_column_input() conserves Column input.
+        """
+        self.db_filter.key = self.Cluster
+
+        column = self.db_filter.convert_column_input(self.PhageID)
+
+        self.assertEqual(column, self.PhageID)
+
+    def test_convert_column_input_3(self):
+        """Verify that convert_column_input() raises TypeError.
+        convert_column_input() should raise TypeError when column input is
+        neither a string or a Column.
+        """
+        self.db_filter.key = self.Cluster
+
+        with self.assertRaises(TypeError):
+            self.db_filter.convert_column_input(None)
+
     def test_build_where_clauses_1(self):
+        """Verify that build_where_clauses() forms list of expected length.
+        """
         self.db_filter.add("phage.PhageID=Myrna")
         self.db_filter.add("phage.PhageID=D29")
 
@@ -93,6 +127,8 @@ class TestFilter(unittest.TestCase):
         self.assertEqual(len(queries), 2)
 
     def test_build_where_clauses_2(self):
+        """Verify that build_where_clauses() forms list of BinaryExpressions.
+        """
         self.db_filter.add("phage.PhageID=Myrna")
         self.db_filter.add("phage.PhageID=D29")
 
@@ -102,6 +138,8 @@ class TestFilter(unittest.TestCase):
             self.assertTrue(isinstance(query, BinaryExpression))
 
     def test_build_values_1(self):
+        """Verify that build_values() does not exclude values as expected.
+        """
         self.db_filter.key = self.PhageID
 
         values = self.db_filter.build_values()
@@ -112,6 +150,8 @@ class TestFilter(unittest.TestCase):
         self.assertTrue("Trixie" in values)
 
     def test_build_values_2(self):
+        """Verify that build_values() utilizes WHERE clauses as expected.
+        """
         self.db_filter.key = self.PhageID
 
         where_clause = (self.Cluster == "A")
@@ -123,6 +163,8 @@ class TestFilter(unittest.TestCase):
         self.assertFalse("Alice" in values)
 
     def test_build_values_3(self):
+        """Verify that build_values() creates DISTINCT values as expected.
+        """
         self.db_filter.key = self.Cluster
 
         where_clause = (self.Subcluster == "A2")
@@ -132,6 +174,8 @@ class TestFilter(unittest.TestCase):
         self.assertEqual(values, ["A"])
   
     def test_transpose_1(self):
+        """Verify that transpose() utilizes Filter values as expected.
+        """
         self.db_filter.values = ["Myrna"]
         self.db_filter.key = self.PhageID
 
@@ -142,6 +186,8 @@ class TestFilter(unittest.TestCase):
         self.assertEqual(clusters, ["C"])
 
     def test_transpose_2(self):
+        """Verify that transpose() can optionally create dict return value.
+        """
         self.db_filter.values = ["Myrna"]
         self.db_filter.key = self.PhageID
 
@@ -152,6 +198,8 @@ class TestFilter(unittest.TestCase):
         self.assertEqual(clusters_dict["Cluster"], ["C"])
 
     def test_transpose_3(self):
+        """Verify that transpose() can alter Filter properties as expected.
+        """
         self.db_filter.values = ["Myrna"]
         self.db_filter.key = self.PhageID
 
@@ -161,14 +209,16 @@ class TestFilter(unittest.TestCase):
 
         self.assertEqual(self.db_filter.key, self.Cluster)
         self.assertEqual(self.db_filter.values, ["C"])
-    
-    def test_retrieve_1(self):
+        
+    def test_mass_transpose_1(self):
+        """Verify that mass_tranpose() returns DISTINCT values as expected.
+        """
         self.db_filter.values = ["Myrna"]
         self.db_filter.key = self.PhageID
         
         self.db_filter.refresh()
 
-        myrna_data = self.db_filter.retrieve(["phage.HostGenus",
+        myrna_data = self.db_filter.mass_transpose(["phage.HostGenus",
                                               "phage.Cluster",
                                               "gene.Notes"])
 
@@ -178,13 +228,15 @@ class TestFilter(unittest.TestCase):
         self.assertEqual(myrna_data["HostGenus"], ["Mycobacterium"])
         self.assertEqual(myrna_data["Cluster"], ["C"])
 
-    def test_retrieve_2(self):
+    def test_mass_transpose_2(self):
+        """Verify that mass_tranpose() utilizes all values as expected.
+        """
         self.db_filter.values = ["Myrna", "Trixie"]
         self.db_filter.key = self.PhageID
 
         self.db_filter.refresh()
 
-        data = self.db_filter.retrieve(["phage.HostGenus",
+        data = self.db_filter.mass_transpose(["phage.HostGenus",
                                         "phage.Cluster",
                                         "gene.Notes"])
 
@@ -194,7 +246,48 @@ class TestFilter(unittest.TestCase):
         self.assertEqual(data["HostGenus"], ["Mycobacterium"])
         self.assertEqual(data["Cluster"], ["C", "A"])
 
+    def test_retrieve_1(self):
+        """Verify that retrieve() separates data as expected.
+        """
+        self.db_filter.values = ["Myrna", "Trixie"]
+        self.db_filter.key = self.PhageID
+
+        self.db_filter.refresh()
+
+        data = self.db_filter.retrieve(["phage.HostGenus",
+                                        "phage.Cluster"])
+        
+        myrna_data = data["Myrna"]
+        self.assertEqual(myrna_data["HostGenus"], ["Mycobacterium"])
+        self.assertEqual(myrna_data["Cluster"], ["C"])
+
+        trixie_data = data["Trixie"]
+        self.assertEqual(trixie_data["HostGenus"], ["Mycobacterium"])
+        self.assertEqual(trixie_data["Cluster"], ["A"])
+
+    def test_retrieve_2(self):
+        """Verify that retrieve() separates data as expected.
+        """
+        self.db_filter.values = ["A", "C"]
+        self.db_filter.key = self.Cluster
+
+        self.db_filter.refresh()
+
+        data = self.db_filter.retrieve(["phage.Cluster", "phage.PhageID"])
+
+        a_data = data["A"]
+        self.assertEqual(a_data["Cluster"], ["A"])
+        self.assertTrue("Trixie" in a_data["PhageID"])
+        self.assertFalse("Myrna" in a_data["PhageID"])
+
+        c_data = data["C"]
+        self.assertEqual(c_data["Cluster"], ["C"])
+        self.assertFalse("Trixie" in c_data["PhageID"])
+        self.assertTrue("Myrna" in c_data["PhageID"])
+
     def test_refresh_1(self):
+        """Verify that refresh() eliminates invalid data.
+        """
         self.db_filter.key = self.PhageID
         self.db_filter.values = ["Myrna", "D29", "Sheetz"]
         self.db_filter.refresh()
@@ -204,6 +297,8 @@ class TestFilter(unittest.TestCase):
         self.assertFalse("Sheetz" in self.db_filter.values)
 
     def test_update_1(self):
+        """Verify that update() filters out values.
+        """
         self.db_filter.key = self.PhageID
         self.db_filter.values = ["Myrna", "D29"]
         self.db_filter.add("phage.PhageID=Myrna")
@@ -213,6 +308,8 @@ class TestFilter(unittest.TestCase):
         self.assertFalse("D29" in self.db_filter.values)
 
     def test_sort_1(self):
+        """Verify that sort() orders values as expected.
+        """
         self.db_filter.key = self.PhageID
         self.db_filter.values = ["Myrna", "D29"]
         self.db_filter.sort(self.PhageID)
@@ -222,6 +319,8 @@ class TestFilter(unittest.TestCase):
         self.assertEqual(self.db_filter.values[0], "D29")
 
     def test_group_1(self):
+        """Verify that group() creates separate groups as expected.
+        """
         self.db_filter.key = self.PhageID
         self.db_filter.values = ["Myrna", "D29"]
         group_results = self.db_filter.group(self.PhageID)
@@ -230,9 +329,11 @@ class TestFilter(unittest.TestCase):
         self.assertTrue("Myrna" in group_results["Myrna"])
 
         self.assertTrue("D29" in group_results.keys())
-        self.assertTrue("D29" in group_results.keys())
+        self.assertTrue("D29" in group_results["D29"])
 
     def test_group_2(self):
+        """Verify that group() recognizes similarities in values as expected.
+        """
         self.db_filter.key = self.PhageID
         self.db_filter.values = ["Myrna", "D29"]
         group_results = self.db_filter.group("phage.HostGenus")
@@ -243,6 +344,8 @@ class TestFilter(unittest.TestCase):
         self.assertTrue("D29" in group_results["Mycobacterium"]) 
 
     def test_group_3(self):
+        """Verify that group() recognizes differences in values as expected.
+        """
         self.db_filter.key = self.PhageID
         self.db_filter.values = ["Myrna", "D29", "Trixie"]
         group_results = self.db_filter.group("phage.Cluster")

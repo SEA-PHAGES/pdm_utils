@@ -25,6 +25,7 @@ class Filter:
 
         self._updated = True 
         self._values_valid = True
+        self._connected = False 
 
         if isinstance(alchemist, AlchemyHandler):
             if not alchemist.connected:
@@ -35,9 +36,12 @@ class Filter:
                 
             self._engine = alchemist.engine
             self._graph = alchemist.graph
+
+            self._connected = True
        
         if isinstance(key, Column):
             self._key = key
+
         else:
             self._key = None
 
@@ -45,7 +49,7 @@ class Filter:
         self._filters = {}
 
         self.verbose = False
-   
+
     @property
     def updated(self):
         updated = self._updated
@@ -55,7 +59,12 @@ class Filter:
     def values_valid(self):
         values_valid = self._values_valid
         return values_valid
-     
+    
+    @property
+    def connected(self):
+        connected = self._connected
+        return connected
+
     @property
     def filters(self):
         filters = self.copy_filters()
@@ -72,6 +81,7 @@ class Filter:
             raise TypeError
         
         self._engine = engine
+        self._connected = False
 
     @property
     def graph(self):
@@ -84,6 +94,7 @@ class Filter:
             raise TypeError
 
         self._graph = graph
+        self._connected = False
 
     @property 
     def values(self):
@@ -107,53 +118,112 @@ class Filter:
 
     @key.setter
     def key(self, key):
-        if not isinstance(key, Column):
+        if isinstance(key, Column):
+            self._key = key
+        elif isinstance(key, str):
+            self._key = q.get_column(self.graph.graph["metadata"], key)
+        else:
             raise TypeError("Filter key value must be of type SqlAlchemy Column.")
         
-        self._key = key
+    def connect(self):
+        """Connect Filter object to a database via an AlchemyHandler.
+        """
+        if self._connected:
+            return
+
+        alchemist = AlchemyHandler()
+        alchemist.connect(ask_database=True)
+
+        alchemist.build_graph()
+        
+        self._engine = alchemist.engine
+        self._graph = alchemist.graph
+
+        self._connected = True
 
     def check(self):
-        if not isinstance(self.engine, Engine): 
-            raise AttributeError("Filter object is missing valid engine.")
-
-        if not isinstance(self.graph, Graph):
-            raise AttributeError("Filter object is missing valid graph.")
+        """Check Filter object contains valid essential objects.
+        Filter object requires a SQLAlchemy Engine and Column as well as
+        a NetworkX Graph.
+        """
+        if not self._connected:
+            self.connect()
+        else: 
+            if not isinstance(self._engine, Engine): 
+                raise AttributeError("Filter object is missing valid engine.")
+            if not isinstance(self._graph, Graph):
+                raise AttributeError("Filter object is missing valid graph.")
 
         if not isinstance(self._key, Column):
             raise AttributeError("Filter object is missing valid column key.")
 
     def add(self, filter):
+        """Add a filter to the Filter object class.
+
+        :param filter: Formatted MySQL WHERE clause.
+        :type filter: str
+        """
         where_clause = q.build_where_clause(self.graph, filter)
         parsed_filter = parsing.parse_filter(filter)
         filter_left = parsed_filter[0] + "." + parsed_filter[1]\
                     + parsed_filter[2]
-       
+      
+        #Stores the BinaryExpression with a key of the Column/Operator pairing.
         if filter_left not in self._filters.keys():
             self._filters.update({filter_left : [where_clause]}) 
-            
+           
+        #Appends the BinaryExpression to the existing Column/Operator key.
         else:  
             self._filters[filter_left].append(where_clause)
 
         self._updated = False
 
     def remove(self, filter):
+        """Remove a filter from the filter object class.
+        :param filter: Formatted MySQL WHERE clause.
+        :type filter: str
+        """
         parsed_filter = parsing.parse_filter(filter)
         filter_left = parsed_filter[0] + "." + parsed_filter[1]\
                     + parsed_filter[2]
 
+        #Indexes into the dictionary using the Column/Operator pairing.
         if filter_left in self._filters.keys():
             filters = self._filters[filter_left]
-            if len(filters) == 1:
+
+            #Matches the string value to the BinaryExpressions stored value
+            for clause in filters:
+                if clause.right.value == parsed_filter[3]:
+                    filters.remove(clause)
+
+            if len(self._filters[filter_left]) == 0:
                 self._filters.pop(filter_left)
 
-            else:
-                for clause in filters:
-                    if clause.right.value == parsed_filter[3]:
-                        filters.remove(clause)
-        
         self._updated = False
 
+    def convert_column_input(self, raw_column):
+        """Converts a column input, string or Column, to a Column.
+
+        :param raw_column: SQLAlchemy Column object or object name.
+        :type raw_column: Column
+        :type raw_column: str
+        """
+        self.check()
+
+        if isinstance(raw_column, str):
+            column = q.get_column(self.graph.graph["metadata"], raw_column)
+        elif isinstance(raw_column, Column):
+            column = raw_column
+        else:
+            raise TypeError("Column must be either a string or a Column object")
+
+
+
+        return column
+
     def build_where_clauses(self):
+        """Builds BinaryExpression objects from stored Filter object filters.
+        """
         where_clauses = []
         for filter in self._filters.keys():
             where_clauses = where_clauses + self._filters[filter]
@@ -161,6 +231,17 @@ class Filter:
         return where_clauses
 
     def build_values(self, where=None, order_by=None):
+        """Queries using Filter key, using Filter values as a constraint.
+        
+        :param where: MySQL WHERE clause_related SQLAlchemy object(s).
+        :type where: BinaryExpression
+        :type where: list
+        :param order_by: MySQL ORDER BY clause-related SQLAlchemy object(s).
+        :type order_by: Column
+        :type order_by: list
+        :returns: Distinct values fetched from given and innate constaints.
+        :rtype: list
+        """
         self.check()
 
         values = []
@@ -176,7 +257,7 @@ class Filter:
         if self.values != []:
             where_clauses.append(self.key.in_(self.values))
 
-        query = q.build_distinct(self.graph, [self._key], where=where_clauses, 
+        query = q.build_distinct(self.graph, self._key, where=where_clauses, 
                                                           order_by=order_by)
 
         proxy = self.engine.execute(query)
@@ -187,29 +268,33 @@ class Filter:
 
         return values
   
-    def transpose(self, column, return_dict=False, set_values=False):
+    def transpose(self, raw_column, return_dict=False, set_values=False):
+        """Queries using given Column, using Filter values as a constraint.
+
+        :param raw_column: SQLAlchemy Column object or object name.
+        :type raw_column: Column
+        :type raw_column: str
+        :param return_dict: Toggle whether to return data as a dictionary.
+        :type return_dict: Boolean
+        :param set_values: Toggle whether to replace Filter key and values.
+        :type set_values: Boolean
+        :returns: Distinct values fetched from given and innate constraints.
+        :rtype: list
+        :rtype: dict
+        """
         self.check()
 
-        if not self.values:
+        if not self._values:
             return []
-       
-        name = ""
-
-        if isinstance(column, str):
-            column = q.get_column(self.graph.graph["metadata"], column)
-            name = column.name
-
-        elif isinstance(column, Column):
-            name = column.name         
     
-        else:
-            raise TypeError
+        column = self.convert_column_input(raw_column)
+        name = column.name
     
         where_clause = (self.key.in_(self.values))
-        query = q.build_distinct(self.graph, [column], where=[where_clause])
+        query = q.build_distinct(self.graph, column, where=where_clause)
         
         proxy = self.engine.execute(query)
-        results = proxy.fetchall()
+        results = proxy.fetchall() 
 
         values = []
         for result in results:
@@ -225,25 +310,75 @@ class Filter:
 
         return values
 
-    def retrieve(self, columns):
+    def mass_transpose(self, columns):
+        """Queries using given Column(s), using Filter values as a constraint.
+
+        :param columns: SQLAlchemy Column object(s)
+        :type columns: Column
+        :type columns: list
+        :returns: Distinct values fetched from given and innate restraints.
+        :rtype: dict
+        """
         self.check()
 
-        if not self.values:
+        if not self._values:
             return {}
 
         if not isinstance(columns, list):
             columns = [columns]
-
-        where_clause = (self.key.in_(self.values))
-    
-        results = {}
+        
+        values={}
         for column in columns:
-            values = self.transpose(column, return_dict=True) 
-            results.update(values)            
+            column_values = self.transpose(column, return_dict=True)
+            values.update(column_values)
 
-        return results
+        return values
+
+    def retrieve(self, raw_columns):
+        """Queries using the given Columns, for each Filter value.
+
+        :param columns: SQLAlchemy Column object(s)
+        :type columns: Column
+        :type columns: list
+        :type columns: str
+        :returns: Distinct values for each Filter value.
+        :rtype: dict{dict}
+        """
+        self.check()
+
+        if not self._values:
+            return {}
+        
+        if not isinstance(raw_columns, list):
+            raw_columns = [raw_columns]
+
+        columns = []
+        for raw_column in raw_columns:
+            columns.append(self.convert_column_input(raw_column))
+
+        values = {}
+        for value in self._values:
+            where_clause = (self._key == value)
+            values.update({value : {}}) 
+
+            #For each column for each value, add the respective data to a dict.
+            for i in range(len(columns)):
+                values[value].update({columns[i].name : []})
+
+                query = q.build_distinct(self._graph, columns[i], 
+                                                        where=where_clause)
+            
+                proxy = self.engine.execute(query)
+                results = proxy.fetchall()
+
+                for result in results:
+                    values[value][columns[i].name].append(result[0])
+
+        return values
 
     def refresh(self):
+        """Re-queries for the Filter's values.
+        """
         self.check()
 
         if self._values_valid:
@@ -254,6 +389,8 @@ class Filter:
         self._values_valid = True
 
     def update(self):
+        """Queries using the Filter's key and its stored BinaryExpressions.
+        """
         self.check()
 
         if not self._values_valid:
@@ -269,26 +406,30 @@ class Filter:
         self._updated = True
         self._values_valid = True
 
-    def sort(self, column):
-        if isinstance(column, Column):
-            order_by_clause = column
-
-        elif isinstance(column, str):
-            order_by_clause = self._graph.get_column(column)
-        else:
-            raise TypeError("Sort column must be either a string or a Column object")
+    def sort(self, raw_column):
+        """Re-queries for the Filter's values, applying a ORDER BY clause.
+       
+        :param raw_column: SQLAlchemy Column object or object name.
+        :type raw_column: Column
+        :type raw_column: str
+        """
+        order_by_clause = self.convert_column_input(raw_column)
 
         values = self.build_values(order_by=order_by_clause)
         self._values = values
         self._values_valid = True
 
     def reset(self):
+        """Resets all filters, values, and Filter state conditions.
+        """
         self._filters = {}
         self._values = []
         self._values_valid = True
         self._updated = True
 
     def print_results(self): 
+        """Prints the Filter object's values in a formatted way.
+        """
         if not self._values:
             return
 
@@ -317,21 +458,23 @@ class Filter:
         print("|" + "_"*57 + "|")
    
     def hits(self):
+        """Gets the number of a Filter object's values.
+        """
         if self.values == None:
             return 0
 
         return len(self._values)    
 
-    def group(self, column): 
+    def group(self, raw_column): 
+        """Queries and separates Filter object's values based on a Column.
+
+        :param raw_column: SQLAlchemy Column object or object name.
+        :type raw_column: Column
+        :type raw_column: str
+        """
         self.check()
 
-        if isinstance(column, str):
-            column = q.get_column(self.graph.graph["metadata"], column)
-
-        elif isinstance(column, Column):
-            pass
-        else:
-            raise TypeError
+        column = self.convert_column_input(raw_column)
 
         groups = self.transpose(column)
 
@@ -344,6 +487,8 @@ class Filter:
         return group_results
 
     def copy(self):
+        """Returns a copy of a Filter object.
+        """
         copy = Filter()
         copy._updated = self.updated
         copy._values_valid = self.values_valid
@@ -356,7 +501,11 @@ class Filter:
         return copy
  
     def copy_filters(self):
+        """Returns a copy of a Filter object's filter dictionary.
+        """
         filters = {}
+        #Copies of each list are required so that multiple filter copies
+        #are not adding and removing from the same space in memory.
         for filter in self._filters.keys():
             clauses = self._filters[filter].copy()
             filters.update({filter : clauses})

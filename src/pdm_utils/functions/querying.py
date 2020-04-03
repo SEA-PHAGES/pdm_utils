@@ -392,7 +392,7 @@ def append_where_clauses(executable, where_clauses):
     :param executable: SQLAlchemy executable query object.
     :type executable: Select
     :param where_clauses: MySQL WHERE clause-related SQLAlchemy object(s).
-    :type where_clauses: Column
+    :type where_clauses: BinaryExpression
     :type where_clauses: list
     :returns: MySQL expression-related SQLAlchemy exectuable.
     :rtype: Select
@@ -439,7 +439,7 @@ def build_select(db_graph, columns, where=None, order_by=None):
     :type columns: Column
     :type columns: list
     :param where: MySQL WHERE clause-related SQLAlchemy object(s).
-    :type where: Column
+    :type where: BinaryExpression
     :type where: list
     :param order_by: MySQL ORDER BY clause-related SQLAlchemy object(s).
     :type order_by: Column
@@ -472,7 +472,7 @@ def build_count(db_graph, columns, where=None):
     :type columns: Column
     :type columns: list
     :param where: MySQL WHERE clause-related SQLAlchemy object(s).
-    :type where: Column
+    :type where: BinaryExpression
     :type where: list
     :returns: MySQL COUNT() expression-related SQLAlchemy executable.
     :rtype: Select
@@ -505,7 +505,7 @@ def build_distinct(db_graph, columns, where=None, order_by=None):
     :type columns: Column
     :type columns: list
     :param where: MySQL WHERE clause-related SQLAlchemy object(s).
-    :type where: Column
+    :type where: BinaryExpression
     :type where: list
     :param order_by: MySQL ORDER BY clause-related SQLAlchemy object(s).
     :type order_by: Column
