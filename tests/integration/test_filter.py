@@ -5,8 +5,6 @@ from pathlib import Path
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.classes.filter import Filter
 from pdm_utils.functions import querying
-from pdm_utils.functions.test_db import setup_test_db
-from pdm_utils.functions.test_db import teardown_test_db
 from sqlalchemy.engine.base import Engine
 from sqlalchemy.sql.elements import BinaryExpression
 from unittest.mock import Mock, patch
