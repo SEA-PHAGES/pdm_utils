@@ -382,7 +382,6 @@ class TestQuerying(unittest.TestCase):
         with self.assertRaises(InternalError):
             dict_list = query_dict_list(self.engine, distinct_query)
 
-
     @classmethod
     def tearDownClass(self):
         test_db_utils.remove_db()
