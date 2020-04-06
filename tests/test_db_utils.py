@@ -93,25 +93,29 @@ def create_empty_test_db():
 
 def create_filled_test_db():
     """Creates a test database with the current schema version and with data."""
-    create_new_db(schema_filepath=TEST_DB_FILEPATH,
-                  version_table_data=VERSION_TABLE_DATA)
+    # No need to add data to version table, since test_db.sql already
+    # has data in this table.
+    create_new_db(schema_filepath=TEST_DB_FILEPATH)
+
+def check_if_exists(db=DB, user=USER, pwd=PWD):
+    """Checks whether database exists or not."""
+    query = ("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA "
+             f"WHERE SCHEMA_NAME = '{db}'")
+    # No need to connect to a specific database.
+    result = get_data(query, db=None, user=user, pwd=pwd)
+    if len(result) != 0:
+        exists = True
+    else:
+        exists = False
+    return exists
 
 def create_new_db(schema_filepath=None, db=DB, user=USER, pwd=PWD,
                   version_table_data=None):
     """Deletes a database if it exists, then creates a new database."""
-    connection = pymysql.connect(host="localhost",
-                                 user=user,
-                                 password=pwd,
-                                 cursorclass=pymysql.cursors.DictCursor)
-    cur = connection.cursor()
-
     # First, test if a test database already exists within mysql.
     # If there is, delete it so that a fresh test database is installed.
-    statement = ("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA "
-                 f"WHERE SCHEMA_NAME = '{db}'")
-
-    result = execute(statement, db=None, user=user, pwd=pwd)
-    if len(result) != 0:
+    exists = check_if_exists(db=db, user=user, pwd=pwd)
+    if exists:
         remove_db(db=db, user=user, pwd=pwd)
 
     # Next, create the database within mysql.

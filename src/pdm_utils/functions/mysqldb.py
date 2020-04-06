@@ -828,22 +828,27 @@ def copy_db(engine, new_database):
                       f"{new_database}")
     command_list1 = command_string1.split(" ")
     command_list2 = command_string2.split(" ")
-    try:
-        print("Copying database...")
-
-        # Per subprocess documentation:
-        # 1. For pipes, use Popen instead of check_call.
-        # 2. Call p1.stdout.close() to allow p1 to receive a SIGPIPE if p2 exits.
-        #    which gets called when used as a context manager.
-        # communicate() waits for the process to complete.
-        with subprocess.Popen(command_list1, stdout=subprocess.PIPE) as p1:
-            with subprocess.Popen(command_list2, stdin=p1.stdout) as p2:
-                p2.communicate()
-        print("Copy complete.")
+    print("Copying database...")
+    if engine.url.database == new_database:
+        print("Databases are the same so no copy needed.")
         result = 0
-    except:
-        print(f"Unable to copy {engine.url.database} to {new_database} in MySQL.")
-        result = 1
+    else:
+        try:
+            # Per subprocess documentation:
+            # 1. For pipes, use Popen instead of check_call.
+            # 2. Call p1.stdout.close() to allow p1 to receive a SIGPIPE if p2 exits.
+            #    which gets called when used as a context manager.
+            # communicate() waits for the process to complete.
+            with subprocess.Popen(command_list1, stdout=subprocess.PIPE) as p1:
+                with subprocess.Popen(command_list2, stdin=p1.stdout) as p2:
+                    p2.communicate()
+        except:
+            print(f"Unable to copy {engine.url.database} to {new_database} in MySQL.")
+            result = 1
+        else:
+            print("Copy complete.")
+            result = 0
+
     return result
 
 
