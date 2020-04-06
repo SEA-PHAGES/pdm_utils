@@ -4,13 +4,21 @@ from sqlalchemy import Column
 import re
 
 #Global file constants
-COMPARATIVE_OPERATORS = [">", ">=", "<", "<="]
-OPERATORS             = ["=", "!=", "IS NOT", "LIKE"] + COMPARATIVE_OPERATORS
+NUMERIC_OPERATORS     = [">", ">=", "<", "<="]
+NONNUMERIC_OPERATORS  = ["=", "!=", "IS NOT", "LIKE"]
+OPERATORS             = NUMERIC_OPERATORS + NONNUMERIC_OPERATORS
 COMPARABLE_TYPES      = [int, Decimal, float, datetime]
 TYPES                 = [str, bytes] + COMPARABLE_TYPES
 GROUP_OPTIONS = ["limited_set", "num_set", "str_set"]
 
 def parse_out_ends(unparsed_string):
+    """Parse and remove beginning and end whitespace of a string.
+
+    :param unparsed_string: String with variable terminal whitespaces.
+    :type unparsed_string: str
+    :returns: String with parsed and removed beginning and ending whitespace.
+    :rtype: str
+    """
     if not isinstance(unparsed_string, str):
         raise TypeError(f"Paremeter type required is of type list.")
 
@@ -20,6 +28,13 @@ def parse_out_ends(unparsed_string):
     return trimmed_string
 
 def parse_in_ends(unparsed_string_list):
+    """Convert a list of strings to a single space separated string.
+
+    :param unparsed_string_list: String list to be concatenated
+    :type unparsed_string_list: list[str]
+    :returns: String with parsed in whitespace.
+    :rtype: str
+    """
     if not isinstance(unparsed_string_list, list):
         raise TypeError(f"Parameter type required is of type list.")
 
@@ -32,6 +47,13 @@ def parse_in_ends(unparsed_string_list):
     return joined_string
 
 def parse_cmd_string(unparsed_cmd_string): 
+    """Recognizes and parses MySQL WHERE clause structures.
+
+    :param unparsed_cmd_string: Formatted MySQL WHERE clause string.
+    :type unparsed_cmd_string: str
+    :returns: 2-D array containing lists of statements joined by ORs.
+    :rtype: list[list]
+    """
     cmd_line_format = re.compile(".+ + AND|.+ + OR|.+")
     
     if re.match(cmd_line_format, unparsed_cmd_string) != None:
@@ -57,20 +79,25 @@ def parse_cmd_string(unparsed_cmd_string):
     return or_splits
 
 def parse_cmd_list(unparsed_string_list):
+    """Recognizes and parses MySQL WHERE clause structures from cmd lists.
+
+    :param unparsed_string_list: Formatted MySQL WHERE clause arguments.
+    :type unparsed_string_list: list[str]
+    :returns: 2-D array containing lists of statements joined by ORs.
+    :rtype: list[list]
+    """
     joined_string = parse_in_ends(unparsed_string_list)
     parsed_cmd_filters = parse_cmd_string(joined_string)
 
     return parsed_cmd_filters
 
 def parse_column(unparsed_column):
-    """Helper function to return a two-dimensional array of group parameters.
+    """Recognizes and parses a MySQL structured column.
 
-    :param unparsed_groups:
-        Input a list of group expressions to parse and split.
-    :type unparsed_groups: List[str]
-    :return groups:
-        Returns a two-dimensional array of group parameters.
-    :type groups: List[List[str]]
+    :param unparsed_column: Formatted MySQL column.
+    :type unparsed_column: str
+    :returns: List containing segments of a MySQL column.
+    :rtype: list[str]
     """
     column_format = re.compile(" *\w+\.\w+ *", re.IGNORECASE)
 
@@ -87,14 +114,12 @@ def parse_column(unparsed_column):
     return parsed_column
 
 def parse_filter(unparsed_filter):
-    """Helper function to return a two-dimensional array of filter parameters.
+    """Recognizes and parses a MySQL structured WHERE clause.
 
-    :param unparsed_filters:
-        Input a list of filter expressions to parse and split.
-    :type unparsed_filters: List[str]
-    :return filters:
-        Returns a two-dimensional array of filter parameters.
-    :type filters: List[List[str]]
+    :param unparsed_filter: Formatted MySQL WHERE clause.
+    :type unparsed_filters: str
+    :returns: List containing segments of a MySQL WHERE clause.
+    :rtype: ist[str]
     """
     filter_format = re.compile(" *\w+\.\w+ *([=<>!]+ *| +LIKE +| +IS NOT +) *\w+ *")
 
@@ -116,38 +141,39 @@ def parse_filter(unparsed_filter):
     return parsed_filter
 
 def check_operator(operator, column_object):
-        """Parses a operator string to match a MySQL query operators.
+    """Validates an operator's application on a MySQL column.
 
-        :param operator:
-            Input a raw operator string for an accepted MySQL operator.
-        :type operator: str
-        :param table:
-            Input a case-sensitive string for a TableNode id.
-        :type table: str
-        :param field:
-            Input a case-sensitive string for a ColumnNode id.
-        :type field: str
-        :param verbose:
-            Set a boolean to control the terminal output.
-        :type verbose: Boolean
-        """
-        if operator not in OPERATORS:
-            raise ValueError(f"Operator {operator} is not supported.")
-        
-        if not isinstance(column_object, Column):
-            raise TypeError(f"Type {type(column_object)} is not a Column.")
+    :param operator: Accepted MySQL operator.
+    :type operator: str
+    :param column_object: A SQLAlchemy Column object.
+    :type column_object: Column
+    """
+    if operator not in OPERATORS:
+        raise ValueError(f"Operator {operator} is not supported.")
+    
+    if not isinstance(column_object, Column):
+        raise TypeError(f"Type {type(column_object)} is not a Column.")
 
-        column_type = column_object.type.python_type
+    column_type = column_object.type.python_type
 
-        if column_type not in TYPES:
-            raise ValueError(f"Column '{column_object.name}' "
-                             f"has an unsupported type, {column_type}.")
-        if operator in COMPARATIVE_OPERATORS and \
-           column_type not in COMPARABLE_TYPES:
-            raise ValueError(f"Column '{column_object.name}' "
-                             f"is not comparable with '{operator}'.")
+    if column_type not in TYPES:
+        raise ValueError(f"Column '{column_object.name}' "
+                         f"has an unsupported type, {column_type}.")
+    if operator in NUMERIC_OPERATORS and \
+       column_type not in COMPARABLE_TYPES:
+        raise ValueError(f"Column '{column_object.name}' "
+                         f"is not comparable with '{operator}'.")
 
 def translate_table(metadata, raw_table):
+    """Converts a case-insensitive table name to a case-sensitive str.
+
+    :param metadata: Reflected SQLAlchemy MetaData object.
+    :type metadata: MetaData
+    :param raw_table: Case-insensitive table name.
+    :type_table: str
+    :returns: Case-sensitive table name.
+    :rtype: str
+    """
     for table in metadata.tables.keys():
         if table.lower() == raw_table.lower():
             return table
@@ -156,6 +182,15 @@ def translate_table(metadata, raw_table):
                      f"is not in selected database.")
 
 def translate_column(metadata, raw_column):
+    """Converts a case-insensitve {table}.{column} str to a case-sensitive str.
+
+    :param metadata: Reflected SQLAlchemy MetaData object.
+    :type metadata: MetaData
+    :param raw_column: Case-insensitive {table}.{column}.
+    :type raw_column: str
+    :returns: Case-sensitive column name.
+    :rtype: str
+    """
     parsed_column = parse_column(raw_column)
 
     table = translate_table(metadata, parsed_column[0])
