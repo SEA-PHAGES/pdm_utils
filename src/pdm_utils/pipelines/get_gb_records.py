@@ -1,30 +1,46 @@
 """Pipeline to retrieve GenBank records using accessions stored in the MySQL database."""
 
 import argparse
+from datetime import date
 import pathlib
 import sys
-import time
 from Bio import SeqIO
 from pdm_utils.functions import basic
 from pdm_utils.functions import ncbi
 from pdm_utils.functions import mysqldb
 
+from pdm_utils.functions import parsing
+from pdm_utils.classes.filter import Filter
+from pdm_utils.classes.alchemyhandler import AlchemyHandler
+
+
+CURRENT_DATE = date.today().strftime("%Y%m%d")
+RESULTS_FOLDER = f"{CURRENT_DATE}_get_gb_records"
+TARGET_TABLE = "phage"
 
 # TODO unittest.
 def parse_args(unparsed_args_list):
     """Verify the correct arguments are selected for getting GenBank records."""
-    RETRIEVE_HELP = ("Pipeline to retrieve GenBank records using accessions"
-                     "stored in a MySQL database.")
+    GET_GB_RECORDS_HELP = ("Pipeline to retrieve GenBank records using "
+                           "accessions stored in a MySQL database.")
     DATABASE_HELP = "Name of the MySQL database."
     OUTPUT_FOLDER_HELP = ("Path to the directory where records will be stored.")
     NCBI_CRED_FILE_HELP = ("Path to the file containing NCBI credentials.")
+    FILTERS_HELP = (
+        "Indicates which genomes to retain in the new database."
+        "Follow selection argument with formatted filter request: "
+        "Table.Field=Value"
+        )
 
-    parser = argparse.ArgumentParser(description=RETRIEVE_HELP)
+    parser = argparse.ArgumentParser(description=GET_GB_RECORDS_HELP)
     parser.add_argument("database", type=str, help=DATABASE_HELP)
     parser.add_argument("output_folder", type=pathlib.Path,
-        help=OUTPUT_FOLDER_HELP)
+                        help=OUTPUT_FOLDER_HELP)
     parser.add_argument("-c", "--ncbi_credentials_file", type=pathlib.Path,
-        help=NCBI_CRED_FILE_HELP)
+                        help=NCBI_CRED_FILE_HELP)
+    parser.add_argument("-f", "--filters", nargs="?",
+                        type=parsing.parse_cmd_string, help=FILTERS_HELP,
+                        default=[])
 
     # Assumed command line arg structure:
     # python3 -m pdm_utils.run <pipeline> <additional args...>
@@ -39,37 +55,80 @@ def main(unparsed_args_list):
     """Run main get_gb_records pipeline."""
     # Parse command line arguments
     args = parse_args(unparsed_args_list)
-    date = time.strftime("%Y%m%d")
-    args.output_folder = basic.set_path(args.output_folder, kind="dir",
+
+    # Filters input: phage.Status=draft AND phage.HostGenus=Mycobacterium
+    # Args structure: [['phage.Status=draft'], ['phage.HostGenus=Mycobacterium']]
+    filters = args.filters
+    ncbi_cred_dict = ncbi.get_ncbi_creds(args.ncbi_credentials_file)
+    output_folder = basic.set_path(args.output_folder, kind="dir",
                                         expect=True)
-
-    working_dir = pathlib.Path(f"{date}_get_gb_records")
-    working_path = basic.make_new_dir(args.output_folder, working_dir,
-                                      attempt=10)
-
+    working_dir = pathlib.Path(RESULTS_FOLDER)
+    working_path = basic.make_new_dir(output_folder, working_dir,
+                                      attempt=50)
     if working_path is None:
         print(f"Invalid working directory '{working_dir}'")
         sys.exit(1)
-    ncbi_cred_dict = ncbi.get_ncbi_creds(args.ncbi_credentials_file)
-
 
     # Verify database connection and schema compatibility.
     print("Connecting to the MySQL database...")
-    engine = mysqldb.connect_to_db(args.database)
+    alchemist = establish_database_connection(args.database, echo=False)
+    engine = alchemist.engine
     mysqldb.check_schema_compatibility(engine, "the get_gb_records pipeline")
+
+    # Get SQLAlchemy metadata Table object
+    # table_obj.primary_key.columns is a
+    # SQLAlchemy ColumnCollection iterable object
+    # Set primary key = 'phage.PhageID'
+    table = alchemist.get_table(TARGET_TABLE)
+    for column in table.primary_key.columns:
+        primary_key = column
+
+    # Create filter object and then add command line filter strings
+    db_filter = Filter(alchemist=alchemist, key=primary_key)
+    db_filter.values = []
+
+    # Attempt to add filters and exit if needed.
+    add_filters(db_filter, filters)
+
+    # Performs the query
+    db_filter.update()
+
+    # db_filter.values now contains list of PhageIDs that pass the filters.
+    # Get the accessions associated with these PhageIDs.
+    keep_set = set(db_filter.values)
 
 
     # Create data sets
     print("Retrieving accessions from the database...")
-    accessions = mysqldb.get_distinct_data(engine, "phage", "Accession")
+    query = construct_accession_query(keep_set)
+    list_of_dicts = mysqldb.query_dict_list(engine, query)
+    # [{'PhageID':'Trixie', 'Accession':'ABC123'}]
+
+
+    # Dictionary where key = PhageID and value = Accession
+    id_acc_dict = {}
+    for dict in list_of_dicts:
+        phage_id = dict["PhageID"]
+        accession = dict["Accession"]
+        id_acc_dict[phage_id] = accession
+
+    # Dictionary where key = Accession and value = [PhageIDs]
+    # Accessions are not guaranteed to be unique.
+    acc_id_dict = {}
+    for key in id_acc_dict.keys():
+        accession = id_acc_dict[key]
+        if (accession is not None and accession != ""):
+            if accession not in acc_id_dict.keys():
+                acc_id_dict[accession] = [key]
+            else:
+                acc_id_dict[accession] = acc_id_dict[accession].append(accession)
+
+    accessions = set(acc_id_dict.keys())
     engine.dispose()
-    if "" in accessions:
-        accessions.remove("")
-    if None in accessions:
-        accessions.remove(None)
-
-    get_genbank_data(working_path, accessions, ncbi_cred_dict)
-
+    if len(accessions) > 0:
+        get_genbank_data(working_path, accessions, ncbi_cred_dict)
+    else:
+        print("There are no records to retrieve.")
 
 # TODO unittest.
 def get_genbank_data(output_folder, accession_set, ncbi_cred_dict={}):
@@ -140,4 +199,50 @@ def get_genbank_data(output_folder, accession_set, ncbi_cred_dict={}):
                 flatfile_path = pathlib.Path(output_folder, ncbi_filename)
                 SeqIO.write(retrieved_record, str(flatfile_path), "genbank")
 
-###
+# TODO this may be moved elsewhere as a more generalized function.
+def establish_database_connection(database: str, echo=False):
+    alchemist = AlchemyHandler(database=database)
+    try:
+        alchemist.connect()
+    except ValueError as err:
+        print(err)
+        print("Unable to login to MySQL.")
+        sys.exit(1)
+    else:
+        alchemist._engine.echo = echo
+    return alchemist
+
+
+# TODO test.
+def construct_set_string(phage_id_set):
+    """Convert set of phage_ids to string formatted for MySQL.
+
+    e.g. set: {'Trixie', 'L5', 'D29'}
+    returns: "('Trixie', 'L5', 'D29')""
+    """
+    string = "('" + "', '".join(phage_id_set) + "')"
+    return string
+
+# TODO test.
+def construct_accession_query(phage_id_set):
+    """Construct SQL query to retrieve accessions."""
+    phage_id_string = construct_set_string(phage_id_set)
+    query = (f"SELECT PhageID, Accession FROM phage "
+             f"WHERE PhageID IN {phage_id_string}")
+    return query
+
+# TODO test.
+def add_filters(filter_obj, filters):
+    """Add filters from command line to filter object."""
+    errors = 0
+    for or_filters in filters:
+        for filter in or_filters:
+            # Catch the error if it is an invalid table.column
+            try:
+                filter_obj.add(filter)
+            except:
+                print(f"Invalid filter: filter")
+                errors += 1
+    if errors > 0:
+        print("Unable to create new database.")
+        sys.exit(1)
