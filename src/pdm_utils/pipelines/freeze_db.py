@@ -1,68 +1,90 @@
-"""Pipeline to freeze a database for publication."""
+"""Pipeline to freeze a database."""
 
 import argparse
+import sys
 from pdm_utils.functions import basic
 from pdm_utils.functions import mysqldb
 from pdm_utils.functions import parsing
 from pdm_utils.classes.filter import Filter
-
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
 
-
 RESET_VERSION = "UPDATE version SET Version = 0"
-DELETE_DRAFTS = "DELETE FROM phage WHERE Status = 'draft'"
+TARGET_TABLE = "phage"
 
 # TODO unittest.
 def main(unparsed_args_list):
     """Run main freeze database pipeline."""
     args = parse_args(unparsed_args_list)
+    ref_database = args.database
+    reset = args.reset
+    new_database = args.new_database_name
+    prefix = args.prefix
+
+    # Filters input: phage.Status=draft AND phage.HostGenus=Mycobacterium
+    # Args structure: [['phage.Status=draft'], ['phage.HostGenus=Mycobacterium']]
+    filters = args.filters
 
     # Verify database connection and schema compatibility.
     print("Connecting to the MySQL database...")
-    alchemist = establish_database_connection(args.database)
-
+    alchemist = establish_database_connection(ref_database, echo=False)
     engine1 = alchemist.engine
-    # engine1 = mysqldb.connect_to_db(args.database)
     mysqldb.check_schema_compatibility(engine1, "the freeze pipeline")
 
+    # Get SQLAlchemy metadata Table object
+    # table_obj.primary_key.columns is a
+    # SQLAlchemy ColumnCollection iterable object
+    # Set primary key = 'phage.PhageID'
+    table = alchemist.get_table(TARGET_TABLE)
+    for column in table.primary_key.columns:
+        primary_key = column
 
-    # Get the number of draft genomes.
-    query = "SELECT count(*) as count FROM phage WHERE Status != 'draft'"
-    phage_count = alchemist.scalar(query)
+    # Create filter object and then add command line filter strings
+    db_filter = Filter(alchemist=alchemist, key=primary_key)
+    db_filter.values = []
 
-    # result = engine1.execute(query).fetchall()
-    # phage_count = result[0]["count"]
+    # Attempt to add filters and exit if needed.
+    add_filters(db_filter, filters)
 
-    # Create the new frozen database folder e.g. Actinobacteriophage_XYZ.
+    # Performs the query
+    db_filter.update()
 
-    if args.new_database_name is not None:
-        new_database = args.new_database_name
-    else:
-        if args.prefix is not None:
-            prefix = args.prefix
-        else:
+    # db_filter.values now contains list of PhageIDs that pass the filters.
+    # Get the number of genomes that will be retained and build the
+    # MYSQL DELETE statement.
+    keep_set = set(db_filter.values)
+    delete_stmt = construct_delete_stmt(TARGET_TABLE, primary_key, keep_set)
+    count_query = construct_count_query(TARGET_TABLE, primary_key, keep_set)
+    phage_count = alchemist.scalar(count_query)
+
+    # Determine the name of the new database.
+    if new_database is None:
+        if prefix is None:
             prefix = get_prefix()
         new_database = f"{prefix}_{phage_count}"
 
-    # Create the new database
-    # Prevent overwriting of current database.
+    # Create the new database, but prevent overwriting of current database.
     if engine1.url.database != new_database:
         result = mysqldb.drop_create_db(engine1, new_database)
     else:
         print("Error: names of the reference and frozen databases are the same.")
-        result == 1
+        print("No database will be created.")
+        result = 1
 
     # Copy database.
     if result == 0:
+        print(f"Reference database: {ref_database}")
+        print(f"New database: {new_database}")
         result = mysqldb.copy_db(engine1, new_database)
         if result == 0:
-            print(f"Deleting 'draft' genomes...")
+            print(f"Deleting genomes...")
             engine2, msg = mysqldb.get_engine(
                                 username=engine1.url.username,
                                 password=engine1.url.password,
-                                database=new_database)
-            engine2.execute(DELETE_DRAFTS)
-            engine2.execute(RESET_VERSION)
+                                database=new_database, echo=False)
+            engine2.execute(delete_stmt)
+            if reset:
+                engine2.execute(RESET_VERSION)
+
             # Close up all connections in the connection pool.
             engine2.dispose()
         else:
@@ -73,14 +95,18 @@ def main(unparsed_args_list):
         print(f"Error creating new database: {new_database}.")
     print("Freeze database script completed.")
 
-
 # TODO this may be moved elsewhere as a more generalized function.
-# It may be best to add a sys.exit call.
-def establish_database_connection(database: str):
+def establish_database_connection(database: str, echo=False):
     alchemist = AlchemyHandler(database=database)
-    alchemist.connect()
+    try:
+        alchemist.connect()
+    except ValueError as err:
+        print(err)
+        print("Unable to login to MySQL.")
+        sys.exit(1)
+    else:
+        alchemist._engine.echo = echo
     return alchemist
-
 
 # TODO unittest.
 def parse_args(unparsed_args_list):
@@ -88,35 +114,32 @@ def parse_args(unparsed_args_list):
 
     PIPELINE_HELP = ("Pipeline to prepare a database for publication.")
     DATABASE_HELP = "Name of the MySQL database."
-
     FILTERS_HELP = (
-        "Genome selection option that indicates which genomes "
-        " to remove or retain. "
+        "Indicates which genomes to retain in the new database."
         "Follow selection argument with formatted filter request: "
         "Table.Field=Value"
         )
-
     NEW_DATABASE_NAME_HELP = ("The new name of the frozen database")
     PREFIX_HELP = ("The prefix used in the new name of the frozen database")
-
-
+    RESET_HELP = "Reset version to 0 in new database."
 
     parser = argparse.ArgumentParser(description=PIPELINE_HELP)
     parser.add_argument("database", type=str, help=DATABASE_HELP)
-    parser.add_argument("-f", "--filter", nargs="?",
-                        type=parsing.parse_cmd_string, help=FILTERS_HELP)
+    parser.add_argument("-f", "--filters", nargs="?",
+                        type=parsing.parse_cmd_string, help=FILTERS_HELP,
+                        default=[])
     parser.add_argument("-n", "--new_database_name", type=str,
         help=NEW_DATABASE_NAME_HELP)
     parser.add_argument("-p", "--prefix", type=str,
         help=PREFIX_HELP)
+    parser.add_argument("-r", "--reset", action="store_true",
+        default=False, help=RESET_HELP)
 
     # Assumed command line arg structure:
     # python3 -m pdm_utils.run <pipeline> <additional args...>
     # sys.argv:      [0]            [1]         [2...]
     args = parser.parse_args(unparsed_args_list[2:])
     return args
-
-
 
 # TODO unittest.
 def get_prefix():
@@ -142,3 +165,45 @@ def get_prefix():
     elif choice == 4:
         prefix = input("Provide the custom database prefix: ")
     return prefix
+
+# TODO test.
+def construct_set_string(phage_id_set):
+    """Convert set of phage_ids to string formatted for MySQL.
+
+    e.g. set: {'Trixie', 'L5', 'D29'}
+    returns: "('Trixie', 'L5', 'D29')""
+    """
+    string = "('" + "', '".join(phage_id_set) + "')"
+    return string
+
+# TODO test.
+def construct_count_query(table, primary_key, phage_id_set):
+    """Construct SQL query to determine count."""
+    phage_id_string = construct_set_string(phage_id_set)
+    query = (f"SELECT count(*) as count FROM {table} "
+             f"WHERE {primary_key} IN {phage_id_string}")
+    return query
+
+# TODO test.
+def construct_delete_stmt(table, primary_key, phage_id_set):
+    """Construct SQL query to determine count."""
+    phage_id_string = construct_set_string(phage_id_set)
+    statement = (f"DELETE FROM {table} "
+                 f"WHERE {primary_key} NOT IN {phage_id_string}")
+    return statement
+
+# TODO test.
+def add_filters(filter_obj, filters):
+    """Add filters from command line to filter object."""
+    errors = 0
+    for or_filters in filters:
+        for filter in or_filters:
+            # Catch the error if it is an invalid table.column
+            try:
+                filter_obj.add(filter)
+            except:
+                print(f"Invalid filter: filter")
+                errors += 1
+    if errors > 0:
+        print("Unable to create new database.")
+        sys.exit(1)
