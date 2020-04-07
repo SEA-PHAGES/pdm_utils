@@ -235,6 +235,11 @@ class AlchemyHandler:
             raise ValueError("Maximum login attempts reached.  Please check "
                              "your MySQL credentials and try again.")
         if ask_database:
+            try:
+                self.build_engine()
+            except:
+                pass
+
             while(not self.connected_database and attempts < login_attempts):
                 attempts += 1
                 self.ask_database()

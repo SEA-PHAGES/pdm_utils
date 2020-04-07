@@ -12,7 +12,6 @@ from pdm_utils.functions import flat_files
 from pathlib import Path
 
 class TestFileExport(unittest.TestCase):
-
     def setUp(self):
         """
         Creates objects for unit testing of the export_db pipeline
@@ -55,6 +54,9 @@ class TestFileExport(unittest.TestCase):
         self.test_seqrecord = seqrecord
         self.test_version_dictionary = \
                 {"Version" : "Test", "SchemaVersion": "Test"}
+
+    def test_main_1(self):
+        pass
 
     def test_parse_file_export(self):
         """

@@ -29,6 +29,18 @@ from pdm_utils.functions import querying
 # Valid file formats using Biopython
 BIOPYTHON_CHOICES = ["gb", "fasta", "clustal", "fasta-2line", "nexus",
                        "phylip", "pir", "stockholm", "tab"]
+FLAT_FILE_TABLES = ["phage"]
+UNDESIRED_COLUMNS = {"phage"           : ["Sequence"],
+                     "gene"            : ["Translation"],
+                     "domain"          : [],
+                     "gene_domain"     : [],
+                     "pham"            : [],
+                     "pham_color"      : [],
+                     "trna"            : ["Sequence"],
+                     "tmrna"           : [],
+                     "trna_structures" : [],
+                     "version"         : []}
+
 # Valid Biopython formats that crash the script due to specific values in
 # some genomes that can probably be fixed relatively easily and implemented.
 # BIOPYTHON_CHOICES_FIXABLE = ["embl", "imgt", "seqxml"]
@@ -38,18 +50,18 @@ BIOPYTHON_CHOICES = ["gb", "fasta", "clustal", "fasta-2line", "nexus",
 # Biopython formats that are not writable
 # BIOPYTHON_CHOICES_NOT_WRITABLE = ["ig"]
 
-def run_export(unparsed_args_list):
+def main(unparsed_args_list):
     """Uses parsed args to run the entirety of the file export pipeline.
 
     :param unparsed_args_list:
         Input a list of command line args.
     :type unparsed_args_list: List[str]
     """
-
-    args = parse_export(unparsed_args_list)
-    if args.verbose:
-        print("Please input database credentials:")
-    alchemist = establish_database_connection(args.database)
+    #Returns after printing appropriate error message from parsing/connecting.
+    try:
+        args = parse_export(unparsed_args_list) 
+    except ValueError:
+        return 
 
     csvx = False
     ffx = None
@@ -79,7 +91,7 @@ def run_export(unparsed_args_list):
         raise ValueError
 
     if not ix:
-        execute_export(alchemist, args.output_path, args.output_name,
+        execute_export(args.alchemist, args.output_path, args.output_name,
                             values=values, verbose=args.verbose,
                             csv_export=csvx, ffile_export=ffx, db_export=dbx,
                             table=args.table,
@@ -164,41 +176,45 @@ def parse_export(unparsed_args_list):
         """
     export_options = BIOPYTHON_CHOICES + ["csv", "sql"]
 
-    selection_parser = argparse.ArgumentParser()
-    selection_parser.add_argument("pipeline", type=str,
-                                  choices=export_options,
-                                  nargs="?", default="I",
-                                  help=EXPORT_SELECT_HELP)
-    export = selection_parser.parse_args([unparsed_args_list[2]])
+    initial_parser = argparse.ArgumentParser()
+    initial_parser.add_argument("database", type=str, help=DATABASE_HELP)
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("database", type=str, help=DATABASE_HELP)
+    initial_parser.add_argument("pipeline", type=str,
+                               choices=export_options,
+                               help=EXPORT_SELECT_HELP)
 
-    parser.add_argument("-o", "--output_name", type=str, help=OUTPUT_NAME_HELP)
-    parser.add_argument("-p", "--output_path", type=convert_dir_path,
-                        help=OUTPUT_PATH_HELP)
-    parser.add_argument("-v", "--verbose", action="store_true",
-                        help=VERBOSE_HELP)
+    initial = initial_parser.parse_args(unparsed_args_list[2:4])
+  
+    alchemist = establish_connection(initial.database)
+
+    optional_parser = argparse.ArgumentParser()
+
+    optional_parser.add_argument("-o", "--output_name", 
+                               type=str, help=OUTPUT_NAME_HELP)
+    optional_parser.add_argument("-p", "--output_path", type=convert_dir_path,
+                               help=OUTPUT_PATH_HELP)
+    optional_parser.add_argument("-v", "--verbose", action="store_true",
+                               help=VERBOSE_HELP)
 
 
-    if export.pipeline in (BIOPYTHON_CHOICES + ["csv"]):
-        table_choices = dict.fromkeys(BIOPYTHON_CHOICES, ["phage"])
-        table_choices.update({"csv": ["domain", "gene", "gene_domain",
-                                       "phage", "pham", "pham_color",
-                                       "tmrna", "trna", "trna_structures"]})
-        parser.add_argument("-t", "--table", help=TABLE_HELP,
-                            choices=table_choices[export.pipeline])
+    if initial.pipeline in (BIOPYTHON_CHOICES + ["csv"]):
+        db_tables = mysqldb.get_db_tables(alchemist.engine, initial.database)
+        table_choices = dict.fromkeys(BIOPYTHON_CHOICES, FLAT_FILE_TABLES)
+        table_choices.update({"csv": db_tables})
+        optional_parser.add_argument("-t", "--table", help=TABLE_HELP,
+                                choices=table_choices[initial.pipeline])
 
-        parser.add_argument("-if", "--import_file", type=convert_file_path,
+        optional_parser.add_argument("-if", "--import_file", 
+                                type=convert_file_path,
                                 help=IMPORT_FILE_HELP, dest="input",
                                 default=[])
-        parser.add_argument("-in", "--import_names", nargs="*",
+        optional_parser.add_argument("-in", "--import_names", nargs="*",
                                 help=SINGLE_GENOMES_HELP, dest="input")
-        parser.add_argument("-f", "--filter", nargs="?",
+        optional_parser.add_argument("-f", "--filter", nargs="?",
                                 type=parsing.parse_cmd_string,
                                 help=FILTERS_HELP,
                                 dest="filters")
-        parser.add_argument("-g", "--group", nargs="*",
+        optional_parser.add_argument("-g", "--group", nargs="*",
                                 help=GROUPS_HELP,
                                 dest="groups")
 
@@ -206,14 +222,15 @@ def parse_export(unparsed_args_list):
     default_folder_name = f"{date}_export"
     default_folder_path = Path.cwd()
 
-    parser.set_defaults(output_name=default_folder_name,
+    optional_parser.set_defaults(alchemist=alchemist,
+                        output_name=default_folder_name,
                         output_path=default_folder_path,
                         verbose=False, input=[],
-                        pipeline=export.pipeline,
+                        pipeline=initial.pipeline,
                         table="phage", filters=[], groups=[],
                         ix=False, csvx=False, dbx=False, ffx=False)
 
-    parsed_args = parser.parse_args(unparsed_args_list[3:])
+    parsed_args = optional_parser.parse_args(unparsed_args_list[4:])
     return parsed_args
 
 def execute_export(alchemist, output_path, output_name,
@@ -270,20 +287,10 @@ def execute_export(alchemist, output_path, output_name,
         write_database(alchemist, db_version["Version"], export_path)
 
     elif csv_export or ffile_export != None:
-        table_obj = alchemist.get_table(table)
-        for column in table_obj.primary_key.columns:
-            primary_key = column
-
-        db_filter = Filter(alchemist=alchemist, key=primary_key)
-        db_filter.values = values
-
-        for or_filters in filters:
-            for filter in or_filters:
-                db_filter.add(filter)
-
-        db_filter.update()
-
-        if filters and not db_filter.values:
+        try:
+            db_filter = build_filtered_values(alchemist, table, filters,
+                                                            values=values)
+        except ValueError:
             return
 
         values_map = {}
@@ -310,6 +317,50 @@ def execute_export(alchemist, output_path, output_name,
                                         table=table, values=values,
                                         verbose=verbose)
 
+def establish_connection(database):
+    alchemist = AlchemyHandler()
+
+    try:
+        alchemist.connect(login_attempts=3)
+    except ValueError:
+        print("Please check your MySQL credentials and try again.")
+        raise ValueError
+    except:
+        print("Unknown error occured when logging into MySQL.")
+        raise
+
+    alchemist.database = database
+    try:
+        alchemist.connect(ask_database=True, login_attempts=0)
+    except ValueError:
+        print("Please check your MySQL database access, "
+              "and/or your database availability.")
+        raise ValueError
+    except:
+        print("Unknonw error occured when connecting to MySQL database.")
+        raise
+
+    return alchemist 
+
+def build_filtered_values(alchemist, table, filters, values=None):
+    table_obj = alchemist.get_table(table)
+    primary_key = list(table_obj.primary_key.columns)[0]
+
+    db_filter = Filter(alchemist=alchemist, key=primary_key)
+    db_filter.values = values
+
+    for or_filters in filters:
+        for filter in or_filters:
+            db_filter.add(filter)
+
+    db_filter.update()
+
+    if filters and not db_filter.values:
+        print("Applied filters resulted in not hits.")
+        raise ValueError
+
+    return db_filter
+
 def build_groups_map(db_filter, export_path, groups=[], values_map={},
                                                        verbose=False):
     db_filter = db_filter.copy()
@@ -330,23 +381,13 @@ def build_groups_map(db_filter, export_path, groups=[], values_map={},
 
 def execute_csv_export(alchemist, export_path,
                                         table="phage", values=[],
-                                        verbose=False):
-    remove_fields = {"phage"           : ["Sequence"],
-                     "gene"            : ["Translation"],
-                     "domain"          : [],
-                     "gene_domain"     : [],
-                     "pham"            : [],
-                     "pham_color"      : [],
-                     "trna"            : ["Sequence"],
-                     "tmrna"           : [],
-                     "trna_structures" : []}
-
+                                        verbose=False): 
     table_obj = alchemist.get_table(table)
 
     select_columns = []
     headers = []
     for column in table_obj.columns:
-        if column.name not in remove_fields[table]:
+        if column.name not in UNDESIRED_COLUMNS[table]:
             select_columns.append(column)
             headers.append(column.name)
 
@@ -488,15 +529,6 @@ def _(value_list_input):
 def _(value_list_input):
     return value_list_input
 
-def establish_database_connection(database_name: str):
-    if not isinstance(database_name, str):
-        print("establish_database_connection requires string input")
-        raise TypeError
-    alchemist = AlchemyHandler(database=database_name)
-    alchemist.connect()
-
-    return alchemist
-
 def set_cds_seqfeatures(phage_genome):
     """Helper function that queries for and returns
     cds data from a SQL database for a specific phage
@@ -584,16 +616,6 @@ def write_seqrecord(seqrecord_list: List[SeqRecord],
         output_handle.close()
 
 def write_database(alchemist, version, export_path):
-
-    # TODO this is probably the long term preferred code:
-    # sql_path = export_path.joinpath(f"{sql_handle.database}_v{version}.sql")
-    # os.system(f"mysqldump -u {sql_handle._username} -p{sql_handle._password} "
-    #           f"--skip-comments {sql_handle.database} > {str(sql_path)}")
-    # version_path = sql_path.with_name(f"{sql_handle.database}_v{version}.version")
-    # version_path.touch()
-    # version_path.write_text(f"{version}")
-
-    # TODO this is a current temporary fix.
     sql_path = export_path.joinpath(f"{alchemist.database}.sql")
     os.system(f"mysqldump -u {alchemist.username} -p{alchemist.password} "
               f"--skip-comments {alchemist.database} > {str(sql_path)}")
@@ -601,10 +623,8 @@ def write_database(alchemist, version, export_path):
     version_path.touch()
     version_path.write_text(f"{version}")
 
-def main(args):
-    """Function to initialize file export"""
-    run_export(args)
 
+#--------------------------------------------------------
 #PROTOTYPE FUNCTIONS
 def cds_to_seqrecord(cds):
     try:
