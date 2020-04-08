@@ -23,7 +23,7 @@ if str(test_dir) not in set(sys.path):
     sys.path.append(str(test_dir))
 import test_db_utils
 
-# Standard pdm_anon user/pwd and test_db
+# Standard pdm_anon user/pwd and pdm_test_db
 engine_string = test_db_utils.create_engine_string()
 
 
@@ -76,7 +76,7 @@ class TestPhamerationFunctions(unittest.TestCase):
         # unphamerated should be a set
         with self.subTest():
             self.assertEqual(type(unphamerated), type(set()))
-        # test_db has 0 unphamerated genes
+        # pdm_test_db has 0 unphamerated genes
         with self.subTest():
             self.assertEqual(len(unphamerated), 0)
 

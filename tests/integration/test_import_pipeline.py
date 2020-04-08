@@ -116,10 +116,10 @@ logging.basicConfig(filename=import_pipeline_test_log, filemode="w",
 pipeline = "import"
 
 # The following integration tests user the 'pdm_anon' MySQL user.
-# It is expected that this user has all privileges for 'test_db' database.
+# It is expected that this user has all privileges for 'pdm_test_db' database.
 # user = "pdm_anon"
 # pwd = "pdm_anon"
-# db = "test_db"
+# db = "pdm_test_db"
 user = test_db_utils.USER
 pwd = test_db_utils.PWD
 db = test_db_utils.DB

@@ -16,7 +16,7 @@ import test_db_utils
 import test_data_utils
 
 # The following integration tests user the 'pdm_anon' MySQL user.
-# It is expected that this user has all privileges for 'test_db' database.
+# It is expected that this user has all privileges for 'pdm_test_db' database.
 engine_string = test_db_utils.create_engine_string()
 
 # Assumes that output message contains "SQLAlchemy Error..."

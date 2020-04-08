@@ -14,10 +14,13 @@ current_date = datetime.today().replace(hour=0, minute=0,
 
 
 # It is expected that the 'pdm_anon' MySQL user has all privileges
-# for 'test_db' database.
+# for 'test_db' and 'pdm_test_*' databases.
 USER = "pdm_anon"
 PWD = "pdm_anon"
+# TODO once developers have added 'pdm_test_db' privileges to 'pdm_anon',
+# remove the 'test_db'
 DB = "test_db"
+DB_NEW = "pdm_test_db"
 unittest_file = Path(__file__)
 test_dir = unittest_file.parent
 test_file_dir = Path(test_dir, "test_files")

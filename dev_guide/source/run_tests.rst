@@ -25,6 +25,6 @@ For integration tests that require a MySQL database, it is expected that MySQL u
 
     mysql> CREATE USER 'pdm_anon'@'localhost' IDENTIFIED BY 'pdm_anon';
     mysql> GRANT ALL PRIVILEGES ON test_db.* TO 'pdm_anon'@'localhost';
-    mysql> GRANT ALL PRIVILEGES ON test_db_2.* TO 'pdm_anon'@'localhost';
+    mysql> GRANT ALL PRIVILEGES ON `pdm\_test\_%`.* TO 'pdm_anon'@'localhost';
     mysql> GRANT SELECT ON *.* TO 'pdm_anon'@'localhost';
     mysql> FLUSH PRIVILEGES;

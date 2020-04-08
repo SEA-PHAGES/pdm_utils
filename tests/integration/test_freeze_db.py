@@ -19,8 +19,7 @@ pipeline = "freeze"
 user = test_db_utils.USER
 pwd = test_db_utils.PWD
 db = test_db_utils.DB
-db2 = "test_db_2"
-
+db2 = "pdm_test_2"
 COUNT_PHAGE = "SELECT COUNT(*) as count FROM phage"
 
 def create_update(table, field, value, phage_id=None):
@@ -46,7 +45,7 @@ class TestFreeze(unittest.TestCase):
 
     @classmethod
     def tearDownClass(self):
-        # Remove 'test_db'
+        # Remove 'pdm_test_db'
         test_db_utils.remove_db()
 
     def setUp(self):
@@ -64,7 +63,7 @@ class TestFreeze(unittest.TestCase):
         self.unparsed_args = get_unparsed_freeze_args()
 
     def tearDown(self):
-        # Remove 'test_db_2'
+        # Remove 'pdm_test_2'
         exists = test_db_utils.check_if_exists(db=db2)
         if exists:
             test_db_utils.remove_db(db=db2)

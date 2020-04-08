@@ -54,7 +54,7 @@ def count_status_from_dict(dict, *args):
     return count
 
 # The following integration tests user the 'pdm_anon' MySQL user.
-# It is expected that this user has all privileges for 'test_db' database.
+# It is expected that this user has all privileges for 'pdm_test_db' database.
 user = test_db_utils.USER
 pwd = test_db_utils.PWD
 db = test_db_utils.DB
@@ -648,7 +648,7 @@ class TestImportGenome2(unittest.TestCase):
 class TestImportGenome3(unittest.TestCase):
 
     def setUp(self):
-        # The empty test_db is only needed to test shema compatibility.
+        # The empty pdm_test_db is only needed to test shema compatibility.
         # Otherwise, Actinobacteriophage is sufficient.
         test_db_utils.create_empty_test_db()
 
