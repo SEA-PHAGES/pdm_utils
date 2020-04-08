@@ -188,6 +188,13 @@ class TestQuerying(unittest.TestCase):
 
         self.assertEqual(table_list[0], self.trna)
 
+    def test_get_table_list_3(self):
+        """Verify get_table_list() does not return table duplicates.
+        """
+        table_list = querying.get_table_list([self.PhageID, self.Cluster])
+
+        self.assertTrue(len(table_list) == 1)
+
     def test_get_table_pathing_1(self):
         """Verify get_table_pathing() builds from common center table.
         """

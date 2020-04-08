@@ -14,6 +14,7 @@ import re
 import sys
 import time
 import copy
+import shutil
 from typing import List, Dict
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
@@ -231,6 +232,7 @@ def parse_export(unparsed_args_list):
                         ix=False, csvx=False, dbx=False, ffx=False)
 
     parsed_args = optional_parser.parse_args(unparsed_args_list[4:])
+
     return parsed_args
 
 def execute_export(alchemist, output_path, output_name,
@@ -288,58 +290,60 @@ def execute_export(alchemist, output_path, output_name,
 
     elif csv_export or ffile_export != None:
         try:
-            db_filter = build_filtered_values(alchemist, table, filters,
-                                                            values=values)
-        except ValueError:
-            return
+            db_filter = build_filtered_values(alchemist, table, filters,                                                values=values)
 
-        values_map = {}
-        if groups:
-            build_groups_map(db_filter, export_path, groups=groups,
-                                        values_map=values_map,
-                                        verbose=verbose)
-        else:
-            values_map.update({export_path : db_filter.values})
+            values_map = {}
+            if groups:
+                build_groups_map(db_filter, export_path, groups=groups,
+                                            values_map=values_map,
+                                            verbose=verbose)
+            else:
+                values_map.update({export_path : db_filter.values})
 
-        for export_path in values_map.keys():
-            values = values_map[export_path]
+            for export_path in values_map.keys():
+                values = values_map[export_path]
 
-            if csv_export:
-                execute_csv_export(alchemist,
-                                        export_path,
-                                        table=table, values=values,
-                                        verbose=verbose)
+                if csv_export:
+                    execute_csv_export(alchemist,
+                                            export_path,
+                                            table=table, values=values,
+                                            verbose=verbose)
 
-            elif ffile_export != None:
-                execute_ffx_export(alchemist,
-                                        export_path, ffile_export,
-                                        db_version,
-                                        table=table, values=values,
-                                        verbose=verbose)
+                elif ffile_export != None:
+                    execute_ffx_export(alchemist,
+                                            export_path, ffile_export,
+                                            db_version,
+                                            table=table, values=values,
+                                            verbose=verbose)
+        except:
+            shutil.rmtree(str(export_path))
+            return 
 
 def establish_connection(database):
     alchemist = AlchemyHandler()
 
+    alchemist.database = database
     try:
         alchemist.connect(login_attempts=3)
     except ValueError:
-        print("Please check your MySQL credentials and try again.")
+        print("Credentials invalid. "
+              "Please check your MySQL credentials and try again.")
         raise ValueError
     except:
         print("Unknown error occured when logging into MySQL.")
         raise
 
-    alchemist.database = database
     try:
         alchemist.connect(ask_database=True, login_attempts=0)
     except ValueError:
         print("Please check your MySQL database access, "
-              "and/or your database availability.")
+              "and/or your database availability.\n"
+             f"Unable to connect to database '{database}' "
+              "with valid credentials.")
         raise ValueError
     except:
-        print("Unknonw error occured when connecting to MySQL database.")
+        print("Unknown error occured when connecting to MySQL database.")
         raise
-
     return alchemist 
 
 def build_filtered_values(alchemist, table, filters, values=None):
@@ -351,7 +355,11 @@ def build_filtered_values(alchemist, table, filters, values=None):
 
     for or_filters in filters:
         for filter in or_filters:
-            db_filter.add(filter)
+            try:
+                db_filter.add(filter)
+            except:
+                print(f"Filter '{filter}' is not a valid filter.")
+                raise ValueError
 
     db_filter.update()
 
@@ -366,7 +374,12 @@ def build_groups_map(db_filter, export_path, groups=[], values_map={},
     db_filter = db_filter.copy()
 
     current_group = groups.pop(0)
-    groups_dict = db_filter.group(current_group)
+   
+    try:
+        groups_dict = db_filter.group(current_group)
+    except:
+        print(f"Group '{current_group}' is not a valid group")
+        raise ValueError
 
     for group in groups_dict.keys():
         group_path = export_path.joinpath(str(group))
@@ -420,6 +433,7 @@ def execute_ffx_export(alchemist, output_path, file_format,
                                 phage_query="SELECT * FROM phage",
                                 gene_query="SELECT * FROM gene")
     else:
+        print(f"Unknown error occured, table '{table}' is not recognized.")
         raise ValueError
 
     if verbose:
@@ -438,6 +452,7 @@ def execute_ffx_export(alchemist, output_path, file_format,
             append_database_version(record, db_version)
 
     else:
+        print("Unknown error occured when compiling genome information.")
         raise ValueError
 
     write_seqrecord(seqrecords, file_format,
@@ -462,9 +477,8 @@ def convert_path(path: str):
     elif path_object.resolve().exists():
         path_object = path_object.resolve()
 
-    print("String input failed to be converted to a working Path object " \
-          "Path does not exist")
-
+    print("String input failed to be converted to a working Path object. \n" 
+          "Path may not exist.")
     raise ValueError
 
 def convert_dir_path(path: str):
@@ -483,8 +497,9 @@ def convert_dir_path(path: str):
     if path_object.is_dir():
         return path_object
     else:
-        print("Path input does not direct to a folder")
-        exit(1)
+        print("Path input required to be a directory "
+              "does not direct to a valid directory.")
+        raise ValueError
 
 def convert_file_path(path: str):
     """Helper function to convert a string to a working Path object.
@@ -501,7 +516,8 @@ def convert_file_path(path: str):
     if path_object.is_file():
         return path_object
     else:
-        print("Path input does not direct to a file")
+        print("Path input required to be a file "
+              "does not direct to a valid file.")
         raise ValueError
 
 @singledispatch
@@ -513,7 +529,7 @@ def parse_value_list_input(value_list_input):
     :type value_list_input: list[str]
     """
 
-    print("Phage list input for database query is not a supported type")
+    print("Value list input for export is not a supported type.")
     raise TypeError
 
 @parse_value_list_input.register(Path)

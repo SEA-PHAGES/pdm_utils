@@ -485,6 +485,14 @@ class TestFilter(unittest.TestCase):
 
         self.assertEqual(copy_filter.values, self.db_filter.values)
 
+    def test_copy_8(self):
+        """Verify that copy() reflects a Filter's connected property.
+        """
+        self.db_filter._connected = True
+        copy_filter = self.db_filter.copy()
+        
+        self.assertEqual(copy_filter._connected, self.db_filter._connected)
+
     def test_copy_filters_1(self):
         """Verify that copy_filters() replicates filters.
         """

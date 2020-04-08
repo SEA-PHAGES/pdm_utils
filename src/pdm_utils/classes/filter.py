@@ -477,7 +477,7 @@ class Filter:
         column = self.convert_column_input(raw_column)
 
         groups = self.transpose(column)
-
+        
         group_results = {}
         for group in groups:
             where_clause = (column == group) 
@@ -490,6 +490,7 @@ class Filter:
         """Returns a copy of a Filter object.
         """
         copy = Filter()
+        copy._connected = self._connected
         copy._updated = self.updated
         copy._values_valid = self.values_valid
         copy._filters = self.copy_filters()
@@ -511,4 +512,5 @@ class Filter:
             filters.update({filter : clauses})
 
         return filters
+
 

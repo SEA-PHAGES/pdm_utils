@@ -221,7 +221,7 @@ class AlchemyHandler:
                 self.build_engine()
             except:
                 pass
-
+        
         while(not self.connected and attempts < login_attempts):
             attempts += 1
             self.ask_credentials()
