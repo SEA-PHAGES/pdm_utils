@@ -121,5 +121,35 @@ class TestGetGBRecords(unittest.TestCase):
             self.assertEqual(count, 1)
 
 
+    @patch("pdm_utils.pipelines.get_gb_records.establish_database_connection")
+    def test_main_3(self, edc_mock):
+        """Verify no GenBank record is retrieved based on one filter."""
+        edc_mock.return_value = self.alchemist
+        stmt = create_update("phage", "Accession", TRIXIE_ACC, "Trixie")
+        test_db_utils.execute(stmt)
+        self.unparsed_args.extend(["-f", "phage.Status!=draft"])
+        run.main(self.unparsed_args)
+        count = count_files(results_path)
+        with self.subTest():
+            self.assertTrue(results_path.exists())
+        with self.subTest():
+            self.assertEqual(count, 0)
+
+    @patch("pdm_utils.pipelines.get_gb_records.establish_database_connection")
+    def test_main_4(self, edc_mock):
+        """Verify one GenBank record is retrieved based on one filter."""
+        edc_mock.return_value = self.alchemist
+        stmt1 = create_update("phage", "Accession", TRIXIE_ACC, "Trixie")
+        test_db_utils.execute(stmt1)
+        stmt2 = create_update("phage", "Status", "final", "Trixie")
+        test_db_utils.execute(stmt2)
+        self.unparsed_args.extend(["-f", "phage.Status!=draft"])
+        run.main(self.unparsed_args)
+        count = count_files(results_path)
+        with self.subTest():
+            self.assertTrue(results_path.exists())
+        with self.subTest():
+            self.assertEqual(count, 1)
+
 if __name__ == '__main__':
     unittest.main()

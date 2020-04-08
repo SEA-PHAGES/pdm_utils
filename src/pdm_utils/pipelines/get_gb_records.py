@@ -102,39 +102,60 @@ def main(unparsed_args_list):
     print("Retrieving accessions from the database...")
     query = construct_accession_query(keep_set)
     list_of_dicts = mysqldb.query_dict_list(engine, query)
-    # [{'PhageID':'Trixie', 'Accession':'ABC123'}]
-
-
-    # Dictionary where key = PhageID and value = Accession
-    id_acc_dict = {}
-    for dict in list_of_dicts:
-        phage_id = dict["PhageID"]
-        accession = dict["Accession"]
-        id_acc_dict[phage_id] = accession
-
-    # Dictionary where key = Accession and value = [PhageIDs]
-    # Accessions are not guaranteed to be unique.
-    acc_id_dict = {}
-    for key in id_acc_dict.keys():
-        accession = id_acc_dict[key]
-        if (accession is not None and accession != ""):
-            if accession not in acc_id_dict.keys():
-                acc_id_dict[accession] = [key]
-            else:
-                acc_id_dict[accession] = acc_id_dict[accession].append(accession)
-
-    accessions = set(acc_id_dict.keys())
+    id_acc_dict = get_id_acc_dict(list_of_dicts)
+    acc_id_dict = get_acc_id_dict(id_acc_dict)
     engine.dispose()
-    if len(accessions) > 0:
-        get_genbank_data(working_path, accessions, ncbi_cred_dict)
+    if len(acc_id_dict.keys()) > 0:
+        get_data(working_path, acc_id_dict, ncbi_cred_dict)
     else:
         print("There are no records to retrieve.")
 
-# TODO unittest.
-def get_genbank_data(output_folder, accession_set, ncbi_cred_dict={}):
-    """Retrieve genomes from GenBank."""
 
-    batch_size = 200
+
+# TODO test.
+def get_id_acc_dict(list_of_dicts):
+    """Convert list of dictionaries from MySQL query into a single dictionary.
+
+    Receives a list of dictionaries, where Keys are PhageID and Accession.
+    Returns a dictionary where Key = PhageID and Value = Accession
+    """
+    # [{'PhageID':'Trixie', 'Accession':'ABC123'}]
+    new_dict = {}
+    for dict in list_of_dicts:
+        phage_id = dict["PhageID"]
+        accession = dict["Accession"]
+        new_dict[phage_id] = accession
+    return new_dict
+
+
+# TODO move to basic.
+# TODO test.
+def get_acc_id_dict(id_acc_dict):
+    """Invert a dictionary.
+
+    Receives a dictionary where Key = PhageID and Value = Accession.
+    Returns a dictionary where Key = Accession and Value = List[PhageIDs]
+    Accessions are not guaranteed to be unique.
+    """
+    new_dict = {}
+    for key in id_acc_dict.keys():
+        accession = id_acc_dict[key]
+        if (accession is not None and accession != ""):
+            if accession not in new_dict.keys():
+                new_dict[accession] = [key]
+            else:
+                new_dict[accession] = new_dict[accession].append(accession)
+    return new_dict
+
+
+# TODO move to ncbi.
+# TODO test.
+def get_data(output_folder, acc_id_dict, ncbi_cred_dict={}, batch_size=200):
+    """Retrieve genomes from GenBank.
+
+    output_folder = Path to where files will be saved.
+    acc_id_dict = Dictionary where key = Accession and value = List[PhageIDs]
+    """
 
     # More setup variables if NCBI updates are desired.  NCBI Bookshelf resource
     # "The E-utilities In-Depth: Parameters, Syntax and More", by Dr. Eric
@@ -150,7 +171,7 @@ def get_genbank_data(output_folder, accession_set, ncbi_cred_dict={}):
     # Use esearch to verify the accessions are valid and efetch to retrieve
     # the record
     # Create batches of accessions
-    unique_accession_list = list(accession_set)
+    unique_accession_list = list(acc_id_dict.keys())
 
     # Add [ACCN] field to each accession number
     appended_accessions = \
@@ -165,14 +186,12 @@ def get_genbank_data(output_folder, accession_set, ncbi_cred_dict={}):
     batch_indices = basic.create_indices(unique_accession_list, batch_size)
     print(f"There are {len(unique_accession_list)} GenBank accessions to check.")
     for indices in batch_indices:
-        batch_index_start = indices[0]
-        batch_index_stop = indices[1]
-        print("Checking accessions "
-              f"{batch_index_start + 1} to {batch_index_stop}...")
-        current_batch_size = batch_index_stop - batch_index_start
+        start = indices[0]
+        stop = indices[1]
+        print(f"Checking accessions {start + 1} to {stop}...")
+
         delimiter = " | "
-        esearch_term = delimiter.join(appended_accessions[
-                                      batch_index_start:batch_index_stop])
+        esearch_term = delimiter.join(appended_accessions[start:stop])
 
         # Use esearch for each accession
         search_record = ncbi.run_esearch(db="nucleotide", term=esearch_term,
@@ -184,20 +203,39 @@ def get_genbank_data(output_folder, accession_set, ncbi_cred_dict={}):
                                              query_key=search_query_key,
                                              webenv=search_webenv)
 
-        accessions_to_retrieve = []
-        for doc_sum in summary_records:
-            doc_sum_accession = doc_sum["Caption"]
-            accessions_to_retrieve.append(doc_sum_accession)
-
+        accessions_to_retrieve = get_accessions_to_retrieve(summary_records)
         if len(accessions_to_retrieve) > 0:
-            output_list = ncbi.get_records(accessions_to_retrieve,
-                                           db="nucleotide",
-                                           rettype="gb",
-                                           retmode="text")
-            for retrieved_record in output_list:
-                ncbi_filename = (f"{retrieved_record.name}.gb")
-                flatfile_path = pathlib.Path(output_folder, ncbi_filename)
-                SeqIO.write(retrieved_record, str(flatfile_path), "genbank")
+            records = ncbi.get_records(accessions_to_retrieve,
+                                       db="nucleotide",
+                                       rettype="gb",
+                                       retmode="text")
+            for record in records:
+                output_data(record, acc_id_dict, output_folder)
+
+
+# TODO move to ncbi.
+# TODO test.
+def get_accessions_to_retrieve(summary_records):
+    """Save retrieved record to file.
+
+    Returns a list of accessions.
+    """
+    accessions = []
+    for doc_sum in summary_records:
+        doc_sum_accession = doc_sum["Caption"]
+        accessions.append(doc_sum_accession)
+    return accessions
+
+# TODO test.
+def output_data(seqrecord, acc_id_dict, output_folder):
+    """Save retrieved record to file."""
+    accession = seqrecord.annotations["accessions"][0]
+    phage_id_list = acc_id_dict[accession]
+    for phage_id in phage_id_list:
+        filename = (f"{phage_id}__{accession}.gb")
+        filepath = pathlib.Path(output_folder, filename)
+        SeqIO.write(seqrecord, str(filepath), "genbank")
+
 
 # TODO this may be moved elsewhere as a more generalized function.
 def establish_database_connection(database: str, echo=False):
@@ -212,7 +250,7 @@ def establish_database_connection(database: str, echo=False):
         alchemist._engine.echo = echo
     return alchemist
 
-
+# TODO move to basic or mysqldb.
 # TODO test.
 def construct_set_string(phage_id_set):
     """Convert set of phage_ids to string formatted for MySQL.
@@ -223,6 +261,7 @@ def construct_set_string(phage_id_set):
     string = "('" + "', '".join(phage_id_set) + "')"
     return string
 
+# TODO move to mysqldb.
 # TODO test.
 def construct_accession_query(phage_id_set):
     """Construct SQL query to retrieve accessions."""
