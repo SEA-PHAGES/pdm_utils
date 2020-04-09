@@ -27,7 +27,7 @@ Any changes made to the structure (schema) of the database (in the form of schem
 
         3. Run the downgrade script::
 
-            > mysql -u root -p <test database> < upgrade_script.sql
+            > mysql -u root -p <test database> < downgrade_script.sql
 
         4. Export the empty schema after downgrade::
 

@@ -11,7 +11,9 @@ ALTER TABLE `trna` DROP COLUMN `Sequence`;
 ALTER TABLE `trna` DROP COLUMN `Product`;
 ALTER TABLE `trna` DROP COLUMN `InfernalScore`;
 ALTER TABLE `trna` ADD COLUMN `Source` enum('aragorn', 'trnascan', 'both') DEFAULT NULL;
-
+ALTER TABLE `trna` MODIFY COLUMN `PhageID` varchar(25) NOT NULL AFTER `TrnaID`;
+ALTER TABLE `trna` MODIFY COLUMN `LocusTag` varchar(35) DEFAULT NULL AFTER `Note`;
+UPDATE `version` SET `SchemaVersion` = 9;
 
 ### DATA_LOSS_SUMMARY
 # LOST_TABLE:trna_structures

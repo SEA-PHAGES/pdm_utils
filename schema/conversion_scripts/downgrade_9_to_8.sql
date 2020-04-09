@@ -1,4 +1,6 @@
 # MySQL script to downgrade the database schema from version 9 to 8.
+ALTER TABLE `trna` MODIFY COLUMN `LocusTag` varchar(35) DEFAULT NULL AFTER `PhageID`;
+ALTER TABLE `trna` MODIFY COLUMN `TrnaID` varchar(35) NOT NULL AFTER `PhageID`;
 ALTER TABLE `trna` DROP COLUMN `Source`;
 ALTER TABLE `trna` ADD COLUMN `InfernalScore` decimal(4,2) DEFAULT NULL AFTER `Anticodon`;
 ALTER TABLE `trna` ADD COLUMN `Product` blob AFTER `Orientation`;
@@ -9,7 +11,6 @@ UPDATE `trna`
 ALTER TABLE `trna` MODIFY COLUMN `Sequence` varchar(100) NOT NULL;
 UPDATE `trna` SET `AminoAcid` = 'OTHER' WHERE `AminoAcid` in ('fMet', 'Ile2', 'Pyl', 'Sec', 'Stop');
 ALTER TABLE `trna` MODIFY COLUMN `AminoAcid` enum('Ala','Arg','Asn','Asp','Cys','Gln','Glu','Gly','His','Ile','Leu','Lys','Met','Phe','Pro','Ser','Thr','Trp','Tyr','Val','Undet','OTHER') NOT NULL;
-
 CREATE TABLE `trna_structures` (
   `Sequence` varchar(100) NOT NULL,
   `Structure` varchar(300) NOT NULL,
@@ -18,6 +19,7 @@ CREATE TABLE `trna_structures` (
 ALTER TABLE `trna` MODIFY COLUMN `Structure` varchar(300) NOT NULL;
 INSERT IGNORE INTO `trna_structures` SELECT `Sequence`, `Structure` FROM `trna`;
 ALTER TABLE `trna` DROP COLUMN `Structure`;
+UPDATE `version` SET `SchemaVersion` = 8;
 
 ### DATA_LOSS_SUMMARY
 # INACCURATE_COLUMN:trna.Product
