@@ -7,7 +7,7 @@ ALTER TABLE `trna` ADD COLUMN `Product` blob AFTER `Orientation`;
 ALTER TABLE `trna` ADD COLUMN `Sequence` varchar(100) DEFAULT NULL AFTER `Orientation`;
 UPDATE `trna`
   LEFT JOIN `phage` ON `trna`.`PhageID` = `phage`.`PhageID`
-  SET `trna`.`Sequence` = SUBSTRING(`phage`.`Sequence` FROM `trna`.`Start` FOR `trna`.`Length`);
+  SET `trna`.`Sequence` = SUBSTRING(`phage`.`Sequence` FROM (`trna`.`Start` + 1) FOR `trna`.`Length`);
 ALTER TABLE `trna` MODIFY COLUMN `Sequence` varchar(100) NOT NULL;
 UPDATE `trna` SET `AminoAcid` = 'OTHER' WHERE `AminoAcid` in ('fMet', 'Ile2', 'Pyl', 'Sec', 'Stop');
 ALTER TABLE `trna` MODIFY COLUMN `AminoAcid` enum('Ala','Arg','Asn','Asp','Cys','Gln','Glu','Gly','His','Ile','Leu','Lys','Met','Phe','Pro','Ser','Thr','Trp','Tyr','Val','Undet','OTHER') NOT NULL;
@@ -16,6 +16,8 @@ CREATE TABLE `trna_structures` (
   `Structure` varchar(300) NOT NULL,
   PRIMARY KEY (`Sequence`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+UPDATE `trna` SET `Structure` = '' WHERE `Structure` is NULL;
+UPDATE `trna` SET `Structure` = SUBSTRING(`Structure` FROM 1 FOR 300);
 ALTER TABLE `trna` MODIFY COLUMN `Structure` varchar(300) NOT NULL;
 INSERT IGNORE INTO `trna_structures` SELECT `Sequence`, `Structure` FROM `trna`;
 ALTER TABLE `trna` DROP COLUMN `Structure`;
