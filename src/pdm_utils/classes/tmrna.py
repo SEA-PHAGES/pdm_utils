@@ -9,6 +9,7 @@ from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
 from Bio.Alphabet import IUPAC
 
+from pdm_utils.classes import eval
 from pdm_utils.functions import basic
 
 
@@ -41,6 +42,7 @@ class TmrnaFeature:
         self.seqfeature = None  # BioPython SeqFeature object for this tRNA
         self.locus_tag = ""     # Gene ID comprised of PhageID and Gene name
         self._locus_tag_num = ""
+        self.parts = 0          # Number of regions this gene encompasses
         self.gene = ""          # Gene number parsed from feature
         self.note = ""          # Raw note field
 
@@ -318,122 +320,390 @@ class TmrnaFeature:
                 # Unknown coordinate format
                 self.length = -1
 
+    # Evaluations
+    # TODO: create base feature class - fully equivalent to version in Cds,
+    #  but documented slightly differently.
+    def set_eval(self, eval_id, definition, result, status):
+        """
+        Constructs and adds and Eval object to this feature's list of
+        evaluations.
+        :param eval_id: unique identifier for the evaluation
+        :type eval_id: str
+        :param definition: description of the evaluation
+        :type definition: str
+        :param result: description of the evaluation outcome
+        :type result: str
+        :param status: overall outcome of the evaluation
+        :type status: str
+        :return:
+        """
+        evl = eval.Eval(eval_id, definition, result, status)
+        self.evaluations.append(evl)
 
-#     #This is an initial attempt at checking the tRNA product description
-#     #Ultimately, a regular expression would be better to use
-#     #tRNA product example = 'tRNA-Ser (AGC)'
-#     #The code block below functions, but it does not fully account for
-#     #tRNA-OTHER descriptions, tRNA-Stop descriptions,
-#     #and it does not check the accuracy of
-#     #the amino acid and anticodon pairing.
-#     #The biggest problem is that the expected product and note descriptions
-#     #are expected to change after they reach NCBI, so it is not clear
-#     #how to best address that issue here, since nothing in the import
-#     #table reflects WHERE the annotated genome came from.
-#
-#     product_error = 0
-#
-#     #product starts off as lowercase 'trna-ser (agc)'
-#     #split1_list = 'trna' and 'ser (agc)'
-#     tRNA_product_split1_list = product_field.split('-')
-#
-#     #If product is missing, an error will already have been thrown.
-#     #The product should have a hypthen, so only parse product if it can be
-#     #split into two elements.
-#     if len(tRNA_product_split1_list) == 2:
-#         tRNA_product_split1_prefix = tRNA_product_split1_list[0].strip() #'trna'
-#
-#         #split2_list = 'ser' and 'agc)'
-#         tRNA_product_split2_list = tRNA_product_split1_list[1].split('(')
-#         tRNA_product_amino_acid_three = tRNA_product_split2_list[0].strip() #'ser'
-#
-#         if tRNA_product_amino_acid_three != 'other' and \
-#             tRNA_product_amino_acid_three != 'stop' and \
-#             len(tRNA_product_amino_acid_three) != 3:
-#                 product_error += 1
-#
-#         #The code block below checks for the presence of an anticodon.
-#         #No need to use it currently, since there is so much variability
-#         #at the tRNA product field, but retain for future use.
-#         # if len(tRNA_product_split2_list) == 2:
-#         #
-#         #     #split3_list = 'agc' and ''
-#         #     tRNA_product_split3_list = tRNA_product_split2_list[1].split(')')
-#         #
-#         #     #Only check the anticodon if the amino acid is NOT 'other'
-#         #     if tRNA_product_amino_acid_three != 'other' and \
-#         #         len(tRNA_product_split3_list) == 2:
-#         #
-#         #         tRNA_product_anticodon = tRNA_product_split3_list[0].strip() #'agc'
-#         #         if len(tRNA_product_anticodon) != 3:
-#         #             product_error += 1
-#         #     else:
-#         #         product_error += 1
-#         #
-#         # else:
-#         #     product_error += 1
-#     else:
-#         product_error += 1
-#
-#     return product_error
+    # TODO: create base feature class - nearly identical to Cds version,
+    #  but exception clause is appropriately narrow.
+    def check_attribute(self, attribute, check_set, expect=False, eval_id=None,
+                        success="correct", fail="error", eval_def=None):
+        """
+        Checks whether the indicated feature attribute is present in
+        the given check_set. Uses expect to determine whether the
+        presence (or lack thereof) is an error, or correct.
+        :param attribute: the gene feature attribute to evaluate
+        :type attribute: str
+        :param check_set: set of reverence values
+        :type check_set: set
+        :param expect: whether the attribute's value is expected to be
+        in the reference set
+        :type expect: bool
+        :param eval_id: unique identifier for the evaluation
+        :type eval_id: str
+        :param success: status if the outcome is successful
+        :type success: str
+        :param fail: status if the outcome is unsuccessful
+        :type fail: str
+        :param eval_def: description of the evaluation
+        :type eval_def: str
+        :return:
+        """
+        try:
+            value = getattr(self, attribute)
+        except AttributeError:
+            value = None
 
-# TODO the code below is pasted from import script.
-#  It evaluates tRNA features, and needs to be implemented in the
-#  check_tRNA function
-# def check_trna_feature(feature):
-#
-#     #Now that start and stop have been parsed, check if coordinates are
-#     fuzzy or not
-#     if (tRNA_start.isdigit() and tRNA_stop.isdigit()):
-#         tRNA_start = int(tRNA_start)
-#         tRNA_stop = int(tRNA_stop)
-#
-#     else:
-#         write_out(output_file,"\nError: tRNA starting at %s has fuzzy
-#         coordinates in phage %s."\
-#                 % (tRNA_start,phageName))
-#         record_errors += 1
-#         continue
-#
-#
-#     if len(tRNA_seq) != tRNA_size:
-#         write_out(output_file,"\nError: unable to retrieve sequence for
-#         tRNA starting at %s in phage %s."\
-#                 % (tRNA_start + 1,phageName))
-#         record_errors += 1
-#         continue
-#
-#     #Check to see if forward orientation terminal nucleotide is correct =
-#     A or C
-#     if tRNA_seq[-1] != 'A' and tRNA_seq[-1] != 'C':
-#         record_warnings += 1
-#         write_out(output_file,"\nWarning: tRNA starting at %s does not appear
-#         to have correct terminal nucleotide in %s phage." \
-#                 % (tRNA_start + 1,phageName))
-#         record_errors += question("\nError: tRNA starting at %s has incorrect
-#         terminal nucleotide in %s phage." \
-#                 % (tRNA_start + 1,phageName))
-#
-#     if tRNA_size < 60 or tRNA_size > 100:
-#         record_warnings += 1
-#         write_out(output_file,"\nWarning: tRNA starting at %s does not appear
-#         to be the correct size in %s phage."  \
-#                 % (tRNA_start + 1,phageName))
-#         record_errors += question("\nError: tRNA starting at %s is incorrect
-#         size in %s phage." \
-#                 % (tRNA_start + 1,phageName))
-#
-#         if len(tRNA_product) > 0:
-#             if check_tRNA_product(tRNA_product) > 0:
-#                 write_out(output_file,"\nError: tRNA starting at %s has
-#                 incorrect amino acid or anticodon in %s." \
-#                     % (tRNA_start + 1, phageName))
-#                 record_errors += 1
-#
-#         else:
-#             write_out(output_file,"\nError: tRNA starting at %s has incorrect
-#             product in %s." \
-#                 % (tRNA_start + 1, phageName))
-#             record_errors += 1
+        if value is not None:
+            value_short = basic.truncate_value(str(value), 30, "...")
+            result = f"The '{attribute}' value '{value_short}' is "
 
-# TODO revamp this code into a function
+            # Returns a boolean
+            outcome = basic.check_value_expected_in_set(
+                value, check_set, expect)
+
+            if outcome:
+                result += "valid."
+                status = success
+            else:
+                result += "not valid."
+                status = fail
+        else:
+            result = f"'{attribute}' is not a valid attribute to be evaluated."
+            status = "untested"
+
+        definition = f"Check the value of the '{attribute}' attribute for " \
+                     f"{self.id}."
+        definition = basic.join_strings([definition, eval_def])
+        self.set_eval(eval_id, definition, result, status)
+
+    # TODO: create base feature class - Travis' version assumes value can't
+    #  be None; if wrong, that method will fail because None can't be <=> x.
+    def check_magnitude(self, attribute, expect, ref_value, eval_id=None,
+                        success="correct", fail="error", eval_def=None):
+        """
+        Check that the magnitude of a numerical attribute meets
+        expectations.
+        :param attribute: the gene feature attribute to evaluate
+        :type attribute: str
+        :param expect: symbol designating direction of magnitude (>=<)
+        :type expect: str
+        :param ref_value: numerical value for comparison
+        :type ref_value: int, float, datetime
+        :param eval_id: unique identifier for the evaluation
+        :type eval_id: str
+        :param success: status if the outcome is successful
+        :type success: str
+        :param fail: status if the outcome is unsuccessful
+        :type fail: str
+        :param eval_def: description of the evaluation
+        :type eval_def: str
+        :return:
+        """
+        try:
+            value = getattr(self, attribute)
+        except AttributeError:
+            value = None
+
+        if value is not None:
+            result = f"The '{attribute}' value '{value}' is "
+            if value > ref_value:
+                compare = ">"
+                result += "greater than "
+            elif value == ref_value:
+                compare = "="
+                result += "equal to "
+            else:
+                compare = "<"
+                result += "less than "
+            result += f"{ref_value}, which is "
+            if compare == expect:
+                result += "expected."
+                status = success
+            else:
+                result += "not expected."
+                status = fail
+        else:
+            result = f"'{attribute}' is not a valid attribute to be evaluated."
+            status = "untested"
+
+        definition = f"Check the magnitude of the '{attribute}' attribute " \
+                     f"for {self.id}."
+        definition = basic.join_strings([definition, eval_def])
+        self.set_eval(eval_id, definition, result, status)
+
+    # TODO: create base feature class - this version avoids overloading
+    #  built-in format()
+    def check_orientation(self, fmt="fr_short", case=True, eval_id=None,
+                          success="correct", fail="error", eval_def=None):
+        """
+        Check that the orientation is set appropriately.
+        :param fmt: indicates how coordinates should be formatted
+        :type fmt: str
+        :param case: indicates whether orientation data should be cased
+        :type case: bool
+        :param eval_id: unique identifier for the evaluation
+        :type eval_id: str
+        :param success: status if the outcome is successful
+        :type success: str
+        :param fail: status if the outcome is unsuccessful
+        :type fail: str
+        :param eval_def: description of the evaluation
+        :type eval_def: str
+        :return:
+        """
+        expect = basic.reformat_strand(self.orientation, fmt, case)
+        result = f"The orientation is {self.orientation}, and it is formatted "
+
+        if self.orientation == expect:
+            result += "correctly."
+            status = success
+        else:
+            result += "incorrectly."
+            status = fail
+
+        definition = f"Check if the orientation is set correctly for {self.id}."
+        definition = basic.join_strings([definition, eval_def])
+        self.set_eval(eval_id, definition, result, status)
+
+    # TODO: create base feature class - I think this is exactly the same as
+    #  in Cds
+    def check_locus_tag_structure(self, check_value=None, only_typo=False,
+                                  prefix_set=set(), case=True, eval_id=None,
+                                  success="correct", fail="error",
+                                  eval_def=None):
+        """
+        Check that the locus tag is structured correctly.
+        :param check_value: expected genome id
+        :type check_value: str
+        :param only_typo: only genomeid spelling is evaluated
+        :type only_typo: bool
+        :param prefix_set: valid common prefixes, if one is expected
+        :type prefix_set: set
+        :param case: whether locus_tag is expected to be capitalized
+        :type case: bool
+        :param eval_id: unique identifier for the evaluation
+        :type eval_id: str
+        :param success: status if the outcome is successful
+        :type success: str
+        :param fail: status if the outcome is unsuccessful
+        :type fail: str
+        :param eval_def: description of the evaluation
+        :type eval_def: str
+        :return:
+        """
+        # Use genome_id from the object if check_value not given
+        if prefix_set is None:
+            prefix_set = {}
+        if check_value is None:
+            check_value = self.genome_id
+
+        results = list()
+        # If only check is to see that genome id is spelled correclty
+        if only_typo:
+            pattern = re.compile(check_value.lower())
+            search_result = pattern.search(self.locus_tag.lower())
+            if search_result is None:
+                results.append("The genome ID is missing.")
+        # Else if we're doing all checks
+        else:
+            # Expected structure: SEA_TRIXIE_20
+            parts = self.locus_tag.split("_")
+            if case:
+                if self.locus_tag != self.locus_tag.upper():
+                    results.append("The capitalization is incorrect.")
+            if len(parts) == 3:
+                if prefix_set is not None:
+                    if parts[0].upper() not in prefix_set:
+                        results.append("The prefix is missing.")
+                    if parts[1].upper() != check_value.upper():
+                        results.append("The genome ID is missing.")
+                    if not parts[2].isdigit():
+                        results.append("The feature number is missing.")
+            else:
+                results.append("The locus_tag does not contain three parts.")
+
+        result = f"The locus_tag qualifier is {self.locus_tag}. It is "
+        if len(results) == 0:
+            result += "structured correctly."
+            status = success
+        else:
+            result += "not structured correctly. " + " ".join(results)
+            status = fail
+
+        definition = f"Check if the locus_tag qualifier is structured " \
+                     f"correctly for {self.id}."
+        definition = basic.join_strings([definition, eval_def])
+        self.set_eval(eval_id, definition, result, status)
+
+    # TODO: create base feature class - fully equivalent to the version in Cds,
+    #  but exception clause is appropriately narrow.
+    def check_gene_structure(self, eval_id=None, success="correct",
+                             fail="error", eval_def=None):
+        """
+        Check that the gene qualifier contains an integer.
+        :param eval_id: unique identifier for the evaluation
+        :type eval_id: str
+        :param success: status if the outcome is successful
+        :type success: str
+        :param fail: status if the outcome is unsuccessful
+        :type fail: str
+        :param eval_def: description of the evaluation
+        :type eval_def: str
+        :return:
+        """
+        try:
+            value = int(self.gene)
+        except ValueError:
+            value = self.gene
+
+        result = f"The gene qualifier is {self.gene}. It"
+        if isinstance(value, int):
+            result += "contains an integer, as expected."
+            status = success
+        else:
+            result += "does ont contain an integer, which is not expected."
+            status = fail
+
+        definition = f"Check if the gene qualifier contains an integer for " \
+                     f"{self.id}."
+        definition = basic.join_strings([definition, eval_def])
+        self.set_eval(eval_id, definition, result, status)
+
+    # TODO: create base feature class
+    def check_compatible_gene_and_locus_tag(self, eval_id=None,
+                                            success="correct", fail="error",
+                                            eval_def=None):
+        """
+        Check that gene and locus_tag attributes contain identical numbers
+        :param eval_id: unique identifier for the evaluation
+        :type eval_id: str
+        :param success: status if the outcome is successful
+        :type success: str
+        :param fail: status if the outcome is unsuccessful
+        :type fail: str
+        :param eval_def: description of the evaluation
+        :type eval_def: str
+        :return:
+        """
+        result = f"The numbers in the gene ({self.gene}) and " \
+                 f"locus_tag ({self.locus_tag}) qualifiers are "
+        if self.gene == self._locus_tag_num:
+            result += "consistent."
+            status = success
+        else:
+            result += "not consistent."
+            status = fail
+
+        definition = f"Check if the gene and locus_tag numbers are " \
+                     f"consistent for {self.id}."
+        definition = basic.join_strings([definition, eval_def])
+        self.set_eval(eval_id, definition, result, status)
+
+    def check_length(self, eval_id=None, success="correct", fail="error",
+                     eval_def=None):
+        """
+        Checks that the tRNA is in the expected range of lengths. The
+        average tRNA gene is 70-90bp in length, but it is not uncommon
+        to identify high-scoring tRNAs in the 60-100bp range.
+        :param eval_id: unique identifier for the evaluation
+        :type eval_id: str
+        :param success: status if the outcome is successful
+        :type success: str
+        :param fail: status if the outcome is unsuccessful
+        :type fail: str
+        :param eval_def: description of the evaluation
+        :type eval_def: str
+        :return:
+        """
+        result = f"The tRNA length ({self.length}) is "
+        if self.length in range(60, 101):
+            result += "in the expected range."
+            status = success
+        elif self.length < 60:
+            result += "shorter than expected."
+            status = fail
+        else:
+            result += "longer than expected."
+            status = fail
+
+        definition = f"Check if the tRNA length is in the expected range " \
+                     f"for {self.id}."
+        definition = basic.join_strings([definition, eval_def])
+        self.set_eval(eval_id, definition, result, status)
+
+    def check_note_structure(self, eval_id=None, success="correct",
+                             fail="error", eval_def=None):
+        """
+        Checks that the note field is formatted properly.
+
+        Genbank does not enforce any standard for the note field.
+        This means that a note does not have to exist.
+
+        SEA-PHAGES note fields should look like 'tRNA-Xxx(nnn)'.
+        :param eval_id: unique identifier for the evaluation
+        :type eval_id: str
+        :param success: status if the outcome is successful
+        :type success: str
+        :param fail: status if the outcome is unsuccessful
+        :type fail: str
+        :param eval_def: description of the evaluation
+        :type eval_def: str
+        :return:
+        """
+        result = f"The tRNA note is "
+        if self.note != "":
+            result += f"present ('{self.note}'). "
+
+            # CHECK NOTE
+        else:
+            result += "missing (''). "
+            result += "Note cannot be checked."
+            status = "unchecked"
+
+        definition = f"Check that the note is formatted properly for " \
+                     f"{self.id}."
+        definition = basic.join_strings([definition, eval_def])
+        self.set_eval(eval_id, definition, result, status)
+
+    def check_parts(self, eval_id=None, success="correct", fail="error",
+                    eval_def=None):
+        """
+        Makes sure only one region exists for this tRNA.
+        :param eval_id: unique identifier for the evaluation
+        :type eval_id: str
+        :param success: status if the outcome is successful
+        :type success: str
+        :param fail: status if the outcome is unsuccessful
+        :type fail: str
+        :param eval_def: description of the evaluation
+        :type eval_def: str
+        :return:
+        """
+        result = f"The tRNA has '{self.parts}' parts. This is "
+        if self.parts == 1:
+            result += "expected."
+            status = success
+        else:
+            result += "unexpected."
+            status = fail
+
+        definition = f"Make sure there is only one region for {self.id}."
+        definition = basic.join_strings([definition, eval_def])
+        self.set_eval(eval_id, definition, result, status)
