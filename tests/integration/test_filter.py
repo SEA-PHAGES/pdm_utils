@@ -21,7 +21,7 @@ import test_db_utils
 class TestFilter(unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        test_db_utils.create_filled_test_db()
+        test_db_utils.create_filled_test_db(db="pdm_test_db")
 
     def setUp(self):
         alchemist = AlchemyHandler()
@@ -35,7 +35,7 @@ class TestFilter(unittest.TestCase):
         self.db_filter = Filter(alchemist=self.alchemist)
 
         self.phage = self.alchemist.metadata.tables["phage"]
-        self.gene = self.alchemist.metadata.tables["gene"] 
+        self.gene = self.alchemist.metadata.tables["gene"]
         self.trna = self.alchemist.metadata.tables["trna"]
 
         self.PhageID = self.phage.c.PhageID
@@ -91,7 +91,7 @@ class TestFilter(unittest.TestCase):
         """
         self.db_filter.key = self.Cluster
 
-        column = self.db_filter.convert_column_input("phage.PhageID") 
+        column = self.db_filter.convert_column_input("phage.PhageID")
 
         self.assertEqual(column, self.PhageID)
 
@@ -121,7 +121,7 @@ class TestFilter(unittest.TestCase):
         self.db_filter.add("phage.PhageID=D29")
 
         queries = self.db_filter.build_where_clauses()
- 
+
         self.assertEqual(len(queries), 2)
 
     def test_build_where_clauses_2(self):
@@ -131,7 +131,7 @@ class TestFilter(unittest.TestCase):
         self.db_filter.add("phage.PhageID=D29")
 
         queries = self.db_filter.build_where_clauses()
- 
+
         for query in queries:
             self.assertTrue(isinstance(query, BinaryExpression))
 
@@ -170,7 +170,7 @@ class TestFilter(unittest.TestCase):
 
         self.assertEqual(len(values), 1)
         self.assertEqual(values, ["A"])
-  
+
     def test_transpose_1(self):
         """Verify that transpose() utilizes Filter values as expected.
         """
@@ -178,9 +178,9 @@ class TestFilter(unittest.TestCase):
         self.db_filter.key = self.PhageID
 
         self.db_filter.refresh()
-        
+
         clusters = self.db_filter.transpose("phage.Cluster")
-        
+
         self.assertEqual(clusters, ["C"])
 
     def test_transpose_2(self):
@@ -190,9 +190,9 @@ class TestFilter(unittest.TestCase):
         self.db_filter.key = self.PhageID
 
         self.db_filter.refresh()
-        
+
         clusters_dict = self.db_filter.transpose(self.Cluster, return_dict=True)
-        
+
         self.assertEqual(clusters_dict["Cluster"], ["C"])
 
     def test_transpose_3(self):
@@ -207,13 +207,13 @@ class TestFilter(unittest.TestCase):
 
         self.assertEqual(self.db_filter.key, self.Cluster)
         self.assertEqual(self.db_filter.values, ["C"])
-        
+
     def test_mass_transpose_1(self):
         """Verify that mass_tranpose() returns DISTINCT values as expected.
         """
         self.db_filter.values = ["Myrna"]
         self.db_filter.key = self.PhageID
-        
+
         self.db_filter.refresh()
 
         myrna_data = self.db_filter.mass_transpose(["phage.HostGenus",
@@ -254,7 +254,7 @@ class TestFilter(unittest.TestCase):
 
         data = self.db_filter.retrieve(["phage.HostGenus",
                                         "phage.Cluster"])
-        
+
         myrna_data = data["Myrna"]
         self.assertEqual(myrna_data["HostGenus"], ["Mycobacterium"])
         self.assertEqual(myrna_data["Cluster"], ["C"])
@@ -300,7 +300,7 @@ class TestFilter(unittest.TestCase):
         self.db_filter.key = self.PhageID
         self.db_filter.values = ["Myrna", "D29"]
         self.db_filter.add("phage.PhageID=Myrna")
-        self.db_filter.update() 
+        self.db_filter.update()
 
         self.assertTrue("Myrna" in self.db_filter.values)
         self.assertFalse("D29" in self.db_filter.values)
@@ -339,7 +339,7 @@ class TestFilter(unittest.TestCase):
         self.assertTrue("Mycobacterium" in group_results.keys())
 
         self.assertTrue("Myrna" in group_results["Mycobacterium"])
-        self.assertTrue("D29" in group_results["Mycobacterium"]) 
+        self.assertTrue("D29" in group_results["Mycobacterium"])
 
     def test_group_3(self):
         """Verify that group() recognizes differences in values as expected.
@@ -357,7 +357,7 @@ class TestFilter(unittest.TestCase):
 
     @classmethod
     def tearDownClass(self):
-        test_db_utils.remove_db()
+        test_db_utils.remove_db(db="pdm_test_db")
 
 if __name__ == "__main__":
     unittest.main()

@@ -91,9 +91,9 @@ def create_empty_test_db():
     create_new_db(schema_filepath=SCHEMA_FILEPATH,
                   version_table_data=VERSION_TABLE_DATA)
 
-def create_filled_test_db():
+def create_filled_test_db(db=DB, user=USER, pwd=PWD):
     """Creates a test database with the current schema version and with data."""
-    create_new_db(schema_filepath=TEST_DB_FILEPATH,
+    create_new_db(schema_filepath=TEST_DB_FILEPATH, db=db, user=user, pwd=pwd,
                   version_table_data=VERSION_TABLE_DATA)
 
 def create_new_db(schema_filepath=None, db=DB, user=USER, pwd=PWD,

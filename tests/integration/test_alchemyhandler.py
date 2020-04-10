@@ -19,11 +19,11 @@ import test_db_utils
 class TestAlchemyHandler(unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        test_db_utils.create_filled_test_db()         
+        test_db_utils.create_filled_test_db(db="pdm_test_db")
 
     def setUp(self):
         self.alchemist = AlchemyHandler()
-     
+
     def test_validate_database_1(self):
         """Verify validate_database() detects good database access.
         """
@@ -44,7 +44,7 @@ class TestAlchemyHandler(unittest.TestCase):
         self.alchemist.database = "not_database"
         with self.assertRaises(ValueError):
             self.alchemist.validate_database()
-     
+
     def test_build_engine_1(self):
         """Verify build_engine() creates and stores Engine object.
         """
@@ -100,7 +100,7 @@ class TestAlchemyHandler(unittest.TestCase):
         query = querying.build_select(self.alchemist.graph, PhageID)
 
         results = self.alchemist.execute(query)
-        
+
         self.assertTrue(isinstance(results, list))
         for result in results:
             self.assertTrue(isinstance(result, dict))
@@ -150,7 +150,7 @@ class TestAlchemyHandler(unittest.TestCase):
     def test_scalar_1(self):
         """Verify scalar() returns expected value.
         """
-        self.connect_to_pdm_test_db() 
+        self.connect_to_pdm_test_db()
 
         PhageID = querying.get_column(self.alchemist.metadata, "phage.PhageID")
         query = querying.build_select(self.alchemist.graph, PhageID)
@@ -158,7 +158,7 @@ class TestAlchemyHandler(unittest.TestCase):
         value = self.alchemist.scalar(query)
 
         self.assertEqual(value, "Alice")
-    
+
     def test_first_column_1(self):
         """Verify first_column() returns expected value.
         """
@@ -166,7 +166,7 @@ class TestAlchemyHandler(unittest.TestCase):
 
         PhageID = querying.get_column(self.alchemist.metadata, "phage.PhageID")
         query = querying.build_distinct(self.alchemist.graph, PhageID)
-        
+
         values = self.alchemist.first_column(query)
 
         self.assertTrue("Trixie" in values)
@@ -176,7 +176,7 @@ class TestAlchemyHandler(unittest.TestCase):
 
     @classmethod
     def tearDownClass(self):
-        test_db_utils.remove_db()
+        test_db_utils.remove_db(db="pdm_test_db")
 
 if __name__ == "__main__":
     unittest.main()
