@@ -54,15 +54,17 @@ UNDESIRED_COLUMNS = {"phage"           : ["Sequence"],
 def main(unparsed_args_list):
     """Uses parsed args to run the entirety of the file export pipeline.
 
-    :param unparsed_args_list:
-        Input a list of command line args.
-    :type unparsed_args_list: List[str]
+    :param unparsed_args_list: Input a list of command line args.
+    :type unparsed_args_list: list[str]
     """
     #Returns after printing appropriate error message from parsing/connecting.
     try:
         args = parse_export(unparsed_args_list) 
     except ValueError:
-        return 
+        print("ABORTING EXPORT: Export failed during startup.")
+        sys.exit(1)
+ 
+    mysqldb.check_schema_compatibility(args.alchemist.engine, "export")
 
     csvx = False
     ffx = None
@@ -87,9 +89,9 @@ def main(unparsed_args_list):
     elif args.pipeline == "I":
         ix = True
     else:
-        print("ERROR: Export pipeline option discrepency.\n"
+        print("ABORTED EXPORT: Unknown pipeline option discrepency.\n"
               "Pipeline parsed from command line args is not supported")
-        raise ValueError
+        sys.exit()
 
     if not ix:
         execute_export(args.alchemist, args.output_path, args.output_name,
@@ -103,12 +105,9 @@ def main(unparsed_args_list):
 def parse_export(unparsed_args_list):
     """Parses export_db arguments and stores them with an argparse object.
 
-    :param unparsed_args_list:
-        Input a list of command line args.
-    :type unparsed_args_list: List[str]
-    :returns tuple(export.pipeline, parsed_args):
-        Return a tuple of the export pipeline and a parsed args object.
-    :type tuple(export.pipeline, parsed_args): (str, Namespace)
+    :param unparsed_args_list: Input a list of command line args.
+    :type unparsed_args_list: list[str]
+    :returns: ArgParse module parsed args.
     """
     EXPORT_SELECT_HELP = """
         Select a export pipeline option to export genomic data:
@@ -241,35 +240,25 @@ def execute_export(alchemist, output_path, output_name,
                         table="phage", filters=[], groups=[]):
     """Executes the entirety of the file export pipeline.
 
-    :param sql_handle:
-        Input a valid SQLAlchemy Engine object.
-    :type sql_handle: Engine:
-    :param export_path:
-        Input a valid path to place export folder.
+    :param alchemist: A connected and fully built AlchemyHandler.
+    :type alchemist: AlchemyHandler
+    :param output_path: Path to a valid dir for new dir creation.
     :type export_path: Path
-    :param folder_name:
-        Input a name for the export folder.
+    :param folder_name: A name for the export folder.
     :type folder_name: str
-    :param phage_filter_list:
-        Input a list of phageIDs.
-    :type phage_filter_list: List[str]
-    :param verbose:
-        Input a boolean value for verbose option.
+    :param phage_filter_list: A list of phageIDs.
+    :type phage_filter_list: list[str]
+    :param verbose: A boolean value for verbose option.
     :type verbose: boolean
-    :param csv_export:
-        Input a boolean value to toggle csv_export.
+    :param csv_export: A boolean value to toggle csv_export.
     :type csv_export: boolean
-    :param ffile_export:
-        Input a SeqIO supported file format to toggle ffile_export.
+    :param ffile_export: SeqIO supported file format.
     :type ffile_export: str
-    :param db_export:
-        Input a boolean value to toggle db_export.
+    :param db_export: A boolean value to toggle db_export.
     :type db_export: boolean
-    :param filters:
-        Input a list of lists with filter values
-    :type filters: List[List[str]]
-    :param groups:
-        Input a list of supported group values.
+    :param filters: A list of lists with filter values, grouped by ORs then AND.
+    :type filters: list[list[str]]
+    :param groups: A list of supported MySQL column names.
     :type groups: List[str]
     """
 
@@ -290,34 +279,54 @@ def execute_export(alchemist, output_path, output_name,
 
     elif csv_export or ffile_export != None:
         try:
-            db_filter = build_filtered_values(alchemist, table, filters,                                                values=values)
+            db_filter = build_filtered_values(alchemist, table, filters,
+                                                                values=values,
+                                                                verbose=verbose)
 
-            values_map = {}
+            conditionals_map = {}
             if groups:
+                if verbose:
+                    print("Starting grouping process...")
                 build_groups_map(db_filter, export_path, groups=groups,
-                                            values_map=values_map,
+                                            conditionals_map=conditionals_map,
                                             verbose=verbose)
             else:
-                values_map.update({export_path : db_filter.values})
+                conditional_maps.update({export_path : \
+                                         db_filter.build_where_clauses()})
 
-            for export_path in values_map.keys():
-                values = values_map[export_path]
+        except:            
+            print("ABORTING EXPORT: Export failed during query structuring.")
+            print("...Removing created export directory...")
+            shutil.rmtree(str(export_path))
+            sys.exit(1)
+        
+        try:
+            if verbose:
+                print("Prepared path structure, beginning export...")
+            for mapped_path in conditionals_map.keys():
+                conditionals = conditionals_map[mapped_path]
 
                 if csv_export:
                     execute_csv_export(alchemist,
-                                            export_path,
-                                            table=table, values=values,
+                                            mapped_path, export_path, 
+                                            table=table, 
+                                            conditionals=conditionals,
+                                            values=values,
                                             verbose=verbose)
 
                 elif ffile_export != None:
                     execute_ffx_export(alchemist,
-                                            export_path, ffile_export,
-                                            db_version,
-                                            table=table, values=values,
+                                            mapped_path, export_path,
+                                            ffile_export, db_version,
+                                            table=table, 
+                                            conditionals=conditionals,
+                                            values=values,
                                             verbose=verbose)
         except:
+            print("ABORTING EXPORT: Export failed during data export.")
+            print("...Removing created export directory...")
             shutil.rmtree(str(export_path))
-            return 
+            sys.exit(1)
 
 def establish_connection(database):
     alchemist = AlchemyHandler()
@@ -346,13 +355,16 @@ def establish_connection(database):
         raise
     return alchemist 
 
-def build_filtered_values(alchemist, table, filters, values=None):
+def build_filtered_values(alchemist, table, filters, values=None,
+                                                     verbose=False):
     table_obj = alchemist.get_table(table)
     primary_key = list(table_obj.primary_key.columns)[0]
 
     db_filter = Filter(alchemist=alchemist, key=primary_key)
     db_filter.values = values
 
+    if verbose:
+        print("Processing and building filters...")
     for or_filters in filters:
         for filter in or_filters:
             try:
@@ -361,72 +373,123 @@ def build_filtered_values(alchemist, table, filters, values=None):
                 print(f"Filter '{filter}' is not a valid filter.")
                 raise ValueError
 
-    db_filter.update()
+    query = querying.build_count(alchemist.graph, primary_key, 
+                                       where=db_filter.build_where_clauses())
+    hits = alchemist.scalar(query)
 
-    if filters and not db_filter.values:
-        print("Applied filters resulted in not hits.")
+    if hits == 0:
+        print("Applied filters resulted in no database hits.")
         raise ValueError
+
+    if verbose:
+        print(f"Total Database hits: {hits}")
 
     return db_filter
 
-def build_groups_map(db_filter, export_path, groups=[], values_map={},
-                                                       verbose=False):
-    db_filter = db_filter.copy()
-
+def build_groups_map(db_filter, export_path, groups=[], conditionals_map={},
+                                                       verbose=False,
+                                                       previous=None,
+                                                       depth=0):
+    
+    groups = groups.copy()
     current_group = groups.pop(0)
-   
+    if verbose:
+        if depth > 0:
+            dots = ".." * depth
+            print(f"{dots}Grouping by {current_group} in {previous}...") 
+        else:
+            print(f"Grouping by {current_group}...")
+    
     try:
-        groups_dict = db_filter.group(current_group)
+        group_column = db_filter.convert_column_input(current_group)
     except:
         print(f"Group '{current_group}' is not a valid group")
         raise ValueError
 
-    for group in groups_dict.keys():
+    query = querying.build_distinct(db_filter.graph, group_column, 
+                                    where=db_filter.build_where_clauses())
+    transposed_values = querying.first_column(db_filter.engine, query)
+
+    if not transposed_values:
+        export_path.rmdir() 
+    
+    for group in transposed_values:
         group_path = export_path.joinpath(str(group))
-        group_path.mkdir()
+        group_path.mkdir() 
+        db_filter_copy = db_filter.copy()
+        db_filter_copy.add(f"{current_group}={group}")
 
         if groups:
-            db_filter.values = groups_dict[group]
-            return build_groups_map(db_filter, group_path, groups=groups,
-                                                       verbose=False)
+            previous = f"{current_group} {group}"
+            build_groups_map(db_filter_copy, group_path, groups=groups,
+                                                    conditionals_map=\
+                                                            conditionals_map,
+                                                    verbose=verbose,
+                                                    previous=previous,
+                                                    depth=depth+1)
         else:
-            values_map.update({group_path : groups_dict[group]})
+            previous = f"{current_group} {group}"
+            conditionals_map.update({group_path : \
+                                        db_filter_copy.build_where_clauses()})
 
-def execute_csv_export(alchemist, export_path,
-                                        table="phage", values=[],
+def execute_csv_export(alchemist, export_path, output_path,
+                                        table="phage", conditionals=None,
+                                        values=[],
                                         verbose=False): 
-    table_obj = alchemist.get_table(table)
-
+    table_obj = querying.get_table(alchemist.metadata, table)
+    
     select_columns = []
     headers = []
+
+    if verbose:
+        relative_path = str(export_path.relative_to(output_path))
+        print(f"Preparing {table} export for '{relative_path}'...")
+
     for column in table_obj.columns:
         if column.name not in UNDESIRED_COLUMNS[table]:
             select_columns.append(column)
             headers.append(column.name)
 
-    for column in table_obj.primary_key.columns:
-        primary_key = column
+    primary_key = list(table_obj.primary_key.columns)[0]
 
-    query = querying.build_select(alchemist.graph, select_columns)
-
+    query = querying.build_select(alchemist.graph, select_columns, 
+                                                        where=conditionals)
+    
     if values:
-        query = query.where(primary_key.in_(values))
+        results = querying.execute_value_subqueries(alchemist.engine, query,
+                                                    primary_key, values)
+    else:
+        results = alchemist.execute(query)
+    
+    if verbose:
+        print(f"...Writing csv '{export_path.name}.csv'...")
 
-    results = alchemist.execute(query)
-
-    file_path = export_path.joinpath(f"{table}.csv")
+    file_path = export_path.joinpath(f"{export_path.name}.csv")
     basic.export_data_dict(results, file_path, headers,
                                                include_headers=True)
 
-def execute_ffx_export(alchemist, output_path, file_format,
-                       db_version, table="phage", values=[],
-                       verbose=False):
-
+def execute_ffx_export(alchemist, export_path, output_path,
+                       file_format, db_version, table="phage", 
+                       conditionals=None, verbose=False):
+    
     if verbose:
         print(
           f"Retrieving {data_name} data from {sql_handle.database}...")
+   
+    table_obj = querying.get_table(alchemist.metadata, table)
+
+    primary_key = list(table_obj.primary_key.columns)[0]
 
     if table == "phage":
+        query = querying.build_distinct(alchemist.graph, primary_key,
+                                                        where=conditionals,
+                                                        order_by=column)
+        if values:
+            values = querying.first_column_value_subqueries(alchemist.engine, 
+                                                        query, primary_key, values)
+        else:
+            values = alchemist.first_column(query)
+
         genomes = mysqldb.parse_genome_data(
                                 alchemist.engine,
                                 phage_id_list=values,
@@ -456,7 +519,7 @@ def execute_ffx_export(alchemist, output_path, file_format,
         raise ValueError
 
     write_seqrecord(seqrecords, file_format,
-                    output_path, verbose=verbose)
+                    export_path, verbose=verbose)
 
 def convert_path(path: str):
     """Function to convert a string to a working Path object.
@@ -544,6 +607,10 @@ def _(value_list_input):
 @parse_value_list_input.register(list)
 def _(value_list_input):
     return value_list_input
+
+@parse_value_list_input.register(str)
+def _(value_list_input):
+    return [value_list_input]
 
 def set_cds_seqfeatures(phage_genome):
     """Helper function that queries for and returns

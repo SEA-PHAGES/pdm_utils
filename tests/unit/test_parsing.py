@@ -228,8 +228,6 @@ class TestCheckOperator(unittest.TestCase):
         type(self.bool_column_type).python_type = \
                                                  PropertyMock(return_value=bool)
 
-
-
     def test_check_operator_1(self):
         """Verify check_operator() raises ValueError from invalid operator.
         """
@@ -331,6 +329,34 @@ class TestTranslate(unittest.TestCase):
         with self.assertRaises(ValueError):
             parsing.translate_column(self.metadata, "phage.NotCluster")
 
+class TestConvert(unittest.TestCase):
+    def setUp(self):
+        self.test_values = ["Trixie", "Myrna", "Alice", "D29"]
+
+        self.encoded_test_values = ["Trixie".encode("utf-8"),
+                                    "Myrna".encode("utf-8"),
+                                    "Alice".encode("utf-8"),
+                                    "D29".encode("utf-8")]
+
+    def test_convert_to_encoded_1(self):
+        """Verify convert_to_encoded() encodes strings properly and in order.
+        """
+        encoded_values = parsing.convert_to_encoded(self.test_values)
+
+        for index in range(len(self.encoded_test_values)):
+            with self.subTest(list_index=index):
+                self.assertEqual(encoded_values[index],
+                                 self.encoded_test_values[index])
+
+    def test_convert_to_decoded_1(self):
+        """Verify convert_to_decoded() decodes strings properly and in order.
+        """
+        decoded_values = parsing.convert_to_decoded(self.encoded_test_values)
+
+        for index in range(len(self.test_values)):
+            with self.subTest(list_index=index):
+                self.assertEqual(decoded_values[index],
+                                 self.test_values[index])
 if __name__ == "__main__":
     unittest.main()
 

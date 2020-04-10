@@ -27,7 +27,7 @@ class TestFilter(unittest.TestCase):
         alchemist = AlchemyHandler()
         alchemist.username="pdm_anon"
         alchemist.password="pdm_anon"
-        alchemist.database="test_db"
+        alchemist.database="pdm_test_db"
         alchemist.connect()
         alchemist.build_graph()
         self.alchemist = alchemist

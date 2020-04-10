@@ -23,7 +23,7 @@ class TestAlchemyHandler(unittest.TestCase):
 
     def setUp(self):
         self.alchemist = AlchemyHandler()
-    
+     
     def test_validate_database_1(self):
         """Verify validate_database() detects good database access.
         """
@@ -31,7 +31,7 @@ class TestAlchemyHandler(unittest.TestCase):
         self.alchemist.password = "pdm_anon"
         self.alchemist.build_engine()
 
-        self.alchemist.database = "test_db"
+        self.alchemist.database = "pdm_test_db"
         self.alchemist.validate_database()
 
     def test_validate_database_2(self):
@@ -60,18 +60,24 @@ class TestAlchemyHandler(unittest.TestCase):
         """
         self.alchemist.username = "pdm_anon"
         self.alchemist.password = "pdm_anon"
-        self.alchemist.database = "test_db"
+        self.alchemist.database = "pdm_test_db"
+
         self.alchemist.build_engine()
 
         self.assertTrue(self.alchemist.connected_database)
 
-    def test_build_metadata_1(self):
-        """Verify build_metadata() creates and stores MetaData and Engine.
+    def connect_to_pdm_test_db(self):
+        """Sets alchemist credentials and database to connect to pdm_test_db.
         """
         self.alchemist.username = "pdm_anon"
         self.alchemist.password = "pdm_anon"
-        self.alchemist.database = "test_db"
-        self.alchemist.build_metadata()
+        self.alchemist.database = "pdm_test_db"
+        self.alchemist.build_graph()
+
+    def test_build_metadata_1(self):
+        """Verify build_metadata() creates and stores MetaData and Engine.
+        """
+        self.connect_to_pdm_test_db()
 
         self.assertTrue(isinstance(self.alchemist.metadata, MetaData))
         self.assertTrue(isinstance(self.alchemist.engine, Engine))
@@ -79,10 +85,7 @@ class TestAlchemyHandler(unittest.TestCase):
     def test_build_graph_1(self):
         """Verify build_graph() creates and stores, Graph, MetaData, and Engine.
         """
-        self.alchemist.username = "pdm_anon"
-        self.alchemist.password = "pdm_anon"
-        self.alchemist.database = "test_db"
-        self.alchemist.build_graph()
+        self.connect_to_pdm_test_db()
 
         self.assertTrue(isinstance(self.alchemist.graph, Graph))
         self.assertTrue(isinstance(self.alchemist.metadata, MetaData))
@@ -91,10 +94,7 @@ class TestAlchemyHandler(unittest.TestCase):
     def test_execute_1(self):
         """Verify execute() returns values in expected data types.
         """
-        self.alchemist.username = "pdm_anon"
-        self.alchemist.password = "pdm_anon"
-        self.alchemist.database = "test_db"
-        self.alchemist.build_graph()
+        self.connect_to_pdm_test_db()
 
         PhageID = querying.get_column(self.alchemist.metadata, "phage.PhageID")
         query = querying.build_select(self.alchemist.graph, PhageID)
@@ -108,10 +108,7 @@ class TestAlchemyHandler(unittest.TestCase):
     def test_execute_2(self):
         """Verify execute() returns expected values in dictionaries.
         """
-        self.alchemist.username = "pdm_anon"
-        self.alchemist.password = "pdm_anon"
-        self.alchemist.database = "test_db"
-        self.alchemist.build_graph()
+        self.connect_to_pdm_test_db()
 
         PhageID = querying.get_column(self.alchemist.metadata, "phage.PhageID")
         query = querying.build_select(self.alchemist.graph, PhageID)
@@ -132,10 +129,7 @@ class TestAlchemyHandler(unittest.TestCase):
     def test_execute_3(self):
         """Verify execute() returns expected values in tuples.
         """
-        self.alchemist.username = "pdm_anon"
-        self.alchemist.password = "pdm_anon"
-        self.alchemist.database = "test_db"
-        self.alchemist.build_graph()
+        self.connect_to_pdm_test_db()
 
         PhageID = querying.get_column(self.alchemist.metadata, "phage.PhageID")
         query = querying.build_select(self.alchemist.graph, PhageID)
@@ -154,12 +148,9 @@ class TestAlchemyHandler(unittest.TestCase):
         self.assertTrue("Alice" in values)
 
     def test_scalar_1(self):
-        """Verify execute() returns expected value.
+        """Verify scalar() returns expected value.
         """
-        self.alchemist.username = "pdm_anon"
-        self.alchemist.password = "pdm_anon"
-        self.alchemist.database = "test_db"
-        self.alchemist.build_graph()
+        self.connect_to_pdm_test_db() 
 
         PhageID = querying.get_column(self.alchemist.metadata, "phage.PhageID")
         query = querying.build_select(self.alchemist.graph, PhageID)
@@ -167,6 +158,21 @@ class TestAlchemyHandler(unittest.TestCase):
         value = self.alchemist.scalar(query)
 
         self.assertEqual(value, "Alice")
+    
+    def test_first_column_1(self):
+        """Verify first_column() returns expected value.
+        """
+        self.connect_to_pdm_test_db()
+
+        PhageID = querying.get_column(self.alchemist.metadata, "phage.PhageID")
+        query = querying.build_distinct(self.alchemist.graph, PhageID)
+        
+        values = self.alchemist.first_column(query)
+
+        self.assertTrue("Trixie" in values)
+        self.assertTrue("D29" in values)
+        self.assertTrue("Myrna" in values)
+        self.assertTrue("Alice" in values)
 
     @classmethod
     def tearDownClass(self):

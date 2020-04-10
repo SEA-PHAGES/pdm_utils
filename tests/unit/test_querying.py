@@ -642,37 +642,36 @@ class TestBuildClauses(unittest.TestCase):
     @patch("pdm_utils.functions.querying.build_fromclause")
     @patch("pdm_utils.functions.querying.extract_order_by_clauses")
     @patch("pdm_utils.functions.querying.extract_where_clauses")
-    def test_build_select_1(self, ExtractWhereClauses, ExtractOrderByClauses,
-                                  BuildFromClause, Select,
-                                  AppendWhereClauses, AppendOrderByClauses):
+    def test_build_select_1(self, extract_where_clauses_mock, extract_order_by_clauses_mock,
+                                  build_from_clause_mock, select_mock,
+                                  append_where_clauses_mock, append_order_by_clauses_mock):
         """Verify function structure of build_count().
         """
-        ExecutableMock = Mock()
-        SelectFromMock = Mock()
-        type(ExecutableMock).select_from = SelectFromMock
-        SelectFromMock.return_value = ExecutableMock
+        executable_mock = Mock()
+        select_from_mock = Mock()
+        type(executable_mock).select_from = select_from_mock
+        select_from_mock.return_value = executable_mock
 
-        ExtractWhereClauses.return_value = self.columns
-        ExtractOrderByClauses.return_value = self.columns
-        BuildFromClause.return_value = self.phage
-        Select.return_value = ExecutableMock
-        AppendWhereClauses.return_value = ExecutableMock
-        AppendOrderByClauses.return_value = ExecutableMock
+        extract_where_clauses_mock.return_value = self.columns
+        extract_order_by_clauses_mock.return_value = self.columns
+        build_from_clause_mock.return_value = self.phage
+        select_mock.return_value = executable_mock
+        append_where_clauses_mock.return_value = executable_mock
+        append_order_by_clauses_mock.return_value = executable_mock
 
         querying.build_select(self.graph, self.columns, 
-                                            where=self.whereclauses,
-                                            order_by=self.columns)
+                                            order_by=self.columns,
+                                            add_in=self.columns)
 
-        ExtractWhereClauses.assert_called_once_with(self.whereclauses)
-        ExtractOrderByClauses.assert_called_once_with(self.columns)
-        total_columns = self.columns + self.columns + self.columns
-        BuildFromClause.assert_called_once_with(self.graph, total_columns)
+        extract_where_clauses_mock.assert_called_with(None)
+        extract_order_by_clauses_mock.assert_any_call(self.columns)
+        total_columns = self.columns * 4
+        build_from_clause_mock.assert_called_once_with(self.graph, total_columns)
         
-        Select.assert_called_once_with(self.columns)
-        SelectFromMock.assert_called_once_with(self.phage)
-        AppendWhereClauses.assert_called_once_with(ExecutableMock,
-                                                   self.whereclauses)
-        AppendOrderByClauses.assert_called_once_with(ExecutableMock,
+        select_mock.assert_called_once_with(self.columns)
+        select_from_mock.assert_called_once_with(self.phage)
+        append_where_clauses_mock.assert_called_once_with(executable_mock, None)
+        append_order_by_clauses_mock.assert_called_once_with(executable_mock,
                                                    self.columns)
 
     @patch("pdm_utils.functions.querying.append_where_clauses")
@@ -680,56 +679,57 @@ class TestBuildClauses(unittest.TestCase):
     @patch("pdm_utils.functions.querying.func.count")
     @patch("pdm_utils.functions.querying.build_fromclause")
     @patch("pdm_utils.functions.querying.extract_where_clauses")
-    def test_build_count_1(self, ExtractWhereClauses, 
-                                 BuildFromClause, Count, Select,
-                                 AppendWhereClauses):
+    def test_build_count_1(self, extract_where_clauses_mock, 
+                                 build_from_clause_mock, count_mock, select_mock,
+                                 append_where_clauses_mock):
         """Verify function structure of build_count().
         """
-        ExecutableMock = Mock()
-        SelectFromMock = Mock()
-        type(ExecutableMock).select_from = SelectFromMock
-        SelectFromMock.return_value = ExecutableMock
+        executable_mock = Mock()
+        select_from_mock = Mock()
+        type(executable_mock).select_from = select_from_mock
+        select_from_mock.return_value = executable_mock
 
-        ExtractWhereClauses.return_value = self.columns
-        BuildFromClause.return_value = self.phage
-        Count.return_value = self.count_column
-        Select.return_value = ExecutableMock
-        AppendWhereClauses.return_value = ExecutableMock
+        extract_where_clauses_mock.return_value = self.columns
+        build_from_clause_mock.return_value = self.phage
+        count_mock.return_value = self.count_column
+        select_mock.return_value = executable_mock
+        append_where_clauses_mock.return_value = executable_mock
 
         querying.build_count(self.graph, self.columns, 
                                             where=self.whereclauses)
 
-        ExtractWhereClauses.assert_called_once_with(self.whereclauses)
+        extract_where_clauses_mock.assert_called_once_with(self.whereclauses)
         total_columns = self.columns + self.columns
-        BuildFromClause.assert_called_once_with(self.graph, total_columns)
+        build_from_clause_mock.assert_called_once_with(self.graph, total_columns)
         
         for index in range(len(self.columns)):
             with self.subTest(columns_list_index=index):
-                Count.assert_any_call(self.columns[index])
+                count_mock.assert_any_call(self.columns[index])
 
         count_param = [self.count_column, self.count_column, self.count_column]
-        Select.assert_called_once_with(count_param)
-        SelectFromMock.assert_called_once_with(self.phage)
-        AppendWhereClauses.assert_called_once_with(ExecutableMock, 
+        select_mock.assert_called_once_with(count_param)
+        select_from_mock.assert_called_once_with(self.phage)
+        append_where_clauses_mock.assert_called_once_with(executable_mock, 
                                                    self.whereclauses)
 
     @patch("pdm_utils.functions.querying.build_select")
-    def test_build_distinct_1(self, BuildSelect):
+    def test_build_distinct_1(self, build_select_mock):
         """Verify function structure of build_distinct()
         """
-        ExecutableMock = Mock()
+        executable_mock = Mock()
         DistinctMock = Mock()
-        type(ExecutableMock).distinct = DistinctMock
+        type(executable_mock).distinct = DistinctMock
 
-        BuildSelect.return_value = ExecutableMock
+        build_select_mock.return_value = executable_mock
         
         querying.build_distinct(self.graph, self.columns, 
                                             where=self.whereclauses, 
                                             order_by=self.columns)
 
-        BuildSelect.assert_called_with(self.graph, self.columns,
+        build_select_mock.assert_called_with(self.graph, self.columns,
                                             where=self.whereclauses, 
-                                            order_by=self.columns)
+                                            order_by=self.columns,
+                                            add_in=None)
 
 if __name__ == "__main__":
     unittest.main()

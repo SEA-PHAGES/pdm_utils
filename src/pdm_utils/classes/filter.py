@@ -9,7 +9,7 @@ import re
 import string
 import math
 import time
-import csv
+from collections import OrderedDict
 from networkx import Graph
 from pathlib import Path
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
@@ -230,8 +230,8 @@ class Filter:
 
         return where_clauses
 
-    def build_values(self, where=None, order_by=None):
-        """Queries using Filter key, using Filter values as a constraint.
+    def build_values(self, where=None, order_by=None, column=None, limit=8000):
+        """Queries for values from stored WHERE clauses and Filter key.
         
         :param where: MySQL WHERE clause_related SQLAlchemy object(s).
         :type where: BinaryExpression
@@ -239,37 +239,53 @@ class Filter:
         :param order_by: MySQL ORDER BY clause-related SQLAlchemy object(s).
         :type order_by: Column
         :type order_by: list
-        :returns: Distinct values fetched from given and innate constaints.
+        :param column: SQLAlchemy Column object or object name.
+        :type column: Column
+        :type column: str
+        :param limit: SQLAlchemy IN clause query length limiter.
+        :type limit: int
+        :returns: Distinct values fetched from given and innate constraints.
         :rtype: list
         """
         self.check()
 
-        values = []
-        
+        if column is None:
+            select_column = self._key
+        else:
+            select_column = self.convert_column_input(column)
+ 
         if not where is None:
             if isinstance(where, list):
-                where_clauses = where
+                base_clauses = where
             else:
-                where_clauses = [where]
+                base_clauses = [where]
         else:
-            where_clauses = []
+            base_clauses = []
 
-        if self.values != []:
-            where_clauses.append(self.key.in_(self.values))
+        query = q.build_distinct(self.graph, select_column, where=base_clauses, 
+                                                            order_by=order_by,
+                                                            add_in=self._key)
 
-        query = q.build_distinct(self.graph, self._key, where=where_clauses, 
-                                                          order_by=order_by)
+        values = []
+        if self._values != []:
+            values = q.first_column_value_subqueries(
+                        self._engine, query, self._key, self._values, 
+                                                        limit=limit)
 
-        proxy = self.engine.execute(query)
-        results = proxy.fetchall()
+        else:
+            proxy = self.engine.execute(query)
+            results = proxy.fetchall()
 
-        for result in results:
-            values.append(result[0])
+            for result in results:
+                values.append(result[0])
+
+        if self._key.type.python_type == bytes:
+            parsing.convert_from_encoded(values)
 
         return values
   
     def transpose(self, raw_column, return_dict=False, set_values=False):
-        """Queries using given Column, using Filter values as a constraint.
+        """Queries for distinct values from stored values and a MySQL Column.
 
         :param raw_column: SQLAlchemy Column object or object name.
         :type raw_column: Column
@@ -289,17 +305,9 @@ class Filter:
     
         column = self.convert_column_input(raw_column)
         name = column.name
-    
-        where_clause = (self.key.in_(self.values))
-        query = q.build_distinct(self.graph, column, where=where_clause)
+   
+        values = self.build_values(column=column)
         
-        proxy = self.engine.execute(query)
-        results = proxy.fetchall() 
-
-        values = []
-        for result in results:
-            values.append(result[0])
-
         if set_values:
             self._key = column
             self._values = values
@@ -311,7 +319,7 @@ class Filter:
         return values
 
     def mass_transpose(self, columns):
-        """Queries using given Column(s), using Filter values as a constraint.
+        """Queries for sets of distinct values, using self.transpose()
 
         :param columns: SQLAlchemy Column object(s)
         :type columns: Column
@@ -335,7 +343,7 @@ class Filter:
         return values
 
     def retrieve(self, raw_columns):
-        """Queries using the given Columns, for each Filter value.
+        """Queries for distinct data for each value in the Filter object.
 
         :param columns: SQLAlchemy Column object(s)
         :type columns: Column
@@ -363,16 +371,11 @@ class Filter:
 
             #For each column for each value, add the respective data to a dict.
             for i in range(len(columns)):
-                values[value].update({columns[i].name : []})
-
                 query = q.build_distinct(self._graph, columns[i], 
                                                         where=where_clause)
-            
-                proxy = self.engine.execute(query)
-                results = proxy.fetchall()
+                value_data = q.first_column(self._engine, query)
 
-                for result in results:
-                    values[value][columns[i].name].append(result[0])
+                values[value].update({columns[i].name : value_data})
 
         return values
 
@@ -512,5 +515,4 @@ class Filter:
             filters.update({filter : clauses})
 
         return filters
-
 
