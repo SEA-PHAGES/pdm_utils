@@ -13,16 +13,20 @@ from pdm_utils.functions import mysqldb
 from pdm_utils.functions import parsing
 
 class AlchemyHandler:
-    def __init__(self, database=None, username=None, password=None):
+    def __init__(self, database=None, username=None, password=None):  
         self._database = database
         self._username = username
         self._password = password
+        #Username, password, and database are included for two reasons:
+        #The ability to set credentials 'pythonically'
+        #An understanding of whether the credentials are valid for the engine.
 
         self._engine = None
         self.metadata = None
         self.graph = None
         self.session = None
-            
+        
+        self.echo = False
         self.connected = False
         self.connected_database = False
         self.has_credentials = False
@@ -56,7 +60,7 @@ class AlchemyHandler:
 
     @property
     def username(self):
-        """Returns the DatabaseHandler's set username.
+        """Returns the AlchemynHandler's set username.
         :return username:
             Returns a copy of the username attribute.
         :type username: str
@@ -82,7 +86,7 @@ class AlchemyHandler:
 
     @property
     def password(self):
-        """Returns the DatabaseHandler's set password.
+        """Returns the AlchemyHandler's set password.
         :return password:
             Returns a copy of the password attribute.
         :type password: str
@@ -184,7 +188,8 @@ class AlchemyHandler:
                                             username=self._username,
                                             password=self._password)
 
-            self._engine = sqlalchemy.create_engine(login_string)
+            self._engine = sqlalchemy.create_engine(login_string, 
+                                                            echo=self.echo)
             self._engine.connect()
           
             self.connected = True
@@ -202,7 +207,8 @@ class AlchemyHandler:
                                         password=self._password,
                                         database=self._database)
 
-            self._engine = sqlalchemy.create_engine(login_string)
+            self._engine = sqlalchemy.create_engine(login_string, 
+                                                            echo=self.echo)
             self._engine.connect()
             
             self.connected_database = True 
@@ -221,7 +227,7 @@ class AlchemyHandler:
                 self.build_engine()
             except:
                 pass
-
+        
         while(not self.connected and attempts < login_attempts):
             attempts += 1
             self.ask_credentials()
@@ -235,6 +241,11 @@ class AlchemyHandler:
             raise ValueError("Maximum login attempts reached.  Please check "
                              "your MySQL credentials and try again.")
         if ask_database:
+            try:
+                self.build_engine()
+            except:
+                pass
+
             while(not self.connected_database and attempts < login_attempts):
                 attempts += 1
                 self.ask_database()
@@ -263,23 +274,14 @@ class AlchemyHandler:
         if self.engine is None:
             self.build_engine()
 
-        proxy = self.engine.execute(executable)
-
-        results = proxy.fetchall()
-
-        if return_dict:
-            results_dicts = []
-            for result in results:
-                results_dicts.append(dict(result))
-
-            results = results_dicts 
-
+        results = querying.execute(self.engine, executable, 
+                                                    return_dict=return_dict)
         return results
 
     def scalar(self, executable):
         """Use SQLAlchemy Engine to execute a MySQL query.
 
-        :param executable: Input a executable MySQL query.
+        :param executable: Input an executable MySQL query.
         :type executable: Select
         :type executable: str
         :param return_dict: Toggle whether execute returns dict or tuple.
@@ -297,6 +299,21 @@ class AlchemyHandler:
 
         return scalar
 
+    def first_column(self, executable):
+        """Use SQLAlchemy Engine to execute and grab the first column."
+
+        :param executable: Input an executeable MySQL query.
+        :type executable: Select
+        :type executable: str
+        :returns: A column for a set of MySQL values.
+        :rtype: list[str]
+        """
+        if self.engine is None:
+            self.build_engine()
+
+        values = querying.first_column(self.engine, executable)
+        return values
+        
     def build_metadata(self):
         """Create and store SQLAlchemy MetaData object.
         """
@@ -311,28 +328,28 @@ class AlchemyHandler:
         
         return True
 
-    #TODO Clean dependancies and remove
+    #TODO for Travis: To be evaluated for removal from this module.
     def translate_table(self, raw_table): 
         if not self.metadata:
             self.build_metadata()
 
         return parsing.translate_table(self.metadata, raw_table)  
 
-    #TODO Clean dependancies and remove
+    #TODO for Travis: To be evaluated for removal from this module.
     def translate_column(self, raw_column):
         if not self.metadata:
             self.build_metadata()
 
         return parsing.translate_column(self.metadata, raw_column) 
 
-    #TODO Clean dependancies and remove
+    #TODO for Travis: To be evaluated for removal from this module.
     def get_table(self, table): 
         if not self.metadata:
             self.build_metadata() 
 
         return querying.get_table(self.metadata, table)
 
-    #TODO Clean dependancies and remove
+    #TODO for Travis: To be evaluated for removal from this module.
     def get_column(self, column):
         if not self.metadata:
             self.build_metadata() 
@@ -359,7 +376,7 @@ class AlchemyHandler:
     #    self.session = session_maker(bind=self.engine)
     #    return 
     
-    #TODO Clean dependancies and remove
+    #TODO for Travis: To be evaluated for removal from this module.
     def get_map(self, template):
         if not self.metadata:
             self.build_metadata()

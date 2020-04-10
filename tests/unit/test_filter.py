@@ -12,8 +12,8 @@ import unittest
 
 class TestFilter(unittest.TestCase):
     @patch("pdm_utils.classes.filter.isinstance")
-    def setUp(self, IsInstance):
-        IsInstance.return_value = True
+    def setUp(self, is_instance_mock):
+        is_instance_mock.return_value = True
 
         alchemist = Mock(spec=AlchemyHandler)
         engine = Mock(spec=Engine)
@@ -28,7 +28,7 @@ class TestFilter(unittest.TestCase):
         engine.execute.return_value = proxy
         proxy.fetchall.return_value = []
       
-        self.mock_isinstance = IsInstance
+        self.mock_isinstance = is_instance_mock
         self.mock_alchemist = alchemist
         self.mock_engine = engine
         self.mock_graph = graph
@@ -158,32 +158,32 @@ class TestFilter(unittest.TestCase):
             self.db_filter.key = Mock()
 
     @patch("pdm_utils.classes.filter.AlchemyHandler")
-    def test_connect_1(self, mock_alchemyhandler):
+    def test_connect_1(self, alchemyhandler_mock):
         """Verfiy that connect() returns when Filter is already connected.
         """
-        mock_alchemyhandler.return_value = self.mock_alchemist
+        alchemyhandler_mock.return_value = self.mock_alchemist
 
         self.db_filter._connected = True
 
         self.db_filter.connect()
-        mock_alchemyhandler.assert_not_called()
+        alchemyhandler_mock.assert_not_called()
 
     @patch("pdm_utils.classes.filter.AlchemyHandler")
-    def test_connect_2(self, mock_alchemyhandler):
+    def test_connect_2(self, alchemyhandler_mock):
         """Verify that the Filter creates an AlchemyHandler.
         """
-        mock_alchemyhandler.return_value = self.mock_alchemist
+        alchemyhandler_mock.return_value = self.mock_alchemist
         
         self.db_filter._connected = False
 
         self.db_filter.connect()
-        mock_alchemyhandler.assert_called()
+        alchemyhandler_mock.assert_called()
 
     @patch("pdm_utils.classes.filter.AlchemyHandler")
-    def test_connect_3(self, mock_alchemyhandler):
+    def test_connect_3(self, alchemyhandler_mock):
         """Verify that the Filter uses an AlchemyHandler to connect. 
         """
-        mock_alchemyhandler.return_value = self.mock_alchemist
+        alchemyhandler_mock.return_value = self.mock_alchemist
 
         self.db_filter._connected = False
 
@@ -193,26 +193,26 @@ class TestFilter(unittest.TestCase):
         self.mock_alchemist.build_graph.assert_called()
     
     @patch("pdm_utils.classes.filter.Filter.connect")
-    def test_check_1(self, mock_connect):
+    def test_check_1(self, connect_mock):
         """Verify that the Filter will connect if not connected.
         """
         self.db_filter._connected = False
         
         self.db_filter.check()
 
-        mock_connect.assert_called()
+        connect_mock.assert_called()
 
     @patch("pdm_utils.classes.filter.isinstance")
-    def test_check_2(self, IsInstance):
+    def test_check_2(self, is_instance_mock):
         """Verify that the Filter calls isinstance() with correct paremeters.
         """
-        IsInstance.return_value = True
+        is_instance_mock.return_value = True
 
         self.db_filter.check()
 
-        IsInstance.assert_any_call(self.mock_engine, Engine)
-        IsInstance.assert_any_call(self.mock_graph, Graph)
-        IsInstance.assert_any_call(self.mock_key, Column)
+        is_instance_mock.assert_any_call(self.mock_engine, Engine)
+        is_instance_mock.assert_any_call(self.mock_graph, Graph)
+        is_instance_mock.assert_any_call(self.mock_key, Column)
 
     def test_check_3(self):
         """Verify that the Filter raises AttributeError with an invalid engine.
@@ -240,78 +240,77 @@ class TestFilter(unittest.TestCase):
 
     @patch("pdm_utils.classes.filter.q.build_distinct")
     @patch("pdm_utils.classes.filter.isinstance")
-    def test_build_values_1(self, IsInstance, BuildDistinct):
+    def test_build_values_1(self, is_instance_mock, build_distinct_mock):
         """Verify that build_distinct() is called with correct parameters.
         """
-        IsInstance.return_value = True
+        is_instance_mock.return_value = True
         self.db_filter.build_values(where="Not a list")
 
-        BuildDistinct.assert_called_once_with(self.mock_graph, self.mock_key,
-                                                        where="Not a list",
-                                                        order_by=None)
+        build_distinct_mock.assert_called_with(self.mock_graph, self.mock_key,
+                                               where="Not a list", 
+                                               order_by=None,
+                                               add_in=self.mock_key)
 
     @patch("pdm_utils.classes.filter.q.build_distinct")
-    def test_build_values_2(self, BuildDistinct):
+    def test_build_values_2(self, build_distinct_mock):
         """Verify that build_distinct() is called with correct parameters.
         """
         self.db_filter.build_values(order_by="Column")
 
-        BuildDistinct.assert_called_once_with(self.mock_graph, self.mock_key,
-                                                        where=[],
-                                                        order_by="Column")
+        build_distinct_mock.assert_called_with(self.mock_graph, self.mock_key,
+                                               where=[],
+                                               order_by="Column",
+                                               add_in=self.mock_key)
+
     
     @patch("pdm_utils.classes.filter.Filter.check")
-    @patch("pdm_utils.classes.filter.q.build_distinct")
-    def test_transpose_1(self, BuildDistinct, Check): 
+    def test_transpose_1(self, check_mock): 
         """Verify that transpose() returns without values.
         """
         self.db_filter.transpose("gene.Notes")
 
-        BuildDistinct.assert_not_called()
-        Check.assert_called()
+        check_mock.assert_called()
 
     @patch("pdm_utils.classes.filter.Filter.check")
-    @patch("pdm_utils.classes.filter.q.build_distinct")
-    def test_mass_transpose_1(self, build_distinct_mock, Check): 
+    def test_mass_transpose_1(self, check_mock): 
         """Verify that mass_tranpose() returns without values.
         """
         self.db_filter.mass_transpose("Column")
     
-        Check.assert_called()
-        build_distinct_mock.assert_not_called()
-    
-    @patch("pdm_utils.classes.filter.Filter.check") 
+        check_mock.assert_called()
+   
     @patch("pdm_utils.classes.filter.q.build_distinct")
-    def test_retrieve_1(self, build_distinct_mock, check_mock):
+    @patch("pdm_utils.classes.filter.Filter.check") 
+    def test_retrieve_1(self, check_mock, build_distinct_mock):
         """Verify that retrieve() returns without values.
         """
         self.db_filter.retrieve("Column")
-
+         
         check_mock.assert_called()
         build_distinct_mock.assert_not_called()
 
     @patch("pdm_utils.classes.filter.Filter.check")
     @patch("pdm_utils.classes.filter.Filter.build_values")
-    def test_refresh_1(self, BuildValues, Check):
+    def test_refresh_1(self, build_values_mock, check_mock):
         """Verify that refresh() returns without values.
         """
         self.db_filter.refresh() 
 
-        Check.assert_called()
-        BuildValues.assert_not_called()
+        check_mock.assert_called()
+        build_values_mock.assert_not_called()
         
     @patch("pdm_utils.classes.filter.Filter.check")
     @patch("pdm_utils.classes.filter.Filter.build_values")
-    def test_refresh_2(self, BuildValues, Check):
+    def test_refresh_2(self, build_values_mock, check_mock):
         """Verify that refresh() calls build_values() and conserves values.
         """
-        BuildValues.return_value = ["Phage"]
+        build_values_mock.return_value = ["Phage"]
 
         self.db_filter._values_valid = False
         self.db_filter.refresh()
 
-        Check.assert_called()
-        BuildValues.assert_called()
+        check_mock.assert_called()
+        build_values_mock.assert_called()
 
         self.assertTrue(self.db_filter.values_valid)
         self.assertEqual(self.db_filter.values, ["Phage"])
@@ -319,33 +318,33 @@ class TestFilter(unittest.TestCase):
     @patch("pdm_utils.classes.filter.Filter.check")
     @patch("pdm_utils.classes.filter.Filter.refresh")
     @patch("pdm_utils.classes.filter.Filter.build_values")
-    def test_update_1(self, BuildValues, Refresh, Check):
+    def test_update_1(self, build_values_mock, Refresh, check_mock):
         """Verify update() returns without values.
         """
         self.db_filter.update()
 
-        Check.assert_called()
+        check_mock.assert_called()
         Refresh.assert_not_called()
-        BuildValues.assert_not_called()
+        build_values_mock.assert_not_called()
         
     @patch("pdm_utils.classes.filter.Filter.check")
     @patch("pdm_utils.classes.filter.Filter.refresh")
     @patch("pdm_utils.classes.filter.Filter.build_values")
-    def test_update_2(self, BuildValues, Refresh, Check):
+    def test_update_2(self, build_values_mock, Refresh, check_mock):
         """Verify update() refreshes values before updating.
         """
         self.db_filter._values_valid = False
 
         self.db_filter.update()
 
-        Check.assert_called()
+        check_mock.assert_called()
         Refresh.assert_called()
-        BuildValues.assert_not_called()
+        build_values_mock.assert_not_called()
 
     @patch("pdm_utils.classes.filter.Filter.check")
     @patch("pdm_utils.classes.filter.Filter.refresh")
     @patch("pdm_utils.classes.filter.Filter.build_values")
-    def test_update_3(self, BuildValues, Refresh, Check):
+    def test_update_3(self, build_values_mock, Refresh, check_mock):
         """Verify function structure of update().
         """
         self.db_filter._values_valid = False
@@ -353,32 +352,32 @@ class TestFilter(unittest.TestCase):
 
         self.db_filter.update()
 
-        Check.assert_called()
+        check_mock.assert_called()
         Refresh.assert_called()
-        BuildValues.assert_called()
+        build_values_mock.assert_called()
 
         self.assertTrue(self.db_filter._values_valid)
         self.assertTrue(self.db_filter._values_valid)
    
     @patch("pdm_utils.classes.filter.Filter.convert_column_input")
     @patch("pdm_utils.classes.filter.Filter.build_values")
-    def test_sort_1(self, BuildValues, convert_column_input_mock):
+    def test_sort_1(self, build_values_mock, convert_column_input_mock):
         """Verify function structure of sort().
         """
-        BuildValues.return_value = ["Phage"]
+        build_values_mock.return_value = ["Phage"]
 
         self.db_filter._values_valid = False
 
         self.db_filter.sort("column")
 
         convert_column_input_mock.assert_called()
-        BuildValues.assert_called()
+        build_values_mock.assert_called()
 
         self.assertTrue(self.db_filter._values_valid)
         self.assertEqual(self.db_filter.values, ["Phage"])
 
     @patch("pdm_utils.classes.filter.Filter.build_values")
-    def test_sort_2(self, BuildValues):
+    def test_sort_2(self, build_values_mock):
         """Verify that sort() raises TypeError at bad ORDER BY input.
         """
         with self.assertRaises(TypeError):
@@ -484,6 +483,14 @@ class TestFilter(unittest.TestCase):
         copy_filter = self.db_filter.copy()
 
         self.assertEqual(copy_filter.values, self.db_filter.values)
+
+    def test_copy_8(self):
+        """Verify that copy() reflects a Filter's connected property.
+        """
+        self.db_filter._connected = True
+        copy_filter = self.db_filter.copy()
+        
+        self.assertEqual(copy_filter._connected, self.db_filter._connected)
 
     def test_copy_filters_1(self):
         """Verify that copy_filters() replicates filters.

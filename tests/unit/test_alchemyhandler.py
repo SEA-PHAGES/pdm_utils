@@ -128,11 +128,11 @@ class TestAlchemyHandler(unittest.TestCase):
         MockProxy = Mock()
 
         MockEngine.execute.return_value = MockProxy 
-        MockProxy.fetchall.return_value = [("test_db",), 
+        MockProxy.fetchall.return_value = [("pdm_test_db",), 
                                            ("Actinobacteriophage",)]
 
         self.alchemist.connected = True
-        self.alchemist.database = "test_db"
+        self.alchemist.database = "pdm_test_db"
         self.alchemist._engine = MockEngine
 
         self.alchemist.validate_database()
@@ -170,20 +170,20 @@ class TestAlchemyHandler(unittest.TestCase):
     @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler."
                                                         "ask_credentials")
     @patch("pdm_utils.classes.alchemyhandler.sqlalchemy.create_engine")
-    def test_build_engine_1(self, CreateEngine, AskCredentials):
+    def test_build_engine_1(self, create_engine_mock, ask_credentials_mock):
         """Verify build_engine() returns if connected already.
         """
         self.alchemist.engine = None
         self.alchemist.connected = True
         self.alchemist.build_engine()
 
-        CreateEngine.assert_not_called()
-        AskCredentials.assert_not_called()
+        create_engine_mock.assert_not_called()
+        ask_credentials_mock.assert_not_called()
 
     @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler."
                                                         "ask_credentials")
     @patch("pdm_utils.classes.alchemyhandler.sqlalchemy.create_engine")
-    def test_build_engine_2(self, CreateEngine, AskCredentials):
+    def test_build_engine_2(self, create_engine_mock, ask_credentials_mock):
         """Verify build_engine() calls create_engine() with engine string.
         """
         self.alchemist.username = "user"
@@ -192,13 +192,13 @@ class TestAlchemyHandler(unittest.TestCase):
 
         self.alchemist.build_engine()
 
-        AskCredentials.assert_called()
+        ask_credentials_mock.assert_called()
         login_string = "mysql+pymysql://user:pass@localhost/"
-        CreateEngine.assert_called_with(login_string)
+        create_engine_mock.assert_called_with(login_string, echo=False)
    
     @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.validate_database")
     @patch("pdm_utils.classes.alchemyhandler.sqlalchemy.create_engine")
-    def test_build_engine_3(self, CreateEngine, ValidateDatabase): 
+    def test_build_engine_3(self, create_engine_mock, validate_database_mock): 
         """Verify build_engine() calls create_engine() with db engine string.
         """
         self.alchemist.username = "user"
@@ -210,13 +210,13 @@ class TestAlchemyHandler(unittest.TestCase):
         login_string = "mysql+pymysql://user:pass@localhost/"
         db_login_string = "mysql+pymysql://user:pass@localhost/database"
 
-        CreateEngine.assert_any_call(login_string)
-        CreateEngine.assert_any_call(db_login_string)
-
+        create_engine_mock.assert_any_call(login_string, echo=False)
+        create_engine_mock.assert_any_call(db_login_string, echo=False)
+        
     @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler."
                                                         "ask_credentials")
     @patch("pdm_utils.classes.alchemyhandler.sqlalchemy.create_engine")
-    def test_build_engine_4(self, CreateEngine, AskCredentials):
+    def test_build_engine_4(self, create_engine_mock, ask_credentials_mock):
         """Verify build_engine() sets has_credentials.
         """
         self.alchemist.has_credentials = True
@@ -229,6 +229,25 @@ class TestAlchemyHandler(unittest.TestCase):
         self.alchemist.connected = True
         self.assertEqual(self.alchemist.metadata, None)
         self.assertEqual(self.alchemist.graph, None)
+
+    @patch("pdm_utils.classes.alchemyhandler.sqlalchemy.create_engine")
+    def test_build_engine_5(self, create_engine_mock):
+        """Verify AlchemyHandler echo property controls create_engine() parameters.
+        """
+        self.alchemist.username = "user"
+        self.alchemist.password = "pass"
+        self.alchemist.build_engine()
+
+        login_string = "mysql+pymysql://user:pass@localhost/"
+    
+        create_engine_mock.assert_any_call(login_string, echo=False)
+
+        self.alchemist.echo = True
+        self.alchemist.connected = False
+        self.alchemist.build_engine()
+
+        create_engine_mock.assert_any_call(login_string, echo=True)
+
 
     @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler."
                                                         "ask_credentials")
@@ -276,46 +295,54 @@ class TestAlchemyHandler(unittest.TestCase):
         AskDatabase.assert_not_called()
         AskCredentials.assert_called()
 
-    def mock_build_engine(self, mock_engine):
+    def build_engine_side_effect(self, mock_engine):
         """Helper function for side effect usage.
         """
         self.alchemist._engine = mock_engine
 
+    @patch("pdm_utils.classes.alchemyhandler.querying.execute")
     @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.build_engine")
-    def test_execute_1(self, BuildEngine):
+    def test_execute_1(self, build_engine_mock, execute_mock):
         """Verify function structure of execute().
         """
-        MockEngine = Mock()
-        MockProxy  = Mock()
-
-        MockEngine.execute.return_value = MockProxy 
-        MockProxy.fetchall.return_value = []
-
-        self.alchemist._engine = MockEngine
+        engine_mock = Mock()
+        build_engine_mock.side_effect = self.build_engine_side_effect(
+                                                                engine_mock)
 
         self.alchemist.execute("Executable")
 
-        MockEngine.execute.assert_called_with("Executable")
-        MockProxy.fetchall.assert_called()
-        BuildEngine.assert_not_called() 
+        execute_mock.assert_called_with(engine_mock, "Executable", 
+                                                            return_dict=True)
    
     @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.build_engine")
-    def test_scalar_1(self, BuildEngine):
+    def test_scalar_1(self, build_engine_mock):
         """Verify function structure of scalar().
         """
-        MockEngine = Mock()
-        MockProxy  = Mock()
+        engine_mock = Mock() 
+        proxy_mock  = Mock()
         
-        MockEngine.execute.return_value = MockProxy
-        MockProxy.scalar.return_value = "Scalar"
+        engine_mock.execute.return_value = proxy_mock
+        proxy_mock.scalar.return_value = "Scalar"
 
-        self.alchemist._engine = MockEngine
+        build_engine_mock.side_effect = self.build_engine_side_effect(
+                                                               engine_mock)
        
         self.alchemist.scalar("Executable")
 
-        MockEngine.execute.assert_called_with("Executable")
-        MockProxy.scalar.assert_called()
-        BuildEngine.assert_not_called()
+        engine_mock.execute.assert_called_with("Executable")
+        proxy_mock.scalar.assert_called()
+        build_engine_mock.assert_not_called()
+
+    @patch("pdm_utils.classes.alchemyhandler.querying.first_column")
+    def test_first_column_1(self, first_column_mock):
+        """Verify function structure of first_row().
+        """
+        engine_mock = Mock()
+        self.alchemist._engine = engine_mock
+
+        self.alchemist.first_column("Executable")
+
+        first_column_mock.assert_called_with(engine_mock, "Executable")
 
     @patch("pdm_utils.classes.alchemyhandler.MetaData")
     @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.build_engine")

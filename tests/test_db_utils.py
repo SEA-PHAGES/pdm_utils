@@ -89,16 +89,16 @@ def get_data(query, db=DB, user=USER, pwd=PWD):
 
 # Database construction
 
-def create_empty_test_db():
+def create_empty_test_db(db=DB, user=USER, pwd=PWD):
     """Creates a test database with the current schema version and no data."""
-    create_new_db(schema_filepath=SCHEMA_FILEPATH,
+    create_new_db(schema_filepath=SCHEMA_FILEPATH, db=db, user=user, pwd=pwd,
                   version_table_data=VERSION_TABLE_DATA)
 
-def create_filled_test_db():
+def create_filled_test_db(db=DB, user=USER, pwd=PWD):
     """Creates a test database with the current schema version and with data."""
     # No need to add data to version table, since test_db.sql already
     # has data in this table.
-    create_new_db(schema_filepath=TEST_DB_FILEPATH)
+    create_new_db(schema_filepath=TEST_DB_FILEPATH, db=db, user=user, pwd=pwd)
 
 def check_if_exists(db=DB, user=USER, pwd=PWD):
     """Checks whether database exists or not."""

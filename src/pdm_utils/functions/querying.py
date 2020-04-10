@@ -113,6 +113,9 @@ def build_where_clause(db_graph, filter_expression):
 
     if column_object.type.python_type == bytes:
         right = right.encode("utf-8")
+   
+    if right == "None":
+        right = None
 
     where_clause = None
 
@@ -430,7 +433,7 @@ def append_order_by_clauses(executable, order_by_clauses):
 
     return executable
 
-def build_select(db_graph, columns, where=None, order_by=None):
+def build_select(db_graph, columns, where=None, order_by=None, add_in=None):
     """Get MySQL SELECT expression SQLAlchemy executable.
 
     :param db_graph: SQLAlchemy structured NetworkX Graph object.
@@ -444,17 +447,21 @@ def build_select(db_graph, columns, where=None, order_by=None):
     :param order_by: MySQL ORDER BY clause-related SQLAlchemy object(s).
     :type order_by: Column
     :type order_by: list
+    :param add_in: MySQL Column-related inputs to be considered for joining.
+    :type add_in: Column
+    :type add_in: list
     :returns: MySQL SELECT expression-related SQLAlchemy executable.
     :rtype: Select
     """
     where_columns = extract_where_clauses(where)
+    add_in_columns = extract_order_by_clauses(add_in)
     order_by_columns = extract_order_by_clauses(order_by)
 
     if not isinstance(columns, list):
         columns = [columns]
-    
+
     #Gathers all the tables from the SELECT, WHERE, and ORDER BY clauses
-    total_columns = columns + where_columns + order_by_columns
+    total_columns = columns + where_columns + order_by_columns + add_in_columns
     fromclause = build_fromclause(db_graph, total_columns) 
 
     select_query = select(columns).select_from(fromclause)
@@ -463,7 +470,7 @@ def build_select(db_graph, columns, where=None, order_by=None):
 
     return select_query
 
-def build_count(db_graph, columns, where=None):
+def build_count(db_graph, columns, where=None, add_in=None):
     """Get MySQL COUNT() expression SQLAlchemy executable.
 
     :param db_graph: SQLAlchemy structured NetworkX Graph object.
@@ -474,16 +481,20 @@ def build_count(db_graph, columns, where=None):
     :param where: MySQL WHERE clause-related SQLAlchemy object(s).
     :type where: BinaryExpression
     :type where: list
+    :param add_in: MySQL Column-related inputs to be considered for joining.
+    :type add_in: Column
+    :type add_in: list
     :returns: MySQL COUNT() expression-related SQLAlchemy executable.
     :rtype: Select
     """
-    where_columns = extract_where_clauses(where)
-   
+    where_columns = extract_where_clauses(where) 
+    add_in_columns = extract_order_by_clauses(add_in)
+
     if not isinstance(columns, list):
         columns = [columns]
     
     #Gathers all the tables from the SELECT, WHERE, and ORDER BY clauses
-    total_columns = columns + where_columns
+    total_columns = columns + where_columns + add_in_columns
     fromclause = build_fromclause(db_graph, total_columns)
 
     #Converts SQLAlchemy Columns into SQLAlchemy COUNT-related objects
@@ -496,7 +507,7 @@ def build_count(db_graph, columns, where=None):
 
     return count_query
 
-def build_distinct(db_graph, columns, where=None, order_by=None):
+def build_distinct(db_graph, columns, where=None, order_by=None, add_in=None):
     """Get MySQL DISTINCT expression SQLAlchemy executable.
 
     :param db_graph: SQLAlchemy structured NetworkX Graph object.
@@ -510,12 +521,149 @@ def build_distinct(db_graph, columns, where=None, order_by=None):
     :param order_by: MySQL ORDER BY clause-related SQLAlchemy object(s).
     :type order_by: Column
     :type order_by: list
+    :param add_in: MySQL Column-related inputs to be considered for joining.
+    :type add_in: Column
+    :type add_in: list
     :returns: MySQL DISTINCT expression-related SQLAlchemy executable.
     :rtype: Select
     """
     query = build_select(db_graph, columns, where=where, 
-                                                    order_by=order_by)
+                                            order_by=order_by,
+                                            add_in=add_in)
     
     distinct_query = query.distinct() #Converts a SELECT to a DISTINCT
     return distinct_query
 
+#TODO for Travis: To be evaluated for placement in another module.
+def first_column_value_subqueries(engine, executable, in_column, 
+                                                                 source_values, 
+                                                                 limit=8000):
+    """Execute a single column MySQL query for a set of values with subqueries.
+
+    :param engine: SQLAlchemy Engine object used for executing queries.
+    :type engine: Engine
+    :param executable: Input a executable MySQL query.
+    :type executable: Select
+    :type executable: str
+    :param in_column: SQLAlchemy Column object.
+    :type in_column: Column
+    :param source_values: Values from specified MySQL column.
+    :type source_values: list[str]
+    :param return_dict: Toggle whether to return data as a dictionary.
+    :type return_dict: Boolean
+    :param limit: SQLAlchemy IN clause query length limiter.
+    :type limit: int
+    :returns: Distinct values fetched from value constraints.
+    :rtype: list
+    """
+    values = []
+    if in_column.type.python_type == bytes:
+        source_values = parsing.convert_to_encoded(source_values)
+
+    chunked_values = [source_values[i*limit:(i+1)*limit]\
+                for i in range((len(source_values) + limit - 1) // limit)]  
+
+    for value_chunk in chunked_values: 
+        subquery = executable.where(in_column.in_(value_chunk))
+
+        proxy = engine.execute(subquery)
+        results = proxy.fetchall()
+
+        for result in results:
+            values.append(result[0]) 
+
+    values = list(OrderedDict.fromkeys(values))
+    return values
+
+#TODO for Travis: To be evaluated for placement in another module.
+def execute_value_subqueries(engine, executable, in_column, 
+                                                            source_values,
+                                                            return_dict=True,
+                                                            limit=8000):
+    """Execute a MySQL query for a set of values with subqueries.
+
+    :param engine: SQLAlchemy Engine object used for executing queries.
+    :type engine: Engine
+    :param executable: Input a executable MySQL query.
+    :type executable: Select
+    :type executable: str
+    :param in_column: SQLAlchemy Column object.
+    :type in_column: Column
+    :param source_values: Values from specified MySQL column.
+    :type source_values: list[str]
+    :param return_dict: Toggle whether to return data as a dictionary.
+    :type return_dict: Boolean
+    :param limit: SQLAlchemy IN clause query length limiter.
+    :type limit: int
+    :returns: List of grouped data for each value constraint.
+    :rtype: list
+    """
+    values=[]
+    if in_column.type.python_type == bytes:
+        source_values = parsing.convert_to_encoded(source_values)
+
+    chunked_values = [source_values[i*limit:(i+1)*limit]\
+                for i in range((len(source_values) + limit - 1) // limit)]
+
+    for value_chunk in chunked_values:
+        subquery = executable.where(in_column.in_(value_chunk))
+        
+        proxy = engine.execute(subquery)
+        results = proxy.fetchall()
+
+        for result in results:
+            if return_dict:
+                result = dict(result)
+
+            values.append(result)
+
+    return values
+
+#TODO for Travis: To be evaluated for placement in another module.
+def execute(engine, executable, return_dict=True):
+    """Use SQLAlchemy Engine to execute a MySQL query.
+    
+    :param engine: SQLAlchemy Engine object used for executing queries.
+    :type engine: Engine
+    :param executable: Input a executable MySQL query.
+    :type executable: Select
+    :type executable: str
+    :param return_dict: Toggle whether execute returns dict or tuple.
+    :type return_dict: Boolean
+    :returns: Results from execution of given MySQL query.
+    :rtype: list[dict]
+    :rtype: list[tuple]
+    """
+    proxy = engine.execute(executable)
+
+    results = proxy.fetchall()
+
+    if return_dict:
+        results_dicts = []
+        for result in results:
+            results_dicts.append(dict(result))
+
+        results = results_dicts 
+
+    return results
+    
+#TODO for Travis: To be evaluated for placement in another module.
+def first_column(engine, executable):
+    """Use SQLAlchemy Engine to execute and grab the first column."
+        
+    :param engine: SQLAlchemy Engine object used for executing queries.
+    :type engine: Engine
+    :param executable: Input an executable MySQL query.
+    :type executable: Select
+    :type executable: str
+    :returns: A column for a set of MySQL values.
+    :rtype: list[str]
+    """
+    proxy = engine.execute(executable)
+    results = proxy.fetchall()
+
+    values = []
+    for result in results:
+        values.append(result[0])
+
+    return values
