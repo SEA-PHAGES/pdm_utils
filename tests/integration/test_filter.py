@@ -18,16 +18,21 @@ if str(test_dir) not in set(sys.path):
     sys.path.append(str(test_dir))
 import test_db_utils
 
+# pdm_anon, pdm_anon, and pdm_test_db
+user = test_db_utils.USER
+pwd = test_db_utils.PWD
+db = test_db_utils.DB
+
 class TestFilter(unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        test_db_utils.create_filled_test_db(db="pdm_test_db")
+        test_db_utils.create_filled_test_db()
 
     def setUp(self):
         alchemist = AlchemyHandler()
-        alchemist.username="pdm_anon"
-        alchemist.password="pdm_anon"
-        alchemist.database="pdm_test_db"
+        alchemist.username=user
+        alchemist.password=pwd
+        alchemist.database=db
         alchemist.connect()
         alchemist.build_graph()
         self.alchemist = alchemist
@@ -357,7 +362,7 @@ class TestFilter(unittest.TestCase):
 
     @classmethod
     def tearDownClass(self):
-        test_db_utils.remove_db(db="pdm_test_db")
+        test_db_utils.remove_db()
 
 if __name__ == "__main__":
     unittest.main()

@@ -21,10 +21,9 @@ The directory of integration and unit tests can be stored completely separately 
         > python3 -m unittest discover ../tests/integration/ -p test_phamerator.py
 
 
-For integration tests that require a MySQL database, it is expected that MySQL user 'pdm_anon' exists with password 'pdm_anon' that has all privileges for 'test_db' database. Log in to MySQL as the 'root' user and execute the following commands::
+For integration tests that require a MySQL database, it is expected that MySQL user 'pdm_anon' exists with password 'pdm_anon' that has all privileges for 'pdm_test_' databases. Log in to MySQL as the 'root' user and execute the following commands::
 
     mysql> CREATE USER 'pdm_anon'@'localhost' IDENTIFIED BY 'pdm_anon';
-    mysql> GRANT ALL PRIVILEGES ON test_db.* TO 'pdm_anon'@'localhost';
     mysql> GRANT ALL PRIVILEGES ON `pdm\_test\_%`.* TO 'pdm_anon'@'localhost';
     mysql> GRANT SELECT ON *.* TO 'pdm_anon'@'localhost';
     mysql> FLUSH PRIVILEGES;

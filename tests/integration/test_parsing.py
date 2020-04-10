@@ -19,10 +19,10 @@ import test_db_utils
 class TestParsing(unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        test_db_utils.create_filled_test_db(db="pdm_test_db")
+        test_db_utils.create_filled_test_db()
 
     def setUp(self):
-        self.engine = create_engine(test_db_utils.create_engine_string(db="pdm_test_db"))
+        self.engine = create_engine(test_db_utils.create_engine_string())
 
         self.metadata = MetaData(bind=self.engine)
         self.metadata.reflect()
@@ -122,7 +122,7 @@ class TestParsing(unittest.TestCase):
 
     @classmethod
     def tearDownClass(self):
-        test_db_utils.remove_db(db="pdm_test_db")
+        test_db_utils.remove_db()
 
 if __name__ == "__main__":
     unittest.main()
