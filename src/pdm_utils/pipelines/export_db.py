@@ -1,24 +1,11 @@
-"""Pipeline for converting a database, filtered for some phages, and writing
-appropriate output files"""
+"""Pipeline for exporting database information into files."""
 
-#for (to be moved) cds_to_seqrecord dependancy
-from Bio.Alphabet import IUPAC
-
-import argparse
-import cmd
-import csv
-from functools import singledispatch
-import os
-from pathlib import Path
-import re
-import sys
-import time
-import copy
-import shutil
-from typing import List, Dict
 from Bio import SeqIO
-from Bio.SeqRecord import SeqRecord
+from Bio.Alphabet import IUPAC
 from Bio.SeqFeature import SeqFeature
+from Bio.SeqRecord import SeqRecord
+from functools import singledispatch
+from pathlib import Path
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.classes.filter import Filter
 from pdm_utils.functions import basic
@@ -26,17 +13,34 @@ from pdm_utils.functions import flat_files
 from pdm_utils.functions import mysqldb
 from pdm_utils.functions import parsing
 from pdm_utils.functions import querying
+from sqlalchemy.sql.elements import Null
+from typing import List, Dict
+import argparse
+import cmd
+import copy
+import csv
+import os
+import re
+import shutil
+import sys
+import time
 
 # Valid file formats using Biopython
-BIOPYTHON_CHOICES = ["gb", "fasta", "clustal", "fasta-2line", "nexus",
+BIOPYTHON_PIPELINES = ["gb", "fasta", "clustal", "fasta-2line", "nexus",
                        "phylip", "pir", "stockholm", "tab"]
+FILTERABLE_PIPELINES = BIOPYTHON_PIPELINES + ["csv"]
+PIPELINES = FILTERABLE_PIPELINES + ["sql"]
 FLAT_FILE_TABLES = ["phage"]
-UNDESIRED_COLUMNS = {"phage"           : ["Sequence"],
+
+#Once trna has data, these tables can be reintroduced.
+TABLES = ["phage", "gene", "domain", "gene_domain", "pham",
+          #"trna", "tmrna", "trna_structures", 
+          "version"]
+SEQUENCE_COLUMNS = {"phage"           : ["Sequence"],
                      "gene"            : ["Translation"],
                      "domain"          : [],
                      "gene_domain"     : [],
                      "pham"            : [],
-                     "pham_color"      : [],
                      "trna"            : ["Sequence"],
                      "tmrna"           : [],
                      "trna_structures" : [],
@@ -44,12 +48,12 @@ UNDESIRED_COLUMNS = {"phage"           : ["Sequence"],
 
 # Valid Biopython formats that crash the script due to specific values in
 # some genomes that can probably be fixed relatively easily and implemented.
-# BIOPYTHON_CHOICES_FIXABLE = ["embl", "imgt", "seqxml"]
+# BIOPYTHON_PIPELINES_FIXABLE = ["embl", "imgt", "seqxml"]
 # Biopython formats that are not applicable.
-# BIOPYTHON_CHOICES_INVALID = ["fastq", "fastq-solexa", "fastq-illumina",
+# BIOPYTHON_PIPELINES_INVALID = ["fastq", "fastq-solexa", "fastq-illumina",
 #                              "phd", "sff", "qual"]
 # Biopython formats that are not writable
-# BIOPYTHON_CHOICES_NOT_WRITABLE = ["ig"]
+# BIOPYTHON_PIPELINES_NOT_WRITABLE = ["ig"]
 
 def main(unparsed_args_list):
     """Uses parsed args to run the entirety of the file export pipeline.
@@ -58,47 +62,34 @@ def main(unparsed_args_list):
     :type unparsed_args_list: list[str]
     """
     #Returns after printing appropriate error message from parsing/connecting.
-    try:
-        args = parse_export(unparsed_args_list) 
-    except ValueError:
-        print("ABORTING EXPORT: Export failed during startup.")
-        sys.exit(1)
- 
-    mysqldb.check_schema_compatibility(args.alchemist.engine, "export")
+    args = parse_export(unparsed_args_list) 
 
-    csvx = False
-    ffx = None
-    dbx = False
-    ix = False
+    alchemist = establish_connection(args.database)
+    mysqldb.check_schema_compatibility(alchemist.engine, "export")
 
     values = []
     filters = []
-    groups = []
-
-    if args.pipeline in BIOPYTHON_CHOICES+["csv"]:
+    groups = []    
+    sort = []
+    if args.pipeline in FILTERABLE_PIPELINES:
         values = parse_value_list_input(args.input)
         filters = args.filters
         groups = args.groups
+        sort = args.sort
 
-        if args.pipeline == "csv":
-            csvx = True
-        else:
-            ffx = args.pipeline
-    elif args.pipeline == "sql":
-        dbx = True
-    elif args.pipeline == "I":
-        ix = True
-    else:
+    if not args.pipeline in PIPELINES:
         print("ABORTED EXPORT: Unknown pipeline option discrepency.\n"
               "Pipeline parsed from command line args is not supported")
-        sys.exit()
+        sys.exit(1)
 
-    if not ix:
-        execute_export(args.alchemist, args.output_path, args.output_name,
-                            values=values, verbose=args.verbose,
-                            csv_export=csvx, ffile_export=ffx, db_export=dbx,
-                            table=args.table,
-                            filters=filters, groups=groups)
+    if args.pipeline != "I":
+        execute_export(alchemist, args.output_path, args.output_name, 
+                       args.pipeline, table=args.table, values=values, 
+                       filters=filters, groups=groups, sort=sort,
+                       include_columns=args.include_columns,
+                       exclude_columns=args.exclude_columns,
+                       sequence_columns=args.sequence_columns,
+                       concatenate=args.concatenate, verbose=args.verbose)
     else:
         pass
 
@@ -110,28 +101,30 @@ def parse_export(unparsed_args_list):
     :returns: ArgParse module parsed args.
     """
     EXPORT_SELECT_HELP = """
-        Select a export pipeline option to export genomic data:
-            -csv export (csv)
-            -formatted file export (ffx)
-            -database export (sql)
-            -interactive export (I)
+        Select a export pipeline option to export database data.
+            Select csv to export data from a table into a .csv file.
+            Select sql to dump the current database into a .sql file.
+            Select a formatted file option to export individual entries.
         """
-    CSV_EXPORT_HELP = """
-        Export option to export a csv file
-        containing information about selected genomes.
-            """
     DATABASE_HELP = "Name of the MySQL database to export from."
-    DATABASE_EXPORT_HELP = """
-        Export option to dump the current database
-        into a .sql file and its version into a .version file.
-            """
-    FORMATTED_FILE_EXPORT_HELP = """
-        Export option to export formatted files containing
-        information about individual genomes.
-            """
-    INTERACTIVE_HELP = """
-        Export option that enables full interactive walkthrough export.
+
+
+    VERBOSE_HELP = """
+        Export option that enables progress print statements.
         """
+    OUTPUT_PATH_HELP = """
+        Export option to change the path
+        of the directory where the exported files are stored.
+            Follow selection argument with the path to the
+            desired export directory.
+        """
+    OUTPUT_NAME_HELP = """
+        Export option to change the name
+        of the directory where the exported files are stored.
+            Follow selection argument with the desired name.
+        """
+
+
     IMPORT_FILE_HELP = """
         Selection input option that imports values from a csv file.
             Follow selection argument with path to the
@@ -147,46 +140,53 @@ def parse_export(unparsed_args_list):
             Follow selection argument with a valid table from the database.
         """
     FILTERS_HELP = """
-        Genome selection option that constructs primary attributes list from
-        inputted filters.
-            Follow selection argument with formatted filter request:
-                Table.Field=Value
+        Data filtering option that filters data by the inputted expressions.
+            Follow selection argument with formatted filter expression:
+                {Table}.{Column}={Value}
         """
     GROUPS_HELP = """
-        Genome selection option that groups primary attributes list list from
-        inputted groups.
-            Follow selection argument with supported grouping option.
+        Data selection option that groups data by the inputted columns.
+            Follow selection argument with formatted column expressions:
+                {Table}.{Column}={Value}
         """
-    VERBOSE_HELP = """
-        Export option that enables progress print statements.
+    SORT_HELP = """
+        Data selection option that sorts data by the inputted columns.
+            Follow selection argument with formatted column expressions:
+                {Table}.{Column}={Value}
         """
-    OUTPUT_PATH_HELP = """
-        Export option to change the path
-        of the directory where the exported files are stored.
-            Follow selection argument with the path to the
-            desired export directory.
-        """
-    OUTPUT_NAME_HELP = """
-        Export option to change the name
-        of the directory where the exported files are stored.
-            Follow selection argument with the desired name.
-        """
-    FILE_FORMAT_HELP = """
-        Positional argument specifying the format of the file to export
-        """
-    export_options = BIOPYTHON_CHOICES + ["csv", "sql"]
 
+
+    CONCATENATE_HELP = """
+        SeqRecord export option to toggle concatenation of files.
+            Toggle to enable concatenation of files.
+        """
+
+
+    SEQUENCE_COLUMNS_HELP = """
+        Csv export option to toggle removal of sequence-based data.
+            Toggle to include sequence based data.
+        """
+    INCLUDE_COLUMNS_HELP = """
+        Csv export option to add additional columns of a database
+        to an exported csv file.
+            Follow selection argument with formatted column expressions:
+                {Table}.{Column}={Value}
+        """
+    EXCLUDE_COLUMNS_HELP = """
+        Csv export option to exclude select columns of a database
+        from an exported csv file.
+            Follow selection argument with formatted column expressions:
+                {Table}.{Column}={Value}
+        """
+ 
     initial_parser = argparse.ArgumentParser()
     initial_parser.add_argument("database", type=str, help=DATABASE_HELP)
 
-    initial_parser.add_argument("pipeline", type=str,
-                               choices=export_options,
+    initial_parser.add_argument("pipeline", type=str, choices=PIPELINES,
                                help=EXPORT_SELECT_HELP)
 
     initial = initial_parser.parse_args(unparsed_args_list[2:4])
   
-    alchemist = establish_connection(initial.database)
-
     optional_parser = argparse.ArgumentParser()
 
     optional_parser.add_argument("-o", "--output_name", 
@@ -197,10 +197,9 @@ def parse_export(unparsed_args_list):
                                help=VERBOSE_HELP)
 
 
-    if initial.pipeline in (BIOPYTHON_CHOICES + ["csv"]):
-        db_tables = mysqldb.get_db_tables(alchemist.engine, initial.database)
-        table_choices = dict.fromkeys(BIOPYTHON_CHOICES, FLAT_FILE_TABLES)
-        table_choices.update({"csv": db_tables})
+    if initial.pipeline in (BIOPYTHON_PIPELINES + ["csv"]):
+        table_choices = dict.fromkeys(BIOPYTHON_PIPELINES, FLAT_FILE_TABLES)
+        table_choices.update({"csv": TABLES})
         optional_parser.add_argument("-t", "--table", help=TABLE_HELP,
                                 choices=table_choices[initial.pipeline])
 
@@ -217,118 +216,333 @@ def parse_export(unparsed_args_list):
         optional_parser.add_argument("-g", "--group", nargs="*",
                                 help=GROUPS_HELP,
                                 dest="groups")
+        optional_parser.add_argument("-s", "--sort", nargs="*",
+                                help=SORT_HELP)
+
+        if initial.pipeline in BIOPYTHON_PIPELINES:
+            optional_parser.add_argument("-cc", "--concatenate",
+                                help=CONCATENATE_HELP, action="store_true")
+        else:
+            optional_parser.add_argument("-sc", "--sequence_columns",
+                                help=SEQUENCE_COLUMNS_HELP, action="store_true")
+            optional_parser.add_argument("-ic", "--include_columns", nargs="*",
+                                help=INCLUDE_COLUMNS_HELP)
+            optional_parser.add_argument("-ec", "--exclude_columns", nargs="*",
+                                help=EXCLUDE_COLUMNS_HELP)
 
     date = time.strftime("%Y%m%d")
     default_folder_name = f"{date}_export"
     default_folder_path = Path.cwd()
 
-    optional_parser.set_defaults(alchemist=alchemist,
-                        output_name=default_folder_name,
-                        output_path=default_folder_path,
-                        verbose=False, input=[],
-                        pipeline=initial.pipeline,
-                        table="phage", filters=[], groups=[],
-                        ix=False, csvx=False, dbx=False, ffx=False)
+    optional_parser.set_defaults(pipeline=initial.pipeline, 
+                                 database=initial.database,
+                                 output_name=default_folder_name,
+                                 output_path=default_folder_path,
+                                 verbose=False, input=[],
+                                 table="phage", filters=[], groups=[], sort=[],
+                                 include_columns=[], exclude_columns=[],
+                                 sequence_columns=False, concatenate=False)
 
     parsed_args = optional_parser.parse_args(unparsed_args_list[4:])
 
     return parsed_args
 
-def execute_export(alchemist, output_path, output_name,
-                        values=[], verbose=False,
-                        csv_export=False, ffile_export=None, db_export=False,
-                        table="phage", filters=[], groups=[]):
+def execute_export(alchemist, output_path, output_name, pipeline,
+                        values=[], verbose=False, table="phage", 
+                        filters=[], groups=[], sort=[],
+                        include_columns=[], exclude_columns=[], 
+                        sequence_columns=False,
+                        concatenate=False):
     """Executes the entirety of the file export pipeline.
 
-    :param alchemist: A connected and fully built AlchemyHandler.
+    :param alchemist: A connected and fully built AlchemyHandler object.
     :type alchemist: AlchemyHandler
     :param output_path: Path to a valid dir for new dir creation.
-    :type export_path: Path
-    :param folder_name: A name for the export folder.
-    :type folder_name: str
-    :param phage_filter_list: A list of phageIDs.
-    :type phage_filter_list: list[str]
-    :param verbose: A boolean value for verbose option.
-    :type verbose: boolean
-    :param csv_export: A boolean value to toggle csv_export.
-    :type csv_export: boolean
-    :param ffile_export: SeqIO supported file format.
-    :type ffile_export: str
-    :param db_export: A boolean value to toggle db_export.
-    :type db_export: boolean
-    :param filters: A list of lists with filter values, grouped by ORs then AND.
+    :type output_path: Path
+    :param output_name: A name for the export folder.
+    :type output_name: str
+    :param pipeline: File type that dictates data processing.
+    :type pipeline: str
+    :param values: List of values to filter database results.
+    :type values: list[str]
+    :param verbose: A boolean value to toggle progress print statements.
+    :type verbose: bool
+    :param table: MySQL table name.
+    :type table: str
+    :param filters: A list of lists with filter values, grouped by ORs.
     :type filters: list[list[str]]
-    :param groups: A list of supported MySQL column names.
-    :type groups: List[str]
+    :param groups: A list of supported MySQL column names to group by.
+    :type groups: list[str]
+    :param sort: A list of supported MySQL column names to sort by.
+    :param include_columns: A csv export column selection parameter.
+    :type include_columns: list[str]
+    :param exclude_columns: A csv export column selection parameter.
+    :type exclude_columns: list[str]
+    :param sequence_columns: A boolean to toggle inclusion of sequence data.
+    :type sequence_columns: bool 
+    :param concatenate: A boolean to toggle concaternation for SeqRecords.
+    :type concaternate: bool
     """
-
     if verbose:
         print("Retrieving database version...")
     db_version = mysqldb.get_version_table_data(alchemist.engine)
+    
+    if pipeline == "csv":
+        if verbose:
+            print("Processing columns for csv export...")
+        csv_columns = get_csv_columns(alchemist, table, 
+                                      include_columns=include_columns,
+                                      exclude_columns=exclude_columns,
+                                      sequence_columns=sequence_columns)
+
+    if pipeline in FILTERABLE_PIPELINES:
+        if verbose:
+            print("Processing columns for sorting...")
+        sort_columns = get_sort_columns(alchemist, sort)
+        db_filter = apply_filters(alchemist, table, filters, verbose=verbose)
 
     if verbose:
         print("Creating export folder...")
-
     export_path = output_path.joinpath(output_name)
     export_path = basic.make_new_dir(output_path, export_path, attempt=50)
 
-    if db_export:
+    if pipeline == "sql":
         if verbose:
             print("Writing SQL database file...")
         write_database(alchemist, db_version["Version"], export_path)
 
-    elif csv_export or ffile_export != None:
-        try:
-            db_filter = build_filtered_values(alchemist, table, filters,
-                                                                values=values,
-                                                                verbose=verbose)
-
-            conditionals_map = {}
-            if groups:
-                if verbose:
-                    print("Starting grouping process...")
-                build_groups_map(db_filter, export_path, groups=groups,
-                                            conditionals_map=conditionals_map,
-                                            verbose=verbose)
-            else:
-                conditional_maps.update({export_path : \
-                                         db_filter.build_where_clauses()})
-
-        except:            
-            print("ABORTING EXPORT: Export failed during query structuring.")
-            print("...Removing created export directory...")
-            shutil.rmtree(str(export_path))
-            sys.exit(1)
-        
-        try:
+    elif pipeline in FILTERABLE_PIPELINES: 
+        conditionals_map = {}
+        if groups:
             if verbose:
-                print("Prepared path structure, beginning export...")
-            for mapped_path in conditionals_map.keys():
-                conditionals = conditionals_map[mapped_path]
+                print("Starting grouping process...")
+            build_groups_map(db_filter, export_path, groups=groups,
+                                        conditionals_map=conditionals_map,
+                                        verbose=verbose)
+        else:
+            conditionals_map.update({export_path : \
+                                        db_filter.build_where_clauses()})
+ 
+        if verbose:
+            print("Prepared query and path structure, beginning export...")
+        for mapped_path in conditionals_map.keys():
+            conditionals = conditionals_map[mapped_path]
+            
+            if pipeline in BIOPYTHON_PIPELINES:
+                execute_ffx_export(alchemist, mapped_path, export_path,
+                                   pipeline, db_version, 
+                                   table=table, sort=sort_columns,
+                                   conditionals=conditionals, values=values,
+                                   concatenate=concatenate, verbose=verbose)
+            else: 
+                execute_csv_export(alchemist, mapped_path, export_path, 
+                                   csv_columns, table=table, 
+                                   sort=sort_columns,
+                                   conditionals=conditionals, values=values,
+                                   verbose=verbose)
+    else:
+        print("Unrecognized export pipeline, aborting export")
+        sys.exit(1) 
 
-                if csv_export:
-                    execute_csv_export(alchemist,
-                                            mapped_path, export_path, 
-                                            table=table, 
-                                            conditionals=conditionals,
-                                            values=values,
-                                            verbose=verbose)
+def execute_csv_export(alchemist, export_path, output_path, columns,
+                                        table="phage", conditionals=None,
+                                        sort=[], values=[],
+                                        verbose=False):
+    """Executes csv export of a MySQL database table with select columns.
 
-                elif ffile_export != None:
-                    execute_ffx_export(alchemist,
-                                            mapped_path, export_path,
-                                            ffile_export, db_version,
-                                            table=table, 
-                                            conditionals=conditionals,
-                                            values=values,
-                                            verbose=verbose)
-        except:
-            print("ABORTING EXPORT: Export failed during data export.")
-            print("...Removing created export directory...")
-            shutil.rmtree(str(export_path))
-            sys.exit(1)
+    :param alchemist: A connected and fully build AlchemyHandler object.
+    :type alchemist: AlchemyHandler
+    :param export_path: Path to a dir for file creation.
+    :type export_path: Path
+    :param output_path: Path to a top-level dir.
+    :type output_path: Path
+    :param table: MySQL table name.
+    :type table: str
+    :param conditionals: MySQL WHERE clause-related SQLAlchemy objects.
+    :type conditionals: list[BinaryExpression]
+    :param sort: A list of SQLAlchemy Columns to sort by.
+    :type sort: list[Column]
+    :param values: List of values to fitler database results.
+    :type values: list[str]
+    :param verbose: A boolean value to toggle progress print statements.
+    :type verbose: bool
+    """
+    table_obj = querying.get_table(alchemist.metadata, table) 
+    primary_key = list(table_obj.primary_key.columns)[0]
+    
+    if verbose:
+        relative_path = str(export_path.relative_to(output_path))
+        print(f"Preparing {table} export for '{relative_path}'...")
+    
+    headers = [primary_key.name]
+    for column in columns:
+        if column.name != primary_key.name:
+            headers.append(column.name)
+
+    query = querying.build_select(alchemist.graph, columns, where=conditionals,
+                                                            order_by=sort)
+    
+    if values:
+        results = querying.execute_value_subqueries(alchemist.engine, query,
+                                                    primary_key, values)
+    else:
+        results = alchemist.execute(query)
+   
+    if len(results) == 0:
+        if verbose:
+            print(f"No database entries received for '{export_path.name}'.")
+        export_path.rmdir() 
+
+    else:
+        if verbose:
+            print(f"...Writing csv '{export_path.name}.csv'...")
+            print("......Database entries retrieved: {len(results)}")
+
+        file_path = export_path.joinpath(f"{export_path.name}.csv")
+        basic.export_data_dict(results, file_path, headers,
+                                               include_headers=True)
+
+def execute_ffx_export(alchemist, export_path, output_path,
+                       file_format, db_version, table="phage", 
+                       values=[], conditionals=None, sort=[],
+                       concatenate=False, verbose=False): 
+    """Executes SeqRecord export of the compilation of data from a MySQL emtry.
+
+    :param alchemist: A connected and fully build AlchemyHandler object.
+    :type alchemist: AlchemyHandler
+    :param export_path: Path to a dir for file creation.
+    :type export_path: Path
+    :param output_path: Path to a top-level dir.
+    :type output_path: Path
+    :param file_format: Biopython supported file type.
+    :type file_format: str
+    :param db_version: Dictionary containing database version information.
+    :type db_version: dict
+    :param table: MySQL table name.
+    :type table: str
+    :param values: List of values to fitler database results.
+    :type values: list[str]
+    :param conditionals: MySQL WHERE clause-related SQLAlchemy objects.
+    :type conditionals: list[BinaryExpression] 
+    :param sort: A list of SQLAlchemy Columns to sort by.
+    :type sort: list[Column]
+    :param concatenate: A boolean to toggle concatenation of SeqRecords.
+    :type concaternate: bool
+    :param verbose: A boolean value to toggle progress print statements.
+    :type verbose: bool
+    """
+    if verbose:
+        print(f"...Retrieving {export_path.name} data...")
+   
+    table_obj = querying.get_table(alchemist.metadata, table)
+    primary_key = list(table_obj.primary_key.columns)[0]
+
+    if table == "phage":
+        query = querying.build_distinct(alchemist.graph, primary_key,
+                                                        where=conditionals,
+                                                        order_by=sort)
+        if values:
+            values = querying.first_column_value_subqueries(alchemist.engine, 
+                                                            query, primary_key, 
+                                                            values)
+        else:
+            values = alchemist.first_column(query)
+
+        if len(values) == 0:
+            if verbose:
+                print(f"No database entries received for '{export_path.name}'.")
+            export_path.rmdir()
+            return
+
+        if verbose:
+            print(f"......Database entries retrieved: {len(values)}")
+
+        genomes = mysqldb.parse_genome_data(
+                                alchemist.engine,
+                                phage_id_list=values,
+                                phage_query="SELECT * FROM phage",
+                                gene_query="SELECT * FROM gene")
+    else:
+        print(f"Unknown error occured, table '{table}' is not recognized.")
+        raise ValueError
+
+    if verbose:
+        print(f"Converting {table} data to SeqRecord format...")
+    seqrecords = []
+    if table == "phage":
+        for gnm in genomes:
+            set_cds_seqfeatures(gnm)
+            if verbose:
+                print(f"Converting {gnm.name}...")
+            seqrecords.append(flat_files.genome_to_seqrecord(gnm))
+        if verbose:
+            print("Appending database version...")
+        for record in seqrecords:
+            append_database_version(record, db_version)
+    else:
+        print("Unknown error occured when compiling genome information.")
+        raise ValueError
+
+    write_seqrecord(seqrecords, file_format, export_path, verbose=verbose,
+                                                    concatenate=concatenate)
+
+def write_seqrecord(seqrecord_list, file_format, export_path, concatenate=False,
+                                                              verbose=False):
+    """Outputs files with a particuar format from a SeqRecord list.
+
+    :param seq_record_list: List of populated SeqRecords.
+    :type seq_record_list: list[SeqRecord]
+    :param file_format: Biopython supported file type.
+    :type file_format: str
+    :param export_path: Path to a dir for file creation.
+    :type export_path: Path
+    :param concatenate: A boolean to toggle concatenation of SeqRecords.
+    :type concaternate: bool
+    :param verbose: A boolean value to toggle progress print statements.
+    :type verbose: bool
+    """
+    if verbose:
+        print("Writing selected data to files...")
+    
+    record_dictionary = {}
+    if concatenate:
+        record_dictionary.update({export_path.name:seqrecord_list})
+    else:
+        for record in seqrecord_list:
+            record_dictionary.update({record.name:record})
+
+    for record_name in record_dictionary.keys():
+        if verbose:
+            print(f"...Writing {record_name}...")
+        file_name = f"{record_name}.{file_format}"
+        file_path = export_path.joinpath(file_name)
+        file_handle = file_path.open(mode='w')
+        SeqIO.write(record_dictionary[record_name], file_handle, file_format)
+        file_handle.close()
+
+def write_database(alchemist, version, export_path):
+    """Output *.sql file from the selected database.
+
+    :param alchemist: A connected and fully built AlchemyHandler object.
+    :type alchemist: AlchemyHandler
+    :param version: Database version information.
+    :type version: int
+    :param export_path: Path to a valid dir for file creation.
+    :type export_path: Path
+    """
+    sql_path = export_path.joinpath(f"{alchemist.database}.sql")
+    os.system(f"mysqldump -u {alchemist.username} -p{alchemist.password} "
+              f"--skip-comments {alchemist.database} > {str(sql_path)}")
+    version_path = sql_path.with_name(f"{alchemist.database}.version")
+    version_path.touch()
+    version_path.write_text(f"{version}")
 
 def establish_connection(database):
+    """Establishes a connection to a MySQL database using an AlchemyHandler.
+
+    :param database: Name of a MySQL database.
+    :type database: str 
+    """
     alchemist = AlchemyHandler()
 
     alchemist.database = database
@@ -337,7 +551,7 @@ def establish_connection(database):
     except ValueError:
         print("Credentials invalid. "
               "Please check your MySQL credentials and try again.")
-        raise ValueError
+        sys.exit(1)
     except:
         print("Unknown error occured when logging into MySQL.")
         raise
@@ -349,15 +563,30 @@ def establish_connection(database):
               "and/or your database availability.\n"
              f"Unable to connect to database '{database}' "
               "with valid credentials.")
-        raise ValueError
+        sys.exit(1)
     except:
         print("Unknown error occured when connecting to MySQL database.")
         raise
+    
+    alchemist.build_graph()
     return alchemist 
 
-def build_filtered_values(alchemist, table, filters, values=None,
+def apply_filters(alchemist, table, filters, values=None,
                                                      verbose=False):
-    table_obj = alchemist.get_table(table)
+    """Applies MySQL WHERE clause filters using a Filter.
+
+    :param alchemist: A connected and fully built AlchemyHandler object.
+    :type alchemist: AlchemyHandler
+    :param table: MySQL table name.
+    :type table: str
+    :param filters: A list of lists with filter values, grouped by ORs.
+    :type filters: list[list[str]]
+    :param groups: A list of supported MySQL column names.
+    :type groups: list[str]
+    :returns: filter-Loaded Filter object.
+    :rtype: Filter
+    """
+    table_obj = alchemist.get_table(table) 
     primary_key = list(table_obj.primary_key.columns)[0]
 
     db_filter = Filter(alchemist=alchemist, key=primary_key)
@@ -370,27 +599,36 @@ def build_filtered_values(alchemist, table, filters, values=None,
             try:
                 db_filter.add(filter)
             except:
+                print("Error occured while processing filters.")
                 print(f"Filter '{filter}' is not a valid filter.")
-                raise ValueError
+                sys.exit(1) 
 
-    query = querying.build_count(alchemist.graph, primary_key, 
-                                       where=db_filter.build_where_clauses())
-    hits = alchemist.scalar(query)
-
-    if hits == 0:
-        print("Applied filters resulted in no database hits.")
-        raise ValueError
-
-    if verbose:
-        print(f"Total Database hits: {hits}")
-
+    db_filter.values = values
     return db_filter
 
 def build_groups_map(db_filter, export_path, groups=[], conditionals_map={},
                                                        verbose=False,
                                                        previous=None,
-                                                       depth=0):
+                                                       depth=0): 
+    """Recursive function that generates conditionals and maps them to a Path.
     
+    :param db_filter: A connected and fully loaded Filter object.
+    :type db_filter: Filter
+    :param export_path: Path to a dir for new dir creation.
+    :type output_path: Path
+    :param groups: A list of supported MySQL column names.
+    :type groups: list[str]
+    :param conditionals_map: A mapping between group conditionals and Paths.
+    :type conditionals_map: dict{Path:list}\
+    :param verbose: A boolean value to toggle progress print statements.
+    :type verbose: bool
+    :param previous: Value set by function to provide info for print statements.
+    :type previous: str
+    :param depth: Value set by function to provide info for print statements.
+    :type depth: int
+    :returns conditionals_map: A mapping between group conditionals and Paths.
+    :rtype: dict{Path:list}
+    """
     groups = groups.copy()
     current_group = groups.pop(0)
     if verbose:
@@ -405,10 +643,9 @@ def build_groups_map(db_filter, export_path, groups=[], conditionals_map={},
     except:
         print(f"Group '{current_group}' is not a valid group")
         raise ValueError
-
-    query = querying.build_distinct(db_filter.graph, group_column, 
-                                    where=db_filter.build_where_clauses())
-    transposed_values = querying.first_column(db_filter.engine, query)
+    
+    transposed_values = db_filter.build_values(column=current_group,
+                                        where=db_filter.build_where_clauses())
 
     if not transposed_values:
         export_path.rmdir() 
@@ -432,104 +669,100 @@ def build_groups_map(db_filter, export_path, groups=[], conditionals_map={},
             conditionals_map.update({group_path : \
                                         db_filter_copy.build_where_clauses()})
 
-def execute_csv_export(alchemist, export_path, output_path,
-                                        table="phage", conditionals=None,
-                                        values=[],
-                                        verbose=False): 
-    table_obj = querying.get_table(alchemist.metadata, table)
-    
-    select_columns = []
-    headers = []
+def get_sort_columns(alchemist, sort_inputs):
+    """Function that converts input for sorting to SQLAlchemy Columns.
 
-    if verbose:
-        relative_path = str(export_path.relative_to(output_path))
-        print(f"Preparing {table} export for '{relative_path}'...")
+    :param alchemist: A connected and fully build AlchemyHandler object.
+    :type alchemist: AlchemyHandler
+    :param sort_inputs: A list of supported MySQL column names.
+    :type sort_inputs: list[str]
+    :returns: A list of SQLAlchemy Column objects.
+    :rtype: list[Column]
+    """
+    sort_columns = []
+    for sort_input in sort_inputs:
+        try:
+            sort_column = querying.get_column(alchemist.metadata, sort_input)
+        except ValueError:
+            print("Error occured while selecting sort columns.")
+            print(f"Column inputted, '{sort_input}', is invalid.")
+            sys.exit(1)
+        finally:
+            sort_columns.append(sort_column)
 
-    for column in table_obj.columns:
-        if column.name not in UNDESIRED_COLUMNS[table]:
-            select_columns.append(column)
-            headers.append(column.name)
+    return sort_columns
 
+def get_csv_columns(alchemist, table, include_columns=[], exclude_columns=[],
+        
+                                                    sequence_columns=False):
+    """Function that filters and constructs a list of Columns to select.
+
+    :param alchemist: A connected and fully built AlchemyHandler object.
+    :type alchemist: AlchemyHandler
+    :param table: MySQL table name.
+    :type table: str
+    :param include_columns: A list of supported MySQL column names.
+    :type include_columns: list[str]
+    :param exclude_columns: A list of supported MySQL column names.
+    :type exclude_columns: list[str]
+    :param sequence_columns: A boolean to toggle inclusion of sequence data.
+    :type sequence_columns: bool
+    :returns: A list of SQLAlchemy Column objects.
+    :rtype: list[Column]
+    """
+    table_obj = alchemist.metadata.tables[table]
+    starting_columns = list(table_obj.columns)
     primary_key = list(table_obj.primary_key.columns)[0]
-
-    query = querying.build_select(alchemist.graph, select_columns, 
-                                                        where=conditionals)
-    
-    if values:
-        results = querying.execute_value_subqueries(alchemist.engine, query,
-                                                    primary_key, values)
-    else:
-        results = alchemist.execute(query)
-    
-    if verbose:
-        print(f"...Writing csv '{export_path.name}.csv'...")
-
-    file_path = export_path.joinpath(f"{export_path.name}.csv")
-    basic.export_data_dict(results, file_path, headers,
-                                               include_headers=True)
-
-def execute_ffx_export(alchemist, export_path, output_path,
-                       file_format, db_version, table="phage", 
-                       conditionals=None, verbose=False):
-    
-    if verbose:
-        print(
-          f"Retrieving {data_name} data from {sql_handle.database}...")
    
-    table_obj = querying.get_table(alchemist.metadata, table)
+    include_column_objs = starting_columns
+    for column in include_columns:
+        try:
+            column_obj = querying.get_column(alchemist.metadata, column)
+        except ValueError:
+            print("Error occured while selecting csv columns.")
+            print(f"Column inputted, '{column}', is invalid.")
+            sys.exit(1)
+        finally:
+            if column_obj not in include_column_objs:
+                include_column_objs.append(column_obj)
+  
+    sequence_column_objs = []
+    if not sequence_columns:
+        for sequence_column in SEQUENCE_COLUMNS[table]:
+            sequence_column_obj = dict(table_obj.c)[sequence_column]
+            sequence_column_objs.append(sequence_column_obj)
 
-    primary_key = list(table_obj.primary_key.columns)[0]
+    exclude_column_objs = sequence_column_objs
+    for column in exclude_columns:
+        try:
+            column_obj = querying.get_column(alchemist.metadata, column)
+        except ValueError:
+            print("Error occured while selecting csv columns.")
+            print(f"Column inputted, '{column}', is invalid.")
+            sys.exit(1)
+        finally:
+            exclude_column_objs.append(column_obj)
+            if column_obj.compare(primary_key):
+                print(f"Primary key to {table} cannot be excluded")
+                sys.exit(1)
 
-    if table == "phage":
-        query = querying.build_distinct(alchemist.graph, primary_key,
-                                                        where=conditionals,
-                                                        order_by=column)
-        if values:
-            values = querying.first_column_value_subqueries(alchemist.engine, 
-                                                        query, primary_key, values)
-        else:
-            values = alchemist.first_column(query)
+            if column_obj not in exclude_column_objs:
+                exclude_column_objs.append(column_obj) 
 
-        genomes = mysqldb.parse_genome_data(
-                                alchemist.engine,
-                                phage_id_list=values,
-                                phage_query="SELECT * FROM phage",
-                                gene_query="SELECT * FROM gene")
-    else:
-        print(f"Unknown error occured, table '{table}' is not recognized.")
-        raise ValueError
-
-    if verbose:
-        print(f"Converting {data_name} data to SeqRecord format...")
-    seqrecords = []
-
-    if table == "phage":
-        for gnm in genomes:
-            set_cds_seqfeatures(gnm)
-            if verbose:
-                print(f"Converting {gnm.name}...")
-            seqrecords.append(flat_files.genome_to_seqrecord(gnm))
-        if verbose:
-            print("Appending database version...")
-        for record in seqrecords:
-            append_database_version(record, db_version)
-
-    else:
-        print("Unknown error occured when compiling genome information.")
-        raise ValueError
-
-    write_seqrecord(seqrecords, file_format,
-                    export_path, verbose=verbose)
+    columns = []
+    for column_obj in include_column_objs:
+        if column_obj not in exclude_column_objs:
+            columns.append(column_obj) 
+        
+    return columns
 
 def convert_path(path: str):
     """Function to convert a string to a working Path object.
 
-    :param path:
-        Input a string to be converted into a Path object.
+    :param path: A string to be converted into a Path object.
     :type path: str
-    :return path_object:
-        Returns a path object from the inputted
-    :type path_object: Path
+    :returns: A Path object converted from the inputed string.
+    :rtype: Path
     """
     path_object = Path(path)
     if "~" in path:
@@ -542,19 +775,16 @@ def convert_path(path: str):
 
     print("String input failed to be converted to a working Path object. \n" 
           "Path may not exist.")
-    raise ValueError
+    sys.exit(1)
 
 def convert_dir_path(path: str):
-    """Helper function to convert a string to a working Path object.
+    """Function to convert a string to a working directory Path object.
 
-    :param path:
-        Input a string to be converted into a Path object.
+    :param path: A string to be converted into a Path object.
     :type path: str
-    :return path_object:
-        Returns a path object directing to a directory.
-    :type path_object: Path
+    :returns: A Path object converted from the inputed string.
+    :rtype: Path
     """
-
     path_object = convert_path(path)
 
     if path_object.is_dir():
@@ -562,18 +792,16 @@ def convert_dir_path(path: str):
     else:
         print("Path input required to be a directory "
               "does not direct to a valid directory.")
-        raise ValueError
+        sys.exit(1)
 
 def convert_file_path(path: str):
-    """Helper function to convert a string to a working Path object.
+    """Function to convert a string to a working file Path object.
 
-    :param path:
-        Input a string to be converted into a Path object.
+    :param path: A string to be converted into a Path object.
     :type path: str
-    :return path_object:
-        Returns a path object directing to a file.
-    :type path_object: Path
-    """
+    :returns: A Path object converted from the inputed string.
+    :rtype: Path
+    """ 
     path_object = convert_path(path)
 
     if path_object.is_file():
@@ -585,15 +813,17 @@ def convert_file_path(path: str):
 
 @singledispatch
 def parse_value_list_input(value_list_input):
-    """Helper function to populate the filter list for a SQL query.
+    """Function to convert values input to a recognized data types.
 
-    :param phage_list_input:
-        Input a list of phage names.
+    :param value_list_input: Values stored in recognized data types.
     :type value_list_input: list[str]
+    :type value_list_input: Path
+    :returns: List of values to filter database results.
+    :rtype: list[str]
     """
 
-    print("Value list input for export is not a supported type.")
-    raise TypeError
+    print("Value list input for export is of an unexpected type.")
+    sys.exit(1)
 
 @parse_value_list_input.register(Path)
 def _(value_list_input):
@@ -608,20 +838,11 @@ def _(value_list_input):
 def _(value_list_input):
     return value_list_input
 
-@parse_value_list_input.register(str)
-def _(value_list_input):
-    return [value_list_input]
-
 def set_cds_seqfeatures(phage_genome):
-    """Helper function that queries for and returns
-    cds data from a SQL database for a specific phage
+    """Function that populates the Cds objects of a Genome object.
 
-    :param phage_genome:
-        Input a genome object to query cds data for.
-    :type phage_genome: genome
-    :param sql_database_handle:
-        Input a SQLAlchemy Engine object.
-    :type sql_database_handle: Engine
+    :param phage_genome: Genome object to query cds data for.
+    :type phage_genome: Genome
     """
 
     try:
@@ -635,17 +856,13 @@ def set_cds_seqfeatures(phage_genome):
     for cds_feature in phage_genome.cds_features:
         cds_feature.set_seqfeature()
 
-def append_database_version(genome_seqrecord: SeqRecord, version_data: Dict):
-    """Helper function that appends the working database version
-    in a comment within a SeqFeature annotation
+def append_database_version(genome_seqrecord, version_data):
+    """Function that sets a property of a SeqRecord with the database version.
 
-    :param genome_seqfeature:
-        Input a SeqRecord object generated from the working
-        SQL database.
+    :param genome_seqrecord: Filled SeqRecord object with relevant attribtues.
     :type genome_seqfeature: SeqRecord
-    :param version_data:
-        Input a version data dictionary parsed from a SQL database.
-    :type version_data: dictionary
+    :param version_data: Dictionary containing database version information.
+    :type version_data: dict
     """
     version_keys = version_data.keys()
     if "Version" not in version_keys or "SchemaVersion" not in version_keys:
@@ -664,48 +881,6 @@ def append_database_version(genome_seqrecord: SeqRecord, version_data: Dict):
         elif genome_seqrecord == None:
             raise TypeError
         raise
-
-def write_seqrecord(seqrecord_list: List[SeqRecord],
-                           file_format: str,
-                           export_path: Path,
-                           verbose=False):
-    """Outputs files with a particuar format from a SeqRecord list
-
-    :param seq_record_list:
-        Input a list of SeqRecords.
-    :type seq_record_list: SeqRecord[]
-    :param file_format:
-        Input SeqIO file output format.
-    :type file_format: str
-    :param export_path:
-        Input the path for the placement of the directory
-        of exported files.
-    :type input_path: Path
-    :param verbose:
-        Input a boolean to represent the verbocity of
-        the file export script.
-    :type verbose: Boolean
-    """
-    if verbose:
-        print("Writing selected data to files...")
-
-    for record in seqrecord_list:
-        if verbose:
-            print(f"...Writing {record.name}...")
-        file_name = f"{record.name}.{file_format}"
-        output_path = export_path.joinpath(file_name)
-        output_handle = output_path.open(mode='w')
-        SeqIO.write(record, output_handle, file_format)
-        output_handle.close()
-
-def write_database(alchemist, version, export_path):
-    sql_path = export_path.joinpath(f"{alchemist.database}.sql")
-    os.system(f"mysqldump -u {alchemist.username} -p{alchemist.password} "
-              f"--skip-comments {alchemist.database} > {str(sql_path)}")
-    version_path = sql_path.with_name(f"{alchemist.database}.version")
-    version_path.touch()
-    version_path.write_text(f"{version}")
-
 
 #--------------------------------------------------------
 #PROTOTYPE FUNCTIONS
@@ -756,7 +931,3 @@ def parse_cds_data_from_geneid(sql_handle, geneid_list):
 
     return cds_list
 
-
-    args = sys.argv
-    args.insert(0, "blank_argument")
-    main(args)

@@ -17,6 +17,7 @@ from pdm_utils.functions import parsing
 from pdm_utils.functions import querying as q
 from sqlalchemy import Column
 from sqlalchemy.engine.base import Engine
+from sqlalchemy.sql.elements import Null
 
 class Filter:
     def __init__(self, alchemist=None, key=None):
@@ -106,7 +107,7 @@ class Filter:
  
     @values.setter
     def values(self, values):
-        if not isinstance(values, list):
+        if not (isinstance(values, list) or values is None):
             raise TypeError("Filter object values must be of type list.")
         self._values = values
         self._values_valid = False
@@ -193,8 +194,12 @@ class Filter:
 
             #Matches the string value to the BinaryExpressions stored value
             for clause in filters:
-                if clause.right.value == parsed_filter[3]:
-                    filters.remove(clause)
+                if not isinstance(clause.right, Null):
+                    if clause.right.value == parsed_filter[3]:
+                        filters.remove(clause)
+                else:
+                    if parsed_filter[3] == "None":
+                        filters.remove(clause)
 
             if len(self._filters[filter_left]) == 0:
                 self._filters.pop(filter_left)
@@ -267,17 +272,12 @@ class Filter:
                                                             add_in=self._key)
 
         values = []
-        if self._values != []:
+        if not self._values:
+            values = q.first_column(self.engine, query) 
+        else:
             values = q.first_column_value_subqueries(
                         self._engine, query, self._key, self._values, 
-                                                        limit=limit)
-
-        else:
-            proxy = self.engine.execute(query)
-            results = proxy.fetchall()
-
-            for result in results:
-                values.append(result[0])
+                                                        limit=limit) 
 
         if self._key.type.python_type == bytes:
             parsing.convert_from_encoded(values)
@@ -299,10 +299,13 @@ class Filter:
         :rtype: dict
         """
         self.check()
-
+        
         if not self._values:
-            return []
-    
+            if return_dict:
+                return {}
+            else:
+                return [] 
+
         column = self.convert_column_input(raw_column)
         name = column.name
    
@@ -328,7 +331,7 @@ class Filter:
         :rtype: dict
         """
         self.check()
-
+        
         if not self._values:
             return {}
 
@@ -356,7 +359,7 @@ class Filter:
 
         if not self._values:
             return {}
-        
+
         if not isinstance(raw_columns, list):
             raw_columns = [raw_columns]
 
