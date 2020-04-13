@@ -30,7 +30,7 @@ BIOPYTHON_PIPELINES = ["gb", "fasta", "clustal", "fasta-2line", "nexus",
                        "phylip", "pir", "stockholm", "tab"]
 FILTERABLE_PIPELINES = BIOPYTHON_PIPELINES + ["csv"]
 PIPELINES = FILTERABLE_PIPELINES + ["sql"]
-FLAT_FILE_TABLES = ["phage"]
+FLAT_FILE_TABLES = ["phage", "gene"]
 
 #Once trna has data, these tables can be reintroduced.
 TABLES = ["phage", "gene", "domain", "gene_domain", "pham",
@@ -432,59 +432,117 @@ def execute_ffx_export(alchemist, export_path, output_path,
     :type verbose: bool
     """
     if verbose:
-        print(f"...Retrieving {export_path.name} data...")
+        print(f"Retrieving {export_path.name} data...")
    
     table_obj = querying.get_table(alchemist.metadata, table)
     primary_key = list(table_obj.primary_key.columns)[0]
 
-    if table == "phage":
-        query = querying.build_distinct(alchemist.graph, primary_key,
-                                                        where=conditionals,
-                                                        order_by=sort)
-        if values:
-            values = querying.first_column_value_subqueries(alchemist.engine, 
-                                                            query, primary_key, 
-                                                            values)
-        else:
-            values = alchemist.first_column(query)
-
-        if len(values) == 0:
-            if verbose:
-                print(f"No database entries received for '{export_path.name}'.")
-            export_path.rmdir()
-            return
-
-        if verbose:
-            print(f"......Database entries retrieved: {len(values)}")
-
-        genomes = mysqldb.parse_genome_data(
-                                alchemist.engine,
-                                phage_id_list=values,
-                                phage_query="SELECT * FROM phage",
-                                gene_query="SELECT * FROM gene")
+    query = querying.build_distinct(alchemist.graph, primary_key,
+                                                     where=conditionals,
+                                                     order_by=sort)
+    if values:
+        values = querying.first_column_value_subqueries(alchemist.engine, 
+                                                        query, primary_key, 
+                                                        values)
     else:
-        print(f"Unknown error occured, table '{table}' is not recognized.")
-        raise ValueError
+        values = alchemist.first_column(query)
+
+    if len(values) == 0:
+        if verbose:
+            print(f"No database entries received for '{export_path.name}'.")
+        export_path.rmdir()
+        return
 
     if verbose:
-        print(f"Converting {table} data to SeqRecord format...")
+        print(f"...Database entries retrieved: {len(values)}")
     seqrecords = []
-    if table == "phage":
-        for gnm in genomes:
-            set_cds_seqfeatures(gnm)
-            if verbose:
-                print(f"Converting {gnm.name}...")
-            seqrecords.append(flat_files.genome_to_seqrecord(gnm))
-        if verbose:
-            print("Appending database version...")
-        for record in seqrecords:
-            append_database_version(record, db_version)
+    if table == "phage": 
+        seqrecords = parse_genome_seqrecord_data(alchemist, values=values,
+                                                            verbose=verbose)
+    elif table == "gene":
+        seqrecords = parse_cds_seqrecord_data(alchemist, values=values,
+                                                         where=conditionals,
+                                                         verbose=verbose)
     else:
-        print("Unknown error occured when compiling genome information.")
-        raise ValueError
+        print(f"Unknown error occured, table '{table}' is not recognized "
+               "for SeqRecord export pipelines.")
+        sys.exit(1)
 
+    if verbose:
+            print("Appending database version...")
+    for record in seqrecords:
+        append_database_version(record, db_version)
     write_seqrecord(seqrecords, file_format, export_path, verbose=verbose,
                                                     concatenate=concatenate)
+
+def parse_genome_seqrecord_data(alchemist, values=[], verbose=False):
+    genomes = mysqldb.parse_genome_data(alchemist.engine,
+                                        phage_id_list=values,
+                                        phage_query="SELECT * FROM phage",
+                                        gene_query="SELECT * FROM gene")
+    
+    seqrecords = []
+    for gnm in genomes:
+        set_genome_cds_seqfeatures(gnm)
+        if verbose:
+            print(f"Converting {gnm.name}...")
+        seqrecords.append(flat_files.genome_to_seqrecord(gnm))    
+
+    return seqrecords
+
+def retrieve_cds_seqrecord_data(alchemist, values=[], where=[]):
+    gene_table = querying.get_table(alchemist.metadata, "gene")
+    primary_key = list(gene_table.primary_key.columns)[0]
+
+    cds_data_columns = list(gene_table.c)
+    cds_data_columns.append(querying.get_column(alchemist.metadata, 
+                                                "phage.HostGenus"))
+    cds_data_columns.append(querying.get_column(alchemist.metadata,
+                                                "phage.Accession"))
+    cds_data_columns.append(querying.get_column(alchemist.metadata,
+                                                "phage.DateLastModified"))
+    cds_data_columns.append(querying.get_column(alchemist.metadata,
+                                                "phage.Length").label(
+                                                "PhageLength"))
+    
+    cds_data_query = querying.build_select(alchemist.graph, cds_data_columns,
+                                           where=where)
+    if values:
+        cds_data = querying.execute_value_subqueries(alchemist.engine,
+                                                     cds_data_query, 
+                                                     primary_key,
+                                                     values)
+    else:
+        cds_data = querying.execute(alchemist.engine, cds_data_query)
+
+    return cds_data
+
+def parse_cds_seqrecord_data(alchemist, values=[], where=[], verbose=False):
+    cds_data_dicts = retrieve_cds_seqrecord_data(alchemist, values=values, 
+                                                            where=where)
+
+    seqrecords = []
+    for cds_dict in cds_data_dicts:
+        cds = mysqldb.parse_gene_table_data(cds_dict)
+        cds.genome_length = int(cds_dict["PhageLength"]) 
+
+        if verbose:
+            print(f"Converting {cds.id}...")
+        record = SeqRecord(cds.translation)
+        record.seq.alphabet = IUPAC.IUPACAmbiguousDNA()
+        record.name = cds.id
+        if cds.locus_tag != "":
+            record.id = cds.locus_tag
+
+        cds.set_seqfeature()
+        record.features = [cds.seqfeature]
+
+        record.description = get_cds_seqrecord_description(cds_dict)
+        record.annotations = get_cds_seqrecord_annotations(cds_dict)
+        
+        seqrecords.append(record)
+
+    return seqrecords
 
 def write_seqrecord(seqrecord_list, file_format, export_path, concatenate=False,
                                                               verbose=False):
@@ -641,8 +699,8 @@ def build_groups_map(db_filter, export_path, groups=[], conditionals_map={},
     try:
         group_column = db_filter.convert_column_input(current_group)
     except:
-        print(f"Group '{current_group}' is not a valid group")
-        raise ValueError
+        print(f"Group '{current_group}' is not a valid group.")
+        sys.exit(1)
     
     transposed_values = db_filter.build_values(column=current_group,
                                         where=db_filter.build_where_clauses())
@@ -692,8 +750,7 @@ def get_sort_columns(alchemist, sort_inputs):
 
     return sort_columns
 
-def get_csv_columns(alchemist, table, include_columns=[], exclude_columns=[],
-        
+def get_csv_columns(alchemist, table, include_columns=[], exclude_columns=[], 
                                                     sequence_columns=False):
     """Function that filters and constructs a list of Columns to select.
 
@@ -838,7 +895,7 @@ def _(value_list_input):
 def _(value_list_input):
     return value_list_input
 
-def set_cds_seqfeatures(phage_genome):
+def set_genome_cds_seqfeatures(phage_genome):
     """Function that populates the Cds objects of a Genome object.
 
     :param phage_genome: Genome object to query cds data for.
@@ -882,52 +939,49 @@ def append_database_version(genome_seqrecord, version_data):
             raise TypeError
         raise
 
-#--------------------------------------------------------
 #PROTOTYPE FUNCTIONS
-def cds_to_seqrecord(cds):
-    try:
-        record = SeqRecord(cds.seq)
-        record.seq.alphabet = IUPAC.IUPACAmbiguousDNA()
-    except AttributeError:
-        print("Genome object failed to be converted to SeqRecord\n."
-              "Genome valid attribute 'seq' is required to "
-              "convert to SeqRecord object.")
+#--------------------------------------------------------
+def get_cds_seqrecord_description(cds_dict):
+    cds_product = cds_dict["Notes"].decode("utf-8")
+    if cds_product == "":
+        cds_product = "hypothetical protein"
 
-    record.name = cds.id
-    if cds.locus_tag != "":
-        record.id = cds.locus_tag
-    cds.set_seqfeature()
-    record.features = [cds.seqfeature]
-    record.description = f"Single gene {cds.id}"
-    record.annotations = get_cds_seqrecord_annotations(cds)
+    cds_parent = cds_dict["PhageID"]
+    parent_host_genus = cds_dict["HostGenus"]
 
-    return record
-
-def get_cds_seqrecord_annotations(cds):
+    description = f"{cds_product} [{parent_host_genus} phage {cds_parent}]"
+    return description
+    
+def get_cds_seqrecord_annotations(cds_dict):
     annotations = {"molecule type": "DNA",
                    "topology" : "linear",
                    "data_file_division" : "PHG",
                    "date" : "",
                    "accessions" : [],
-                   "sequence_version" : "1",
+                   "sequence_version" : "",
                    "keyword" : [],
                    "source" : "",
                    "organism" : "",
                    "taxonomy" : [],
                    "comment" : ()}
+  
+    annotations["date"] = cds_dict["DateLastModified"]
+    annotations["organism"] = (f"{cds_dict['HostGenus']} phage "
+                               f"{cds_dict['PhageID']}")
+    annotations["source"] = f"Accession {cds_dict['Accession']}"
+
+    annotations["taxonomy"].append("Viruses")
+    annotations["taxonomy"].append("dsDNA Viruses")
+    annotations["taxonomy"].append("Caudovirales")
+
+    annotations["comment"] = get_cds_seqrecord_annotations_comments(cds_dict)
+
     return annotations
 
-def parse_cds_data_from_geneid(sql_handle, geneid_list):
-    if not geneid_list:
-        return []
-
-    query = (f"SELECT * FROM gene WHERE GeneID IN ('" + \
-              "','".join(geneid_list) + "')")
-    result_list = sql_handle.execute_query(query)
-
-    cds_list = []
-    for data_dict in result_list:
-        cds_list.append(mysqldb.parse_gene_table_data(data_dict))
-
-    return cds_list
-
+def get_cds_seqrecord_annotations_comments(cds_dict):
+    pham_comment =\
+           f"Pham: {cds_dict['PhamID']}"
+    auto_generated_comment =\
+            "Auto-generated genome record from a MySQL database"
+    
+    return (pham_comment, auto_generated_comment)

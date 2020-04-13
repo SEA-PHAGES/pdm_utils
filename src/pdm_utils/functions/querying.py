@@ -11,6 +11,7 @@ from sqlalchemy.sql import func
 from sqlalchemy.sql import functions
 from sqlalchemy.sql.elements import BinaryExpression
 from sqlalchemy.sql.elements import Grouping
+from sqlalchemy.sql.elements import Label
 from sqlalchemy.sql.elements import UnaryExpression
 from datetime import datetime
 from decimal import Decimal
@@ -198,6 +199,8 @@ def extract_column(column, check=None):
     #For handling SQLAlchemy Column.distinct expressions
     elif isinstance(column, UnaryExpression):
         column = column.element
+    elif isinstance(column, Label):
+        column = column.element
     #For handling SQLAlchemy comparison expressions
     elif isinstance(column, BinaryExpression):
         expression = column.left
@@ -217,7 +220,7 @@ def extract_column(column, check=None):
                             f"of expression {expression} is not supported.")
 
     else:
-        raise TypeError(f"Input type {column} is not a derivative "
+        raise TypeError(f"Input type {type(column)} is not a derivative "
                          "of a SqlAlchemy Column.")
     
     return column
