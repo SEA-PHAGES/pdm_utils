@@ -1,4 +1,19 @@
 # MySQL script to downgrade the database schema from version 9 to 8.
+ALTER TABLE `tmrna` DROP COLUMN `Name`;
+ALTER TABLE `tmrna` DROP COLUMN `Length`;
+ALTER TABLE `tmrna` CHANGE `GeneID` `TmrnaID` varchar(35) NOT NULL;
+ALTER TABLE `tmrna` MODIFY COLUMN `LocusTag` varchar(35) DEFAULT NULL AFTER `PhageID`;
+ALTER TABLE `tmrna` MODIFY COLUMN `TmrnaID` varchar(35) NOT NULL AFTER `PhageID`;
+ALTER TABLE `tmrna` DROP FOREIGN KEY `tmrna_ibfk_1`;
+ALTER TABLE `tmrna` DROP KEY `PhageID`;
+
+ALTER TABLE `trna` DROP FOREIGN KEY `trna_ibfk_1`;
+ALTER TABLE `trna`
+  ADD CONSTRAINT `trna_ibfk_1`
+  FOREIGN KEY (`PhageID`)
+  REFERENCES `phage` (`PhageID`);
+ALTER TABLE `trna` DROP COLUMN `Name`;
+ALTER TABLE `trna` CHANGE `GeneID` `TrnaID` varchar(35) NOT NULL;
 ALTER TABLE `trna` MODIFY COLUMN `LocusTag` varchar(35) DEFAULT NULL AFTER `PhageID`;
 ALTER TABLE `trna` MODIFY COLUMN `TrnaID` varchar(35) NOT NULL AFTER `PhageID`;
 ALTER TABLE `trna` DROP COLUMN `Source`;
@@ -21,6 +36,7 @@ UPDATE `trna` SET `Structure` = SUBSTRING(`Structure` FROM 1 FOR 300);
 ALTER TABLE `trna` MODIFY COLUMN `Structure` varchar(300) NOT NULL;
 INSERT IGNORE INTO `trna_structures` SELECT `Sequence`, `Structure` FROM `trna`;
 ALTER TABLE `trna` DROP COLUMN `Structure`;
+
 UPDATE `version` SET `SchemaVersion` = 8;
 
 ### DATA_LOSS_SUMMARY
@@ -29,3 +45,6 @@ UPDATE `version` SET `SchemaVersion` = 8;
 # INACCURATE_COLUMN:trna.InfernalScore
 # INACCURATE_COLUMN:trna.AminoAcid
 # LOST_COLUMN:trna.Source
+# LOST_COLUMN:trna.Name
+# LOST_COLUMN:tmrna.Name
+# LOST_COLUMN:tmrna.Length

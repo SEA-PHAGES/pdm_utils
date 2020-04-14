@@ -13,6 +13,29 @@ ALTER TABLE `trna` DROP COLUMN `InfernalScore`;
 ALTER TABLE `trna` ADD COLUMN `Source` enum('aragorn', 'trnascan', 'both') DEFAULT NULL;
 ALTER TABLE `trna` MODIFY COLUMN `PhageID` varchar(25) NOT NULL AFTER `TrnaID`;
 ALTER TABLE `trna` MODIFY COLUMN `LocusTag` varchar(35) DEFAULT NULL AFTER `Note`;
+ALTER TABLE `trna` CHANGE `TrnaID` `GeneID` varchar(35) NOT NULL;
+ALTER TABLE `trna` ADD COLUMN `Name` varchar(50) NOT NULL AFTER `Length`;
+ALTER TABLE `trna` DROP FOREIGN KEY `trna_ibfk_1`;
+ALTER TABLE `trna`
+  ADD CONSTRAINT `trna_ibfk_1`
+  FOREIGN KEY (`PhageID`)
+  REFERENCES `phage` (`PhageID`)
+  ON DELETE CASCADE
+  ON UPDATE CASCADE;
+
+ALTER TABLE `tmrna` ADD KEY (`PhageID`);
+ALTER TABLE `tmrna`
+  ADD CONSTRAINT `tmrna_ibfk_1`
+  FOREIGN KEY (`PhageID`)
+  REFERENCES `phage` (`PhageID`)
+  ON DELETE CASCADE
+  ON UPDATE CASCADE;
+ALTER TABLE `tmrna` MODIFY COLUMN `PhageID` varchar(25) NOT NULL AFTER `TmrnaID`;
+ALTER TABLE `tmrna` MODIFY COLUMN `LocusTag` varchar(35) DEFAULT NULL AFTER `Note`;
+ALTER TABLE `tmrna` CHANGE `TmrnaID` `GeneID` varchar(35) NOT NULL;
+ALTER TABLE `tmrna` ADD COLUMN `Length` mediumint(9) NOT NULL AFTER `Stop`;
+ALTER TABLE `tmrna` ADD COLUMN `Name` varchar(50) NOT NULL AFTER `Length`;
+
 UPDATE `version` SET `SchemaVersion` = 9;
 
 ### DATA_LOSS_SUMMARY
@@ -21,3 +44,6 @@ UPDATE `version` SET `SchemaVersion` = 9;
 # LOST_COLUMN:trna.Product
 # LOST_COLUMN:trna.InfernalScore
 # INACCURATE_COLUMN:trna.Source
+# INACCURATE_COLUMN:trna.Name
+# INACCURATE_COLUMN:tmrna.Name
+# INACCURATE_COLUMN:tmrna.Length
