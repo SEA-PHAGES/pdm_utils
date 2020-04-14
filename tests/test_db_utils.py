@@ -146,6 +146,13 @@ def install_db(schema_filepath, db=DB, user=USER, pwd=PWD):
     proc = subprocess.check_call(command_list, stdin=handle)
     handle.close()
 
+def create_schema_file(schema_filepath, db=DB, user=USER, pwd=PWD):
+    """Dump empty schema file for a database."""
+    # "mysqldump --no-data -u root -p --skip-comments <db_name> > db_schema_before.sql"
+    command_string = f"mysqldump --no-data -u {user} -p{pwd} --skip-comments {db}"
+    command_list = command_string.split(" ")
+    with schema_filepath.open("w") as handle:
+        subprocess.check_call(command_list, stdout=handle)
 
 
 
