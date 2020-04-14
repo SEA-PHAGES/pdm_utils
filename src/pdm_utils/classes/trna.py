@@ -9,6 +9,8 @@ from Bio.Alphabet import IUPAC
 from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
 from pdm_utils.classes import eval
+from pdm_utils.classes.aragornhandler import AragornHandler
+from pdm_utils.classes.trnascansehandler import TRNAscanSEHandler
 from pdm_utils.functions import basic
 
 # Amino acids that Genbank allows in the product field
@@ -61,7 +63,7 @@ class TrnaFeature:
         self.aragorn_data = None
 
         # tRNAscan-SE data
-        self.trnascan_data = None
+        self.trnascanse_data = None
 
         # Which program(s) support the annotation?
         self.sources = list()
@@ -70,10 +72,11 @@ class TrnaFeature:
         self.seqfeature = None  # BioPython SeqFeature object for this tRNA
         self.locus_tag = ""     # Gene ID comprised of PhageID and Gene name
         self._locus_tag_num = ""
+        self._gene_num = ""
         self.parts = 0          # How many regions does the tRNA have
         self.gene = ""          # Gene number parsed from feature
-        self.product = ""       # Raw product field
-        self.note = ""          # Raw note field
+        self.raw_product = ""       # Raw product field
+        self.raw_note = ""          # Raw note field
 
         # Useful for processing data from various sources:
         self.evaluations = list()
@@ -82,11 +85,10 @@ class TrnaFeature:
         self._end_orient_id = tuple()
         self._start_end_id = tuple()
 
-    # TODO: create base feature class - use this version of the method unless
-    #  Travis objects, because it's simpler and better documented.
+    # TODO: create base feature class
     def set_locus_tag(self, tag="", delimiter="_", check_value=None):
         """
-        Populate the locus tag attribute.
+        Populate the locus_tag and parse the locus_tag number.
         :param tag: Input locus_tag data
         :type tag: str
         :param delimiter: Value used to split locus_tag data
@@ -95,8 +97,19 @@ class TrnaFeature:
         used to parse the locus_tag to identify the feature number
         :type check_value: str
         """
-        # Set locus tag
+        # List of delimiters commonly found in locus tags. "_" is most common
+        delims = ["_", "-", "."]
+
+        # If tag is None, locus_tag and _locus_tag_num remain default ""
+        if tag is None:
+            return
+
+        # Else, we'll set the tag directly, then decide how to parse number
         self.locus_tag = tag
+
+        # If delimiter is None, choose based on what appears in locus_tag
+        if delimiter is None:
+            delimiter = basic.choose_most_common(tag, delims)
 
         # If no check_value was given, use self.genome_id
         if check_value is None:
@@ -119,7 +132,7 @@ class TrnaFeature:
                 else:
                     # If the check_value was found anywhere else in locus tag,
                     # value is probably found in the next index
-                    parsed_value = parts[i + 1]
+                    parsed_value = parts[-1]        # TODO: why is this not parts[i+1]?
                 # No need to keep searching if we found a match
                 break
 
@@ -127,33 +140,77 @@ class TrnaFeature:
             # Last-ditch effort to find locus tag number
             parsed_value = parts[-1]
 
-        # If the value we parsed is a digit, populate _locus_tag_num
-        if parsed_value.isdigit():
-            self._locus_tag_num = parsed_value
-
-    # TODO: create base feature class - fully equivalent to version in Cds,
-    #  but documented differently.
-    def set_name(self, value=None):
-        """
-        Set the feature name.
-        :param value: Value to use for `name` regardless of `gene`
-        and `_locus_tag_num`
-        :type value: str
-        :return:
-        """
-        # If a value was given, we'll use this by default
-        if value is not None:
-            self.name = value
-        # If no value was given we'll use the following hierarchy:
-        # 1. self.gene
-        # 2. self._locus_tag_num
-        # 3. leave as default ""
-        elif self.gene != "":
-            self.name = self.gene
-        elif self._locus_tag_num != "":
-            self.name = self._locus_tag_num
+        # Remove generic 'gp' or 'orf' prefixes
+        if parsed_value.lower().startswith("gp"):
+            parsed_value = parsed_value[2:]
+        elif parsed_value.lower().startswith("orf"):
+            parsed_value = parsed_value[3:]
         else:
             pass
+
+        # If the value we parsed is a digit, populate _locus_tag_num
+        left, right = basic.split_string(parsed_value)
+        if right != "":
+            self._locus_tag_num = right
+        else:
+            self._locus_tag_num = parsed_value
+
+    # TODO: create base feature class
+    def set_name(self, value=None):
+        """Set the feature name.
+
+        Ideally, the name of the CDS will be an integer. This information
+        can be stored in multiple fields in the GenBank-formatted flat file.
+        The name is derived from one of several qualifiers.
+
+        :param value:
+            Indicates a value that should be used to directly set
+            the name regardless of the 'gene' and '_locus_tag_num'
+            attributes.
+        :type value: str
+        """
+        # The CDS feature number may be stored in several places in the
+        # gene, product, note, function, and locus_tag qualifiers of a
+        # flat file, but it is unpredictable. Not all of these qualifiers
+        # are always present.
+        # 1. PECAAN Draft and new SEA-PHAGES Final:
+        #    The 'gene' qualifier should be present and contain an integer.
+        # 2. SEA-PHAGES Final in GenBank:
+        #    The 'gene' qualifier may or may not be present, and
+        #    it may or may not have an integer.
+        #    The 'locus_tag' qualifier may or may not be present,
+        #    and may or may not have an integer.
+        # 3. Non-SEA-PHAGES in GenBank:
+        #    The 'gene' qualifier may or may not be present, and
+        #    it may or may not have an integer.
+        #    The 'locus_tag' qualifier may or may not be present,
+        #    and may or may not have an integer.
+        if value is None:
+            name = ""
+            list1 = ["_locus_tag_num", "_gene_num", "_product_num",
+                     "_note_num", "_function_num"]
+
+            # First see if any num attributes have a float.
+            x = 0
+            while name == "" and x < len(list1):
+                value = getattr(self, list1[x])
+                if basic.is_float(value):
+                    name = value
+                x += 1
+
+            # Second see if any num attributes have non-empty values.
+            # At this point, it's very unpredictable. Values could be like
+            # 'terL' in the gene or like '10a' in the locus_tag.
+            if name == "":
+                list2 = ["gene"]
+                list2.extend(list1)
+                y = 0
+                while name == "" and y < len(list2):
+                    value = getattr(self, list2[y])
+                    if value != "":
+                        name = value
+                    y += 1
+        self.name = value
 
     # TODO: create base feature class - use this version of the method unless
     #  Travis objects, because it's documented more cleanly and avoids using
@@ -236,13 +293,13 @@ class TrnaFeature:
 
     def set_product(self, value):
         """
-        Set the `product` attribute.
+        Set the `raw_product` attribute.
         :param value: raw value from the product qualifier
         :type value: str
         :return:
         """
         if isinstance(value, str):
-            self.product = value
+            self.raw_product = value
         else:
             raise ValueError(f"Invalid type '{type(value)}' for product.")
 
@@ -254,13 +311,13 @@ class TrnaFeature:
         :return:
         """
         if isinstance(value, str):
-            self.note = value
+            self.raw_note = value
         else:
             raise ValueError(f"Invalid type '{type(value)}' for note.")
 
     def set_amino_acid(self, value=None):
         """
-        Attempts to parse the `amino_acid` attribute from the `product`
+        Attempts to parse the `amino_acid` attribute from the `raw_product`
         and `note` attributes.
         :param value: override default behavior and set amino acid
         :type value: str
@@ -271,7 +328,7 @@ class TrnaFeature:
             self.amino_acid = value
 
         else:
-            results = PRODUCT_REGEX.findall(self.product)
+            results = PRODUCT_REGEX.findall(self.raw_product)
             # If we got a single item (e.g. the amino acid)
             if len(results) == 1:
                 # Begin using it as the amino acid
@@ -279,7 +336,7 @@ class TrnaFeature:
                 # If amino acid we got is "OTHER", we need to check the note
                 # field for a more specific amino acid
                 if amino_acid == "OTHER":
-                    results = NOTE_STANDARD_REGEX.findall(self.note)
+                    results = NOTE_STANDARD_REGEX.findall(self.raw_note)
                     # If we got two items (e.g. the amino acid and anticodon)
                     # and the amino acid is in our allowed special amino acids
                     if len(results) == 2 and results[0] in SPECIAL_AMINO_ACIDS:
@@ -302,12 +359,12 @@ class TrnaFeature:
             self.anticodon = value.upper()
 
         else:
-            results = NOTE_STANDARD_REGEX.findall(self.note)
+            results = NOTE_STANDARD_REGEX.findall(self.raw_note)
             # If we got two items (e.g. the amino acid and anticodon)
             if len(results) == 2:
                 self.anticodon = results[-1].upper()
             else:
-                results = NOTE_SPECIAL_REGEX.findall(self.note)
+                results = NOTE_SPECIAL_REGEX.findall(self.raw_note)
                 # If we got three items (e.g. the two amino acid choices and
                 # part of anticodon)
                 if len(results) == 3:
@@ -378,27 +435,28 @@ class TrnaFeature:
     # TODO: create base feature class - use this version of the method unless
     #  Travis objects, because the logic is slightly better and it raises an
     #  Error if something is wrong with given seq.
-    def set_nucleotide_sequence(self, seq=None, parent_genome_seq=None):
+    def set_nucleotide_sequence(self, value=None, parent_genome_seq=None):
         """
         Set this feature's nucleotide sequence
-        :param seq: sequence
-        :type seq: str or Seq
+        :param value: sequence
+        :type value: str or Seq
         :param parent_genome_seq: parent genome sequence
         :type parent_genome_seq: Seq
         :raise: ValueError
         :return:
         """
         # If seq is given we'll try to use that
-        if seq is not None:
+        if value is not None:
             # If seq is a BioPython Seq object, use it directly
-            if isinstance(seq, Seq):
-                self.seq = seq.upper()
+            if isinstance(value, Seq):
+                self.seq = value.upper()
             # If seq is a string, we can coerce it to a BioPython Seq object
-            elif isinstance(seq, str):
-                self.seq = Seq(seq, IUPAC.ambiguous_dna)
+            elif isinstance(value, str):
+                self.seq = Seq(value.upper(), IUPAC.ambiguous_dna)
             # If seq is something else entirely, we cannot use it
             else:
-                raise ValueError(f"tRNA.seq cannot use type '{type(seq)}'")
+                pass
+                # raise ValueError(f"tRNA.seq cannot use type '{type(value)}'")
         # If instead a parent_genome_seq is given, we'll try to use that
         elif parent_genome_seq is not None and self.seqfeature is not None:
             try:
@@ -597,46 +655,39 @@ class TrnaFeature:
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
-    # TODO: create base feature class - I think this is exactly the same as
-    #  in Cds
+    # TODO: create base feature class
     def check_locus_tag_structure(self, check_value=None, only_typo=False,
                                   prefix_set=set(), case=True, eval_id=None,
-                                  success="correct", fail="error",
-                                  eval_def=None):
-        """
-        Check that the locus tag is structured correctly.
-        :param check_value: expected genome id
+                                  success="correct", fail="error", eval_def=None):
+        """Check if the locus_tag is structured correctly.
+
+        :param check_value:
+            Indicates the genome id that is expected to be present.
+            If None, the 'genome_id' parameter is used.
         :type check_value: str
-        :param only_typo: only genomeid spelling is evaluated
+        :param only_typo:
+            Indicates if only the genome id spelling should be evaluated.
         :type only_typo: bool
-        :param prefix_set: valid common prefixes, if one is expected
+        :param prefix_set:
+            Indicates valid common prefixes, if a prefix is expected.
         :type prefix_set: set
-        :param case: whether locus_tag is expected to be capitalized
+        :param case:
+            Indicates whether the locus_tag is expected to be capitalized.
         :type case: bool
-        :param eval_id: unique identifier for the evaluation
-        :type eval_id: str
-        :param success: status if the outcome is successful
-        :type success: str
-        :param fail: status if the outcome is unsuccessful
-        :type fail: str
-        :param eval_def: description of the evaluation
-        :type eval_def: str
-        :return:
+        :param eval_id: same as for check_attribute().
+        :param success: same as for check_attribute().
+        :param fail: same as for check_attribute().
+        :param eval_def: same as for check_attribute().
         """
-        # Use genome_id from the object if check_value not given
-        if prefix_set is None:
-            prefix_set = {}
         if check_value is None:
             check_value = self.genome_id
 
-        results = list()
-        # If only check is to see that genome id is spelled correclty
+        results = []
         if only_typo:
             pattern = re.compile(check_value.lower())
             search_result = pattern.search(self.locus_tag.lower())
-            if search_result is None:
+            if search_result == None:
                 results.append("The genome ID is missing.")
-        # Else if we're doing all checks
         else:
             # Expected structure: SEA_TRIXIE_20
             parts = self.locus_tag.split("_")
@@ -647,23 +698,20 @@ class TrnaFeature:
                 if prefix_set is not None:
                     if parts[0].upper() not in prefix_set:
                         results.append("The prefix is missing.")
-                    if parts[1].upper() != check_value.upper():
-                        results.append("The genome ID is missing.")
-                    if not parts[2].isdigit():
-                        results.append("The feature number is missing.")
+                if parts[1].upper() != check_value.upper():
+                    results.append("The genome ID is missing.")
+                if not parts[2].isdigit():
+                    results.append("The feature number is missing.")
             else:
                 results.append("The locus_tag does not contain three parts.")
-
         result = f"The locus_tag qualifier is {self.locus_tag}. It is "
         if len(results) == 0:
-            result += "structured correctly."
+            result = result + "structured correctly."
             status = success
         else:
-            result += "not structured correctly. " + " ".join(results)
+            result = result + "not structured correctly. " + " ".join(results)
             status = fail
-
-        definition = f"Check if the locus_tag qualifier is structured " \
-                     f"correctly for {self.id}."
+        definition = f"Check if the locus_tag qualifier is structured correctly for {self.id}."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
@@ -817,12 +865,12 @@ class TrnaFeature:
         :return:
         """
         result = f"The tRNA product is "
-        if self.product != "":
-            result += f"present ('{self.product}'). "
+        if self.raw_product != "":
+            result += f"present ('{self.raw_product}'). "
 
             # This regex will ignore the (nnn) anticodon if it's there; it
             # parses the amino acid prediction and makes sure it's valid.
-            results = PRODUCT_REGEX.findall(self.product)
+            results = PRODUCT_REGEX.findall(self.raw_product)
 
             # If the product field is formatted correctly, there should only
             # be a single result from the regex search
@@ -892,11 +940,11 @@ class TrnaFeature:
         :return:
         """
         result = f"The tRNA note is "
-        if self.note != "":
-            result += f"present ('{self.note}'). "
+        if self.raw_note != "":
+            result += f"present ('{self.raw_note}'). "
 
-            results1 = NOTE_STANDARD_REGEX.findall(self.note)
-            results2 = NOTE_SPECIAL_REGEX.findall(self.note)
+            results1 = NOTE_STANDARD_REGEX.findall(self.raw_note)
+            results2 = NOTE_SPECIAL_REGEX.findall(self.raw_note)
 
             if results1 is not None and len(results1) == 2:
                 result += f"Note is formatted properly."
@@ -983,14 +1031,32 @@ class TrnaFeature:
 
     def run_aragorn(self):
         """
-
+        Runs Aragorn locally using this tRNA's DNA sequence as the
+        input sequence.
         :return:
         """
-        pass
+        ah = AragornHandler(self.id, str(self.seq))
+        ah.write_fasta()
+        ah.run_aragorn()        # default params are set for single-trna search
+        ah.read_output()
+        ah.parse_trnas()
+        if ah.trna_tally == 1:
+            self.aragorn_data = ah.trnas[0]
+        else:
+            print(f"Aragorn found {ah.trna_tally} tRNA(s) for {self.id}")
 
     def run_trnascanse(self):
         """
-
+        Runs tRNAscan-SE locally using this tRNA's DNA sequence as the
+        input sequence.
         :return:
         """
-        pass
+        th = TRNAscanSEHandler(self.id, str(self.seq))
+        th.write_fasta()
+        th.run_trnascanse()     # default params find low-scoring tRNAs here
+        th.read_output()
+        th.parse_trnas()
+        if th.trna_tally == 1:
+            self.trnascanse_data = th.trnas[0]
+        else:
+            print(f"tRNAscanSE found {th.trna_tally} tRNA(s) for {self.id}")
