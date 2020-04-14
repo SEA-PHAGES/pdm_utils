@@ -23,7 +23,7 @@ class TRNAscanSEHandler:
         self.trnas = list()
         self.tmrnas = list()
 
-    def write_input(self):
+    def write_fasta(self):
         """
         Writes the search sequence to input file in FASTA format.
         :return:
