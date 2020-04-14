@@ -4,11 +4,21 @@
 
 # Key names.
 statements = "statements"
-inaccurate_column = "INACCURATE_COLUMN"
-lost_column = "LOST_COLUMN"
-lost_table = "LOST_TABLE"
-lost_data = "LOST_DATA"
 step_summary_dict = "step_summary_dict"
+
+# lost_table = When a table is remove and its data is not stored elsewhere.
+lost_table = "LOST_TABLE"
+
+# lost_column = When a column is removed and its data is not stored elsewhere.
+lost_column = "LOST_COLUMN"
+
+# inaccurate_column = When data is inserted into a column to fulfill
+# data structure requirements, but may not be true data.
+inaccurate_column = "INACCURATE_COLUMN"
+
+# lost_data = When subset of data in a column is lost, such as due
+# to change in datatype that truncates string lengths.
+lost_data = "LOST_DATA"
 
 CONVERSION_STEPS = {
 
@@ -292,6 +302,60 @@ CONVERSION_STEPS = {
         step_summary_dict: {}
         },
 
+    "upgrade_8_to_9": {
+        statements: [
+            """ALTER TABLE `trna` ADD COLUMN `Structure` varchar(300) NOT NULL;""",
+            """UPDATE `trna`
+              LEFT JOIN `trna_structures` ON `trna`.`Sequence` = `trna_structures`.`Sequence`
+              SET `trna`.`Structure` = `trna_structures`.`Structure`;""",
+            """ALTER TABLE `trna` MODIFY COLUMN `Structure` blob DEFAULT NULL;""",
+            """DROP TABLE `trna_structures`;""",
+            """UPDATE `trna` SET `AminoAcid` = 'OTHER' WHERE `AminoAcid` = 'Undet';""",
+            """ALTER TABLE `trna` MODIFY COLUMN `AminoAcid` enum('Ala','Arg','Asn','Asp','Cys','fMet','Gln','Glu','Gly','His','Ile','Ile2','Leu','Lys','Met','Phe','Pro','Pyl','SeC','Ser','Thr','Trp','Tyr','Val','Stop','OTHER') NOT NULL;""",
+            """ALTER TABLE `trna` DROP COLUMN `Sequence`;""",
+            """ALTER TABLE `trna` DROP COLUMN `Product`;""",
+            """ALTER TABLE `trna` DROP COLUMN `InfernalScore`;""",
+            """ALTER TABLE `trna` ADD COLUMN `Source` enum('aragorn', 'trnascan', 'both') DEFAULT NULL;""",
+            """ALTER TABLE `trna` MODIFY COLUMN `PhageID` varchar(25) NOT NULL AFTER `TrnaID`;""",
+            """ALTER TABLE `trna` MODIFY COLUMN `LocusTag` varchar(35) DEFAULT NULL AFTER `Note`;""",
+            """ALTER TABLE `trna` CHANGE `TrnaID` `GeneID` varchar(35) NOT NULL;""",
+            """ALTER TABLE `trna` ADD COLUMN `Name` varchar(50) NOT NULL AFTER `Length`;""",
+            """ALTER TABLE `trna` DROP FOREIGN KEY `trna_ibfk_1`;""",
+            """ALTER TABLE `trna`
+                  ADD CONSTRAINT `trna_ibfk_1`
+                  FOREIGN KEY (`PhageID`)
+                  REFERENCES `phage` (`PhageID`)
+                  ON DELETE CASCADE
+                  ON UPDATE CASCADE;""",
+            """ALTER TABLE `tmrna` ADD KEY (`PhageID`);""",
+            """ALTER TABLE `tmrna`
+                  ADD CONSTRAINT `tmrna_ibfk_1`
+                  FOREIGN KEY (`PhageID`)
+                  REFERENCES `phage` (`PhageID`)
+                  ON DELETE CASCADE
+                  ON UPDATE CASCADE;""",
+            """ALTER TABLE `tmrna` MODIFY COLUMN `PhageID` varchar(25) NOT NULL AFTER `TmrnaID`;""",
+            """ALTER TABLE `tmrna` MODIFY COLUMN `LocusTag` varchar(35) DEFAULT NULL AFTER `Note`;""",
+            """ALTER TABLE `tmrna` CHANGE `TmrnaID` `GeneID` varchar(35) NOT NULL;""",
+            """ALTER TABLE `tmrna` ADD COLUMN `Length` mediumint(9) NOT NULL AFTER `Stop`;""",
+            """ALTER TABLE `tmrna` ADD COLUMN `Name` varchar(50) NOT NULL AFTER `Length`;""",
+            """UPDATE `version` SET `SchemaVersion` = 9;"""
+            ],
+        step_summary_dict: {
+            lost_column: [
+                "trna.Sequence",
+                "trna.Product",
+                "trna.InfernalScore"
+                ],
+            inaccurate_column: [
+                "trna.Source",
+                "trna.Name",
+                "tmrna.Name",
+                "tmrna.Length"
+                ]
+            }
+        },
+
     # Downgrade steps
     "downgrade_1_to_0": {
         statements: [
@@ -543,7 +607,7 @@ CONVERSION_STEPS = {
             """UPDATE `version` SET `SchemaVersion` = 6;"""
             ],
         step_summary_dict: {
-            lost_data: ["gene.Parts"]
+            lost_column: ["gene.Parts"]
             }
         },
 
@@ -556,5 +620,61 @@ CONVERSION_STEPS = {
             """UPDATE `version` SET `SchemaVersion` = 7;"""
             ],
         step_summary_dict: {}
+        },
+
+    "downgrade_9_to_8": {
+        statements: [
+            """ALTER TABLE `tmrna` DROP COLUMN `Name`;""",
+            """ALTER TABLE `tmrna` DROP COLUMN `Length`;""",
+            """ALTER TABLE `tmrna` CHANGE `GeneID` `TmrnaID` varchar(35) NOT NULL;""",
+            """ALTER TABLE `tmrna` MODIFY COLUMN `LocusTag` varchar(35) DEFAULT NULL AFTER `PhageID`;""",
+            """ALTER TABLE `tmrna` MODIFY COLUMN `TmrnaID` varchar(35) NOT NULL AFTER `PhageID`;""",
+            """ALTER TABLE `tmrna` DROP FOREIGN KEY `tmrna_ibfk_1`;""",
+            """ALTER TABLE `tmrna` DROP KEY `PhageID`;""",
+            """ALTER TABLE `trna` DROP FOREIGN KEY `trna_ibfk_1`;""",
+            """ALTER TABLE `trna`
+                  ADD CONSTRAINT `trna_ibfk_1`
+                  FOREIGN KEY (`PhageID`)
+                  REFERENCES `phage` (`PhageID`);""",
+            """ALTER TABLE `trna` DROP COLUMN `Name`;""",
+            """ALTER TABLE `trna` CHANGE `GeneID` `TrnaID` varchar(35) NOT NULL;""",
+            """ALTER TABLE `trna` MODIFY COLUMN `LocusTag` varchar(35) DEFAULT NULL AFTER `PhageID`;""",
+            """ALTER TABLE `trna` MODIFY COLUMN `TrnaID` varchar(35) NOT NULL AFTER `PhageID`;""",
+            """ALTER TABLE `trna` DROP COLUMN `Source`;""",
+            """ALTER TABLE `trna` ADD COLUMN `InfernalScore` decimal(4,2) DEFAULT NULL AFTER `Anticodon`;""",
+            """ALTER TABLE `trna` ADD COLUMN `Product` blob AFTER `Orientation`;""",
+            """ALTER TABLE `trna` ADD COLUMN `Sequence` varchar(100) DEFAULT NULL AFTER `Orientation`;""",
+            """UPDATE `trna`
+                  LEFT JOIN `phage` ON `trna`.`PhageID` = `phage`.`PhageID`
+                  SET `trna`.`Sequence` = SUBSTRING(`phage`.`Sequence` FROM (`trna`.`Start` + 1) FOR `trna`.`Length`);""",
+            """ALTER TABLE `trna` MODIFY COLUMN `Sequence` varchar(100) NOT NULL;""",
+            """UPDATE `trna` SET `AminoAcid` = 'OTHER' WHERE `AminoAcid` in ('fMet', 'Ile2', 'Pyl', 'Sec', 'Stop');""",
+            """ALTER TABLE `trna` MODIFY COLUMN `AminoAcid` enum('Ala','Arg','Asn','Asp','Cys','Gln','Glu','Gly','His','Ile','Leu','Lys','Met','Phe','Pro','Ser','Thr','Trp','Tyr','Val','Undet','OTHER') NOT NULL;""",
+            """CREATE TABLE `trna_structures` (
+                  `Sequence` varchar(100) NOT NULL,
+                  `Structure` varchar(300) NOT NULL,
+                  PRIMARY KEY (`Sequence`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=latin1;""",
+            """UPDATE `trna` SET `Structure` = '' WHERE `Structure` is NULL;""",
+            """UPDATE `trna` SET `Structure` = SUBSTRING(`Structure` FROM 1 FOR 300);""",
+            """ALTER TABLE `trna` MODIFY COLUMN `Structure` varchar(300) NOT NULL;""",
+            """INSERT IGNORE INTO `trna_structures` SELECT `Sequence`, `Structure` FROM `trna`;""",
+            """ALTER TABLE `trna` DROP COLUMN `Structure`;""",
+            """UPDATE `version` SET `SchemaVersion` = 8;"""
+            ],
+        step_summary_dict: {
+            inaccurate_column: [
+                "trna.Product",
+                "trna_structures.Sequence",
+                "trna.InfernalScore",
+                "trna.AminoAcid"
+                ],
+            lost_column: [
+                "trna.Source",
+                "trna.Name",
+                "tmrna.Name",
+                "tmrna.Length"
+                ]
+            }
         }
     }

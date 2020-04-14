@@ -39,7 +39,6 @@ ALTER TABLE `tmrna` ADD COLUMN `Name` varchar(50) NOT NULL AFTER `Length`;
 UPDATE `version` SET `SchemaVersion` = 9;
 
 ### DATA_LOSS_SUMMARY
-# LOST_TABLE:trna_structures
 # LOST_COLUMN:trna.Sequence
 # LOST_COLUMN:trna.Product
 # LOST_COLUMN:trna.InfernalScore
