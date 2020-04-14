@@ -32,4 +32,4 @@ ALTER TABLE `phage` CHANGE `HostGenus` `HostStrain` varchar(50) DEFAULT NULL;
 UPDATE `version` SET `SchemaVersion` = 6;
 
 ### DATA_LOSS_SUMMARY
-# LOST_DATA:gene.Parts
+# LOST_COLUMN:gene.Parts
