@@ -75,7 +75,7 @@ Any changes made to the structure (schema) of the database (in the form of schem
         - page describing prior schema version schema maps
         - page describing schema version changelog
 
-    15. Update files requires for integration tests:
+    15. Update files required for integration tests:
 
         1. Copy the new empty schema file to the following directory::
 

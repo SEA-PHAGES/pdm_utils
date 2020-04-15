@@ -48,3 +48,9 @@
 # Implemented by: Travis Mavrich
 # Small modification: gene.PhamID foreign key constraint was redefined. This was needed to be able to remove data from pham.PhamID even though gene.PhamID is a foreign key.
 # Implemented 20200120 in database version = 336.
+
+
+# Schema version: 9
+# Implemented by: Travis Mavrich
+# Removal of trna_structures table and substantial structural changes to trna and tmrna tables.
+# Not yet implemented.

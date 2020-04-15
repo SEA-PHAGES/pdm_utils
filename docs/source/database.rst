@@ -1,9 +1,9 @@
 .. _dbstructure:
 
-MySQL database structure
-========================
+Database structure
+==================
 
-The current schema (schema version 8) of the MySQL database contains the following tables:
+The database (schema version 9) contains the following tables:
 
     1.  phage
     2.  gene
@@ -11,19 +11,15 @@ The current schema (schema version 8) of the MySQL database contains the followi
     4.  gene_domain
     5.  pham
     6.  version
-    7.  trna (in development)
-    8.  trna_structures (in development)
-    9.  tmrna (in development)
-
+    7.  trna
+    8.  tmrna
 
 .. _figschema:
 
-.. figure:: /images/database_structure/schema_8_map.jpg
+.. figure:: /images/database_structure/schema_9_map.jpg
 
-    Map of the MySQL database schema (schema version 8).
+    Schema Entity Relationship Diagram.
 
-.. .. csv-table::
-    :file: images/database_structure/database.csv
 
 
 .. :widths: 10, 10
@@ -76,7 +72,7 @@ This table contains information that pertains to individual genes, including coo
 
 **GeneID** Unique identifier for the gene feature in the entire database. It is distinct from other common gene identifiers in a flat file such as LOCUS_TAG or GENE.
 
-**Name** This field is an identifier for the annotation but does not need to be unique, analogous to the distinction between the PhageID and Name fields in the *phage* table. Most of the time (but not always), it is a number. This field is displayed on Phamerator genome maps. This can be derived two ways. If the CDS feature in the flat file contains a GENE qualifier, this is set to the Name. Not all features contain this qualifier though. If this is the case, if the CDS feature contains an integer in the LOCUS_TAG qualifier, this is set to the Name. Not all features contain an integer in the qualifier, or even a qualifier at all, though. If neither of these conditions are met, this field remains empty.
+**Name** This field is an identifier for the annotation but does not need to be unique, analogous to the distinction between the PhageID and Name fields in the *phage* table. Most of the time (but not always), it is an integer, but is ocassionally a float, an alphanumeric string, or a strictly alphabetic.  This field is displayed on Phamerator genome maps. This can be derived from several locations in the flat file: the LOCUS_TAG, GENE, PRODUCT, NOTE, and FUNCTION qualifiers. If no gene identifier is present in any of these qualifiers, this field remains empty.
 
 **PhageID** The name of the phage genome from which the gene is derived, matching one of the phage names in the PhageID of the *phage* table.
 
@@ -174,14 +170,60 @@ This table keeps track of the database version and is updated every time the dat
 
 
 
-trna (in development)
----------------------
-This table contains information that pertains to individual tRNA features.
+trna
+----
+This table contains information that pertains to individual tRNA features similar to the gene table.
 
-trna_structures (in development)
---------------------------------
-This table contains information that pertains to tRNA secondary structure.
+.. csv-table::
+    :file: images/database_structure/trna_table.csv
 
-tmrna (in development)
-----------------------
-This table contains information that pertains to individual tmRNA features.
+**GeneID** Same usage as in the *gene* table.
+
+**Name** Same usage as in the *gene* table.
+
+**PhageID** Same usage as in the *gene* table.
+
+**Start, Stop** Same usage as in the *gene* table.
+
+**Orientation** Same usage as in the *gene* table.
+
+**Length** This field indicates the length of the nucleotide sequence.
+
+**LocusTag** Same usage as in the *gene* table.
+
+**Note** This field contains data from the NOTE qualifier.
+
+**AminoAcid** The feature's annotated amino acid.
+
+**Anticodon** The feature's annotated anti-codon.
+
+**Structure** The predicted secondary structure.
+
+**Source** Indicates whether ARAGORN and/or tRNAScan-SE identified this feature.
+
+
+
+tmrna
+-----
+This table contains information that pertains to individual tmRNA features similar to the gene table.
+
+.. csv-table::
+    :file: images/database_structure/tmrna_table.csv
+
+**GeneID** Same usage as in the *gene* table.
+
+**Name** Same usage as in the *gene* table.
+
+**PhageID** Same usage as in the *gene* table.
+
+**Start, Stop** Same usage as in the *gene* table.
+
+**Orientation** Same usage as in the *gene* table.
+
+**Length** This field indicates the length of the nucleotide sequence.
+
+**LocusTag** Same usage as in the *gene* table.
+
+**Note** This field contains data from the NOTE qualifier.
+
+**PeptideTag** The feature's annotated peptide tag.
