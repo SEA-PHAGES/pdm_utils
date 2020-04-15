@@ -15,7 +15,7 @@ Some integration tests require a pre-defined, non-empty test database, called 't
 
 3.  Download the most recent version of Actinobacteriophage.sql::
 
-        python3 -m pdm_utils get_db Actinobacteriophage ./ -d
+        python3 -m pdm_utils get_db Actinobacteriophage server -d -o ./
 
 4.  Source the new Actinobacteriophage.sql into pdm_test_db::
 
