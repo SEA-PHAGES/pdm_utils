@@ -26,6 +26,8 @@ pipeline = "convert"
 user = test_db_utils.USER
 pwd = test_db_utils.PWD
 db = test_db_utils.DB
+db2 = "pdm_test_2"
+query = test_db_utils.version_table_query
 
 # Create the main test directory in which all files will be
 # created and managed. Gets created once for all tests.
@@ -38,11 +40,13 @@ test_root_dir.mkdir()
 # for each test.
 results_path = Path(test_root_dir, "output")
 
-def get_unparsed_convert_args(schema_version=None):
+def get_unparsed_convert_args(schema_version=None, new_db=None):
     """Returns list of command line arguments to convert database."""
     unparsed_args = ["run.py", pipeline, db]
     if schema_version is not None:
         unparsed_args.extend(["-s", schema_version])
+    if new_db is not None:
+        unparsed_args.extend(["-n", new_db])
     return unparsed_args
 
 
@@ -59,7 +63,7 @@ class TestConvert(unittest.TestCase):
 
     def setUp(self):
         test_db_utils.create_filled_test_db()
-        self.version_data = test_db_utils.get_data(test_db_utils.version_table_query)
+        self.version_data = test_db_utils.get_data(query)
         self.current = self.version_data[0]["SchemaVersion"]
         self.engine = sqlalchemy.create_engine(engine_string, echo=False)
         results_path.mkdir()
@@ -68,6 +72,12 @@ class TestConvert(unittest.TestCase):
         shutil.rmtree(results_path)
         # Remove 'pdm_test_db'
         test_db_utils.remove_db()
+
+        # Remove 'pdm_test_2'
+        exists = test_db_utils.check_if_exists(db=db2)
+        if exists:
+            test_db_utils.remove_db(db=db2)
+
 
     @patch("pdm_utils.functions.mysqldb.connect_to_db")
     def test_main_1(self, ctd_mock):
@@ -143,8 +153,8 @@ class TestConvert(unittest.TestCase):
         # Get data and schema file after round trip.
         schema_filepath2 = Path(results_path, "after.sql")
         test_db_utils.create_schema_file(schema_filepath2)
-        new_version_data = test_db_utils.get_data(test_db_utils.version_table_query)
-        new_schem_version = new_version_data[0]["SchemaVersion"]
+        new_version_data = test_db_utils.get_data(query)
+        new_schema_version = new_version_data[0]["SchemaVersion"]
 
         # Compare the two empty schema files representing the same schema version,
         # generated from a downgrade to 0 and upgrade.
@@ -161,6 +171,27 @@ class TestConvert(unittest.TestCase):
         self.assertEqual(result, 0)
 
 
+    @patch("pdm_utils.functions.mysqldb.connect_to_db")
+    def test_main_3(self, ctd_mock):
+        """Verify database with new name is created."""
+        ctd_mock.return_value = self.engine
+
+        # Downgrade one step.
+        step = self.current - 1
+        unparsed_args = get_unparsed_convert_args(str(step), new_db=db2)
+        run.main(unparsed_args)
+
+        # Get data from both databases.
+        data1 = test_db_utils.get_data(query)
+        v1 = data1[0]["SchemaVersion"]
+        data2 = test_db_utils.get_data(query, db=db2)
+        v2 = data2[0]["SchemaVersion"]
+
+        # Test
+        with self.subTest():
+            self.assertEqual(v1, self.current)
+        with self.subTest():
+            self.assertEqual(v2, step)
 
 
 if __name__ == '__main__':
