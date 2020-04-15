@@ -2,10 +2,9 @@
 
 import argparse
 import csv
-from datetime import datetime
+from datetime import datetime, date
 import pathlib
 import sys
-import time
 from Bio import SeqIO
 from pdm_utils.classes import genomepair
 from pdm_utils.classes import ticket
@@ -15,6 +14,19 @@ from pdm_utils.functions import ncbi
 from pdm_utils.functions import mysqldb
 from pdm_utils.functions import phagesdb
 from pdm_utils.functions import tickets
+
+# Names of folders and files created.
+CURRENT_DATE = date.today().strftime("%Y%m%d")
+RESULTS_FOLDER = f"{CURRENT_DATE}_get_data"
+PECAAN_FOLDER = "pecaan"
+GENBANK_FOLDER = "genbank"
+PHAGESDB_FOLDER = "phagesdb"
+UPDATES_FOLDER = "updates"
+UPDATE_TABLE = "update_table.csv"
+LEGACY_IMPORT_TABLE = "legacy_import_table.csv"
+IMPORT_TABLE = "import_table.csv"
+GENBANK_RESULTS_TABLE = "genbank_results.csv"
+GENOME_FOLDER = "genomes"
 
 # TODO toggles whether both ticket table files are generated.
 BOTH = True
@@ -52,7 +64,6 @@ NCBI_RESULTS_COLUMNS = ["phage_id",
                        "genbank_date",
                        "result"]
 
-GENOMES_DIR = "genomes"
 
 # TODO unittest.
 def parse_args(unparsed_args_list):
@@ -124,12 +135,11 @@ def main(unparsed_args_list):
     """Run main retrieve_updates pipeline."""
     # Parse command line arguments
     args = parse_args(unparsed_args_list)
-    date = time.strftime("%Y%m%d")
 
     args.output_folder = basic.set_path(args.output_folder, kind="dir",
                                         expect=True)
-
-    working_dir = pathlib.Path(f"{date}_get_data")
+                                        #HERE
+    working_dir = pathlib.Path(RESULTS_FOLDER)
     working_path = basic.make_new_dir(args.output_folder, working_dir,
                                       attempt=10)
 
@@ -294,8 +304,8 @@ def get_update_data(output_folder, matched_genomes):
     # Field updates
     if len(update_tickets) > 0:
         print("\n\nNew field updates are available.")
-        filepath = basic.prepare_filepath(output_folder, "update_table.csv",
-                                           folder_name="updates")
+        filepath = basic.prepare_filepath(output_folder, UPDATE_TABLE,
+                                           folder_name=UPDATES_FOLDER)
         basic.export_data_dict(update_tickets, filepath,
                                    UPDATE_COLUMNS, include_headers=True)
     else:
@@ -350,9 +360,9 @@ def convert_tickets_to_dict(list_of_tickets, old_format=False):
 def get_final_data(output_folder, matched_genomes):
     """Run sub-pipeline to retrieve 'final' genomes from PhagesDB."""
 
-    phagesdb_folder = pathlib.Path(output_folder, "phagesdb")
+    phagesdb_folder = pathlib.Path(output_folder, PHAGESDB_FOLDER)
     phagesdb_folder.mkdir()
-    genome_folder = pathlib.Path(phagesdb_folder, GENOMES_DIR)
+    genome_folder = pathlib.Path(phagesdb_folder, GENOME_FOLDER)
     genome_folder.mkdir()
     import_tickets = []
     failed_list = []
@@ -414,14 +424,14 @@ def get_final_data(output_folder, matched_genomes):
     count1 = len(import_tickets)
     if count1 > 0:
         print(f"\n\n{count1} phage(s) were retrieved from PhagesDB.")
-        filepath = basic.prepare_filepath(phagesdb_folder, "legacy_import_table.csv")
+        filepath = basic.prepare_filepath(phagesdb_folder, LEGACY_IMPORT_TABLE)
         import_tickets1 = convert_tickets_to_dict(import_tickets, old_format=True)
         basic.export_data_dict(import_tickets1, filepath, IMPORT_COLUMNS1)
 
         # TODO new dictwriter. Use this block instead of above once the
         # new import script is functioning.
         if BOTH:
-            filepath2 = basic.prepare_filepath(phagesdb_folder, "import_table.csv")
+            filepath2 = basic.prepare_filepath(phagesdb_folder, IMPORT_TABLE)
             import_tickets2 = convert_tickets_to_dict(import_tickets)
             basic.export_data_dict(import_tickets2, filepath2,
                                    IMPORT_COLUMNS2, include_headers=True)
@@ -487,7 +497,7 @@ def get_genbank_data(output_folder, genome_dict, ncbi_cred_dict={},
     # 5 Save new records in a folder and create an import table for them
 
     # Create output folder
-    ncbi_folder = pathlib.Path(output_folder, f"genbank")
+    ncbi_folder = pathlib.Path(output_folder, GENBANK_FOLDER)
     ncbi_folder.mkdir()
 
     ncbi_results_list = []
@@ -536,7 +546,7 @@ def get_genbank_data(output_folder, genome_dict, ncbi_cred_dict={},
 
     # Record retrieval results for all phages.
     if genbank_results == True:
-        filepath3 = basic.prepare_filepath(ncbi_folder, "genbank_results.csv")
+        filepath3 = basic.prepare_filepath(ncbi_folder, GENBANK_RESULTS_TABLE)
         basic.export_data_dict(ncbi_results_list, filepath3,
                                    NCBI_RESULTS_COLUMNS, include_headers=True)
 
@@ -764,7 +774,7 @@ def check_record_date(record_list, accession_dict):
 def save_files_and_tkts(record_list, accession_dict, output_folder):
     """Save flat files retrieved from GenBank and create import tickets."""
     import_tickets = []
-    genome_folder = pathlib.Path(output_folder, GENOMES_DIR)
+    genome_folder = pathlib.Path(output_folder, GENOME_FOLDER)
     genome_folder.mkdir()
     for record in record_list:
         accession = record.name
@@ -796,14 +806,14 @@ def save_files_and_tkts(record_list, accession_dict, output_folder):
 
     # Now make the import table.
     if len(import_tickets) > 0:
-        filepath = basic.prepare_filepath(output_folder, "legacy_import_table.csv")
+        filepath = basic.prepare_filepath(output_folder, LEGACY_IMPORT_TABLE)
         import_tickets1 = convert_tickets_to_dict(import_tickets, old_format=True)
         basic.export_data_dict(import_tickets1, filepath, IMPORT_COLUMNS1)
 
         # TODO new dictwriter. Use this block instead of above once the
         # new import script is functioning.
         if BOTH:
-            filepath2 = basic.prepare_filepath(output_folder, "import_table.csv")
+            filepath2 = basic.prepare_filepath(output_folder, IMPORT_TABLE)
             import_tickets2 = convert_tickets_to_dict(import_tickets)
             basic.export_data_dict(import_tickets2, filepath2,
                                    IMPORT_COLUMNS2, include_headers=True)
@@ -847,7 +857,7 @@ def get_draft_data(output_path, phage_id_set):
 
     if len(phage_id_set) > 0:
         phage_id_list = list(phage_id_set)
-        pecaan_folder = pathlib.Path(output_path, "pecaan")
+        pecaan_folder = pathlib.Path(output_path, PECAAN_FOLDER)
         pecaan_folder.mkdir()
         retrieve_drafts(pecaan_folder, phage_id_list)
     else:
@@ -860,7 +870,7 @@ def retrieve_drafts(output_folder, phage_list):
     """Retrieve auto-annotated 'draft' genomes from PECAAN."""
 
     print(f"\n\nRetrieving {len(phage_list)} new phages from PECAAN")
-    genome_folder = pathlib.Path(output_folder, GENOMES_DIR)
+    genome_folder = pathlib.Path(output_folder, GENOME_FOLDER)
     genome_folder.mkdir()
 
     # Keep track of how many genomes were retrieved from PECAAN
@@ -903,14 +913,14 @@ def retrieve_drafts(output_folder, phage_list):
 
     # Now make the import table.
     if len(import_tickets) > 0:
-        filepath = basic.prepare_filepath(output_folder, "legacy_import_table.csv")
+        filepath = basic.prepare_filepath(output_folder, LEGACY_IMPORT_TABLE)
         import_tickets1 = convert_tickets_to_dict(import_tickets, old_format=True)
         basic.export_data_dict(import_tickets1, filepath, IMPORT_COLUMNS1)
 
         # TODO new dictwriter. Use this block instead of above once the
         # new import script is functioning.
         if BOTH:
-            filepath2 = basic.prepare_filepath(output_folder, "import_table.csv")
+            filepath2 = basic.prepare_filepath(output_folder, IMPORT_TABLE)
             import_tickets2 = convert_tickets_to_dict(import_tickets)
             basic.export_data_dict(import_tickets2, filepath2,
                                    IMPORT_COLUMNS2, include_headers=True)
