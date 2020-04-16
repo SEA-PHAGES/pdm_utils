@@ -89,6 +89,29 @@ def get_summaries(db="", query_key="", webenv=""):
     return summary_records
 
 
+
+# TODO test.
+def get_accessions_to_retrieve(summary_records):
+    """Extract accessions from summary records.
+
+    :param summary_records:
+        List of dictionaries, where each dictionary is a record summary.
+    :type summary_records: list
+    :return: List of accessions.
+    :rtype: list
+    """
+    accessions = []
+    for doc_sum in summary_records:
+        doc_sum_accession = doc_sum["Caption"]
+        accessions.append(doc_sum_accession)
+    return accessions
+
+
+
+
+
+
+
 # TODO unittest.
 def get_records(accession_list, db="nucleotide", rettype="gb", retmode="text"):
     """Retrieve records from NCBI from a list of active accessions.

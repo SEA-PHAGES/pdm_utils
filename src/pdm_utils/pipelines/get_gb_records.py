@@ -203,7 +203,7 @@ def get_data(output_folder, acc_id_dict, ncbi_cred_dict={}, batch_size=200):
                                              query_key=search_query_key,
                                              webenv=search_webenv)
 
-        accessions_to_retrieve = get_accessions_to_retrieve(summary_records)
+        accessions_to_retrieve = ncbi.get_accessions_to_retrieve(summary_records)
         if len(accessions_to_retrieve) > 0:
             records = ncbi.get_records(accessions_to_retrieve,
                                        db="nucleotide",
@@ -212,19 +212,6 @@ def get_data(output_folder, acc_id_dict, ncbi_cred_dict={}, batch_size=200):
             for record in records:
                 output_data(record, acc_id_dict, output_folder)
 
-
-# TODO move to ncbi.
-# TODO test.
-def get_accessions_to_retrieve(summary_records):
-    """Save retrieved record to file.
-
-    Returns a list of accessions.
-    """
-    accessions = []
-    for doc_sum in summary_records:
-        doc_sum_accession = doc_sum["Caption"]
-        accessions.append(doc_sum_accession)
-    return accessions
 
 # TODO test.
 def output_data(seqrecord, acc_id_dict, output_folder):
