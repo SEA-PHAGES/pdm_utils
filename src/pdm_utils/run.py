@@ -5,16 +5,15 @@ then passes all command line arguments to the main pipeline module.
 import argparse
 import sys
 
-from pdm_utils.pipelines import find_domains
 from pdm_utils.pipelines import compare_db
 from pdm_utils.pipelines import convert_db
 from pdm_utils.pipelines import export_db
+from pdm_utils.pipelines import find_domains
 from pdm_utils.pipelines import freeze_db
-from pdm_utils.pipelines import get_db
 from pdm_utils.pipelines import get_data
+from pdm_utils.pipelines import get_db
 from pdm_utils.pipelines import get_gb_records
 from pdm_utils.pipelines import import_genome
-from pdm_utils.pipelines import import_phage
 from pdm_utils.pipelines import phamerate
 from pdm_utils.pipelines import push_db
 from pdm_utils.pipelines import update_field
@@ -35,7 +34,6 @@ def main(unparsed_args):
         "get_gb_records",
         "update",
         "import",
-        "import_legacy",
         "find_domains",
         "phamerate",
         "export",
@@ -58,11 +56,6 @@ def main(unparsed_args):
         get_db.main(unparsed_args)
     elif args.pipeline == "update":
         update_field.main(unparsed_args[unparsed_args.index("update") + 1:])
-    # Note: import_phage is the legacy import script and will be deprecated.
-    # Once import_genome is tested and operational, 'import' will call the
-    # 'import_genome' module instead of the 'import_phage' module.
-    elif args.pipeline == "import_legacy":
-        import_phage.main(unparsed_args)
     elif args.pipeline == "import":
         import_genome.main(unparsed_args)
     elif args.pipeline == "find_domains":
