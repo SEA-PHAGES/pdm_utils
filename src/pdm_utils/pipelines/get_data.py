@@ -71,6 +71,7 @@ def parse_args(unparsed_args_list):
     ALL_HELP = "Retrieve all types of new data."
     NCBI_CRED_FILE_HELP = "Path to the file containing NCBI credentials."
     GENBANK_RESULTS_HELP = "Store results of Genbank record retrieval."
+    FORCE_DOWNLOAD_HELP = "Retrieve genomes regardless of date in database."
 
     parser = argparse.ArgumentParser(description=RETRIEVE_HELP)
     parser.add_argument("database", type=str, help=DATABASE_HELP)
@@ -90,6 +91,9 @@ def parse_args(unparsed_args_list):
         help=NCBI_CRED_FILE_HELP)
     parser.add_argument("-gr", "--genbank_results", action="store_true",
         default=False, help=GENBANK_RESULTS_HELP)
+
+    parser.add_argument("-fd", "--force_download", action="store_true",
+        default=False, help=FORCE_DOWNLOAD_HELP)
 
     # Assumed command line arg structure:
     # python3 -m pdm_utils.run <pipeline> <additional args...>
@@ -120,7 +124,7 @@ def main(unparsed_args_list):
     """Run main retrieve_updates pipeline."""
     # Parse command line arguments
     args = parse_args(unparsed_args_list)
-
+    force = args.force_download
     args.output_folder = basic.set_path(args.output_folder, kind="dir",
                                         expect=True)
     working_dir = pathlib.Path(RESULTS_FOLDER)
@@ -149,7 +153,11 @@ def main(unparsed_args_list):
     engine.dispose()
     mysqldb_genome_dict = {}
     for gnm in mysqldb_genome_list:
+        # With default date, the date of all records retrieved will be newer.
+        if force:
+            gnm.date = constants.EMPTY_DATE
         mysqldb_genome_dict[gnm.id] = gnm
+        #HERE
 
     # Get data from PhagesDB
     if (args.updates or args.final or args.draft) is True:
@@ -167,9 +175,9 @@ def main(unparsed_args_list):
             sys.exit(1)
 
         # Returns a list of tuples.
-        match_output = match_genomes(mysqldb_genome_dict, phagesdb_genome_dict)
-        matched_genomes = match_output[0]
-        unmatched_phagesdb_ids = match_output[1]
+        tup = match_genomes(mysqldb_genome_dict, phagesdb_genome_dict)
+        matched_genomes = tup[0]
+        unmatched_phagesdb_ids = tup[1]
 
     if args.updates is True:
         get_update_data(working_path, matched_genomes)
@@ -179,8 +187,26 @@ def main(unparsed_args_list):
         get_genbank_data(working_path, mysqldb_genome_dict,
                          ncbi_cred_dict, args.genbank_results)
     if args.draft is True:
+        if force:
+            drafts = get_matched_drafts(matched_genomes)
+            unmatched_phagesdb_ids |= drafts
         get_draft_data(working_path, unmatched_phagesdb_ids)
 
+
+# TODO unittest.
+def get_matched_drafts(matched_genomes):
+    """Generate a list of matched 'draft' genomes."""
+    # matched data = list of gnm_pair objects
+    # unmatched data = set of PhageIDs
+    drafts = set()
+    for gnm_pair in matched_genomes:
+        mysqldb_gnm = gnm_pair.genome1
+        phagesdb_gnm = gnm_pair.genome2
+        if mysqldb_gnm.annotation_status == "draft":
+            # Since draft phage ids are used by PECAAN to retrieve data from
+            # PhagesDB, use the id from the PhagesDB genome object.
+            drafts.add(phagesdb_gnm.id)
+    return drafts
 
 # TODO unittest.
 def match_genomes(dict1, dict2):
@@ -335,6 +361,7 @@ def convert_tickets_to_dict(list_of_tickets):
 def get_final_data(output_folder, matched_genomes):
     """Run sub-pipeline to retrieve 'final' genomes from PhagesDB."""
 
+    print(f"\n\nDownloading genomes from PhagesDB.")
     phagesdb_folder = pathlib.Path(output_folder, PHAGESDB_FOLDER)
     phagesdb_folder.mkdir()
     genome_folder = pathlib.Path(phagesdb_folder, GENOME_FOLDER)
@@ -371,11 +398,12 @@ def get_final_data(output_folder, matched_genomes):
                 import_tickets.append(tkt)
 
     if len(import_tickets) > 0:
-        print(f"\n\n{len(import_tickets)} phage(s) were retrieved from PhagesDB.")
+        print(f"\n\n{len(import_tickets)} genome(s) "
+              "were retrieved from PhagesDB.")
         create_ticket_table(import_tickets, phagesdb_folder)
 
     if len(failed_list) > 0:
-        print(f"{len(failed_list)} phage(s) failed to be retrieved:")
+        print(f"{len(failed_list)} genome(s) failed to be retrieved:")
         for element in failed_list:
             print(element)
         input("\n\nPress ENTER to continue.")
@@ -407,7 +435,7 @@ def save_pecaan_file(response, name, output_folder):
 # TODO test.
 def save_genbank_file(seqrecord, accession, name, output_folder):
     """Save retrieved record to file."""
-    filename = f"{name}__{accession}.gb"
+    filename = f"{name}__{accession}.txt"
     filepath = pathlib.Path(output_folder, filename)
     SeqIO.write(seqrecord, str(filepath), "genbank")
 
@@ -425,11 +453,17 @@ def set_phagesdb_gnm_date(gnm):
     # it is Null, but change this to a standarized 'empty' value of 1/1/0001.
     date = gnm.misc["qced_genbank_file_date"]
     if date is None:
-        gnm.date = constants.EMPTY_DATE
+        # The date used to be set to default (1/1/0001), but the force flag
+        # now relies on this early date, so here set to a date
+        # more recent than default.
+        # gnm.date = constants.EMPTY_DATE
+        gnm.date = datetime.strptime("1/1/1000 00:00:00", "%m/%d/%Y %H:%M:%S")
     else:
+        #e.g. 2018-09-01T22:19:33-04:00 (string)
         date = date.split("T")[0]
+        #e.g. 2018-09-01 (string)
         gnm.date = datetime.strptime(date, "%Y-%m-%d")
-
+        #e.g. 2018-09-01 00:00:00 (datetime.datetime)
 
 # TODO unittest.
 def set_phagesdb_gnm_file(gnm):
@@ -455,6 +489,7 @@ def get_genbank_data(output_folder, genome_dict, ncbi_cred_dict={},
     # the MySQL database date
     # 5 Save new records in a folder and create an import table for them
 
+    print(f"\n\nDownloading genomes from GenBank.")
     # Create output folder
     ncbi_folder = pathlib.Path(output_folder, GENBANK_FOLDER)
     ncbi_folder.mkdir()
@@ -798,19 +833,19 @@ def get_draft_data(output_path, phage_id_set):
     """Run sub-pipeline to retrieve auto-annotated 'draft' genomes."""
 
     if len(phage_id_set) > 0:
+        print(f"\n\nRetrieving {len(phage_id_set)} genomes from PECAAN")
         phage_id_list = list(phage_id_set)
         pecaan_folder = pathlib.Path(output_path, PECAAN_FOLDER)
         pecaan_folder.mkdir()
         retrieve_drafts(pecaan_folder, phage_id_list)
     else:
-        print("No new 'draft' genomes available.")
+        print("No new genomes to retrieve from PECAAN.")
 
 
 # TODO unittest.
 def retrieve_drafts(output_folder, phage_list):
     """Retrieve auto-annotated 'draft' genomes from PECAAN."""
 
-    print(f"\n\nRetrieving {len(phage_list)} new phages from PECAAN")
     genome_folder = pathlib.Path(output_folder, GENOME_FOLDER)
     genome_folder.mkdir()
     failed = []
