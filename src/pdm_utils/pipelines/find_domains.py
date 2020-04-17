@@ -234,26 +234,27 @@ def search_and_process2(rpsblast, cdd_name, tmp_dir, evalue,
                                 name = basic.truncate_value(name, 25, "...")
                                 description = ",".join(des_list[2:]).strip()
 
-                            # Try to put domain into domain table
-                            results.append(INSERT_INTO_DOMAIN.format(
-                                align.hit_id, domain_id, name, description))
-
-                            # Try to put this hit into gene_domain table
                             data_dict = {
-                                "Translation": translation,
                                 "HitID": align.hit_id,
+                                "DomainID": domain_id,
+                                "Name": name,
+                                "Description": description,
                                 "Expect": float(hsp.expect),
                                 "QueryStart": int(hsp.query_start),
                                 "QueryEnd": int(hsp.query_end)
                                 }
                             results.append(data_dict)
+                            # results.append(INSERT_INTO_DOMAIN.format(
+                            #     align.hit_id, domain_id, name, description))
                             # results.append(INSERT_INTO_GENE_DOMAIN.format(
                             #     geneid, align.hit_id, float(hsp.expect),
                             #     int(hsp.query_start), int(hsp.query_end)))
 
     # Update this gene's DomainStatus to 1
     # results.append(UPDATE_GENE.format(geneid))
-    return results
+    trans_dict = {"Translation": translation,
+                  "Data": results}
+    return trans_dict
 
 def learn_cdd_name(cdd_dir):
     cdd_files = os.listdir(cdd_dir)
@@ -350,61 +351,149 @@ def main(argument_list):
         make_tempdir(tmp_dir)
 
         # TODO dev
-        # translations = get_unique_translations(cdd_genes)
+        cds_trans_dict = create_cds_translation_dict(cdd_genes)
 
 
         # Build jobs list
+        unique_trans = cds_trans_dict.keys()
         jobs = []
+        for id, translation in enumerate(unique_trans):
+            jobs.append((rpsblast, cdd_name, tmp_dir, evalue, id, translation))
+        results = parallelize(jobs, threads, search_and_process2)
+
+        # List of dictionaries. Each dictionary:
+        # keys: "Translation": translation, "Data": list of results
+        # In each list of results, each element is a dictionary:
+        # data_dict = {
+        #     "HitID": align.hit_id,
+        #     "DomainID": domain_id,
+        #     "Name": name,
+        #     "Description": description,
+        #     "Expect": float(hsp.expect),
+        #     "QueryStart": int(hsp.query_start),
+        #     "QueryEnd": int(hsp.query_end)
+        #     }
+
 
         # TODO dev
-        # translation_id = 0
-        # for translation in translations:
-        #     translation_id += 1
-        #     jobs.append((rpsblast, cdd_name, tmp_dir, evalue,
-        #                  translation_id, translation))
-
-        for cdd_gene in cdd_genes:
-            jobs.append((rpsblast, cdd_name, tmp_dir, evalue,
-                         cdd_gene["GeneID"], cdd_gene["Translation"]))
-
-        results = parallelize(jobs, threads, search_and_process)
-        print("\n")
-
+        results_dict = create_results_dict(results)
+        # Returns a dictionary, where:
+        # key = unique translation,
+        # value = list of dictionaries, each dictionary a unique rpsblast result
 
         # TODO dev
-        # results_dict = create_results_dict(results)
-        # map_results_to_genes(cdd_genes, results_dict)
-
-        insert_domain_data(engine, results)
+        transactions = create_sql_statements(cds_trans_dict, results_dict)
+        insert_domain_data(engine, transactions)
         engine.dispose()
+
+        # for cdd_gene in cdd_genes:
+        #     jobs.append((rpsblast, cdd_name, tmp_dir, evalue,
+        #                  cdd_gene["GeneID"], cdd_gene["Translation"]))
+        # results = parallelize(jobs, threads, search_and_process)
+        print("\n")
+        # insert_domain_data(engine, results)
+        # engine.dispose()
+
+
+
+        # insert_domain_data(engine, results)
+        # engine.dispose()
     return
 
 
 # TODO dev
-def get_unique_translations(cdd_genes):
-    """Generate list of unique translations to process."""
-    # Get unique translations.
-    translations = set()
-    for i in range(len(cdd_genes)):
-        translations.add(cdd_genes[i]["Translation"])
-    return translations
+def create_cds_translation_dict(cdd_genes):
+    """Create a dictionary of genes and translations.
+
+    Returns a dictionary, where:
+    key = unique translation
+    value = set of GeneIDs with that translation."""
+    trans_dict = {}
+    for cds in cdd_genes:
+        trans = cds["Translation"]
+        gene_id = cds["GeneID"]
+        if trans in trans_dict.keys():
+            trans_dict[trans].add(gene_id)
+        else:
+            trans_dict[trans] = {gene_id}
+    return trans_dict
+
+
+# def get_unique_translations(cdd_genes):
+#     """Generate list of unique translations to process."""
+#     translations = set()
+#     for i in range(len(cdd_genes)):
+#         translations.add(cdd_genes[i]["Translation"])
+#     return translations
+
+
+
 
 # TODO dev
-def map_results_to_genes(cdd_genes, search_results):
-    """Map results of domain search back to list of gene_ids."""
+def create_sql_statements(cds_trans_dict, rpsblast_results):
+    """Map domain data back to gene_ids and create SQL statements."""
+    # cds_trans_dict key = translation, value = set of GeneIDs
+    transactions = []
+    for translation in rpsblast_results.keys():
+        rps_data = rpsblast_results[translation]
+        gene_ids = cds_trans_dict[translation]
+            txn = []
+            for gene_id in gene_ids:
+                for result in rps_data:
+                    domain_stmt = construct_domain_stmt(rps_data)
+                    gene_domain_stmt = construct_gene_domain_stmt(rps_data, gene_id)
+                    txn.append(domain_stmt)
+                    txn.append(gene_domain_stmt)
+                update_stmt = construct_gene_update_stmt(gene_id)
+                txn.append(update_stmt)
+                transactions.append(txn)
+    return transactions
 
-    for i in range(len(cdd_genes)):
-        pass
+
+
+# TODO dev
+def construct_domain_stmt(data_dict):
+    """Construct the SQL statement to insert data into the domain table."""
+    smt = INSERT_INTO_DOMAIN.format(data_dict["HitID"],
+                                    data_dict["DomainID"],
+                                    data_dict["Name"],
+                                    data_dict["Description"])
+    return stmt
+
+
+# TODO dev
+def construct_gene_domain_stmt(data_dict, gene_id):
+    """Construct the SQL statement to insert data into the gene_domain table."""
+    smt = INSERT_INTO_GENE_DOMAIN.format(gene_id,
+                                         data_dict["HitID"],
+                                         data_dict["Expect"],
+                                         data_dict["QueryStart"],
+                                         data_dict["QueryEnd"])
+    return stmt
+
+
+def construct_gene_update_stmt(gene_id):
+    """Construct the SQL statement to update data in the gene table."""
+    smt = UPDATE_GENE.format(gene_id)
+    return stmt
 
 # TODO dev
 def create_results_dict(search_results):
     """Create a dictionary of search results
-    key = translation; value = results."""
+
+    Input is a list of dictionaries, one dict per translation, where:
+    key = translation, value = list of rpsblast results
+    Each element is a dictionary containing the domain and gene domain data.
+
+    Returns a dictionary, where:
+    key = unique translation,
+    value = list of dictionaries, each dictionary a unique rpsblast result
+    """
     dict = {}
     for result in search_results:
-        trans = result[1]["Translation"]
-        dict[trans] = result
+        dict[result["Translation"]] = result["Data"]
     return dict
+
 
 
 def get_rpsblast_command():
