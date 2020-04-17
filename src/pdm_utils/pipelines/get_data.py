@@ -188,6 +188,8 @@ def main(unparsed_args_list):
                          ncbi_cred_dict, args.genbank_results)
     if args.draft is True:
         if force:
+            # Add all draft genomes currently in database to the list of
+            # draft genomes to be downloaded.
             drafts = get_matched_drafts(matched_genomes)
             unmatched_phagesdb_ids |= drafts
         get_draft_data(working_path, unmatched_phagesdb_ids)
@@ -361,7 +363,7 @@ def convert_tickets_to_dict(list_of_tickets):
 def get_final_data(output_folder, matched_genomes):
     """Run sub-pipeline to retrieve 'final' genomes from PhagesDB."""
 
-    print(f"\n\nDownloading genomes from PhagesDB.")
+    print(f"\n\nDownloading genome(s) from PhagesDB.")
     phagesdb_folder = pathlib.Path(output_folder, PHAGESDB_FOLDER)
     phagesdb_folder.mkdir()
     genome_folder = pathlib.Path(phagesdb_folder, GENOME_FOLDER)
@@ -489,7 +491,7 @@ def get_genbank_data(output_folder, genome_dict, ncbi_cred_dict={},
     # the MySQL database date
     # 5 Save new records in a folder and create an import table for them
 
-    print(f"\n\nDownloading genomes from GenBank.")
+    print(f"\n\nDownloading genome(s) from GenBank.")
     # Create output folder
     ncbi_folder = pathlib.Path(output_folder, GENBANK_FOLDER)
     ncbi_folder.mkdir()
@@ -833,7 +835,7 @@ def get_draft_data(output_path, phage_id_set):
     """Run sub-pipeline to retrieve auto-annotated 'draft' genomes."""
 
     if len(phage_id_set) > 0:
-        print(f"\n\nRetrieving {len(phage_id_set)} genomes from PECAAN")
+        print(f"\n\nRetrieving {len(phage_id_set)} genome(s) from PECAAN")
         phage_id_list = list(phage_id_set)
         pecaan_folder = pathlib.Path(output_path, PECAAN_FOLDER)
         pecaan_folder.mkdir()

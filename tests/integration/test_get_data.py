@@ -8,6 +8,8 @@ import unittest
 from unittest.mock import patch
 from pdm_utils import run
 from pdm_utils.pipelines import get_data
+from pdm_utils.classes import genomepair
+from pdm_utils.classes import genome
 
 # Import helper functions to build mock database
 unittest_file = Path(__file__)
@@ -65,7 +67,8 @@ def create_update(table, field, value, phage_id=None):
         statement = statement + f" WHERE PhageID = '{phage_id}'"
     return statement
 
-def get_unparsed_args(draft=False, final=False, genbank=False, update=False):
+def get_unparsed_args(draft=False, final=False, genbank=False, update=False,
+                      force_download=False, genbank_results=True):
     """Returns list of command line arguments to get data."""
     unparsed_args = ["run.py", pipeline, db, str(test_folder)]
     if draft:
@@ -76,6 +79,10 @@ def get_unparsed_args(draft=False, final=False, genbank=False, update=False):
         unparsed_args.append("-g")
     if update:
         unparsed_args.append("-u")
+    if force_download:
+        unparsed_args.append("-fd")
+    if genbank_results:
+        unparsed_args.append("-gr")
     return unparsed_args
 
 def count_files(path_to_folder):
@@ -84,6 +91,48 @@ def count_files(path_to_folder):
     for item in path_to_folder.iterdir():
         count += 1
     return count
+
+
+def count_rows(filepath, header=True):
+    """Count number of rows in a file."""
+    with open(filepath, "r") as handle:
+        lines = handle.readlines()
+    count = len(lines)
+    if header:
+        count -= 1
+    return count
+
+
+def create_matched_genomes():
+    """Create list of GenomePair objects."""
+
+    gnm1 = genome.Genome()
+    gnm1.id = "Trixie"
+    gnm1.annotation_status = "draft"
+
+    gnm2 = genome.Genome()
+    gnm2.id = "Trixie"
+
+    gnm_pair1 = genomepair.GenomePair()
+    gnm_pair1.genome1 = gnm1
+    gnm_pair1.genome2 = gnm2
+
+    gnm3 = genome.Genome()
+    gnm3.id = "Alice"
+    gnm3.annotation_status = "final"
+
+    gnm4 = genome.Genome()
+    gnm4.id = "Alice"
+
+    gnm_pair2 = genomepair.GenomePair()
+    gnm_pair2.genome1 = gnm3
+    gnm_pair2.genome2 = gnm4
+
+    matched_genomes = [gnm_pair1, gnm_pair2]
+    return matched_genomes
+
+
+
 
 class TestGetData(unittest.TestCase):
 
@@ -116,6 +165,7 @@ class TestGetData(unittest.TestCase):
 
 
 
+
     @patch("pdm_utils.functions.mysqldb.connect_to_db")
     def test_main_1(self, ctd_mock):
         """Verify update data and final data are retrieved."""
@@ -124,11 +174,13 @@ class TestGetData(unittest.TestCase):
         # it is time-intensive.
         ctd_mock.return_value = self.engine
         # If final=True, any genome in database will be checked on PhagesDB
-        # regardless of Status, AnnotationAuthor, etc.
+        # regardless of AnnotationAuthor
         unparsed_args = get_unparsed_args(update=True, final=True)
         run.main(unparsed_args)
         count1 = count_files(updates_folder)
         count2 = count_files(phagesdb_genome_folder)
+        count3 = count_rows(update_table)
+        count4 = count_rows(phagesdb_import_table)
         with self.subTest():
             self.assertEqual(count1, 1)
         with self.subTest():
@@ -138,6 +190,11 @@ class TestGetData(unittest.TestCase):
             # one area of testing that could be improved. For now, simply
             # verify that 1 or more files have been retrieved.
             self.assertTrue(count2 > 0)
+        with self.subTest():
+            # There should be several rows of updates.
+            self.assertTrue(count3 > 0)
+        with self.subTest():
+            self.assertEqual(count2, count4)
 
     @patch("pdm_utils.functions.mysqldb.connect_to_db")
     def test_main_2(self, ctd_mock):
@@ -147,21 +204,69 @@ class TestGetData(unittest.TestCase):
         test_db_utils.execute(stmt1)
         stmt2 = create_update("phage", "Accession", TRIXIE_ACC, phage_id="Trixie")
         test_db_utils.execute(stmt2)
-        unparsed_args = get_unparsed_args(genbank=True)
+        unparsed_args = get_unparsed_args(genbank=True, genbank_results=True)
         run.main(unparsed_args)
-        count = count_files(genbank_genomes_folder)
-        self.assertEqual(count, 1)
+        query = "SELECT COUNT(*) FROM phage"
+        count1 = test_db_utils.get_data(query)[0]["COUNT(*)"]
+        count2 = count_files(genbank_genomes_folder)
+        count3 = count_rows(genbank_import_table)
+        count4 = count_rows(genbank_results_table)
+        with self.subTest():
+            self.assertEqual(count2, 1)
+        with self.subTest():
+            self.assertEqual(count2, count3)
+        with self.subTest():
+            self.assertEqual(count1, count4)
 
     @patch("pdm_utils.pipelines.get_data.match_genomes")
     @patch("pdm_utils.functions.mysqldb.connect_to_db")
     def test_main_3(self, ctd_mock, mg_mock):
         """Verify draft data is retrieved."""
+        matched_genomes = create_matched_genomes()
         ctd_mock.return_value = self.engine
-        mg_mock.return_value = ([], {"EagleEye"})
+        mg_mock.return_value = (matched_genomes, {"EagleEye"})
         unparsed_args = get_unparsed_args(draft=True)
         run.main(unparsed_args)
+        count1 = count_files(pecaan_genomes_folder)
+        count2 = count_rows(pecaan_import_table)
+        with self.subTest():
+            self.assertEqual(count1, 1)
+        with self.subTest():
+            self.assertEqual(count1, count2)
+
+    @patch("pdm_utils.functions.mysqldb.connect_to_db")
+    def test_main_4(self, ctd_mock):
+        """Verify final data with very recent date are retrieved
+        with force_download."""
+        ctd_mock.return_value = self.engine
+        stmt = create_update("phage", "DateLastModified", "2200-01-01")
+        test_db_utils.execute(stmt)
+        unparsed_args = get_unparsed_args(final=True, force_download=True)
+        run.main(unparsed_args)
+        count = count_files(phagesdb_genome_folder)
+        with self.subTest():
+            # It's not clear how stable the storage of any particular final
+            # flat file is on PhagesDB. There is possibility that for any
+            # genome the associated flat file will be removed. So this is
+            # one area of testing that could be improved. For now, simply
+            # verify that 1 or more files have been retrieved.
+            self.assertTrue(count > 0)
+
+    @patch("pdm_utils.pipelines.get_data.match_genomes")
+    @patch("pdm_utils.functions.mysqldb.connect_to_db")
+    def test_main_5(self, ctd_mock, mg_mock):
+        """Verify draft data already in database is retrieved
+        with force_download."""
+        # Create a list of 2 matched genomes, only one of which has
+        # status = draft.
+        matched_genomes = create_matched_genomes()
+        ctd_mock.return_value = self.engine
+        mg_mock.return_value = (matched_genomes, {"EagleEye"})
+        unparsed_args = get_unparsed_args(draft=True, force_download=True)
+        run.main(unparsed_args)
         count = count_files(pecaan_genomes_folder)
-        self.assertEqual(count, 1)
+        self.assertEqual(count, 2)
+
 
 
 
