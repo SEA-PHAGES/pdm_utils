@@ -245,7 +245,9 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
                                   description_field,
                                   constants.IMPORT_TABLE_STRUCTURE)
     if ticket_dict is None:
-        logger.error("Invalid import table. Unable to evaluate flat files.")
+        tkt_msg = "Invalid import table. Unable to evaluate flat files."
+        logger.error(tkt_msg)
+        print(f"\n\n\nError: {tkt_msg}")
         sys.exit(1)
     else:
         progress = f"There are {len(ticket_dict.keys())} import ticket(s)."

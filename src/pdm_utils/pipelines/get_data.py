@@ -915,12 +915,12 @@ def create_phagesdb_ticket(phage_id):
     tkt.description_field = "product"
     tkt.eval_mode = "final"
     tkt.data_dict = {
-        "host_genus": "retrieve",
-        "cluster": "retrieve",
-        "subcluster": "retrieve",
+        "host_genus": "retain", # formerly "retrieve",
+        "cluster": "retain", # formerly "retrieve",
+        "subcluster": "retain", # formerly "retrieve",
         "annotation_status": "final",
         "annotation_author": 1,
-        "accession": "retrieve",
+        "accession": "retain", # formerly "retrieve",
         "retrieve_record": 1
         }
     return tkt
@@ -938,12 +938,12 @@ def create_genbank_ticket(gnm):
     tkt.description_field = "product"
     tkt.eval_mode = "auto"
     tkt.data_dict = {
-        "host_genus": gnm.host_genus,
-        "cluster": gnm.cluster,
-        "subcluster": gnm.subcluster,
-        "annotation_status": gnm.annotation_status,
-        "annotation_author": gnm.annotation_author,
+        "host_genus": "retain", # formerly gnm.host_genus,
+        "cluster": "retain", # formerly gnm.cluster,
+        "subcluster": "retain", # formerly gnm.subcluster,
+        "annotation_status": "retain", # formerly gnm.annotation_status,
+        "annotation_author": "retain", # formerly gnm.annotation_author,
         "accession": "parse",
-        "retrieve_record": 1
+        "retrieve_record": "retain", # formerly 1
         }
     return tkt
