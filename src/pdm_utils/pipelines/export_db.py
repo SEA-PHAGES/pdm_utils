@@ -457,12 +457,11 @@ def execute_ffx_export(alchemist, export_path, output_path,
         print(f"...Database entries retrieved: {len(values)}")
     seqrecords = []
     if table == "phage": 
-        seqrecords = parse_genome_seqrecord_data(alchemist, values=values,
+        seqrecords = get_genome_seqrecords(alchemist, values=values, 
                                                             verbose=verbose)
     elif table == "gene":
-        seqrecords = parse_cds_seqrecord_data(alchemist, values=values,
-                                                         where=conditionals,
-                                                         verbose=verbose)
+        seqrecords = get_cds_seqrecords(alchemist, values=values, 
+                                                            verbose=verbose)
     else:
         print(f"Unknown error occured, table '{table}' is not recognized "
                "for SeqRecord export pipelines.")
@@ -475,7 +474,7 @@ def execute_ffx_export(alchemist, export_path, output_path,
     write_seqrecord(seqrecords, file_format, export_path, verbose=verbose,
                                                     concatenate=concatenate)
 
-def parse_genome_seqrecord_data(alchemist, values=[], verbose=False):
+def get_genome_seqrecords(alchemist, values=[], verbose=False):
     genomes = mysqldb.parse_genome_data(alchemist.engine,
                                         phage_id_list=values,
                                         phage_query="SELECT * FROM phage",
@@ -490,23 +489,41 @@ def parse_genome_seqrecord_data(alchemist, values=[], verbose=False):
 
     return seqrecords
 
-def retrieve_cds_seqrecord_data(alchemist, values=[], where=[]):
+def get_cds_seqrecords(alchemist, values=[], nucleotide=False, verbose=False):
+    cds_list = parse_cds_data(alchemist, values=values)
+
+    seqrecords = []
+    genomes_dict = {}
+    for cds in cds_list:
+        if not cds.genome_id in genomes_dict.keys():
+            if verbose:
+                print(f" Retrieving parent genome for {cds.id}...")
+            parent_genome_data = mysqldb.retrieve_data(
+                                                alchemist.engine,
+                                                column="PhageID",
+                                                query="SELECT * FROM phage",
+                                                phage_id_list=[cds.genome_id])
+            parent_genome = mysqldb.parse_phage_table_data(
+                                                        parent_genome_data[0])
+            genomes_dict.update({cds.genome_id : parent_genome})
+        
+        if verbose:
+            print(f"Converting {cds.id}...")
+        cds.genome_length = genomes_dict[cds.genome_id].length
+        cds.set_seqfeature()
+
+        record = cds_to_seqrecord(cds, genomes_dict[cds.genome_id])
+        seqrecords.append(record)
+
+    return seqrecords
+
+def parse_cds_data(alchemist, values=[]):
     gene_table = querying.get_table(alchemist.metadata, "gene")
     primary_key = list(gene_table.primary_key.columns)[0]
-
     cds_data_columns = list(gene_table.c)
-    cds_data_columns.append(querying.get_column(alchemist.metadata, 
-                                                "phage.HostGenus"))
-    cds_data_columns.append(querying.get_column(alchemist.metadata,
-                                                "phage.Accession"))
-    cds_data_columns.append(querying.get_column(alchemist.metadata,
-                                                "phage.DateLastModified"))
-    cds_data_columns.append(querying.get_column(alchemist.metadata,
-                                                "phage.Length").label(
-                                                "PhageLength"))
     
-    cds_data_query = querying.build_select(alchemist.graph, cds_data_columns,
-                                           where=where)
+    cds_data_query = querying.build_select(alchemist.graph, cds_data_columns)
+
     if values:
         cds_data = querying.execute_value_subqueries(alchemist.engine,
                                                      cds_data_query, 
@@ -515,34 +532,12 @@ def retrieve_cds_seqrecord_data(alchemist, values=[], where=[]):
     else:
         cds_data = querying.execute(alchemist.engine, cds_data_query)
 
-    return cds_data
+    cds_list = []
+    for data_dict in cds_data:
+        cds_ftr = mysqldb.parse_gene_table_data(data_dict)
+        cds_list.append(cds_ftr)
 
-def parse_cds_seqrecord_data(alchemist, values=[], where=[], verbose=False):
-    cds_data_dicts = retrieve_cds_seqrecord_data(alchemist, values=values, 
-                                                            where=where)
-
-    seqrecords = []
-    for cds_dict in cds_data_dicts:
-        cds = mysqldb.parse_gene_table_data(cds_dict)
-        cds.genome_length = int(cds_dict["PhageLength"]) 
-
-        if verbose:
-            print(f"Converting {cds.id}...")
-        record = SeqRecord(cds.translation)
-        record.seq.alphabet = IUPAC.IUPACAmbiguousDNA()
-        record.name = cds.id
-        if cds.locus_tag != "":
-            record.id = cds.locus_tag
-
-        cds.set_seqfeature()
-        record.features = [cds.seqfeature]
-
-        record.description = get_cds_seqrecord_description(cds_dict)
-        record.annotations = get_cds_seqrecord_annotations(cds_dict)
-        
-        seqrecords.append(record)
-
-    return seqrecords
+    return cds_list
 
 def write_seqrecord(seqrecord_list, file_format, export_path, concatenate=False,
                                                               verbose=False):
@@ -941,18 +936,23 @@ def append_database_version(genome_seqrecord, version_data):
 
 #PROTOTYPE FUNCTIONS
 #--------------------------------------------------------
-def get_cds_seqrecord_description(cds_dict):
-    cds_product = cds_dict["Notes"].decode("utf-8")
-    if cds_product == "":
-        cds_product = "hypothetical protein"
+def cds_to_seqrecord(cds, parent_genome):
+    record = SeqRecord(cds.translation)
+    record.seq.alphabet = IUPAC.IUPACAmbiguousDNA()
+    record.name = cds.id
+    if cds.locus_tag != "":
+        record.id = cds.locus_tag
 
-    cds_parent = cds_dict["PhageID"]
-    parent_host_genus = cds_dict["HostGenus"]
+    cds.set_seqfeature()
+    record.features = [cds.seqfeature]
 
-    description = f"{cds_product} [{parent_host_genus} phage {cds_parent}]"
-    return description
-    
-def get_cds_seqrecord_annotations(cds_dict):
+    record.description = (f"{cds.description} "
+                          f"[{parent_genome.host_genus} phage {cds.genome_id}]")
+    record.annotations = get_cds_seqrecord_annotations(cds, parent_genome)
+
+    return record
+
+def get_cds_seqrecord_annotations(cds, parent_genome):
     annotations = {"molecule type": "DNA",
                    "topology" : "linear",
                    "data_file_division" : "PHG",
@@ -965,22 +965,22 @@ def get_cds_seqrecord_annotations(cds_dict):
                    "taxonomy" : [],
                    "comment" : ()}
   
-    annotations["date"] = cds_dict["DateLastModified"]
-    annotations["organism"] = (f"{cds_dict['HostGenus']} phage "
-                               f"{cds_dict['PhageID']}")
-    annotations["source"] = f"Accession {cds_dict['Accession']}"
+    annotations["date"] = parent_genome.date
+    annotations["organism"] = (f"{parent_genome.host_genus} phage "
+                               f"{cds.genome_id}")
+    annotations["source"] = f"Accession {parent_genome.accession}"
 
     annotations["taxonomy"].append("Viruses")
     annotations["taxonomy"].append("dsDNA Viruses")
     annotations["taxonomy"].append("Caudovirales")
 
-    annotations["comment"] = get_cds_seqrecord_annotations_comments(cds_dict)
+    annotations["comment"] = get_cds_seqrecord_annotations_comments(cds)
 
     return annotations
 
-def get_cds_seqrecord_annotations_comments(cds_dict):
+def get_cds_seqrecord_annotations_comments(cds):
     pham_comment =\
-           f"Pham: {cds_dict['PhamID']}"
+           f"Pham: {cds.pham_id}"
     auto_generated_comment =\
             "Auto-generated genome record from a MySQL database"
     
