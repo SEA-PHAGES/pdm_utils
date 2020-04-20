@@ -25,6 +25,18 @@ import shutil
 import sys
 import time
 
+#GLOBAL VARIABLES
+#-----------------------------------------------------------------------------
+
+# Valid Biopython formats that crash the script due to specific values in
+# some genomes that can probably be fixed relatively easily and implemented.
+# BIOPYTHON_PIPELINES_FIXABLE = ["embl", "imgt", "seqxml"]
+# Biopython formats that are not applicable.
+# BIOPYTHON_PIPELINES_INVALID = ["fastq", "fastq-solexa", "fastq-illumina",
+#                              "phd", "sff", "qual"]
+# Biopython formats that are not writable
+# BIOPYTHON_PIPELINES_NOT_WRITABLE = ["ig"]
+
 # Valid file formats using Biopython
 BIOPYTHON_PIPELINES = ["gb", "fasta", "clustal", "fasta-2line", "nexus",
                        "phylip", "pir", "stockholm", "tab"]
@@ -46,14 +58,9 @@ SEQUENCE_COLUMNS = {"phage"           : ["Sequence"],
                      "trna_structures" : [],
                      "version"         : []}
 
-# Valid Biopython formats that crash the script due to specific values in
-# some genomes that can probably be fixed relatively easily and implemented.
-# BIOPYTHON_PIPELINES_FIXABLE = ["embl", "imgt", "seqxml"]
-# Biopython formats that are not applicable.
-# BIOPYTHON_PIPELINES_INVALID = ["fastq", "fastq-solexa", "fastq-illumina",
-#                              "phd", "sff", "qual"]
-# Biopython formats that are not writable
-# BIOPYTHON_PIPELINES_NOT_WRITABLE = ["ig"]
+#-----------------------------------------------------------------------------
+#MAIN FUNCTIONS
+#-----------------------------------------------------------------------------
 
 def main(unparsed_args_list):
     """Uses parsed args to run the entirety of the file export pipeline.
@@ -290,7 +297,7 @@ def execute_export(alchemist, output_path, output_name, pipeline,
     if pipeline == "csv":
         if verbose:
             print("Processing columns for csv export...")
-        csv_columns = get_csv_columns(alchemist, table, 
+        csv_columns = filter_csv_columns(alchemist, table, 
                                       include_columns=include_columns,
                                       exclude_columns=exclude_columns,
                                       sequence_columns=sequence_columns)
@@ -437,19 +444,19 @@ def execute_ffx_export(alchemist, export_path, output_path,
     table_obj = querying.get_table(alchemist.metadata, table)
     primary_key = list(table_obj.primary_key.columns)[0]
 
-    query = querying.build_distinct(alchemist.graph, primary_key,
+    values_query = querying.build_distinct(alchemist.graph, primary_key,
                                                      where=conditionals,
                                                      order_by=sort)
     if values:
         values = querying.first_column_value_subqueries(alchemist.engine, 
-                                                        query, primary_key, 
+                                                        values_query, 
+                                                        primary_key, 
                                                         values)
     else:
-        values = alchemist.first_column(query)
+        values = alchemist.first_column(values_query)
 
     if len(values) == 0:
-        if verbose:
-            print(f"No database entries received for '{export_path.name}'.")
+        print(f"No database entries received for '{export_path.name}'.")
         export_path.rmdir()
         return
 
@@ -473,71 +480,6 @@ def execute_ffx_export(alchemist, export_path, output_path,
         append_database_version(record, db_version)
     write_seqrecord(seqrecords, file_format, export_path, verbose=verbose,
                                                     concatenate=concatenate)
-
-def get_genome_seqrecords(alchemist, values=[], verbose=False):
-    genomes = mysqldb.parse_genome_data(alchemist.engine,
-                                        phage_id_list=values,
-                                        phage_query="SELECT * FROM phage",
-                                        gene_query="SELECT * FROM gene")
-    
-    seqrecords = []
-    for gnm in genomes:
-        set_genome_cds_seqfeatures(gnm)
-        if verbose:
-            print(f"Converting {gnm.name}...")
-        seqrecords.append(flat_files.genome_to_seqrecord(gnm))    
-
-    return seqrecords
-
-def get_cds_seqrecords(alchemist, values=[], nucleotide=False, verbose=False):
-    cds_list = parse_cds_data(alchemist, values=values)
-
-    seqrecords = []
-    genomes_dict = {}
-    for cds in cds_list:
-        if not cds.genome_id in genomes_dict.keys():
-            if verbose:
-                print(f" Retrieving parent genome for {cds.id}...")
-            parent_genome_data = mysqldb.retrieve_data(
-                                                alchemist.engine,
-                                                column="PhageID",
-                                                query="SELECT * FROM phage",
-                                                phage_id_list=[cds.genome_id])
-            parent_genome = mysqldb.parse_phage_table_data(
-                                                        parent_genome_data[0])
-            genomes_dict.update({cds.genome_id : parent_genome})
-        
-        if verbose:
-            print(f"Converting {cds.id}...")
-        cds.genome_length = genomes_dict[cds.genome_id].length
-        cds.set_seqfeature()
-
-        record = cds_to_seqrecord(cds, genomes_dict[cds.genome_id])
-        seqrecords.append(record)
-
-    return seqrecords
-
-def parse_cds_data(alchemist, values=[]):
-    gene_table = querying.get_table(alchemist.metadata, "gene")
-    primary_key = list(gene_table.primary_key.columns)[0]
-    cds_data_columns = list(gene_table.c)
-    
-    cds_data_query = querying.build_select(alchemist.graph, cds_data_columns)
-
-    if values:
-        cds_data = querying.execute_value_subqueries(alchemist.engine,
-                                                     cds_data_query, 
-                                                     primary_key,
-                                                     values)
-    else:
-        cds_data = querying.execute(alchemist.engine, cds_data_query)
-
-    cds_list = []
-    for data_dict in cds_data:
-        cds_ftr = mysqldb.parse_gene_table_data(data_dict)
-        cds_list.append(cds_ftr)
-
-    return cds_list
 
 def write_seqrecord(seqrecord_list, file_format, export_path, concatenate=False,
                                                               verbose=False):
@@ -590,6 +532,92 @@ def write_database(alchemist, version, export_path):
     version_path.touch()
     version_path.write_text(f"{version}")
 
+#-----------------------------------------------------------------------------
+#PIPELINE SETUP FUNCTIONS
+#-----------------------------------------------------------------------------
+
+def convert_path(path: str):
+    """Function to convert a string to a working Path object.
+
+    :param path: A string to be converted into a Path object.
+    :type path: str
+    :returns: A Path object converted from the inputed string.
+    :rtype: Path
+    """
+    path_object = Path(path)
+    if "~" in path:
+        path_object = path_object.expanduser()
+
+    if path_object.exists():
+        return path_object
+    elif path_object.resolve().exists():
+        path_object = path_object.resolve()
+
+    print("String input failed to be converted to a working Path object. \n" 
+          "Path may not exist.")
+    sys.exit(1)
+
+def convert_dir_path(path: str):
+    """Function to convert a string to a working directory Path object.
+
+    :param path: A string to be converted into a Path object.
+    :type path: str
+    :returns: A Path object converted from the inputed string.
+    :rtype: Path
+    """
+    path_object = convert_path(path)
+
+    if path_object.is_dir():
+        return path_object
+    else:
+        print("Path input required to be a directory "
+              "does not direct to a valid directory.")
+        sys.exit(1)
+
+def convert_file_path(path: str):
+    """Function to convert a string to a working file Path object.
+
+    :param path: A string to be converted into a Path object.
+    :type path: str
+    :returns: A Path object converted from the inputed string.
+    :rtype: Path
+    """ 
+    path_object = convert_path(path)
+
+    if path_object.is_file():
+        return path_object
+    else:
+        print("Path input required to be a file "
+              "does not direct to a valid file.")
+        raise ValueError
+
+@singledispatch
+def parse_value_list_input(value_list_input):
+    """Function to convert values input to a recognized data types.
+
+    :param value_list_input: Values stored in recognized data types.
+    :type value_list_input: list[str]
+    :type value_list_input: Path
+    :returns: List of values to filter database results.
+    :rtype: list[str]
+    """
+
+    print("Value list input for export is of an unexpected type.")
+    sys.exit(1)
+
+@parse_value_list_input.register(Path)
+def _(value_list_input):
+    value_list = []
+    with open(value_list_input, newline = '') as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter = ",")
+        for name in csv_reader:
+            value_list.append(name[0])
+    return value_list
+
+@parse_value_list_input.register(list)
+def _(value_list_input):
+    return value_list_input
+
 def establish_connection(database):
     """Establishes a connection to a MySQL database using an AlchemyHandler.
 
@@ -623,6 +651,57 @@ def establish_connection(database):
     
     alchemist.build_graph()
     return alchemist 
+
+#-----------------------------------------------------------------------------
+#EXPORT-SPECIFIC HELPER FUNCTIONS
+#-----------------------------------------------------------------------------
+
+def get_genome_seqrecords(alchemist, values=[], verbose=False):
+    genomes = mysqldb.parse_genome_data(alchemist.engine,
+                                        phage_id_list=values,
+                                        phage_query="SELECT * FROM phage",
+                                        gene_query="SELECT * FROM gene")
+    
+    seqrecords = []
+    for gnm in genomes:
+        process_cds_seqfeatures(gnm)
+        if verbose:
+            print(f"Converting {gnm.name}...")
+        seqrecords.append(flat_files.genome_to_seqrecord(gnm))    
+
+    return seqrecords
+
+def get_cds_seqrecords(alchemist, values=[], nucleotide=False, verbose=False):
+    cds_list = parse_cds_data(alchemist, values=values)
+
+    seqrecords = []
+    genomes_dict = {}
+    for cds in cds_list:
+        if not cds.genome_id in genomes_dict.keys():
+            if verbose:
+                print(f"...Retrieving parent genome for {cds.id}...")
+            phage_id_obj = querying.get_column(alchemist.metadata, 
+                                               "phage.PhageID")
+            phage_obj = phage_id_obj.table
+
+            parent_genome_query = querying.build_select(
+                                                alchemist.graph,
+                                                phage_obj,
+                                                where=\
+                                                phage_id_obj==cds.genome_id)
+            parent_genome_data = alchemist.first(parent_genome_query)
+            parent_genome = mysqldb.parse_phage_table_data(parent_genome_data)
+            genomes_dict.update({cds.genome_id : parent_genome})
+        
+        if verbose:
+            print(f"Converting {cds.id}...")
+        cds.genome_length = genomes_dict[cds.genome_id].length
+        cds.set_seqfeature()
+
+        record = cds_to_seqrecord(cds, genomes_dict[cds.genome_id])
+        seqrecords.append(record)
+
+    return seqrecords
 
 def apply_filters(alchemist, table, filters, values=None,
                                                      verbose=False):
@@ -745,7 +824,7 @@ def get_sort_columns(alchemist, sort_inputs):
 
     return sort_columns
 
-def get_csv_columns(alchemist, table, include_columns=[], exclude_columns=[], 
+def filter_csv_columns(alchemist, table, include_columns=[], exclude_columns=[], 
                                                     sequence_columns=False):
     """Function that filters and constructs a list of Columns to select.
 
@@ -808,89 +887,7 @@ def get_csv_columns(alchemist, table, include_columns=[], exclude_columns=[],
         
     return columns
 
-def convert_path(path: str):
-    """Function to convert a string to a working Path object.
-
-    :param path: A string to be converted into a Path object.
-    :type path: str
-    :returns: A Path object converted from the inputed string.
-    :rtype: Path
-    """
-    path_object = Path(path)
-    if "~" in path:
-        path_object = path_object.expanduser()
-
-    if path_object.exists():
-        return path_object
-    elif path_object.resolve().exists():
-        path_object = path_object.resolve()
-
-    print("String input failed to be converted to a working Path object. \n" 
-          "Path may not exist.")
-    sys.exit(1)
-
-def convert_dir_path(path: str):
-    """Function to convert a string to a working directory Path object.
-
-    :param path: A string to be converted into a Path object.
-    :type path: str
-    :returns: A Path object converted from the inputed string.
-    :rtype: Path
-    """
-    path_object = convert_path(path)
-
-    if path_object.is_dir():
-        return path_object
-    else:
-        print("Path input required to be a directory "
-              "does not direct to a valid directory.")
-        sys.exit(1)
-
-def convert_file_path(path: str):
-    """Function to convert a string to a working file Path object.
-
-    :param path: A string to be converted into a Path object.
-    :type path: str
-    :returns: A Path object converted from the inputed string.
-    :rtype: Path
-    """ 
-    path_object = convert_path(path)
-
-    if path_object.is_file():
-        return path_object
-    else:
-        print("Path input required to be a file "
-              "does not direct to a valid file.")
-        raise ValueError
-
-@singledispatch
-def parse_value_list_input(value_list_input):
-    """Function to convert values input to a recognized data types.
-
-    :param value_list_input: Values stored in recognized data types.
-    :type value_list_input: list[str]
-    :type value_list_input: Path
-    :returns: List of values to filter database results.
-    :rtype: list[str]
-    """
-
-    print("Value list input for export is of an unexpected type.")
-    sys.exit(1)
-
-@parse_value_list_input.register(Path)
-def _(value_list_input):
-    value_list = []
-    with open(value_list_input, newline = '') as csv_file:
-        csv_reader = csv.reader(csv_file, delimiter = ",")
-        for name in csv_reader:
-            value_list.append(name[0])
-    return value_list
-
-@parse_value_list_input.register(list)
-def _(value_list_input):
-    return value_list_input
-
-def set_genome_cds_seqfeatures(phage_genome):
+def process_cds_features(phage_genome):
     """Function that populates the Cds objects of a Genome object.
 
     :param phage_genome: Genome object to query cds data for.
@@ -934,8 +931,37 @@ def append_database_version(genome_seqrecord, version_data):
             raise TypeError
         raise
 
-#PROTOTYPE FUNCTIONS
-#--------------------------------------------------------
+#TODO Travis 
+#Functions to be evaluated for another module:
+#-----------------------------------------------------------------------------
+
+#Copy of mysqldb.parse_cds_data() with value subquerying.
+#Value subquerying needed for +300000 GeneID entries.
+#Unsure about function redundancy.
+def parse_cds_data(alchemist, values=[]):
+    gene_table = querying.get_table(alchemist.metadata, "gene")
+    primary_key = list(gene_table.primary_key.columns)[0]
+    cds_data_columns = list(gene_table.c)
+    
+    cds_data_query = querying.build_select(alchemist.graph, cds_data_columns)
+
+    if values:
+        cds_data = querying.execute_value_subqueries(alchemist.engine,
+                                                     cds_data_query, 
+                                                     primary_key,
+                                                     values)
+    else:
+        cds_data = querying.execute(alchemist.engine, cds_data_query)
+
+    cds_list = []
+    for data_dict in cds_data:
+        cds_ftr = mysqldb.parse_gene_table_data(data_dict)
+        cds_list.append(cds_ftr)
+
+    return cds_list
+
+#Similar to genome_to_seqrecord()
+#Move to flat_files.py?
 def cds_to_seqrecord(cds, parent_genome):
     record = SeqRecord(cds.translation)
     record.seq.alphabet = IUPAC.IUPACAmbiguousDNA()
@@ -952,6 +978,8 @@ def cds_to_seqrecord(cds, parent_genome):
 
     return record
 
+#Similar to get_seqrecord_annotations():
+#Move to flat_files.py?
 def get_cds_seqrecord_annotations(cds, parent_genome):
     annotations = {"molecule type": "DNA",
                    "topology" : "linear",
@@ -978,6 +1006,8 @@ def get_cds_seqrecord_annotations(cds, parent_genome):
 
     return annotations
 
+#Similar to get_seqrecord_annotatoions():
+#Move to flat_files.py?
 def get_cds_seqrecord_annotations_comments(cds):
     pham_comment =\
            f"Pham: {cds.pham_id}"

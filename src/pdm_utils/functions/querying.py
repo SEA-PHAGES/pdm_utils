@@ -6,6 +6,7 @@ from sqlalchemy import Column
 from sqlalchemy import join
 from sqlalchemy import MetaData
 from sqlalchemy import select
+from sqlalchemy import Table
 from sqlalchemy.sql import distinct
 from sqlalchemy.sql import func
 from sqlalchemy.sql import functions
@@ -193,6 +194,9 @@ def extract_column(column, check=None):
 
     if isinstance(column, Column): 
         pass
+    #For handling SQLAlchemy Table input
+    elif isinstance(column, Table):
+        column = list(column.primary_key.columns)[0]
     #For handling SQLAlchemy count(Column) expressions
     elif isinstance(column, functions.count):
         column = column.clauses.clauses[0]

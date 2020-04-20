@@ -38,6 +38,10 @@ class AlchemyHandler:
         if username != None and password != None:
             self.has_credentials = True
 
+#-----------------------------------------------------------------------------
+#ALCHEMYHANDLER PROPERTIES
+#-----------------------------------------------------------------------------
+
     @property
     def database(self):
         database = self._database
@@ -139,6 +143,10 @@ class AlchemyHandler:
             self.build_metadata()
            
         return self.metadata.tables
+
+#-----------------------------------------------------------------------------
+#CONNECTION METHODS
+#-----------------------------------------------------------------------------
 
     def ask_database(self):
         """Ask for database input to store in AlchemyHandler.
@@ -258,7 +266,12 @@ class AlchemyHandler:
             if not self.connected_database:
                 raise ValueError("Maximum database login attempts reached. "
                                  "Please your database access and try again.")
-        
+
+
+#-----------------------------------------------------------------------------
+#EXECUTE METHODS
+#-----------------------------------------------------------------------------
+
     def execute(self, executable, return_dict=True):
         """Use SQLAlchemy Engine to execute a MySQL query.
 
@@ -278,8 +291,9 @@ class AlchemyHandler:
                                                     return_dict=return_dict)
         return results
 
-    def scalar(self, executable):
-        """Use SQLAlchemy Engine to execute a MySQL query.
+    #TODO Owen unittest
+    def first(self, executable, return_dict=True):
+        """Use SQLAlchemy Engine to execute a MySQL query for the first row.
 
         :param executable: Input an executable MySQL query.
         :type executable: Select
@@ -295,12 +309,15 @@ class AlchemyHandler:
 
         proxy = self.engine.execute(executable)
 
-        scalar = proxy.scalar()
+        first_row = proxy.first()
+    
+        if return_dict:
+            first_row = dict(first_row)
 
-        return scalar
+        return first_row
 
     def first_column(self, executable):
-        """Use SQLAlchemy Engine to execute and grab the first column."
+        """Use SQLAlchemy Engine to execute a MySQL query for the first column."
 
         :param executable: Input an executeable MySQL query.
         :type executable: Select
@@ -313,7 +330,30 @@ class AlchemyHandler:
 
         values = querying.first_column(self.engine, executable)
         return values
-        
+
+    def scalar(self, executable):
+        """Use SQLAlchemy Engine to execute a MySQL query for the first field.
+
+        :param executable: Input an executable MySQL query.
+        :type executable: Select
+        :type executable: str
+        :returns: Results from execution of given MySQL query.
+        :rtype: list[dict]
+        :rtype: list[tuple]
+        """
+        if self.engine is None:
+            self.build_engine()
+
+        proxy = self.engine.execute(executable)
+
+        scalar = proxy.scalar()
+
+        return scalar 
+          
+#-----------------------------------------------------------------------------
+#SQLALCHEMY-RELATED OBJECT GENERATION METHODS
+#-----------------------------------------------------------------------------
+
     def build_metadata(self):
         """Create and store SQLAlchemy MetaData object.
         """
@@ -328,6 +368,30 @@ class AlchemyHandler:
         
         return True
 
+    def build_graph(self):
+        """Create and store SQLAlchemy MetaData related NetworkX Graph object.
+        """
+        if not self.metadata:
+            self.build_metadata()
+        
+        self.graph = querying.build_graph(self.metadata)
+
+    #PROTOTYPE SESSION FUNCTION
+    #def build_session(self):
+    #    if not self.has_database:
+    #        self.connect(ask_database=True)
+    #    if not self.connected:
+    #        self.build_engine()
+            
+
+    #    session_maker = sessionmaker()
+    #    self.session = session_maker(bind=self.engine)
+    #    return 
+
+#-----------------------------------------------------------------------------
+#SUPPLEMENTARY FUNCTIONS
+#-----------------------------------------------------------------------------
+    
     #TODO for Travis: To be evaluated for removal from this module.
     def translate_table(self, raw_table): 
         if not self.metadata:
@@ -354,28 +418,8 @@ class AlchemyHandler:
         if not self.metadata:
             self.build_metadata() 
 
-        return querying.get_column(self.metadata, column) 
-
-    def build_graph(self):
-        """Create and store SQLAlchemy MetaData related NetworkX Graph object.
-        """
-        if not self.metadata:
-            self.build_metadata()
+        return querying.get_column(self.metadata, column)  
         
-        self.graph = querying.build_graph(self.metadata)
-
-    #For when necessary
-    #def build_session(self):
-    #    if not self.has_database:
-    #        self.connect(ask_database=True)
-    #    if not self.connected:
-    #        self.build_engine()
-            
-
-    #    session_maker = sessionmaker()
-    #    self.session = session_maker(bind=self.engine)
-    #    return 
-    
     #TODO for Travis: To be evaluated for removal from this module.
     def get_map(self, template):
         if not self.metadata:
