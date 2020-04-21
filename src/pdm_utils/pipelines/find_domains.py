@@ -437,16 +437,16 @@ def create_sql_statements(cds_trans_dict, rpsblast_results):
     for translation in rpsblast_results.keys():
         rps_data = rpsblast_results[translation]
         gene_ids = cds_trans_dict[translation]
-            txn = []
-            for gene_id in gene_ids:
-                for result in rps_data:
-                    domain_stmt = construct_domain_stmt(rps_data)
-                    gene_domain_stmt = construct_gene_domain_stmt(rps_data, gene_id)
-                    txn.append(domain_stmt)
-                    txn.append(gene_domain_stmt)
-                update_stmt = construct_gene_update_stmt(gene_id)
-                txn.append(update_stmt)
-                transactions.append(txn)
+        txn = []
+        for gene_id in gene_ids:
+            for result in rps_data:
+                domain_stmt = construct_domain_stmt(rps_data)
+                gene_domain_stmt = construct_gene_domain_stmt(rps_data, gene_id)
+                txn.append(domain_stmt)
+                txn.append(gene_domain_stmt)
+            update_stmt = construct_gene_update_stmt(gene_id)
+            txn.append(update_stmt)
+            transactions.append(txn)
     return transactions
 
 

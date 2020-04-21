@@ -39,7 +39,16 @@ engine_string = test_db_utils.create_engine_string()
 # Assumes that output message contains "SQLAlchemy Error..."
 error_msg = "SQLAlchemy"
 
+
+pipeline = "find_domains"
+DB = test_db_utils.DB
 DB2 = "Actinobacteriophage"
+
+def get_unparsed_args():
+    """Returns list of command line arguments to find domains."""
+    unparsed_args = ["run.py", pipeline, DB]
+    return unparsed_args
+
 
 def get_trixie_gene_table_domain_status_update_data_1():
     """Mock gene table DomainStatus update data for Trixie."""
@@ -688,7 +697,20 @@ class TestFindDomains3(unittest.TestCase):
         test_db_utils.create_empty_test_db()
         test_db_utils.insert_phage_data(test_data_utils.get_trixie_phage_data())
 
+        # Translation from Trixie gene 35, contains multiple conserved domains.
+        trans = (
+            "MQASYISPVDGQRYWGPRNYDNRMDAEAWLASEKRLIDMEQWTPPAERAKKEAANS"
+            "ITVEEYTKKWLAERDLAEGTRELYKTHARKRIYPVLGDVAVAEMTPALVRAWWAGM"
+            "GKDYPTARRHAYNVLRAVMNTAVEDKLLTENPCRIEQKAAAERDVEALTPEELDIV"
+            "AGEVLEHYRVAVYILAWTSLRFGELIELRRKDIDDDGETMMFRVRRGAARVGQKVV"
+            "VGNTKTVRSKRPVTVPPHVATMIREHMADRTKMNKGPEALLVTTTQGQRLSKSAFT"
+            "RALKKGYRKIGRTDLRVHDLRAVGATYAAQAGATTKELMVRLGHTTPRMAMKYQMA"
+            "SEARDAEIAKRMSELAGA")
+
+
         cds1 = test_data_utils.get_trixie_gene_data() # GeneID = "TRIXIE_0001"
+        cds1["Translation"] = trans
+
         cds2 = test_data_utils.get_trixie_gene_data()
         cds3 = test_data_utils.get_trixie_gene_data()
         cds2["GeneID"] = "TRIXIE_0002"
@@ -696,7 +718,8 @@ class TestFindDomains3(unittest.TestCase):
         test_db_utils.insert_gene_data(cds1)
         test_db_utils.insert_gene_data(cds2)
         test_db_utils.insert_gene_data(cds3)
-
+        stmt = "UPDATE gene SET DomainStatus = 1"
+        test_db_utils.execute(stmt)
         self.engine = sqlalchemy.create_engine(engine_string, echo=False)
 
     def tearDown(self):
@@ -733,8 +756,6 @@ class TestFindDomains3(unittest.TestCase):
         # GeneID = "TRIXIE_0001"
         gene_domain_data = test_data_utils.get_trixie_gene_domain_data()
         statement2 = get_gene_domain_insert_statement(gene_domain_data)
-        update_data = get_trixie_gene_table_domain_status_update_data_1()
-        statement3 = get_gene_update_statement(update_data)
         statements = [statement1, statement2, statement3]
         txns = [statements]
         find_domains.insert_domain_data(self.engine, txns)
@@ -856,6 +877,16 @@ class TestFindDomains3(unittest.TestCase):
             self.assertEqual(domain_status1, 1)
         with self.subTest():
             self.assertEqual(domain_status2, 1)
+
+
+
+    def test_main_1(self):
+        """Verify all three genes processed."""
+        logging.info("test_main_1")
+
+        stmt = "UPDATE gene SET DomainStatus = 1"
+        test_db_utils.execute(stmt)
+
 
 
 if __name__ == '__main__':
