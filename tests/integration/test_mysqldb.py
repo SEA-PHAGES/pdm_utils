@@ -502,6 +502,7 @@ class TestMysqldbFunctions3(unittest.TestCase):
         cds1.stop = 10
         cds1.parts = 1
         cds1.translation_length = 20
+        cds1.length = 200
         cds1.name = "Int"
         cds1.type = "CDS"
         cds1.translation = Seq("ACKLG", IUPAC.protein)
@@ -516,7 +517,7 @@ class TestMysqldbFunctions3(unittest.TestCase):
                """(GeneID, PhageID, Start, Stop, Length, Name, """
                """Translation, Orientation, Notes, LocusTag, Parts) """
                """VALUES """
-               """("SEA_TRIXIE_123", "Trixie", 5, 10, 20, "Int", """
+               """("SEA_TRIXIE_123", "Trixie", 5, 10, 200, "Int", """
                """"ACKLG", "F", "5' nucleotide phosphatase", "TAG1", 1);""")
         with self.subTest():
             self.assertEqual(statement, exp)
@@ -531,7 +532,7 @@ class TestMysqldbFunctions3(unittest.TestCase):
         with self.subTest():
             self.assertEqual(results["Parts"], 1)
         with self.subTest():
-            self.assertEqual(results["Length"], 20)
+            self.assertEqual(results["Length"], 200)
         with self.subTest():
             self.assertEqual(results["Name"], "Int")
         with self.subTest():
@@ -557,6 +558,7 @@ class TestMysqldbFunctions3(unittest.TestCase):
         cds1.stop = 10
         cds1.parts = 1
         cds1.translation_length = 20
+        cds1.length = 200
         cds1.name = "Int"
         cds1.type = "CDS"
         cds1.translation = Seq("ACKLG", IUPAC.protein)
@@ -571,7 +573,7 @@ class TestMysqldbFunctions3(unittest.TestCase):
                """(GeneID, PhageID, Start, Stop, Length, Name, """
                """Translation, Orientation, Notes, LocusTag, Parts) """
                """VALUES """
-               """("SEA_TRIXIE_123", "Trixie", 5, 10, 20, "Int", """
+               """("SEA_TRIXIE_123", "Trixie", 5, 10, 200, "Int", """
                """"ACKLG", "F", "integrase", NULL, 1);""")
         with self.subTest():
             self.assertEqual(statement, exp)

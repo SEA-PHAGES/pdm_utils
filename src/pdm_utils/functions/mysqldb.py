@@ -495,7 +495,7 @@ def create_gene_table_insert(cds_ftr):
                  """("{}", "{}", {}, {}, {}, "{}", "{}", "{}", "{}", {}, {});""")
     statement = statement.format(cds_ftr.id, cds_ftr.genome_id,
                                  cds_ftr.start, cds_ftr.stop,
-                                 cds_ftr.translation_length,
+                                 cds_ftr.length,
                                  cds_ftr.name, cds_ftr.translation,
                                  cds_ftr.orientation, cds_ftr.description,
                                  locus_tag, cds_ftr.parts)

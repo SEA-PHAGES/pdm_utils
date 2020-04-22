@@ -997,6 +997,13 @@ class TestCdsClass(unittest.TestCase):
         self.assertEqual(self.feature.length, 4)
 
     def test_set_nucleotide_length_2(self):
+        """Verify the nucleotide length is correct when computed directly
+        from a translation."""
+        self.feature.translation = Seq("MF", IUPAC.protein)
+        self.feature.set_nucleotide_length(translation=True)
+        self.assertEqual(self.feature.length, 9)
+
+    def test_set_nucleotide_length_3(self):
         """Verify the nucleotide length is correct for a 0-based
         half-open interval."""
         self.feature.start = 0
@@ -1005,7 +1012,7 @@ class TestCdsClass(unittest.TestCase):
         self.feature.set_nucleotide_length()
         self.assertEqual(self.feature.length, 11)
 
-    def test_set_nucleotide_length_3(self):
+    def test_set_nucleotide_length_4(self):
         """Verify the nucleotide length is correct for a 1-based
         closed interval."""
         self.feature.start = 0
@@ -1014,7 +1021,7 @@ class TestCdsClass(unittest.TestCase):
         self.feature.set_nucleotide_length()
         self.assertEqual(self.feature.length, 12)
 
-    def test_set_nucleotide_length_4(self):
+    def test_set_nucleotide_length_5(self):
         """Verify the nucleotide length is not set for invalid
         coordinate format."""
         self.feature.start = 0

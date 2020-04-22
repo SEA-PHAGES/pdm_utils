@@ -446,25 +446,31 @@ class Cds:
             self.coordinate_format = new_format
 
 
-    def set_nucleotide_length(self, seq=False):
+    def set_nucleotide_length(self, seq=False, translation=False):
         """Set the length of the nucleotide sequence.
 
+        Nucleotide length can be computed several different ways, including
+        from the difference of the start and stop coordinates, the length
+        of the transcribed nucleotide sequence, or the length of
+        the translation. For compound features, using either the nucleotide or
+        translation sequence is the accurate way to determine the
+        true length of the feature, but 'length' may mean different things
+        in different contexts.
+
         :param seq:
-            Nucleotide length can be computed multiple ways.
-            If the 'seq' parameter is False, the 'start' and 'stop'
-            coordinates are used to determine the length (and take into
-            account the 'coordinate_format' attribute. However, for
-            compound features, this value may not be accurate.
-            If the 'seq' parameter is True, the nucleotide sequence is used
-            to determine the length. When the sequence reflects the
-            entire feature (including compound features), the length
-            will be accurate.
+            Use the nucleotide sequence from the 'seq' attribute to
+            compute the length.
         :type seq: bool
+        :param translation:
+            Use the translation sequence from the 'translation' attribute to
+            compute the length.
+        :type translation: bool
         """
 
         if seq:
             self.length = len(self.seq)
-            pass
+        elif translation:
+            self.length = (len(self.translation) * 3) + 3 # include stop codon
         else:
             if self.coordinate_format == "0_half_open":
                 self.length = self.stop - self.start

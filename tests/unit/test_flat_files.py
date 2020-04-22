@@ -411,7 +411,7 @@ class TestFlatFileFunctions2(unittest.TestCase):
         with self.subTest():
             self.assertEqual(cds_ftr.translation_length, 5)
         with self.subTest():
-            self.assertEqual(cds_ftr.length, 8)
+            self.assertEqual(cds_ftr.length, 18)
         with self.subTest():
             self.assertEqual(cds_ftr.translation_table, 11)
         with self.subTest():
@@ -467,6 +467,8 @@ class TestFlatFileFunctions2(unittest.TestCase):
             self.assertEqual(cds_ftr.translation, "")
         with self.subTest():
             self.assertEqual(cds_ftr.translation_length, 0)
+        with self.subTest():
+            self.assertEqual(cds_ftr.length, 3)
 
     def test_parse_cds_seqfeature_4(self):
         """Verify CDS feature is parsed with no translation table."""
@@ -609,7 +611,7 @@ class TestFlatFileFunctions2(unittest.TestCase):
         with self.subTest():
             self.assertEqual(cds_ftr.coordinate_format, "0_half_open")
         with self.subTest():
-            self.assertEqual(cds_ftr.length, 0)
+            self.assertEqual(cds_ftr.length, 18)
 
     def test_parse_cds_seqfeature_10(self):
         """Verify CDS feature is parsed with fuzzy coordinates."""
@@ -630,7 +632,7 @@ class TestFlatFileFunctions2(unittest.TestCase):
         with self.subTest():
             self.assertEqual(cds_ftr.coordinate_format, "0_half_open")
         with self.subTest():
-            self.assertEqual(cds_ftr.length, 11)
+            self.assertEqual(cds_ftr.length, 18)
 
 
 
