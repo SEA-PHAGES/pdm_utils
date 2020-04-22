@@ -3,6 +3,7 @@
 import argparse
 import csv
 from datetime import datetime, date
+import os
 import pathlib
 import sys
 from Bio import SeqIO
@@ -16,6 +17,7 @@ from pdm_utils.functions import phagesdb
 from pdm_utils.functions import tickets
 
 # Names of folders and files created.
+DEFAULT_OUTPUT_FOLDER = os.getcwd()
 CURRENT_DATE = date.today().strftime("%Y%m%d")
 RESULTS_FOLDER = f"{CURRENT_DATE}_get_data"
 PECAAN_FOLDER = "pecaan"
@@ -75,8 +77,8 @@ def parse_args(unparsed_args_list):
 
     parser = argparse.ArgumentParser(description=RETRIEVE_HELP)
     parser.add_argument("database", type=str, help=DATABASE_HELP)
-    parser.add_argument("output_folder", type=pathlib.Path,
-        help=OUTPUT_FOLDER_HELP)
+    parser.add_argument("-o", "--output_folder", type=pathlib.Path,
+        default=pathlib.Path(DEFAULT_OUTPUT_FOLDER), help=OUTPUT_FOLDER_HELP)
     parser.add_argument("-u", "--updates", action="store_true",
         default=False, help=UPDATES_HELP)
     parser.add_argument("-d", "--draft", action="store_true",

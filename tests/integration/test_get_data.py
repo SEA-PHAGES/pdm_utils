@@ -70,7 +70,7 @@ def create_update(table, field, value, phage_id=None):
 def get_unparsed_args(draft=False, final=False, genbank=False, update=False,
                       force_download=False, genbank_results=True):
     """Returns list of command line arguments to get data."""
-    unparsed_args = ["run.py", pipeline, db, str(test_folder)]
+    unparsed_args = ["run.py", pipeline, db, "-o", str(test_folder)]
     if draft:
         unparsed_args.append("-d")
     if final:
