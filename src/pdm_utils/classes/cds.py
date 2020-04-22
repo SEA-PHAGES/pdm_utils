@@ -165,29 +165,29 @@ class Cds:
         #    The 'locus_tag' qualifier may or may not be present,
         #    and may or may not have an integer.
         if value is None:
-            name = ""
+            value = ""
             list1 = ["_locus_tag_num", "_gene_num", "_product_num",
                      "_note_num", "_function_num"]
 
             # First see if any num attributes have a float.
             x = 0
-            while (name == "" and x < len(list1)):
-                value = getattr(self, list1[x])
-                if basic.is_float(value):
-                    name = value
+            while (value == "" and x < len(list1)):
+                name = getattr(self, list1[x])
+                if basic.is_float(name):
+                    value = name
                 x += 1
 
             # Second see if any num attributes have non-empty values.
             # At this point, it's very unpredictable. Values could be like
             # 'terL' in the gene or like '10a' in the locus_tag.
-            if name == "":
+            if value == "":
                 list2 = ["gene"]
                 list2.extend(list1)
                 y = 0
-                while (name == "" and y < len(list2)):
-                    value = getattr(self, list2[y])
-                    if value != "":
-                        name = value
+                while (value == "" and y < len(list2)):
+                    name = getattr(self, list2[y])
+                    if name != "":
+                        value = name
                     y += 1
         self.name = value
 
