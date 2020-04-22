@@ -135,7 +135,6 @@ import_table = Path(base_dir, import_table_name)
 genome_folder = Path(base_dir, "genome_folder")
 output_folder = Path(base_dir, "output_folder")
 log_file_name = Path("import_log.txt")
-log_file = Path(output_folder, log_file_name)
 alice_flat_file = Path("temp_alice.gb")
 l5_flat_file = Path("temp_l5.gb")
 alice_flat_file_path = Path(genome_folder, alice_flat_file)
@@ -242,8 +241,7 @@ def get_unparsed_draft_import_args():
                       "-p",
                       "-e", "draft",
                       "-d", "product",
-                      "-o", str(output_folder),
-                      "-l", str(log_file)
+                      "-o", str(output_folder)
                       ]
     return unparsed_args
 
@@ -438,7 +436,7 @@ class TestImportGenome1(unittest.TestCase):
         # Note: testing whether the log file exists is tricky,
         # due to how the logging module operates.
         # with self.subTest():
-        #     self.assertTrue(self.log_file.exists())
+        #     self.assertTrue(log_file_name.exists())
 
 
     @patch("getpass.getpass")

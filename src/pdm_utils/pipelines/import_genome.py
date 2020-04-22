@@ -40,6 +40,7 @@ GENOMES_FOLDER = "genomes"
 LOGS_FOLDER = "logs"
 VERSION = pdm_utils.__version__
 EDD = eval_descriptions.EVAL_DESCRIPTIONS
+MAIN_LOG_FILE = "import.log"
 
 def main(unparsed_args_list):
     """Runs the complete import pipeline.
@@ -70,10 +71,10 @@ def main(unparsed_args_list):
         print("Unable to create results folder.")
         sys.exit(1)
 
-    args.log_file = pathlib.Path(results_path, args.log_file)
+    log_file = pathlib.Path(results_path, MAIN_LOG_FILE)
 
     # Set up root logger.
-    logging.basicConfig(filename=args.log_file, filemode="w",
+    logging.basicConfig(filename=log_file, filemode="w",
                         level=logging.DEBUG,
                         format="pdm_utils import: %(levelname)s: %(message)s")
                         # format="%(name)s - %(levelname)s - %(message)s")
@@ -144,9 +145,6 @@ def parse_args(unparsed_args_list):
     DESCRIPTION_FIELD_HELP = \
         ("Indicates the field in CDS features that is expected "
          "to store the gene description.")
-    LOG_FILE_HELP = \
-        ("Indicates the name of the file to log the import results. "
-         "This will be created in the output folder.")
     INTERACTIVE_HELP = \
         "Indicates whether interactive evaluation of data is permitted."
 
@@ -176,8 +174,6 @@ def parse_args(unparsed_args_list):
         help=DESCRIPTION_FIELD_HELP)
     parser.add_argument("-o", "--output_folder", type=pathlib.Path,
         default=pathlib.Path(DEFAULT_OUTPUT_FOLDER), help=OUTPUT_FOLDER_HELP)
-    parser.add_argument("-l", "--log_file", type=str, default="import.log",
-        help=LOG_FILE_HELP)
     parser.add_argument("-i", "--interactive", action="store_true",
         default=False, help=INTERACTIVE_HELP)
 
