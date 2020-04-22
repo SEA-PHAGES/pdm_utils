@@ -45,7 +45,7 @@ def create_update(table, field, value, phage_id=None):
 
 def get_unparsed_args():
     """Returns list of command line arguments to get gb records."""
-    unparsed_args = ["run.py", pipeline, db, str(test_folder)]
+    unparsed_args = ["run.py", pipeline, db, "-o", str(test_folder)]
     return unparsed_args
 
 D29_ACC = "AF022214"

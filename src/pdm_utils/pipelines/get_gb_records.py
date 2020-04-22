@@ -2,6 +2,7 @@
 
 import argparse
 from datetime import date
+import os
 import pathlib
 import sys
 from Bio import SeqIO
@@ -14,6 +15,7 @@ from pdm_utils.classes.filter import Filter
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
 
 
+DEFAULT_OUTPUT_FOLDER = os.getcwd()
 CURRENT_DATE = date.today().strftime("%Y%m%d")
 RESULTS_FOLDER = f"{CURRENT_DATE}_get_gb_records"
 TARGET_TABLE = "phage"
@@ -34,7 +36,8 @@ def parse_args(unparsed_args_list):
 
     parser = argparse.ArgumentParser(description=GET_GB_RECORDS_HELP)
     parser.add_argument("database", type=str, help=DATABASE_HELP)
-    parser.add_argument("output_folder", type=pathlib.Path,
+    parser.add_argument("-o", "--output_folder", type=pathlib.Path,
+                        default=pathlib.Path(DEFAULT_OUTPUT_FOLDER),
                         help=OUTPUT_FOLDER_HELP)
     parser.add_argument("-c", "--ncbi_credentials_file", type=pathlib.Path,
                         help=NCBI_CRED_FILE_HELP)
