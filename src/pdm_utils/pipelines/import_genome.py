@@ -6,6 +6,7 @@ import argparse
 import csv
 from datetime import datetime, date
 import logging
+import os
 import pathlib
 import shutil
 import sys
@@ -30,7 +31,7 @@ logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
 
-DEFAULT_OUTPUT_FOLDER = "/tmp/"
+DEFAULT_OUTPUT_FOLDER = os.getcwd()
 IMPORT_DATE = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
 CURRENT_DATE = date.today().strftime("%Y%m%d")
 RESULTS_FOLDER = f"{CURRENT_DATE}_import"

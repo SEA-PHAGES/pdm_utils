@@ -1,6 +1,7 @@
 """Integration tests for the main import pipeline."""
 
 import csv
+import os
 from pathlib import Path
 import shutil
 import sys
@@ -20,6 +21,16 @@ if str(test_dir) not in set(sys.path):
     sys.path.append(str(test_dir))
 import test_db_utils
 import test_data_utils
+
+# This will match the current working directory data stored in
+# the import_genome module. Since this module has already been imported
+# for these tests, the import_genome.DEFAULT_OUTPUT_FOLDER has already been set.
+default_cwd = os.getcwd()
+
+# Since default output folder is the current working directory, change
+# the working directory to tmp to avoid any output created within the
+# pdm_utils repo during testing.
+os.chdir("/tmp")
 
 # Create the main test directory in which all files will be
 # created and managed.
@@ -531,7 +542,6 @@ class TestImportGenome1(unittest.TestCase):
 class TestImportGenome2(unittest.TestCase):
 
     def setUp(self):
-
         self.test_filepath1 = Path(test_file_dir, "test_flat_file_1.gb")
         self.test_directory1 = Path(test_root_dir, "test_dir")
         self.test_directory1.mkdir()
@@ -568,7 +578,7 @@ class TestImportGenome2(unittest.TestCase):
         with self.subTest():
             self.assertEqual(args.description_field, "product")
         with self.subTest():
-            self.assertEqual(args.output_folder, Path("/tmp/"))
+            self.assertEqual(args.output_folder, Path(default_cwd))
         with self.subTest():
             self.assertFalse(args.interactive)
 

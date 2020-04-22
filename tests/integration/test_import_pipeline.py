@@ -53,6 +53,7 @@
 import csv
 from datetime import datetime
 import logging
+import os
 from pathlib import Path
 import shutil
 import sys
@@ -83,6 +84,12 @@ import test_data_utils
 # current_date = datetime.today().replace(hour=0, minute=0,
 #                                         second=0, microsecond=0)
 #folder_date = date.today().strftime("%Y%m%d")
+
+
+# Since default output folder is the current working directory, change
+# the working directory to tmp to avoid any output created within the
+# pdm_utils repo during testing.
+os.chdir("/tmp")
 
 # Create the main test directory in which all files will be
 # created and managed.
@@ -506,6 +513,10 @@ class TestImportGenome1(unittest.TestCase):
         """Test pipeline with:
         valid add ticket for draft genome,
         no data in the database, minimal command line arguments."""
+        # The output_folder argument is not minimal, but it is still
+        # specified to ensure that files are created in a
+        # specified directory instead of the default directory, which is
+        # the working directory from which the tests were called.
         logging.info("test_add_3")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
@@ -514,6 +525,7 @@ class TestImportGenome1(unittest.TestCase):
                          str(genome_folder),
                          str(import_table),
                          "-p",
+                         "-o", str(output_folder)
                          ]
         run.main(unparsed_args)
         phage_table_results = test_db_utils.get_data(test_db_utils.phage_table_query)
