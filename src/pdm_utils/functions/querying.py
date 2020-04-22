@@ -18,8 +18,15 @@ from datetime import datetime
 from decimal import Decimal
 import re
 
-#GLOBAL CONSTANTS
+#GLOBAL VARIABLES
+#-----------------------------------------------------------------------------
+
 COLUMN_TYPES = [Column, functions.count, BinaryExpression, UnaryExpression]
+
+#-----------------------------------------------------------------------------
+#SQLALCHEMY OBJECT RETRIEVAL
+#Functions that functionalize retrieval of SqlAlchemy objects.
+#-----------------------------------------------------------------------------
 
 def get_table(metadata, table):
     """Get a SQLAlchemy Table object, with a case-insensitive input.
@@ -59,6 +66,11 @@ def get_column(metadata, column):
 
     return column_obj
 
+#-----------------------------------------------------------------------------
+#MySQL DATABASE MAPPING AND TRAVERSAL
+#Functions to traverse MySQL database structures and map valid JOIN clauses.
+#-----------------------------------------------------------------------------
+
 def build_graph(metadata):
     """Get a NetworkX Graph object populated from a SQLAlchemy MetaData object.
 
@@ -90,6 +102,153 @@ def build_graph(metadata):
                                          key=foreign_key)
 
     return graph
+
+def build_fromclause(db_graph, columns):
+    """Get a joined table from pathing instructions for joining MySQL Tables.
+    :param db_graph: SQLAlchemy structured NetworkX Graph object.
+    :type db_graph: Graph
+    :param columns: SQLAlchemy Column object(s).
+    :type columns: Column
+    :type columns: list
+    :returns: SQLAlchemy Table object containing left outer-joined tables.
+    :rtype: Table
+    """
+    table_list = get_table_list(columns)
+    table_pathing = get_table_pathing(db_graph, table_list)
+    joined_table = join_pathed_tables(db_graph, table_pathing)
+
+    return joined_table
+
+def build_onclause(db_graph, source_table, adjacent_table):
+    """Creates a SQLAlchemy BinaryExpression object for a MySQL ON clause 
+       expression
+
+    :param db_graph: SQLAlchemy structured NetworkX Graph object.
+    :type db_graph: Graph
+    :param source_table: Case-insensitive MySQL table name.
+    :type source_table: str
+    :param adjacent_table: Case-insensitive MySQL table name.
+    :type source_table: str
+    :returns: MySQL foreign key related SQLAlchemy BinaryExpression object.
+    :rtype: BinaryExpression
+    """
+    #Retrieves accurate table names
+    source_table = parsing.translate_table(db_graph.graph["metadata"], 
+                                           source_table)
+    adjacent_table = parsing.translate_table(db_graph.graph["metadata"],
+                                           adjacent_table)
+
+    if source_table == adjacent_table:
+        source_table = db_graph.nodes[source_table]["table"]
+        return source_table 
+
+    edge = db_graph[source_table][adjacent_table] #Indexes for graph edge.
+    foreign_key = edge["key"] #Retreives the stored foreign key object
+
+    referent_column = foreign_key.column #Gets the original primary key
+    referenced_column = foreign_key.parent #Gets the foreign key
+
+    onclause = referent_column == referenced_column 
+
+    return onclause
+
+def get_table_list(columns):
+    """Get a nonrepeating list SQLAlchemy Table objects from Column objects.
+
+    :param columns: SQLAlchemy Column object(s).
+    :type columns: Column
+    :type columns: list
+    :returns: List of corresponding SQLAlchemy Table objects.
+    :rtype: list
+    """
+    table_list = []
+
+    if not isinstance(columns, list):
+        columns = [columns]
+
+    for column in columns:
+        table_list.append(extract_column(column).table)
+
+    #OrderedDict is onlt used for the python mapping functions to remove repeats
+    table_list = list(OrderedDict.fromkeys(table_list))
+                            
+    return table_list
+
+def get_table_pathing(db_graph, table_list, center_table=None):
+    """Get pathing instructions for joining MySQL Table objects.
+
+    :param db_graph: SQLAlchemy structured NetworkX Graph object.
+    :type db_graph: Graph
+    :param table_list: List of SQLAlchemy Table objects.
+    :type table_list: list[Table]
+    :param center_table: SQLAlchemy Table object to begin traversals from.
+    :type center_table: Table
+    :returns: 2-D list containing the center table and pathing instructions.
+    :rtype: list
+    """
+    table_list = table_list.copy()
+
+    #Removes the center_table from the list, if specified
+    if not center_table is None:
+        table_list.remove(center_table)
+    #Creates a random center_table
+    else:
+        center_table = table_list[0]
+        table_list.remove(center_table)
+
+
+    table_paths = []
+    for table in table_list:
+        #NetworkX traversal algorithm finds path
+        path = shortest_path(db_graph, center_table.name, table.name)
+
+        if not path:
+            raise ValueError( "Operation cannot be performed. "
+                             f"Table {table.name} is not connected by any "
+                             f"foreign keys to table {center_table}.")
+
+        table_paths.append(path)
+
+    table_pathing = [center_table, table_paths]
+    return table_pathing
+
+def join_pathed_tables(db_graph, table_pathing):
+    """Get a joined table from pathing instructions for joining MySQL Tables.
+
+    :param db_graph: SQLAlchemy structured NetworkX Graph object.
+    :type db_graph: Graph
+    :param table_pathing: 2-D list containing a Table and pathing lists.
+    :type table_pathing: list
+    :returns: SQLAlchemy Table object containing left outer-joined tables.
+    :rtype: Table
+    """
+    center_table = table_pathing[0] #The center_table from table pathing
+    joined_tables = center_table #Creates a Table 'base' to add to
+
+    joined_table_set = set()
+    joined_table_set.add(center_table.name) #Creates running table history
+
+    for path in table_pathing[1]:
+        for index in range(len(path)): 
+            table = path[index]
+            previous_table = path[index-1]
+
+            #If the table has not already been added:
+            if table not in joined_table_set:
+                joined_table_set.add(table) 
+                table_object = db_graph.nodes[table]["table"] # Get Table object
+                #Build a MySQL ON clause to left outer-join the table
+                onclause = build_onclause(db_graph, previous_table, table) 
+                joined_tables = join(joined_tables, table_object, 
+                                                            isouter=True, 
+                                                            onclause=onclause)
+
+    return joined_tables
+
+#-----------------------------------------------------------------------------
+#SQLALCHEMY COLUMN HANDLING
+#Functions to deal with column formats and constructing column expressions.
+#-----------------------------------------------------------------------------
 
 def build_where_clause(db_graph, filter_expression): 
     """Creates a SQLAlchemy BinaryExpression object from a MySQL WHERE 
@@ -137,39 +296,6 @@ def build_where_clause(db_graph, filter_expression):
         where_clause = (column_object  <=  right)
 
     return where_clause 
-
-def build_onclause(db_graph, source_table, adjacent_table):
-    """Creates a SQLAlchemy BinaryExpression object for a MySQL ON clause 
-       expression
-
-    :param db_graph: SQLAlchemy structured NetworkX Graph object.
-    :type db_graph: Graph
-    :param source_table: Case-insensitive MySQL table name.
-    :type source_table: str
-    :param adjacent_table: Case-insensitive MySQL table name.
-    :type source_table: str
-    :returns: MySQL foreign key related SQLAlchemy BinaryExpression object.
-    :rtype: BinaryExpression
-    """
-    #Retrieves accurate table names
-    source_table = parsing.translate_table(db_graph.graph["metadata"], 
-                                           source_table)
-    adjacent_table = parsing.translate_table(db_graph.graph["metadata"],
-                                           adjacent_table)
-
-    if source_table == adjacent_table:
-        source_table = db_graph.nodes[source_table]["table"]
-        return source_table 
-
-    edge = db_graph[source_table][adjacent_table] #Indexes for graph edge.
-    foreign_key = edge["key"] #Retreives the stored foreign key object
-
-    referent_column = foreign_key.column #Gets the original primary key
-    referenced_column = foreign_key.parent #Gets the foreign key
-
-    onclause = referent_column == referenced_column 
-
-    return onclause
 
 def extract_column(column, check=None):
     """Get a column from a supported SQLAlchemy Column-related object.
@@ -287,114 +413,10 @@ def extract_order_by_clauses(order_by_clauses):
 
     return order_by_columns
 
-def get_table_list(columns):
-    """Get a nonrepeating list SQLAlchemy Table objects from Column objects.
-
-    :param columns: SQLAlchemy Column object(s).
-    :type columns: Column
-    :type columns: list
-    :returns: List of corresponding SQLAlchemy Table objects.
-    :rtype: list
-    """
-    table_list = []
-
-    if not isinstance(columns, list):
-        columns = [columns]
-
-    for column in columns:
-        table_list.append(extract_column(column).table)
-
-    #OrderedDict is onlt used for the python mapping functions to remove repeats
-    table_list = list(OrderedDict.fromkeys(table_list))
-                            
-    return table_list
-
-def get_table_pathing(db_graph, table_list, center_table=None):
-    """Get pathing instructions for joining MySQL Table objects.
-
-    :param db_graph: SQLAlchemy structured NetworkX Graph object.
-    :type db_graph: Graph
-    :param table_list: List of SQLAlchemy Table objects.
-    :type table_list: list[Table]
-    :param center_table: SQLAlchemy Table object to begin traversals from.
-    :type center_table: Table
-    :returns: 2-D list containing the center table and pathing instructions.
-    :rtype: list
-    """
-    table_list = table_list.copy()
-
-    #Removes the center_table from the list, if specified
-    if not center_table is None:
-        table_list.remove(center_table)
-    #Creates a random center_table
-    else:
-        center_table = table_list[0]
-        table_list.remove(center_table)
-
-
-    table_paths = []
-    for table in table_list:
-        #NetworkX traversal algorithm finds path
-        path = shortest_path(db_graph, center_table.name, table.name)
-
-        if not path:
-            raise ValueError( "Operation cannot be performed. "
-                             f"Table {table.name} is not connected by any "
-                             f"foreign keys to table {center_table}.")
-
-        table_paths.append(path)
-
-    table_pathing = [center_table, table_paths]
-    return table_pathing
-
-def join_pathed_tables(db_graph, table_pathing):
-    """Get a joined table from pathing instructions for joining MySQL Tables.
-
-    :param db_graph: SQLAlchemy structured NetworkX Graph object.
-    :type db_graph: Graph
-    :param table_pathing: 2-D list containing a Table and pathing lists.
-    :type table_pathing: list
-    :returns: SQLAlchemy Table object containing left outer-joined tables.
-    :rtype: Table
-    """
-    center_table = table_pathing[0] #The center_table from table pathing
-    joined_tables = center_table #Creates a Table 'base' to add to
-
-    joined_table_set = set()
-    joined_table_set.add(center_table.name) #Creates running table history
-
-    for path in table_pathing[1]:
-        for index in range(len(path)): 
-            table = path[index]
-            previous_table = path[index-1]
-
-            #If the table has not already been added:
-            if table not in joined_table_set:
-                joined_table_set.add(table) 
-                table_object = db_graph.nodes[table]["table"] # Get Table object
-                #Build a MySQL ON clause to left outer-join the table
-                onclause = build_onclause(db_graph, previous_table, table) 
-                joined_tables = join(joined_tables, table_object, 
-                                                            isouter=True, 
-                                                            onclause=onclause)
-
-    return joined_tables
-
-def build_fromclause(db_graph, columns):
-    """Get a joined table from pathing instructions for joining MySQL Tables.
-    :param db_graph: SQLAlchemy structured NetworkX Graph object.
-    :type db_graph: Graph
-    :param columns: SQLAlchemy Column object(s).
-    :type columns: Column
-    :type columns: list
-    :returns: SQLAlchemy Table object containing left outer-joined tables.
-    :rtype: Table
-    """
-    table_list = get_table_list(columns)
-    table_pathing = get_table_pathing(db_graph, table_list)
-    joined_table = join_pathed_tables(db_graph, table_pathing)
-
-    return joined_table
+#-----------------------------------------------------------------------------
+#SQLALCHEMY SELECT HANDLING
+#Functions that build and modify SqlAlchemy executable objects.
+#-----------------------------------------------------------------------------
 
 def append_where_clauses(executable, where_clauses):
     """Add WHERE SQLAlchemy BinaryExpression objects to a Select object.
@@ -541,11 +563,80 @@ def build_distinct(db_graph, columns, where=None, order_by=None, add_in=None):
     distinct_query = query.distinct() #Converts a SELECT to a DISTINCT
     return distinct_query
 
-#TODO for Travis: To be evaluated for placement in another module.
-def first_column_value_subqueries(engine, executable, in_column, 
-                                                                 source_values, 
+#-----------------------------------------------------------------------------
+#SQLALCHEMY EXECUTE QUERY FUNCTIONS
+#Functions that execute SqlAlchemy select statements and handle outputs.
+#-----------------------------------------------------------------------------
+def execute(engine, executable, values=[], in_column=None, limit=8000, 
+                                                           return_dict=True):
+    """Use SQLAlchemy Engine to execute a MySQL query.
+    
+    :param engine: SQLAlchemy Engine object used for executing queries.
+    :type engine: Engine
+    :param executable: Input a executable MySQL query.
+    :type executable: Select
+    :type executable: str
+    :param return_dict: Toggle whether execute returns dict or tuple.
+    :type return_dict: Boolean
+    :returns: Results from execution of given MySQL query.
+    :rtype: list[dict]
+    :rtype: list[tuple]
+    """
+    if values:
+        if in_column is None:
+            raise ValueError("Column input is required to condition "
+                             "SQLAlchemy select for a set of values.")
+        
+        results = execute_value_subqueries(engine, executable,
+                                           in_column, values, 
+                                           return_dict=return_dict, limit=limit)
+                                           
+    else:
+        proxy = engine.execute(executable)
+
+        results = proxy.fetchall()
+
+        if return_dict:
+            results_dicts = []
+            for result in results:
+                results_dicts.append(dict(result))
+
+            results = results_dicts 
+
+    return results
+    
+def first_column(engine, executable, values=[], in_column=None, limit=8000):
+    """Use SQLAlchemy Engine to execute and return the first column of fields.
+        
+    :param engine: SQLAlchemy Engine object used for executing queries.
+    :type engine: Engine
+    :param executable: Input an executable MySQL query.
+    :type executable: Select
+    :type executable: str
+    :returns: A column for a set of MySQL values.
+    :rtype: list[str]
+    """     
+    if values:
+        if in_column is None:
+            raise ValueError("Column input is required to condition "
+                             "SQLAlchemy select for a set of values.")
+
+        values = first_column_value_subqueries(engine, executable,
+                                               in_column, values,
+                                               limit=8000)
+    else:
+        proxy = engine.execute(executable)
+        results = proxy.fetchall()
+
+        values = []
+        for result in results:
+            values.append(result[0])
+
+    return values
+
+def first_column_value_subqueries(engine, executable, in_column, source_values, 
                                                                  limit=8000):
-    """Execute a single column MySQL query for a set of values with subqueries.
+    """Query with a conditional on a set of values using subqueries.
 
     :param engine: SQLAlchemy Engine object used for executing queries.
     :type engine: Engine
@@ -563,6 +654,16 @@ def first_column_value_subqueries(engine, executable, in_column,
     :returns: Distinct values fetched from value constraints.
     :rtype: list
     """
+    if not isinstance(in_column, Column):
+        raise ValueError("Inputted column to conditional values against "
+                         "is not a SqlAlchemy Column."
+                        f"Object is instead type {type(in_column)}.")
+
+    if not executable.is_derived_from(in_column.table):
+        raise ValueError("Inputted column to conditional values against "
+                         "must be a column from the table(s) joined in the "
+                         "SQLAlchemy select.")
+
     values = []
     if in_column.type.python_type == bytes:
         source_values = parsing.convert_to_encoded(source_values)
@@ -582,12 +683,10 @@ def first_column_value_subqueries(engine, executable, in_column,
     values = list(OrderedDict.fromkeys(values))
     return values
 
-#TODO for Travis: To be evaluated for placement in another module.
-def execute_value_subqueries(engine, executable, in_column, 
-                                                            source_values,
+def execute_value_subqueries(engine, executable, in_column, source_values,
                                                             return_dict=True,
                                                             limit=8000):
-    """Execute a MySQL query for a set of values with subqueries.
+    """Query with a conditional on a set of values using subqueries.
 
     :param engine: SQLAlchemy Engine object used for executing queries.
     :type engine: Engine
@@ -605,6 +704,16 @@ def execute_value_subqueries(engine, executable, in_column,
     :returns: List of grouped data for each value constraint.
     :rtype: list
     """
+    if not isinstance(in_column, Column):
+        raise ValueError("Inputted column to conditional values against "
+                         "is not a SqlAlchemy Column."
+                        f"Object is instead type {type(in_column)}.")
+
+    if in_column not in executable.get_children():
+        raise ValueError("Inputted column to conditional values against "
+                         "must be a column from the table(s) joined in the "
+                         "SQLAlchemy select.")
+    
     values=[]
     if in_column.type.python_type == bytes:
         source_values = parsing.convert_to_encoded(source_values)
@@ -626,51 +735,3 @@ def execute_value_subqueries(engine, executable, in_column,
 
     return values
 
-#TODO for Travis: To be evaluated for placement in another module.
-def execute(engine, executable, return_dict=True):
-    """Use SQLAlchemy Engine to execute a MySQL query.
-    
-    :param engine: SQLAlchemy Engine object used for executing queries.
-    :type engine: Engine
-    :param executable: Input a executable MySQL query.
-    :type executable: Select
-    :type executable: str
-    :param return_dict: Toggle whether execute returns dict or tuple.
-    :type return_dict: Boolean
-    :returns: Results from execution of given MySQL query.
-    :rtype: list[dict]
-    :rtype: list[tuple]
-    """
-    proxy = engine.execute(executable)
-
-    results = proxy.fetchall()
-
-    if return_dict:
-        results_dicts = []
-        for result in results:
-            results_dicts.append(dict(result))
-
-        results = results_dicts 
-
-    return results
-    
-#TODO for Travis: To be evaluated for placement in another module.
-def first_column(engine, executable):
-    """Use SQLAlchemy Engine to execute and grab the first column."
-        
-    :param engine: SQLAlchemy Engine object used for executing queries.
-    :type engine: Engine
-    :param executable: Input an executable MySQL query.
-    :type executable: Select
-    :type executable: str
-    :returns: A column for a set of MySQL values.
-    :rtype: list[str]
-    """
-    proxy = engine.execute(executable)
-    results = proxy.fetchall()
-
-    values = []
-    for result in results:
-        values.append(result[0])
-
-    return values

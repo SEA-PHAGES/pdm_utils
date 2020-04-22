@@ -51,6 +51,10 @@ class Filter:
 
         self.verbose = False
 
+#-----------------------------------------------------------------------------
+#FILTER PROPERTIES
+#-----------------------------------------------------------------------------
+
     @property
     def updated(self):
         updated = self._updated
@@ -125,7 +129,11 @@ class Filter:
             self._key = q.get_column(self.graph.graph["metadata"], key)
         else:
             raise TypeError("Filter key value must be of type SqlAlchemy Column.")
-        
+
+#-----------------------------------------------------------------------------
+#FILTER PROPERTY HANDLING
+#-----------------------------------------------------------------------------
+
     def connect(self):
         """Connect Filter object to a database via an AlchemyHandler.
         """
@@ -157,6 +165,14 @@ class Filter:
 
         if not isinstance(self._key, Column):
             raise AttributeError("Filter object is missing valid column key.")
+
+    def reset(self):
+        """Resets all filters, values, and Filter state conditions.
+        """
+        self._filters = {}
+        self._values = []
+        self._values_valid = True
+        self._updated = True
 
     def add(self, filter):
         """Add a filter to the Filter object class.
@@ -206,84 +222,87 @@ class Filter:
 
         self._updated = False
 
-    def convert_column_input(self, raw_column):
-        """Converts a column input, string or Column, to a Column.
+    def hits(self):
+        """Gets the number of a Filter object's values.
+        """
+        if self.values == None:
+            return 0
 
+        return len(self._values)    
+
+    def copy(self):
+        """Returns a copy of a Filter object.
+        """
+        copy = Filter()
+        copy._connected = self._connected
+        copy._updated = self.updated
+        copy._values_valid = self.values_valid
+        copy._filters = self.copy_filters()
+        copy._engine = self.engine
+        copy._graph = self.graph
+        copy._key = self.key
+        copy._values = self.values
+
+        return copy
+ 
+    def copy_filters(self):
+        """Returns a copy of a Filter object's filter dictionary.
+        """
+        filters = {}
+        #Copies of each list are required so that multiple filter copies
+        #are not adding and removing from the same space in memory.
+        for filter in self._filters.keys():
+            clauses = self._filters[filter].copy()
+            filters.update({filter : clauses})
+
+        return filters
+
+#-----------------------------------------------------------------------------
+#FILTER QUERYING
+#-----------------------------------------------------------------------------
+    def refresh(self):
+        """Re-queries for the Filter's values.
+        """
+        self.check()
+
+        if self._values_valid:
+            return
+
+        values = self.build_values()
+        self._values = values
+        self._values_valid = True
+
+    def update(self):
+        """Queries using the Filter's key and its stored BinaryExpressions.
+        """
+        self.check()
+
+        if not self._values_valid:
+            self.refresh()
+
+        if self._updated:
+            return
+
+        where_clauses = self.build_where_clauses()
+        values = self.build_values(where=where_clauses)
+        self._values = values
+
+        self._updated = True
+        self._values_valid = True
+ 
+    def sort(self, raw_column):
+        """Re-queries for the Filter's values, applying a ORDER BY clause.
+       
         :param raw_column: SQLAlchemy Column object or object name.
         :type raw_column: Column
         :type raw_column: str
         """
-        self.check()
+        order_by_clause = self.convert_column_input(raw_column)
 
-        if isinstance(raw_column, str):
-            column = q.get_column(self.graph.graph["metadata"], raw_column)
-        elif isinstance(raw_column, Column):
-            column = raw_column
-        else:
-            raise TypeError("Column must be either a string or a Column object")
-
-
-
-        return column
-
-    def build_where_clauses(self):
-        """Builds BinaryExpression objects from stored Filter object filters.
-        """
-        where_clauses = []
-        for filter in self._filters.keys():
-            where_clauses = where_clauses + self._filters[filter]
-
-        return where_clauses
-
-    def build_values(self, where=None, order_by=None, column=None, limit=8000):
-        """Queries for values from stored WHERE clauses and Filter key.
-        
-        :param where: MySQL WHERE clause_related SQLAlchemy object(s).
-        :type where: BinaryExpression
-        :type where: list
-        :param order_by: MySQL ORDER BY clause-related SQLAlchemy object(s).
-        :type order_by: Column
-        :type order_by: list
-        :param column: SQLAlchemy Column object or object name.
-        :type column: Column
-        :type column: str
-        :param limit: SQLAlchemy IN clause query length limiter.
-        :type limit: int
-        :returns: Distinct values fetched from given and innate constraints.
-        :rtype: list
-        """
-        self.check()
-
-        if column is None:
-            select_column = self._key
-        else:
-            select_column = self.convert_column_input(column)
+        values = self.build_values(order_by=order_by_clause)
+        self._values = values
+        self._values_valid = True
  
-        if not where is None:
-            if isinstance(where, list):
-                base_clauses = where
-            else:
-                base_clauses = [where]
-        else:
-            base_clauses = []
-
-        query = q.build_distinct(self.graph, select_column, where=base_clauses, 
-                                                            order_by=order_by,
-                                                            add_in=self._key)
-
-        values = []
-        if not self._values:
-            values = q.first_column(self.engine, query) 
-        else:
-            values = q.first_column_value_subqueries(
-                        self._engine, query, self._key, self._values, 
-                                                        limit=limit) 
-
-        if self._key.type.python_type == bytes:
-            parsing.convert_from_encoded(values)
-
-        return values
-  
     def transpose(self, raw_column, return_dict=False, set_values=False):
         """Queries for distinct values from stored values and a MySQL Column.
 
@@ -382,57 +401,104 @@ class Filter:
 
         return values
 
-    def refresh(self):
-        """Re-queries for the Filter's values.
-        """
-        self.check()
+    def group(self, raw_column): 
+        """Queries and separates Filter object's values based on a Column.
 
-        if self._values_valid:
-            return
-
-        values = self.build_values()
-        self._values = values
-        self._values_valid = True
-
-    def update(self):
-        """Queries using the Filter's key and its stored BinaryExpressions.
-        """
-        self.check()
-
-        if not self._values_valid:
-            self.refresh()
-
-        if self._updated:
-            return
-
-        where_clauses = self.build_where_clauses()
-        values = self.build_values(where=where_clauses)
-        self._values = values
-
-        self._updated = True
-        self._values_valid = True
-
-    def sort(self, raw_column):
-        """Re-queries for the Filter's values, applying a ORDER BY clause.
-       
         :param raw_column: SQLAlchemy Column object or object name.
         :type raw_column: Column
         :type raw_column: str
         """
-        order_by_clause = self.convert_column_input(raw_column)
+        self.check()
 
-        values = self.build_values(order_by=order_by_clause)
-        self._values = values
-        self._values_valid = True
+        column = self.convert_column_input(raw_column)
 
-    def reset(self):
-        """Resets all filters, values, and Filter state conditions.
+        groups = self.transpose(column)
+        
+        group_results = {}
+        for group in groups:
+            where_clause = (column == group) 
+            values = self.build_values(where=[where_clause])
+            group_results.update({group : values})
+
+        return group_results
+
+    def build_values(self, where=None, order_by=None, column=None, limit=8000):
+        """Queries for values from stored WHERE clauses and Filter key.
+        
+        :param where: MySQL WHERE clause_related SQLAlchemy object(s).
+        :type where: BinaryExpression
+        :type where: list
+        :param order_by: MySQL ORDER BY clause-related SQLAlchemy object(s).
+        :type order_by: Column
+        :type order_by: list
+        :param column: SQLAlchemy Column object or object name.
+        :type column: Column
+        :type column: str
+        :param limit: SQLAlchemy IN clause query length limiter.
+        :type limit: int
+        :returns: Distinct values fetched from given and innate constraints.
+        :rtype: list
         """
-        self._filters = {}
-        self._values = []
-        self._values_valid = True
-        self._updated = True
+        self.check()
 
+        if column is None:
+            column_obj = self._key
+        else:
+            column_obj = self.convert_column_input(column)
+ 
+        if not where is None:
+            if isinstance(where, list):
+                base_clauses = where
+            else:
+                base_clauses = [where]
+        else:
+            base_clauses = []
+
+        query = q.build_distinct(self.graph, column_obj, where=base_clauses, 
+                                                         order_by=order_by,
+                                                         add_in=self._key)
+
+        values = q.first_column(self.engine, query, in_column=self._key,
+                                                    values=self._values,
+                                                    limit=limit) 
+
+        if self._key.type.python_type == bytes:
+            parsing.convert_from_encoded(values)
+
+        return values
+
+    def build_where_clauses(self):
+        """Builds BinaryExpression objects from stored Filter object filters.
+        """
+        where_clauses = []
+        for filter in self._filters.keys():
+            where_clauses = where_clauses + self._filters[filter]
+
+        return where_clauses
+
+    def convert_column_input(self, raw_column):
+        """Converts a column input, string or Column, to a Column.
+
+        :param raw_column: SQLAlchemy Column object or object name.
+        :type raw_column: Column
+        :type raw_column: str
+        """
+        self.check()
+
+        if isinstance(raw_column, str):
+            column = q.get_column(self.graph.graph["metadata"], raw_column)
+        elif isinstance(raw_column, Column):
+            column = raw_column
+        else:
+            raise TypeError("Column must be either a string or a Column object")
+
+
+
+        return column
+
+#-----------------------------------------------------------------------------
+#FILTER QUALITY-OF-LIFE
+#----------------------------------------------------------------------------- 
     def print_results(self): 
         """Prints the Filter object's values in a formatted way.
         """
@@ -463,59 +529,3 @@ class Filter:
                      + " " + "|")
         print("|" + "_"*57 + "|")
    
-    def hits(self):
-        """Gets the number of a Filter object's values.
-        """
-        if self.values == None:
-            return 0
-
-        return len(self._values)    
-
-    def group(self, raw_column): 
-        """Queries and separates Filter object's values based on a Column.
-
-        :param raw_column: SQLAlchemy Column object or object name.
-        :type raw_column: Column
-        :type raw_column: str
-        """
-        self.check()
-
-        column = self.convert_column_input(raw_column)
-
-        groups = self.transpose(column)
-        
-        group_results = {}
-        for group in groups:
-            where_clause = (column == group) 
-            values = self.build_values(where=[where_clause])
-            group_results.update({group : values})
-
-        return group_results
-
-    def copy(self):
-        """Returns a copy of a Filter object.
-        """
-        copy = Filter()
-        copy._connected = self._connected
-        copy._updated = self.updated
-        copy._values_valid = self.values_valid
-        copy._filters = self.copy_filters()
-        copy._engine = self.engine
-        copy._graph = self.graph
-        copy._key = self.key
-        copy._values = self.values
-
-        return copy
- 
-    def copy_filters(self):
-        """Returns a copy of a Filter object's filter dictionary.
-        """
-        filters = {}
-        #Copies of each list are required so that multiple filter copies
-        #are not adding and removing from the same space in memory.
-        for filter in self._filters.keys():
-            clauses = self._filters[filter].copy()
-            filters.update({filter : clauses})
-
-        return filters
-

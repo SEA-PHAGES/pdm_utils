@@ -664,7 +664,7 @@ def get_genome_seqrecords(alchemist, values=[], verbose=False):
     
     seqrecords = []
     for gnm in genomes:
-        process_cds_seqfeatures(gnm)
+        process_cds_features(gnm)
         if verbose:
             print(f"Converting {gnm.name}...")
         seqrecords.append(flat_files.genome_to_seqrecord(gnm))    
@@ -888,9 +888,9 @@ def filter_csv_columns(alchemist, table, include_columns=[], exclude_columns=[],
     return columns
 
 def process_cds_features(phage_genome):
-    """Function that populates the Cds objects of a Genome object.
+    """Function that sorts and processes the Cds objects of a Genome object.
 
-    :param phage_genome: Genome object to query cds data for.
+    :param phage_genome: Genome object containing Cds objects.
     :type phage_genome: Genome
     """
 
@@ -906,9 +906,9 @@ def process_cds_features(phage_genome):
         cds_feature.set_seqfeature()
 
 def append_database_version(genome_seqrecord, version_data):
-    """Function that sets a property of a SeqRecord with the database version.
+    """Function that appends the database version to the SeqRecord comments.
 
-    :param genome_seqrecord: Filled SeqRecord object with relevant attribtues.
+    :param genome_seqrecord: Filled SeqRecord object.
     :type genome_seqfeature: SeqRecord
     :param version_data: Dictionary containing database version information.
     :type version_data: dict
@@ -931,6 +931,9 @@ def append_database_version(genome_seqrecord, version_data):
             raise TypeError
         raise
 
+
+
+#----------------------------------------------------------------------------
 #TODO Travis 
 #Functions to be evaluated for another module:
 #-----------------------------------------------------------------------------
@@ -938,20 +941,24 @@ def append_database_version(genome_seqrecord, version_data):
 #Copy of mysqldb.parse_cds_data() with value subquerying.
 #Value subquerying needed for +300000 GeneID entries.
 #Unsure about function redundancy.
-def parse_cds_data(alchemist, values=[]):
+def parse_cds_data(alchemist, values=[], limit=8000):
+    """Returns Cds objects containing data parsed from a MySQL database.
+
+    :param alchemist: A connected and fully built AlchemyHandler object.
+    :type alchemist: AlchemyHandler
+    :param values: List of GeneIDs upon which the query can be conditioned.
+    :type values: list[str]
+    """
     gene_table = querying.get_table(alchemist.metadata, "gene")
     primary_key = list(gene_table.primary_key.columns)[0]
     cds_data_columns = list(gene_table.c)
     
     cds_data_query = querying.build_select(alchemist.graph, cds_data_columns)
 
-    if values:
-        cds_data = querying.execute_value_subqueries(alchemist.engine,
-                                                     cds_data_query, 
-                                                     primary_key,
-                                                     values)
-    else:
-        cds_data = querying.execute(alchemist.engine, cds_data_query)
+    cds_data = querying.execute(alchemist.engine, cds_data_query, 
+                                                  in_column=primary_key,
+                                                  values=values,
+                                                  limit=limit)
 
     cds_list = []
     for data_dict in cds_data:
@@ -963,6 +970,14 @@ def parse_cds_data(alchemist, values=[]):
 #Similar to genome_to_seqrecord()
 #Move to flat_files.py?
 def cds_to_seqrecord(cds, parent_genome):
+    """Creates a SeqRecord object from a Cds and its parent Genome.
+
+    :param cds: A populated Cds object.
+    :type cds: Cds
+    :param phage_genome: Populated parent Genome object of the Cds object.
+    :returns: Filled Biopython SeqRecord object.
+    :rtype: SeqRecord
+    """
     record = SeqRecord(cds.translation)
     record.seq.alphabet = IUPAC.IUPACAmbiguousDNA()
     record.name = cds.id
@@ -981,6 +996,14 @@ def cds_to_seqrecord(cds, parent_genome):
 #Similar to get_seqrecord_annotations():
 #Move to flat_files.py?
 def get_cds_seqrecord_annotations(cds, parent_genome):
+    """Function that creates a Cds SeqRecord annotations attribute dict.
+    :param cds: A populated Cds object.
+    :type cds: Cds
+    :param phage_genome: Populated parent Genome object of the Cds object.
+    :type phage_genome: Genome
+    :returns: Formatted SeqRecord annotations dictionary.
+    :rtype: dict{str}
+    """
     annotations = {"molecule type": "DNA",
                    "topology" : "linear",
                    "data_file_division" : "PHG",
@@ -1009,6 +1032,11 @@ def get_cds_seqrecord_annotations(cds, parent_genome):
 #Similar to get_seqrecord_annotatoions():
 #Move to flat_files.py?
 def get_cds_seqrecord_annotations_comments(cds):
+    """Function that creates a Cds SeqRecord comments attribute tuple.
+    
+    :param cds:
+    :type cds:
+    """
     pham_comment =\
            f"Pham: {cds.pham_id}"
     auto_generated_comment =\
