@@ -75,14 +75,8 @@ def main(unparsed_args_list):
     mysqldb.check_schema_compatibility(alchemist.engine, "export")
 
     values = []
-    filters = []
-    groups = []    
-    sort = []
     if args.pipeline in FILTERABLE_PIPELINES:
-        values = parse_value_list_input(args.input)
-        filters = args.filters
-        groups = args.groups
-        sort = args.sort
+        values = parse_value_input(args.input)
 
     if not args.pipeline in PIPELINES:
         print("ABORTED EXPORT: Unknown pipeline option discrepency.\n"
@@ -92,11 +86,13 @@ def main(unparsed_args_list):
     if args.pipeline != "I":
         execute_export(alchemist, args.output_path, args.output_name, 
                        args.pipeline, table=args.table, values=values, 
-                       filters=filters, groups=groups, sort=sort,
+                       filters=args.filters, groups=args.groups, sort=args.sort,
                        include_columns=args.include_columns,
                        exclude_columns=args.exclude_columns,
                        sequence_columns=args.sequence_columns,
-                       concatenate=args.concatenate, verbose=args.verbose)
+                       raw_bytes=args.raw_bytes, 
+                       concatenate=args.concatenate, 
+                       verbose=args.verbose)
     else:
         pass
 
@@ -185,6 +181,11 @@ def parse_export(unparsed_args_list):
             Follow selection argument with formatted column expressions:
                 {Table}.{Column}={Value}
         """
+    RAW_BYTES_HELP = """
+        Csv export option to conserve blob and encoded data from the database 
+        when exporting to a csv file.
+            Toggle to leave conserve format of bytes-type data.
+        """
  
     initial_parser = argparse.ArgumentParser()
     initial_parser.add_argument("database", type=str, help=DATABASE_HELP)
@@ -236,6 +237,8 @@ def parse_export(unparsed_args_list):
                                 help=INCLUDE_COLUMNS_HELP)
             optional_parser.add_argument("-ec", "--exclude_columns", nargs="*",
                                 help=EXCLUDE_COLUMNS_HELP)
+            optional_parser.add_argument("-rb", "--raw_bytes", 
+                                help=RAW_BYTES_HELP, action="store_true")
 
     date = time.strftime("%Y%m%d")
     default_folder_name = f"{date}_export"
@@ -248,7 +251,8 @@ def parse_export(unparsed_args_list):
                                  verbose=False, input=[],
                                  table="phage", filters=[], groups=[], sort=[],
                                  include_columns=[], exclude_columns=[],
-                                 sequence_columns=False, concatenate=False)
+                                 sequence_columns=False, concatenate=False,
+                                 raw_bytes=False)
 
     parsed_args = optional_parser.parse_args(unparsed_args_list[4:])
 
@@ -258,7 +262,7 @@ def execute_export(alchemist, output_path, output_name, pipeline,
                         values=[], verbose=False, table="phage", 
                         filters=[], groups=[], sort=[],
                         include_columns=[], exclude_columns=[], 
-                        sequence_columns=False,
+                        sequence_columns=False, raw_bytes=False,
                         concatenate=False):
     """Executes the entirety of the file export pipeline.
 
@@ -343,17 +347,16 @@ def execute_export(alchemist, output_path, output_name, pipeline,
                                    concatenate=concatenate, verbose=verbose)
             else: 
                 execute_csv_export(alchemist, mapped_path, export_path, 
-                                   csv_columns, table=table, 
-                                   sort=sort_columns,
+                                   csv_columns, table=table, sort=sort_columns, 
                                    conditionals=conditionals, values=values,
-                                   verbose=verbose)
+                                   raw_bytes=raw_bytes, verbose=verbose)
     else:
         print("Unrecognized export pipeline, aborting export")
         sys.exit(1) 
 
 def execute_csv_export(alchemist, export_path, output_path, columns,
                                         table="phage", conditionals=None,
-                                        sort=[], values=[],
+                                        sort=[], values=[], raw_bytes=False,
                                         verbose=False):
     """Executes csv export of a MySQL database table with select columns.
 
@@ -390,7 +393,8 @@ def execute_csv_export(alchemist, export_path, output_path, columns,
                                                             order_by=sort)
     
     results = querying.execute(alchemist.engine, query, primary_key, values)
-    decode_results(results, columns, verbose=verbose)
+    if not raw_bytes:
+        decode_results(results, columns, verbose=verbose)
 
     if len(results) == 0:
         if verbose:
@@ -589,7 +593,7 @@ def convert_file_path(path: str):
         raise ValueError
 
 @singledispatch
-def parse_value_list_input(value_list_input):
+def parse_value_input(value_list_input):
     """Function to convert values input to a recognized data types.
 
     :param value_list_input: Values stored in recognized data types.
@@ -602,7 +606,7 @@ def parse_value_list_input(value_list_input):
     print("Value list input for export is of an unexpected type.")
     sys.exit(1)
 
-@parse_value_list_input.register(Path)
+@parse_value_input.register(Path)
 def _(value_list_input):
     value_list = []
     with open(value_list_input, newline = '') as csv_file:
@@ -611,7 +615,7 @@ def _(value_list_input):
             value_list.append(name[0])
     return value_list
 
-@parse_value_list_input.register(list)
+@parse_value_input.register(list)
 def _(value_list_input):
     return value_list_input
 

@@ -19,45 +19,112 @@ import os
 
 class TestExportMain(unittest.TestCase):
     def setUp(self):
-        self.args_mock = Mock()  
+        self.mock_args = Mock()  
 
-        self.pipeline_mock = Mock()
-        self.alchemist_mock = Mock() 
+        self.mock_pipeline = "gb"
+        self.mock_alchemist = Mock() 
+        self.mock_engine = Mock() 
+        self.mock_database = Mock()
 
-        self.output_path_mock = Mock()
-        self.output_name_mock = Mock() 
-        self.values_mock = Mock()
-        self.verbose_mock = Mock() 
+        type(self.mock_alchemist).engine = \
+                            PropertyMock(return_value=self.mock_engine)
 
-        self.table_mock = Mock()
-        self.filters_mock = Mock()
-        self.groups_mock = Mock()
+        self.mock_output_path = Mock()
+        self.mock_output_name = Mock() 
+        self.mock_input = Mock()
+        self.mock_values = Mock()
+        self.mock_verbose = Mock() 
 
-        type(self.args_mock).pipeline = \
-                            PropertyMock(return_value=self.pipeline_mock) 
-        type(self.args_mock).alchemist = \
-                            PropertyMock(return_value=self.alchemist_mock)
+        self.mock_table = Mock()
+        self.mock_filters = Mock()
+        self.mock_groups = Mock()
+        self.mock_sort = Mock()
 
-        type(self.args_mock).output_path = \
-                            PropertyMock(return_value=self.output_path_mock)
-        type(self.args_mock).output_name = \
-                            PropertyMock(return_value=self.output_name_mock) 
-        type(self.args_mock).values = \
-                            PropertyMock(return_value=self.values_mock)
-        type(self.args_mock).verbose = \
-                            PropertyMock(return_value=self.verbose_mock)
+        self.mock_include_columns = Mock()
+        self.mock_exclude_columns = Mock()
+        self.mock_sequence_columns = Mock()
+        self.mock_raw_bytes = Mock()
 
-        type(self.args_mock).table = \
-                            PropertyMock(return_value=self.table_mock)
-        type(self.args_mock).fitlers = \
-                            PropertyMock(return_value=self.filters_mock)
-        type(self.args_mock).groups = \
-                            PropertyMock(return_value=self.groups_mock)
+        self.mock_concatenate = Mock()
 
-    def test_main_1(self):
+        type(self.mock_args).pipeline = \
+                            PropertyMock(return_value=self.mock_pipeline) 
+        type(self.mock_args).database = \
+                            PropertyMock(return_value=self.mock_database)
+
+        type(self.mock_args).output_path = \
+                            PropertyMock(return_value=self.mock_output_path)
+        type(self.mock_args).output_name = \
+                            PropertyMock(return_value=self.mock_output_name) 
+        type(self.mock_args).input = \
+                            PropertyMock(return_value=self.mock_input)
+        type(self.mock_args).verbose = \
+                            PropertyMock(return_value=self.mock_verbose)
+
+        type(self.mock_args).table = \
+                            PropertyMock(return_value=self.mock_table)
+        type(self.mock_args).filters = \
+                            PropertyMock(return_value=self.mock_filters)
+        type(self.mock_args).groups = \
+                            PropertyMock(return_value=self.mock_groups)
+        type(self.mock_args).sort = \
+                            PropertyMock(return_value=self.mock_sort)
+
+        type(self.mock_args).include_columns = \
+                        PropertyMock(return_value=self.mock_include_columns)
+        type(self.mock_args).exclude_columns = \
+                        PropertyMock(return_value=self.mock_exclude_columns)
+        type(self.mock_args).sequence_columns = \
+                        PropertyMock(return_value=self.mock_sequence_columns)
+        type(self.mock_args).raw_bytes = \
+                            PropertyMock(return_value=self.mock_raw_bytes)
+
+        type(self.mock_args).concatenate = \
+                            PropertyMock(return_value=self.mock_concatenate)
+        
+    @patch("pdm_utils.pipelines.export_db.execute_export")
+    @patch("pdm_utils.pipelines.export_db.parse_value_input")
+    @patch("pdm_utils.pipelines.export_db.mysqldb.check_schema_compatibility")
+    @patch("pdm_utils.pipelines.export_db.establish_connection")
+    @patch("pdm_utils.pipelines.export_db.parse_export")
+    def test_main_1(self, parse_export_mock, establish_connection_mock,
+                                             check_schema_compatibility_mock,
+                                             parse_value_input_mock,
+                                             execute_export_mock):
         """Verify function structure of main(). 
         """ 
-        pass
+        parse_export_mock.return_value = self.mock_args
+        parse_value_input_mock.return_value = self.mock_values
+        establish_connection_mock.return_value = self.mock_alchemist
+        
+        export_db.main(["cmd", "args"])
+
+        parse_export_mock.assert_called_with(["cmd", "args"])
+        establish_connection_mock.assert_called_with(self.mock_database)
+        check_schema_compatibility_mock.assert_called_with(self.mock_engine,
+                                                           "export")
+        parse_value_input_mock.assert_called_with(self.mock_input)
+
+        execute_export_mock.assert_called_with(
+                                    self.mock_alchemist,
+                                    self.mock_output_path,
+                                    self.mock_output_name,
+                                    self.mock_pipeline,
+                                    table=self.mock_table,
+                                    values=self.mock_values,
+                                    filters=self.mock_filters,
+                                    groups=self.mock_groups,
+                                    sort=self.mock_sort, 
+                                    include_columns=self.mock_include_columns,
+                                    exclude_columns=self.mock_exclude_columns,
+                                    raw_bytes=self.mock_raw_bytes,
+                                    sequence_columns=self.mock_sequence_columns,
+                                    concatenate=self.mock_concatenate,
+                                    verbose=self.mock_verbose)
+
+
+
+                
         
 if __name__ == "__main__":
     unittest.main()
