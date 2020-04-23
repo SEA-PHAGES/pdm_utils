@@ -65,7 +65,7 @@ The most up-to-date version of Actinobacteriophage is stored on the Hatfull lab'
 
     #. **Retrieve new data to import into the database.** New data that needs to be added to the database is retrieved from various sources and staged in a structured local directory for import. *get_data* creates separate staged directories and import tables for different types of data to be imported to minimize potential ticket conflicts::
 
-        > python3 -m pdm_utils get_data Actinobacteriophage ./ -a -c config.txt
+        > python3 -m pdm_utils get_data Actinobacteriophage -a -c config.txt
 
 
     #. **Update specific fields.** New updates are implemented predominantly in the *phage* table::
@@ -78,21 +78,21 @@ The most up-to-date version of Actinobacteriophage is stored on the Hatfull lab'
 
         A. Auto-annotated genomes::
 
-            > python3 -m pdm_utils import Actinobacteriophage ./pecaan/genomes/ ./pecaan/import_table.csv -o ./ -p
+            > python3 -m pdm_utils import Actinobacteriophage ./pecaan/genomes/ ./pecaan/import_table.csv -p
 
         B. New final annotations::
 
-            > python3 -m pdm_utils import Actinobacteriophage ./phagesdb/genomes/ ./phagesdb/import_table.csv -o ./ -p
+            > python3 -m pdm_utils import Actinobacteriophage ./phagesdb/genomes/ ./phagesdb/import_table.csv -p
 
 
         C. Auto-updated SEA-PHAGES final annotations from GenBank::
 
-            > python3 -m pdm_utils import Actinobacteriophage ./genbank/genomes/ ./genbank/import_table.csv -o ./ -p
+            > python3 -m pdm_utils import Actinobacteriophage ./genbank/genomes/ ./genbank/import_table.csv -p
 
 
         D. Other miscellaneous genomes::
 
-            > python3 -m pdm_utils import Actinobacteriophage ./misc/genomes/ ./misc/import_table.csv -o ./ -p
+            > python3 -m pdm_utils import Actinobacteriophage ./misc/genomes/ ./misc/import_table.csv -p
 
 
 
@@ -110,7 +110,7 @@ The most up-to-date version of Actinobacteriophage is stored on the Hatfull lab'
 
     #. **Export the updated database to a single file.** The updated Actinobacteriophage database is exported from MySQL into a single file, Actinobacteriophage.sql, with a corresponding Actinobacteriophage.version file that stores the database version number::
 
-        > python3 -m pdm_utils export sql Actinobacteriophage
+        > python3 -m pdm_utils export Actinobacteriophage sql
 
     #. **Upload the database for public access.** The SQL file is uploaded to the Hatfull lab's public server, where it can be retrieved by end-users for downstream applications and data analysis tools::
 
@@ -120,7 +120,7 @@ The most up-to-date version of Actinobacteriophage is stored on the Hatfull lab'
     #. **Prepare downgraded database and upload to server.** A copy of the database is generated with a downgraded schema that is compliant with several downstream tools::
 
         > python3 -m pdm_utils convert Actinobacteriophage -n Actino_Draft -s 6 -v
-        > python3 -m pdm_utils export sql Actino_Draft
+        > python3 -m pdm_utils export Actino_Draft sql
         > python3 -m pdm_utils push -d ./downgraded_version/
 
 
