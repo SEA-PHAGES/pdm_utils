@@ -59,12 +59,14 @@ def main(unparsed_args_list):
     """
     #Returns after printing appropriate error message from parsing/connecting.
     try:
-        args = parse_export(unparsed_args_list) 
+        args = parse_export(unparsed_args_list)
     except ValueError:
         print("ABORTING EXPORT: Export failed during startup.")
         sys.exit(1)
- 
-    mysqldb.check_schema_compatibility(args.alchemist.engine, "export")
+
+    # TODO temp fix to allow sql export.
+    if args.pipeline != "sql":
+        mysqldb.check_schema_compatibility(args.alchemist.engine, "export")
 
     csvx = False
     ffx = None
@@ -184,12 +186,12 @@ def parse_export(unparsed_args_list):
                                help=EXPORT_SELECT_HELP)
 
     initial = initial_parser.parse_args(unparsed_args_list[2:4])
-  
+
     alchemist = establish_connection(initial.database)
 
     optional_parser = argparse.ArgumentParser()
 
-    optional_parser.add_argument("-o", "--output_name", 
+    optional_parser.add_argument("-o", "--output_name",
                                type=str, help=OUTPUT_NAME_HELP)
     optional_parser.add_argument("-p", "--output_path", type=convert_dir_path,
                                help=OUTPUT_PATH_HELP)
@@ -204,7 +206,7 @@ def parse_export(unparsed_args_list):
         optional_parser.add_argument("-t", "--table", help=TABLE_HELP,
                                 choices=table_choices[initial.pipeline])
 
-        optional_parser.add_argument("-if", "--import_file", 
+        optional_parser.add_argument("-if", "--import_file",
                                 type=convert_file_path,
                                 help=IMPORT_FILE_HELP, dest="input",
                                 default=[])
@@ -294,12 +296,12 @@ def execute_export(alchemist, output_path, output_name,
                 conditional_maps.update({export_path : \
                                          db_filter.build_where_clauses()})
 
-        except:            
+        except:
             print("ABORTING EXPORT: Export failed during query structuring.")
             print("...Removing created export directory...")
             shutil.rmtree(str(export_path))
             sys.exit(1)
-        
+
         try:
             if verbose:
                 print("Prepared path structure, beginning export...")
@@ -308,8 +310,8 @@ def execute_export(alchemist, output_path, output_name,
 
                 if csv_export:
                     execute_csv_export(alchemist,
-                                            mapped_path, export_path, 
-                                            table=table, 
+                                            mapped_path, export_path,
+                                            table=table,
                                             conditionals=conditionals,
                                             values=values,
                                             verbose=verbose)
@@ -318,7 +320,7 @@ def execute_export(alchemist, output_path, output_name,
                     execute_ffx_export(alchemist,
                                             mapped_path, export_path,
                                             ffile_export, db_version,
-                                            table=table, 
+                                            table=table,
                                             conditionals=conditionals,
                                             values=values,
                                             verbose=verbose)
@@ -353,7 +355,7 @@ def establish_connection(database):
     except:
         print("Unknown error occured when connecting to MySQL database.")
         raise
-    return alchemist 
+    return alchemist
 
 def build_filtered_values(alchemist, table, filters, values=None,
                                                      verbose=False):
@@ -373,7 +375,7 @@ def build_filtered_values(alchemist, table, filters, values=None,
                 print(f"Filter '{filter}' is not a valid filter.")
                 raise ValueError
 
-    query = querying.build_count(alchemist.graph, primary_key, 
+    query = querying.build_count(alchemist.graph, primary_key,
                                        where=db_filter.build_where_clauses())
     hits = alchemist.scalar(query)
 
@@ -390,32 +392,32 @@ def build_groups_map(db_filter, export_path, groups=[], conditionals_map={},
                                                        verbose=False,
                                                        previous=None,
                                                        depth=0):
-    
+
     groups = groups.copy()
     current_group = groups.pop(0)
     if verbose:
         if depth > 0:
             dots = ".." * depth
-            print(f"{dots}Grouping by {current_group} in {previous}...") 
+            print(f"{dots}Grouping by {current_group} in {previous}...")
         else:
             print(f"Grouping by {current_group}...")
-    
+
     try:
         group_column = db_filter.convert_column_input(current_group)
     except:
         print(f"Group '{current_group}' is not a valid group")
         raise ValueError
 
-    query = querying.build_distinct(db_filter.graph, group_column, 
+    query = querying.build_distinct(db_filter.graph, group_column,
                                     where=db_filter.build_where_clauses())
     transposed_values = querying.first_column(db_filter.engine, query)
 
     if not transposed_values:
-        export_path.rmdir() 
-    
+        export_path.rmdir()
+
     for group in transposed_values:
         group_path = export_path.joinpath(str(group))
-        group_path.mkdir() 
+        group_path.mkdir()
         db_filter_copy = db_filter.copy()
         db_filter_copy.add(f"{current_group}={group}")
 
@@ -435,9 +437,9 @@ def build_groups_map(db_filter, export_path, groups=[], conditionals_map={},
 def execute_csv_export(alchemist, export_path, output_path,
                                         table="phage", conditionals=None,
                                         values=[],
-                                        verbose=False): 
+                                        verbose=False):
     table_obj = querying.get_table(alchemist.metadata, table)
-    
+
     select_columns = []
     headers = []
 
@@ -452,15 +454,15 @@ def execute_csv_export(alchemist, export_path, output_path,
 
     primary_key = list(table_obj.primary_key.columns)[0]
 
-    query = querying.build_select(alchemist.graph, select_columns, 
+    query = querying.build_select(alchemist.graph, select_columns,
                                                         where=conditionals)
-    
+
     if values:
         results = querying.execute_value_subqueries(alchemist.engine, query,
                                                     primary_key, values)
     else:
         results = alchemist.execute(query)
-    
+
     if verbose:
         print(f"...Writing csv '{export_path.name}.csv'...")
 
@@ -469,13 +471,13 @@ def execute_csv_export(alchemist, export_path, output_path,
                                                include_headers=True)
 
 def execute_ffx_export(alchemist, export_path, output_path,
-                       file_format, db_version, table="phage", 
+                       file_format, db_version, table="phage",
                        conditionals=None, verbose=False):
-    
+
     if verbose:
         print(
           f"Retrieving {data_name} data from {sql_handle.database}...")
-   
+
     table_obj = querying.get_table(alchemist.metadata, table)
 
     primary_key = list(table_obj.primary_key.columns)[0]
@@ -485,7 +487,7 @@ def execute_ffx_export(alchemist, export_path, output_path,
                                                         where=conditionals,
                                                         order_by=column)
         if values:
-            values = querying.first_column_value_subqueries(alchemist.engine, 
+            values = querying.first_column_value_subqueries(alchemist.engine,
                                                         query, primary_key, values)
         else:
             values = alchemist.first_column(query)
@@ -540,7 +542,7 @@ def convert_path(path: str):
     elif path_object.resolve().exists():
         path_object = path_object.resolve()
 
-    print("String input failed to be converted to a working Path object. \n" 
+    print("String input failed to be converted to a working Path object. \n"
           "Path may not exist.")
     raise ValueError
 
