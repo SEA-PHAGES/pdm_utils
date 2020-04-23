@@ -37,7 +37,15 @@ CLEAR_GENE_DOMAINSTATUS = "UPDATE gene SET DomainStatus = 0"
 
 # MISC
 VERSION = pdm_utils.__version__
+
+# TODO tmp dir stores rpsblast output, while output folder stores logged info
+# about the find_domains pipeline. These two directories could possibly be
+# combined, so that all tmp dir automatically gets created within output folder
+# beside the results folder, or something like that.
+DEFAULT_TMP_DIR = "/tmp/find_domains"
+DEFAULT_OUTPUT_FOLDER = os.getcwd()
 RESULTS_FOLDER = f"{constants.CURRENT_DATE}_find_domains"
+MAIN_LOG_FILE = "find_domains.log"
 
 # LOGGING
 # Add a logger named after this module. Then add a null handler, which
@@ -59,29 +67,29 @@ def setup_argparser():
         "Uses rpsblast to search the NCBI conserved domain database "
         "for significant domain hits in all new proteins of a "
         "MySQL database.")
-    output_folder_help = "Directory where log data can be generated."
-    log_file_help = "Name of the log file generated."
-    reset_help = "Clear all domain data currently in the database before finding domains."
+    output_folder_help = \
+        "Directory where log data can be generated."
+    reset_help = \
+        "Clear all domain data in the database before finding domains."
 
     # Initialize parser and add arguments
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument("db", type=str,
+    parser.add_argument("database", type=str,
                         help="name of database to phamerate")
-    parser.add_argument("dir", type=str,
+    parser.add_argument("cdd", type=str,
                         help="path to local directory housing CDD database")
-    parser.add_argument("--threads", default=mp.cpu_count(), type=int,
+    parser.add_argument("-t","--threads", default=mp.cpu_count(), type=int,
                         help="number of concurrent CDD searches to run")
-    parser.add_argument("--evalue", default=0.001, type=float,
+    parser.add_argument("-e", "--evalue", default=0.001, type=float,
                         help="evalue cutoff for rpsblast hits")
-    parser.add_argument("--tmp_dir", default="/tmp/find_domains", type=str,
+    parser.add_argument("-td", "--tmp_dir", default=DEFAULT_TMP_DIR, type=str,
                         help="path to temporary directory for file I/O")
-    parser.add_argument("--rpsblast", default="", type=str,
+    parser.add_argument("-r", "--rpsblast", default="", type=str,
                         help="path to rpsblast(+) binary")
-    parser.add_argument("--output_folder", type=pathlib.Path,
-        default=pathlib.Path("/tmp/"), help=output_folder_help)
-    parser.add_argument("--log_file", type=str, default="find_domains.log",
-        help=log_file_help)
-    parser.add_argument("--reset", action="store_true",
+    parser.add_argument("-o", "--output_folder", type=pathlib.Path,
+                        default=pathlib.Path(DEFAULT_OUTPUT_FOLDER),
+                        help=output_folder_help)
+    parser.add_argument("-x", "--reset", action="store_true",
         default=False, help=reset_help)
     return parser
 
@@ -279,27 +287,26 @@ def main(argument_list):
     args = cdd_parser.parse_args(argument_list)
 
     # Store arguments in more easily accessible variables
-    database = args.db
-    cdd_dir = expand_path(args.dir)
+    database = args.database
+    cdd_dir = expand_path(args.cdd)
     cdd_name = learn_cdd_name(cdd_dir)
     threads = args.threads
     evalue = args.evalue
     rpsblast = args.rpsblast
     tmp_dir = args.tmp_dir
     output_folder = args.output_folder
-    log_file = args.log_file
     reset = args.reset
 
     # Set up directory.
     output_folder = basic.set_path(output_folder, kind="dir", expect=True)
     results_folder = pathlib.Path(RESULTS_FOLDER)
     results_path = basic.make_new_dir(output_folder, results_folder,
-                                      attempt=10)
+                                      attempt=50)
     if results_path is None:
         print("Unable to create output_folder.")
         sys.exit(1)
 
-    log_file = pathlib.Path(results_path, log_file)
+    log_file = pathlib.Path(results_path, MAIN_LOG_FILE)
 
     # Set up root logger.
     logging.basicConfig(filename=log_file, filemode="w",
@@ -345,59 +352,80 @@ def main(argument_list):
 
     # Only run the pipeline if there are genes returned that need it
     if len(cdd_genes) > 0:
+
+        # TODO old pipeline. can be removed once new pipeline is working.
         log_gene_ids(cdd_genes)
-
-        # Create temp_dir
         make_tempdir(tmp_dir)
-
-        # TODO dev
-        cds_trans_dict = create_cds_translation_dict(cdd_genes)
-
-
-        # Build jobs list
-        unique_trans = cds_trans_dict.keys()
         jobs = []
-        for id, translation in enumerate(unique_trans):
-            jobs.append((rpsblast, cdd_name, tmp_dir, evalue, id, translation))
-        results = parallelize(jobs, threads, search_and_process2)
-
-        # List of dictionaries. Each dictionary:
-        # keys: "Translation": translation, "Data": list of results
-        # In each list of results, each element is a dictionary:
-        # data_dict = {
-        #     "HitID": align.hit_id,
-        #     "DomainID": domain_id,
-        #     "Name": name,
-        #     "Description": description,
-        #     "Expect": float(hsp.expect),
-        #     "QueryStart": int(hsp.query_start),
-        #     "QueryEnd": int(hsp.query_end)
-        #     }
-
-
-        # TODO dev
-        results_dict = create_results_dict(results)
-        # Returns a dictionary, where:
-        # key = unique translation,
-        # value = list of dictionaries, each dictionary a unique rpsblast result
-
-        # TODO dev
-        transactions = create_sql_statements(cds_trans_dict, results_dict)
-        insert_domain_data(engine, transactions)
+        for cdd_gene in cdd_genes:
+            jobs.append((rpsblast, cdd_name, tmp_dir, evalue,
+                         cdd_gene["GeneID"], cdd_gene["Translation"]))
+        results = parallelize(jobs, threads, search_and_process)
+        print("\n")
+        insert_domain_data(engine, results)
         engine.dispose()
 
-        # for cdd_gene in cdd_genes:
-        #     jobs.append((rpsblast, cdd_name, tmp_dir, evalue,
-        #                  cdd_gene["GeneID"], cdd_gene["Translation"]))
-        # results = parallelize(jobs, threads, search_and_process)
-        print("\n")
-        # insert_domain_data(engine, results)
+
+
+        # # TODO below is new pipeline in development.
+        #
+        # # TODO dev
+        # log_gene_ids(cdd_genes)
+        #
+        # # Create temp_dir
+        # make_tempdir(tmp_dir)
+        #
+        #
+        #
+        # cds_trans_dict = create_cds_translation_dict(cdd_genes)
+        #
+        # print("cds_trans_dict")
+        #
+        # # Build jobs list
+        # unique_trans = cds_trans_dict.keys()
+        # print("unique_trans")
+        # print(unique_trans)
+        # input("check")
+        # jobs = []
+        # for id, translation in enumerate(unique_trans):
+        #     print(id)
+        #     print(translation)
+        #     input("check2")
+        #     jobs.append((rpsblast, cdd_name, tmp_dir, evalue, id, translation))
+        # results = parallelize(jobs, threads, search_and_process2)
+        #
+        # print("results")
+        # # List of dictionaries. Each dictionary:
+        # # keys: "Translation": translation, "Data": list of results
+        # # In each list of results, each element is a dictionary:
+        # # data_dict = {
+        # #     "HitID": align.hit_id,
+        # #     "DomainID": domain_id,
+        # #     "Name": name,
+        # #     "Description": description,
+        # #     "Expect": float(hsp.expect),
+        # #     "QueryStart": int(hsp.query_start),
+        # #     "QueryEnd": int(hsp.query_end)
+        # #     }
+        #
+        #
+        # # TODO dev
+        # results_dict = create_results_dict(results)
+        # print("results_dict")
+        #
+        # # Returns a dictionary, where:
+        # # key = unique translation,
+        # # value = list of dictionaries, each dictionary a unique rpsblast result
+        #
+        # # TODO dev
+        # transactions = create_sql_statements(cds_trans_dict, results_dict)
+        # print("transactions")
+        #
+        # insert_domain_data(engine, transactions)
+        #
         # engine.dispose()
+        # print("inserted")
 
-
-
-        # insert_domain_data(engine, results)
-        # engine.dispose()
     return
 
 
