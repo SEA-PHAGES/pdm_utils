@@ -389,12 +389,9 @@ def execute_csv_export(alchemist, export_path, output_path, columns,
     query = querying.build_select(alchemist.graph, columns, where=conditionals,
                                                             order_by=sort)
     
-    if values:
-        results = querying.execute_value_subqueries(alchemist.engine, query,
-                                                    primary_key, values)
-    else:
-        results = alchemist.execute(query)
-   
+    results = querying.execute(alchemist.engine, query, primary_key, values)
+    decode_results(results, columns, verbose=verbose)
+
     if len(results) == 0:
         if verbose:
             print(f"No database entries received for '{export_path.name}'.")
@@ -887,6 +884,22 @@ def filter_csv_columns(alchemist, table, include_columns=[], exclude_columns=[],
         
     return columns
 
+def decode_results(results, columns, verbose=False):
+    """Function that decodes encoded results from SQLAlchemy generated data.
+
+    :param results: List of data dictionaries from a SQLAlchemy results proxy.
+    :type results: list[dict]
+    :param columns: SQLAlchemy Column objects.
+    :type columns: list[Column]
+    """
+    for column in columns:
+        if column.type.python_type == bytes:
+            if verbose:
+                print(f"Decoding retrieved {column} data...")
+            for result in results:
+                if not result[column.name] is None:
+                    result[column.name] = result[column.name].decode("utf-8")
+
 def process_cds_features(phage_genome):
     """Function that sorts and processes the Cds objects of a Genome object.
 
@@ -904,34 +917,6 @@ def process_cds_features(phage_genome):
         pass
     for cds_feature in phage_genome.cds_features:
         cds_feature.set_seqfeature()
-
-def append_database_version(genome_seqrecord, version_data):
-    """Function that appends the database version to the SeqRecord comments.
-
-    :param genome_seqrecord: Filled SeqRecord object.
-    :type genome_seqfeature: SeqRecord
-    :param version_data: Dictionary containing database version information.
-    :type version_data: dict
-    """
-    version_keys = version_data.keys()
-    if "Version" not in version_keys or "SchemaVersion" not in version_keys:
-        raise ValueError("Version of selected database is outdated. "
-                         "Version data is incompatable.")
-    try:
-        genome_seqrecord.annotations["comment"] =\
-                genome_seqrecord.annotations["comment"] + (
-                    "Database Version: {}; Schema Version: {}".format(
-                                        version_data["Version"],
-                                        version_data["SchemaVersion"]),)
-    except:
-        if isinstance(genome_seqrecord, SeqRecord):
-            raise ValueError
-
-        elif genome_seqrecord == None:
-            raise TypeError
-        raise
-
-
 
 #----------------------------------------------------------------------------
 #TODO Travis 
@@ -1043,3 +1028,30 @@ def get_cds_seqrecord_annotations_comments(cds):
             "Auto-generated genome record from a MySQL database"
     
     return (pham_comment, auto_generated_comment)
+
+def append_database_version(genome_seqrecord, version_data):
+    """Function that appends the database version to the SeqRecord comments.
+
+    :param genome_seqrecord: Filled SeqRecord object.
+    :type genome_seqfeature: SeqRecord
+    :param version_data: Dictionary containing database version information.
+    :type version_data: dict
+    """
+    version_keys = version_data.keys()
+    if "Version" not in version_keys or "SchemaVersion" not in version_keys:
+        raise ValueError("Version of selected database is outdated. "
+                         "Version data is incompatable.")
+    try:
+        genome_seqrecord.annotations["comment"] =\
+                genome_seqrecord.annotations["comment"] + (
+                    "Database Version: {}; Schema Version: {}".format(
+                                        version_data["Version"],
+                                        version_data["SchemaVersion"]),)
+    except:
+        if isinstance(genome_seqrecord, SeqRecord):
+            raise ValueError
+
+        elif genome_seqrecord == None:
+            raise TypeError
+        raise
+

@@ -265,7 +265,10 @@ def build_where_clause(db_graph, filter_expression):
 
     #Retrieve Table and Column objects from split filter expression strings
     table_object = db_graph.nodes[filter_params[0]]["table"]
-    column_object = table_object.columns[filter_params[1]]
+
+    column_name = parsing.translate_column(db_graph.graph["metadata"],
+                                f"{table_object.name}.{filter_params[1]}")
+    column_object = table_object.columns[column_name]
 
     #Checks the operator and Column type compatability
     parsing.check_operator(filter_params[2], column_object)

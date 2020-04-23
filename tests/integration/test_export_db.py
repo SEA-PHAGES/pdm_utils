@@ -237,6 +237,23 @@ class TestFileExport(unittest.TestCase):
         self.assertEqual("PhageID", headers[0])
         self.assertTrue("Sequence" in headers)
 
+    def test_execute_export_12(self):
+        """Verify execute_export() SeqRecord pipeline functions as expected.
+        """
+        for file_type in export_db.BIOPYTHON_PIPELINES:
+            with self.subTest(file_type=file_type):
+                export_db.execute_export(self.alchemist, self.test_dir,
+                                         self.export_test_dir.name, file_type,
+                                         table="gene")
+
+                self.assertTrue(self.export_test_dir.is_dir())
+
+                flat_file_path = self.export_test_dir.joinpath(
+                                            f"Trixie_CDS_70.{file_type}")
+                self.assertTrue(flat_file_path.is_file())
+
+                shutil.rmtree(str(self.export_test_dir))
+
     def tearDown(self):
         if self.export_test_dir.is_dir():
             shutil.rmtree(str(self.export_test_dir))

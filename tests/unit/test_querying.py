@@ -540,6 +540,10 @@ class TestUseGraph(unittest.TestCase):
 class TestBuildClauses(unittest.TestCase):
     def setUp(self):
         self.graph = Mock()
+        self.metadata = Mock()
+        self.graph_properties = {"metadata" : self.metadata}
+        type(self.graph).graph = PropertyMock(
+                                 return_value=self.graph_properties)
 
         self.phage = Mock(spec=Table)
         self.gene  = Mock(spec=Table)
@@ -556,9 +560,14 @@ class TestBuildClauses(unittest.TestCase):
         nodes_dict = {"phage" : {"table" : self.phage},
                       "gene"  : {"table"  : self.gene},
                       "trna"  : {"table"  : self.trna}}
+        tables_dict = {"phage" : self.phage,
+                       "gene"  : self.gene,
+                       "trna"  : self.trna}
     
         mock_nodes = PropertyMock(return_value=nodes_dict)
+        mock_tables = PropertyMock(return_value=tables_dict)
         type(self.graph).nodes = mock_nodes
+        type(self.metadata).tables = mock_tables
 
         self.pathing = [self.phage, [["phage", "gene"], ["phage", "trna"]]]
 
