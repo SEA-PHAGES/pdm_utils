@@ -389,6 +389,104 @@ class TestQuerying(unittest.TestCase):
         with self.assertRaises(InternalError):
             dict_list = query_dict_list(self.engine, distinct_query)
 
+    def test_execute_1(self):
+        """Verify execute() correctly executes SQLAlchemy select objects.
+        """
+        where_clause = querying.build_where_clause(self.graph,
+                                                   "phage.Cluster=A")
+        phage_table = querying.get_table(self.metadata, "phage")
+        select = querying.build_select(self.graph, phage_table,
+                                       where=where_clause)
+
+        results = querying.execute(self.engine, select)
+        result_keys = results[0].keys()
+
+        self.assertTrue("PhageID" in result_keys)
+        self.assertTrue("Cluster" in result_keys)
+        self.assertTrue("Subcluster" in result_keys)
+
+    def test_execute_2(self):
+        """Verify execute() retrieves expected data.
+        """
+        where_clause = querying.build_where_clause(self.graph,
+                                                   "phage.Cluster=A")
+        phage_table = querying.get_table(self.metadata, "phage")
+        select = querying.build_select(self.graph, phage_table,
+                                       where=where_clause)
+
+        results = querying.execute(self.engine, select)
+       
+        for result in results:
+            self.assertEqual(result["Cluster"], "A")
+
+    def test_first_column_1(self): 
+        """Verify first_column() returns expected data type.
+        """
+        where_clause = querying.build_where_clause(self.graph,
+                                                   "phage.Cluster=A")
+        phageid = querying.get_column(self.metadata, "phage.PhageID")
+        select = querying.build_select(self.graph, phageid,
+                                       where=where_clause)
+
+        results = querying.first_column(self.engine, select)
+
+        self.assertTrue(isinstance(results, list))
+        self.assertTrue(isinstance(results[0], str))
+
+    def test_first_column_2(self):
+        """Verify first_column() retrieves expected data.
+        """
+        where_clause = querying.build_where_clause(self.graph,
+                                                   "phage.Cluster=A")
+        phageid = querying.get_column(self.metadata, "phage.PhageID")
+        select = querying.build_select(self.graph, phageid,
+                                       where=where_clause)
+
+        results = querying.first_column(self.engine, select)
+
+        self.assertTrue("Trixie" in results)
+        self.assertTrue("D29" in results)
+        self.assertFalse("Myrna" in results)
+
+    def test_execute_value_subqueries(self):
+        """Verify execute_value_subqueries() retrieves expected data.
+        """
+        where_clause = querying.build_where_clause(self.graph,
+                                                   "phage.Cluster=A")
+        phage_table = querying.get_table(self.metadata, "phage")
+        phageid = querying.get_column(self.metadata, "phage.PhageID")
+        select = querying.build_select(self.graph, phage_table,
+                                       where=where_clause)
+
+        results = querying.execute_value_subqueries(self.engine, select, 
+                                                    phageid,
+                                                    ["Trixie", "D29", 
+                                                     "Alice", "Myrna"],
+                                                    limit=2)
+       
+        for result in results:
+            self.assertEqual(result["Cluster"], "A")
+
+    def test_first_column_value_subqueries(self):
+        """Verify first_column_value_subqueries() retrieves expected data.
+        """
+        where_clause = querying.build_where_clause(self.graph,
+                                                   "phage.Cluster=A")
+        phageid = querying.get_column(self.metadata, "phage.PhageID")
+        select = querying.build_select(self.graph, phageid,
+                                       where=where_clause)
+
+        results = querying.first_column_value_subqueries(self.engine, select, 
+                                                         phageid,
+                                                         ["Trixie", "D29", 
+                                                          "Alice", "Myrna"],
+                                                         limit=2)
+
+        self.assertTrue("Trixie" in results)
+        self.assertTrue("D29" in results)
+        self.assertFalse("Alice" in results)
+        self.assertFalse("Myrna" in results)
+
     @classmethod
     def tearDownClass(self):
         test_db_utils.remove_db()

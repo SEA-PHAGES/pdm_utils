@@ -567,7 +567,7 @@ def build_distinct(db_graph, columns, where=None, order_by=None, add_in=None):
 #SQLALCHEMY EXECUTE QUERY FUNCTIONS
 #Functions that execute SqlAlchemy select statements and handle outputs.
 #-----------------------------------------------------------------------------
-def execute(engine, executable, values=[], in_column=None, limit=8000, 
+def execute(engine, executable, in_column=None, values=[], limit=8000, 
                                                            return_dict=True):
     """Use SQLAlchemy Engine to execute a MySQL query.
     
@@ -605,7 +605,7 @@ def execute(engine, executable, values=[], in_column=None, limit=8000,
 
     return results
     
-def first_column(engine, executable, values=[], in_column=None, limit=8000):
+def first_column(engine, executable, in_column=None, values=[], limit=8000):
     """Use SQLAlchemy Engine to execute and return the first column of fields.
         
     :param engine: SQLAlchemy Engine object used for executing queries.
@@ -623,7 +623,7 @@ def first_column(engine, executable, values=[], in_column=None, limit=8000):
 
         values = first_column_value_subqueries(engine, executable,
                                                in_column, values,
-                                               limit=8000)
+                                               limit=limit)
     else:
         proxy = engine.execute(executable)
         results = proxy.fetchall()
@@ -631,6 +631,58 @@ def first_column(engine, executable, values=[], in_column=None, limit=8000):
         values = []
         for result in results:
             values.append(result[0])
+
+    return values
+
+def execute_value_subqueries(engine, executable, in_column, source_values,
+                                                            return_dict=True,
+                                                            limit=8000):
+    """Query with a conditional on a set of values using subqueries.
+
+    :param engine: SQLAlchemy Engine object used for executing queries.
+    :type engine: Engine
+    :param executable: Input a executable MySQL query.
+    :type executable: Select
+    :type executable: str
+    :param in_column: SQLAlchemy Column object.
+    :type in_column: Column
+    :param source_values: Values from specified MySQL column.
+    :type source_values: list[str]
+    :param return_dict: Toggle whether to return data as a dictionary.
+    :type return_dict: Boolean
+    :param limit: SQLAlchemy IN clause query length limiter.
+    :type limit: int
+    :returns: List of grouped data for each value constraint.
+    :rtype: list
+    """
+    if not isinstance(in_column, Column):
+        raise ValueError("Inputted column to conditional values against "
+                         "is not a SqlAlchemy Column."
+                        f"Object is instead type {type(in_column)}.")
+
+    if not executable.is_derived_from(in_column.table):
+        raise ValueError("Inputted column to conditional values against "
+                         "must be a column from the table(s) joined in the "
+                         "SQLAlchemy select.")
+    
+    values=[]
+    if in_column.type.python_type == bytes:
+        source_values = parsing.convert_to_encoded(source_values)
+
+    chunked_values = [source_values[i*limit:(i+1)*limit]\
+                for i in range((len(source_values) + limit - 1) // limit)]
+
+    for value_chunk in chunked_values:
+        subquery = executable.where(in_column.in_(value_chunk))
+        
+        proxy = engine.execute(subquery)
+        results = proxy.fetchall()
+
+        for result in results:
+            if return_dict:
+                result = dict(result)
+
+            values.append(result)
 
     return values
 
@@ -683,55 +735,4 @@ def first_column_value_subqueries(engine, executable, in_column, source_values,
     values = list(OrderedDict.fromkeys(values))
     return values
 
-def execute_value_subqueries(engine, executable, in_column, source_values,
-                                                            return_dict=True,
-                                                            limit=8000):
-    """Query with a conditional on a set of values using subqueries.
-
-    :param engine: SQLAlchemy Engine object used for executing queries.
-    :type engine: Engine
-    :param executable: Input a executable MySQL query.
-    :type executable: Select
-    :type executable: str
-    :param in_column: SQLAlchemy Column object.
-    :type in_column: Column
-    :param source_values: Values from specified MySQL column.
-    :type source_values: list[str]
-    :param return_dict: Toggle whether to return data as a dictionary.
-    :type return_dict: Boolean
-    :param limit: SQLAlchemy IN clause query length limiter.
-    :type limit: int
-    :returns: List of grouped data for each value constraint.
-    :rtype: list
-    """
-    if not isinstance(in_column, Column):
-        raise ValueError("Inputted column to conditional values against "
-                         "is not a SqlAlchemy Column."
-                        f"Object is instead type {type(in_column)}.")
-
-    if in_column not in executable.get_children():
-        raise ValueError("Inputted column to conditional values against "
-                         "must be a column from the table(s) joined in the "
-                         "SQLAlchemy select.")
-    
-    values=[]
-    if in_column.type.python_type == bytes:
-        source_values = parsing.convert_to_encoded(source_values)
-
-    chunked_values = [source_values[i*limit:(i+1)*limit]\
-                for i in range((len(source_values) + limit - 1) // limit)]
-
-    for value_chunk in chunked_values:
-        subquery = executable.where(in_column.in_(value_chunk))
-        
-        proxy = engine.execute(subquery)
-        results = proxy.fetchall()
-
-        for result in results:
-            if return_dict:
-                result = dict(result)
-
-            values.append(result)
-
-    return values
 
