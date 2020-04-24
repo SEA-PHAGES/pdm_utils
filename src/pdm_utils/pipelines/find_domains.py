@@ -46,6 +46,7 @@ DEFAULT_TMP_DIR = "/tmp/find_domains"
 DEFAULT_OUTPUT_FOLDER = os.getcwd()
 RESULTS_FOLDER = f"{constants.CURRENT_DATE}_find_domains"
 MAIN_LOG_FILE = "find_domains.log"
+DEFAULT_CDD = "~/Databases/Cdd_LE"
 
 # LOGGING
 # Add a logger named after this module. Then add a null handler, which
@@ -71,17 +72,20 @@ def setup_argparser():
         "Directory where log data can be generated."
     reset_help = \
         "Clear all domain data in the database before finding domains."
+    cdd_help = \
+        f"Path to local NCBI Conserved Domain Database. Default is {DEFAULT_CDD}."
+
 
     # Initialize parser and add arguments
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument("database", type=str,
                         help="name of database to phamerate")
-    parser.add_argument("cdd", type=str,
-                        help="path to local directory housing CDD database")
+    parser.add_argument("-c", "--cdd", type=str, default=DEFAULT_CDD,
+                        help=cdd_help)
     parser.add_argument("-t","--threads", default=mp.cpu_count(), type=int,
                         help="number of concurrent CDD searches to run")
     parser.add_argument("-e", "--evalue", default=0.001, type=float,
-                        help="evalue cutoff for rpsblast hits")
+                        help="evalue cutoff for rpsblast(+) hits")
     parser.add_argument("-td", "--tmp_dir", default=DEFAULT_TMP_DIR, type=str,
                         help="path to temporary directory for file I/O")
     parser.add_argument("-r", "--rpsblast", default="", type=str,
@@ -309,8 +313,7 @@ def main(argument_list):
     log_file = pathlib.Path(results_path, MAIN_LOG_FILE)
 
     # Set up root logger.
-    logging.basicConfig(filename=log_file, filemode="w",
-                        level=logging.DEBUG,
+    logging.basicConfig(filename=log_file, filemode="w", level=logging.DEBUG,
                         format="pdm_utils find_domains: %(levelname)s: %(message)s")
     logger.info(f"pdm_utils version: {VERSION}")
     logger.info(f"CDD run date: {constants.CURRENT_DATE}")
