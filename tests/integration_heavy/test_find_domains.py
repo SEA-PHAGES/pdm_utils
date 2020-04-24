@@ -141,6 +141,183 @@ def get_gene_id_dict(list_of_results):
 
 
 
+class TestFindDomains10(unittest.TestCase):
+
+    def setUp(self):
+        test_db_utils.create_empty_test_db()
+        test_db_utils.insert_phage_data(test_data_utils.get_trixie_phage_data())
+        self.gene_data_1 = test_data_utils.get_trixie_gene_data()
+        self.gene_data_1["GeneID"] = "TRIXIE_0001"
+        self.gene_data_2 = test_data_utils.get_trixie_gene_data()
+        self.gene_data_2["GeneID"] = "TRIXIE_0002"
+        self.gene_data_3 = test_data_utils.get_trixie_gene_data()
+        self.gene_data_3["GeneID"] = "TRIXIE_0003"
+
+        test_db_utils.insert_gene_data(self.gene_data_1)
+
+        self.domain_data = test_data_utils.get_trixie_domain_data()
+        self.gene_domain_data = test_data_utils.get_trixie_gene_domain_data()
+
+        self.rps_hit_1 = {
+            "HitID": "hit_1",
+            "DomainID": self.domain_data["DomainID"],
+            "Name": self.domain_data["Name"],
+            "Description": self.domain_data["Description"],
+            "Expect": self.gene_domain_data["Expect"],
+            "QueryStart": self.gene_domain_data["QueryStart"],
+            "QueryEnd": self.gene_domain_data["QueryEnd"]
+            }
+
+        self.rps_hit_2 = {
+            "HitID": "hit_2",
+            "DomainID": self.domain_data["DomainID"],
+            "Name": self.domain_data["Name"],
+            "Description": self.domain_data["Description"],
+            "Expect": self.gene_domain_data["Expect"],
+            "QueryStart": self.gene_domain_data["QueryStart"],
+            "QueryEnd": self.gene_domain_data["QueryEnd"]
+            }
+
+        self.rps_data = [self.rps_hit_1, self.rps_hit_2]
+
+        translation = "ABCDE"
+        self.cds_translation_dict = {
+            translation: {self.gene_data_1["GeneID"],
+                          self.gene_data_2["GeneID"],
+                          self.gene_data_3["GeneID"]}
+             }
+        self.rps_translation_dict = {translation: self.rps_data}
+
+
+        self.rps_result_1 = {"Translation": "ABCDE", "Data": self.rps_data}
+        self.rps_result_2 = {"Translation": "FGHIJ", "Data": self.rps_data}
+        self.rps_result_3 = {"Translation": "MNOPQ", "Data": self.rps_data}
+        self.rps_result_4 = {"Translation": "RSTUV", "Data": self.rps_data}
+
+        self.rps_results = [self.rps_result_1, self.rps_result_2,
+                            self.rps_result_3, self.rps_result_4]
+
+
+
+    def tearDown(self):
+        test_db_utils.remove_db()
+
+
+    def test_construct_gene_update_stmt_1(self):
+        """Verify gene table data can be updated."""
+        # Use previously validated data.
+        stmt = find_domains.construct_gene_update_stmt(self.gene_data_1["GeneID"])
+        test_db_utils.execute(stmt)
+        results = test_db_utils.get_data(test_db_utils.gene_table_query)
+        status = results[0]["DomainStatus"]
+        self.assertEqual(status, 1)
+
+    def test_construct_domain_stmt_1(self):
+        """Verify domain table data can be inserted."""
+        # Use previously validated data.
+        hit_id_1 = self.domain_data["HitID"]
+        domain_id_1 = self.domain_data["DomainID"]
+        name_1 = self.domain_data["Name"]
+        desc_1 = self.domain_data["Description"]
+
+        stmt = find_domains.construct_domain_stmt(self.domain_data)
+        test_db_utils.execute(stmt)
+        results = test_db_utils.get_data(test_db_utils.domain_table_query)
+
+        hit_id_2 = results[0]["HitID"]
+        domain_id_2 = results[0]["DomainID"]
+        name_2 = results[0]["Name"]
+        desc_2 = results[0]["Description"].decode("utf-8")
+
+        with self.subTest():
+            self.assertEqual(len(results), 1)
+        with self.subTest():
+            self.assertEqual(hit_id_1, hit_id_2)
+        with self.subTest():
+            self.assertEqual(domain_id_1, domain_id_2)
+        with self.subTest():
+            self.assertEqual(name_1, name_2)
+        with self.subTest():
+            self.assertEqual(desc_1, desc_2)
+
+    def test_construct_gene_domain_stmt_1(self):
+        """Verify gene_domain table data can be inserted."""
+        # Use previously validated gene_domain data.
+        # Valid domain data needs to be inserted first.
+        test_db_utils.insert_domain_data(self.domain_data)
+
+        # Pop gene_id. The dictionary for find_domains doesn't need it as a key.
+        gene_id_1 = self.gene_domain_data.pop("GeneID")
+        hit_id_1 = self.gene_domain_data["HitID"]
+        expect_1 = self.gene_domain_data["Expect"]
+        query_start_1 = self.gene_domain_data["QueryStart"]
+        query_end_1 = self.gene_domain_data["QueryEnd"]
+        stmt = find_domains.construct_gene_domain_stmt(self.gene_domain_data,
+                                                       gene_id_1)
+        test_db_utils.execute(stmt)
+        results = test_db_utils.get_data(test_db_utils.gene_domain_table_query)
+        gene_id_2 = results[0]["GeneID"]
+        hit_id_2 = results[0]["HitID"]
+        expect_2 = results[0]["Expect"]
+        query_start_2 = results[0]["QueryStart"]
+        query_end_2 = results[0]["QueryEnd"]
+
+        with self.subTest():
+            self.assertEqual(len(results), 1)
+        with self.subTest():
+            self.assertEqual(gene_id_1, gene_id_2)
+        with self.subTest():
+            self.assertEqual(hit_id_1, hit_id_2)
+        with self.subTest():
+            self.assertEqual(expect_1, expect_2)
+        with self.subTest():
+            self.assertEqual(query_start_1, query_start_2)
+        with self.subTest():
+            self.assertEqual(query_end_1, query_end_2)
+
+
+
+
+
+
+    def test_construct_sql_txn_1(self):
+        """Verify list of SQL statements representing one transaction
+        is constructed."""
+        gene_id = self.gene_data_1["GeneID"]
+        txn = find_domains.construct_sql_txn(gene_id, self.rps_data)
+        self.assertEqual(len(txn), 5)
+
+
+    def test_construct_sql_txns_1(self):
+        """Verify list of list of SQL statements representing one transaction
+        each are constructed."""
+        txns = find_domains.construct_sql_txns(self.cds_translation_dict,
+                                              self.rps_translation_dict)
+        with self.subTest():
+            self.assertEqual(len(txns), 3)
+        with self.subTest():
+            self.assertEqual(len(txns[0]), 5)
+        with self.subTest():
+            self.assertEqual(len(txns[1]), 5)
+        with self.subTest():
+            self.assertEqual(len(txns[2]), 5)
+
+
+
+
+    def test_create_results_dict_1(self):
+        """Verify dictionary is constucted correctly."""
+        dict = find_domains.create_results_dict(self.rps_results)
+        with self.subTest():
+            self.assertEqual(len(dict.keys()), 4)
+        with self.subTest():
+            self.assertEqual(len(dict["ABCDE"]), 2)
+        with self.subTest():
+            self.assertEqual(len(dict["FGHIJ"]), 2)
+
+
+
+
 class TestFindDomains1(unittest.TestCase):
 
     def setUp(self):
@@ -157,8 +334,6 @@ class TestFindDomains1(unittest.TestCase):
         self.trans.rollback()
         self.engine.dispose()
         test_db_utils.remove_db()
-
-
 
 
     def test_execute_statement_1(self):

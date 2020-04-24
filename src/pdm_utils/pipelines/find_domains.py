@@ -116,79 +116,78 @@ def make_tempdir(tmp_dir):
         print(f"Error {err.args[0]}: {err.args[1]}")
 
 
+# def search_and_process_old(rpsblast, cdd_name, tmp_dir, evalue,
+#                            geneid, translation):
+#     """
+#     Uses rpsblast to search indicated gene against the indicated CDD
+#     :param rpsblast: path to rpsblast binary
+#     :param cdd_name: CDD database path/name
+#     :param tmp_dir: path to directory where I/O will take place
+#     :param evalue: evalue cutoff for rpsblast
+#     :param geneid: name of the gene to query
+#     :param translation: protein sequence for gene to query
+#     :return: results
+#     """
+#     # Setup I/O variables
+#     i = "{}/{}.txt".format(tmp_dir, geneid)
+#     o = "{}/{}.xml".format(tmp_dir, geneid)
+#
+#     # Write the input file
+#     with open(i, "w") as fh:
+#         fh.write(">{}\n{}".format(geneid, translation))
+#
+#     # Setup and run the rpsblast command
+#     rps_command = NcbirpsblastCommandline(cmd=rpsblast, db=cdd_name,
+#                                           query=i, out=o, outfmt=5,
+#                                           evalue=evalue)
+#     rps_command()
+#
+#     # Process results into a single list
+#     results = []
+#
+#     with open(o, "r") as fh:
+#         for record in NCBIXML.parse(fh):
+#             # Only need to process if there are record alignments
+#             if record.alignments:
+#                 for align in record.alignments:
+#                     for hsp in align.hsps:
+#                         if hsp.expect <= evalue:
+#                             align.hit_def = align.hit_def.replace("\"", "\'")
+#
+#                             des_list = align.hit_def.split(",")
+#                             if len(des_list) == 1:
+#                                 description = des_list[0].strip()
+#                                 domain_id = None
+#                                 name = None
+#                             elif len(des_list) == 2:
+#                                 domain_id = des_list[0].strip()
+#                                 description = des_list[1].strip()
+#                                 name = None
+#                             else:
+#                                 domain_id = des_list[0].strip()
+#                                 name = des_list[1].strip()
+#                                 # Name is occassionally longer than permitted
+#                                 # in the database. Truncating avoids a
+#                                 # MySQL error.
+#                                 # TODO perhaps the database schema should be
+#                                 # changed to account for this.
+#                                 name = basic.truncate_value(name, 25, "...")
+#                                 description = ",".join(des_list[2:]).strip()
+#
+#                             # Try to put domain into domain table
+#                             results.append(INSERT_INTO_DOMAIN.format(
+#                                 align.hit_id, domain_id, name, description))
+#
+#                             # Try to put this hit into gene_domain table
+#                             results.append(INSERT_INTO_GENE_DOMAIN.format(
+#                                 geneid, align.hit_id, float(hsp.expect),
+#                                 int(hsp.query_start), int(hsp.query_end)))
+#
+#     # Update this gene's DomainStatus to 1
+#     results.append(UPDATE_GENE.format(geneid))
+#     return results
+
 def search_and_process(rpsblast, cdd_name, tmp_dir, evalue,
-                       geneid, translation):
-    """
-    Uses rpsblast to search indicated gene against the indicated CDD
-    :param rpsblast: path to rpsblast binary
-    :param cdd_name: CDD database path/name
-    :param tmp_dir: path to directory where I/O will take place
-    :param evalue: evalue cutoff for rpsblast
-    :param geneid: name of the gene to query
-    :param translation: protein sequence for gene to query
-    :return: results
-    """
-    # Setup I/O variables
-    i = "{}/{}.txt".format(tmp_dir, geneid)
-    o = "{}/{}.xml".format(tmp_dir, geneid)
-
-    # Write the input file
-    with open(i, "w") as fh:
-        fh.write(">{}\n{}".format(geneid, translation))
-
-    # Setup and run the rpsblast command
-    rps_command = NcbirpsblastCommandline(cmd=rpsblast, db=cdd_name,
-                                          query=i, out=o, outfmt=5,
-                                          evalue=evalue)
-    rps_command()
-
-    # Process results into a single list
-    results = []
-
-    with open(o, "r") as fh:
-        for record in NCBIXML.parse(fh):
-            # Only need to process if there are record alignments
-            if record.alignments:
-                for align in record.alignments:
-                    for hsp in align.hsps:
-                        if hsp.expect <= evalue:
-                            align.hit_def = align.hit_def.replace("\"", "\'")
-
-                            des_list = align.hit_def.split(",")
-                            if len(des_list) == 1:
-                                description = des_list[0].strip()
-                                domain_id = None
-                                name = None
-                            elif len(des_list) == 2:
-                                domain_id = des_list[0].strip()
-                                description = des_list[1].strip()
-                                name = None
-                            else:
-                                domain_id = des_list[0].strip()
-                                name = des_list[1].strip()
-                                # Name is occassionally longer than permitted
-                                # in the database. Truncating avoids a
-                                # MySQL error.
-                                # TODO perhaps the database schema should be
-                                # changed to account for this.
-                                name = basic.truncate_value(name, 25, "...")
-                                description = ",".join(des_list[2:]).strip()
-
-                            # Try to put domain into domain table
-                            results.append(INSERT_INTO_DOMAIN.format(
-                                align.hit_id, domain_id, name, description))
-
-                            # Try to put this hit into gene_domain table
-                            results.append(INSERT_INTO_GENE_DOMAIN.format(
-                                geneid, align.hit_id, float(hsp.expect),
-                                int(hsp.query_start), int(hsp.query_end)))
-
-    # Update this gene's DomainStatus to 1
-    results.append(UPDATE_GENE.format(geneid))
-    return results
-
-# TODO dev
-def search_and_process2(rpsblast, cdd_name, tmp_dir, evalue,
                        translation_id, translation):
     """
     Uses rpsblast to search indicated gene against the indicated CDD
@@ -200,6 +199,7 @@ def search_and_process2(rpsblast, cdd_name, tmp_dir, evalue,
     :param translation: protein sequence for gene to query
     :return: results
     """
+    # Currently translation_id is used only for file formatting.
     # Setup I/O variables
     i = "{}/{}.txt".format(tmp_dir, translation_id)
     o = "{}/{}.xml".format(tmp_dir, translation_id)
@@ -208,65 +208,68 @@ def search_and_process2(rpsblast, cdd_name, tmp_dir, evalue,
     with open(i, "w") as fh:
         fh.write(">{}\n{}".format(translation_id, translation))
 
-    # Setup and run the rpsblast command
+    # Setup, run the rpsblast command, and process results
     rps_command = NcbirpsblastCommandline(cmd=rpsblast, db=cdd_name,
                                           query=i, out=o, outfmt=5,
                                           evalue=evalue)
     rps_command()
+    data = process_rps_output(o, evalue)
 
-    # Process results into a single list
+    # Currently need to return as a list due to a
+    # filter in parallelize.start_processes()
+    results = [{"Translation": translation, "Data": data}]
+    return results
+
+
+def process_rps_output(filepath, evalue):
+    """Process rpsblast output and return list of dictionaries."""
     results = []
-
-    with open(o, "r") as fh:
+    with open(filepath, "r") as fh:
         for record in NCBIXML.parse(fh):
-            # Only need to process if there are record alignments
-            if record.alignments:
-                for align in record.alignments:
-                    for hsp in align.hsps:
-                        if hsp.expect <= evalue:
-                            align.hit_def = align.hit_def.replace("\"", "\'")
-
-                            des_list = align.hit_def.split(",")
-                            if len(des_list) == 1:
-                                description = des_list[0].strip()
-                                domain_id = None
-                                name = None
-                            elif len(des_list) == 2:
-                                domain_id = des_list[0].strip()
-                                description = des_list[1].strip()
-                                name = None
-                            else:
-                                domain_id = des_list[0].strip()
-                                name = des_list[1].strip()
-                                # Name is occassionally longer than permitted
-                                # in the database. Truncating avoids a
-                                # MySQL error.
-                                # TODO perhaps the database schema should be
-                                # changed to account for this.
-                                name = basic.truncate_value(name, 25, "...")
-                                description = ",".join(des_list[2:]).strip()
-
-                            data_dict = {
-                                "HitID": align.hit_id,
-                                "DomainID": domain_id,
+            for align in record.alignments:
+                des, d_id, name = process_align(align)
+                for hsp in align.hsps:
+                    if hsp.expect <= evalue:
+                        dict = {"HitID": align.hit_id,
+                                "DomainID": d_id,
                                 "Name": name,
-                                "Description": description,
+                                "Description": des,
                                 "Expect": float(hsp.expect),
                                 "QueryStart": int(hsp.query_start),
-                                "QueryEnd": int(hsp.query_end)
-                                }
-                            results.append(data_dict)
-                            # results.append(INSERT_INTO_DOMAIN.format(
-                            #     align.hit_id, domain_id, name, description))
-                            # results.append(INSERT_INTO_GENE_DOMAIN.format(
-                            #     geneid, align.hit_id, float(hsp.expect),
-                            #     int(hsp.query_start), int(hsp.query_end)))
+                                "QueryEnd": int(hsp.query_end)}
+                        results.append(dict)
+    return results
 
-    # Update this gene's DomainStatus to 1
-    # results.append(UPDATE_GENE.format(geneid))
-    trans_dict = {"Translation": translation,
-                  "Data": results}
-    return trans_dict
+
+def process_align(align):
+    """Process alignment data.
+
+    Returns description, domain_id, and name.
+    """
+    align.hit_def = align.hit_def.replace("\"", "\'")
+    des_list = align.hit_def.split(",")
+    if len(des_list) == 1:
+        description = des_list[0].strip()
+        domain_id = None
+        name = None
+    elif len(des_list) == 2:
+        domain_id = des_list[0].strip()
+        description = des_list[1].strip()
+        name = None
+    else:
+        domain_id = des_list[0].strip()
+        name = des_list[1].strip()
+        # Name is occassionally longer than permitted
+        # in the database. Truncating avoids a
+        # MySQL error.
+        # TODO perhaps the database schema should be
+        # changed to account for this.
+        name = basic.truncate_value(name, 25, "...")
+        description = ",".join(des_list[2:]).strip()
+
+    return description, domain_id, name
+
+
 
 def learn_cdd_name(cdd_dir):
     cdd_files = os.listdir(cdd_dir)
@@ -356,78 +359,67 @@ def main(argument_list):
     # Only run the pipeline if there are genes returned that need it
     if len(cdd_genes) > 0:
 
-        # TODO old pipeline. can be removed once new pipeline is working.
-        log_gene_ids(cdd_genes)
-        make_tempdir(tmp_dir)
-        jobs = []
-        for cdd_gene in cdd_genes:
-            jobs.append((rpsblast, cdd_name, tmp_dir, evalue,
-                         cdd_gene["GeneID"], cdd_gene["Translation"]))
-        results = parallelize(jobs, threads, search_and_process)
-        print("\n")
-        insert_domain_data(engine, results)
-        engine.dispose()
-
-
-
-        # # TODO below is new pipeline in development.
-        #
-        # # TODO dev
+        # # TODO old pipeline. can be removed once new pipeline is working.
         # log_gene_ids(cdd_genes)
-        #
-        # # Create temp_dir
         # make_tempdir(tmp_dir)
-        #
-        #
-        #
-        # cds_trans_dict = create_cds_translation_dict(cdd_genes)
-        #
-        # print("cds_trans_dict")
-        #
-        # # Build jobs list
-        # unique_trans = cds_trans_dict.keys()
-        # print("unique_trans")
-        # print(unique_trans)
-        # input("check")
         # jobs = []
-        # for id, translation in enumerate(unique_trans):
-        #     print(id)
-        #     print(translation)
-        #     input("check2")
-        #     jobs.append((rpsblast, cdd_name, tmp_dir, evalue, id, translation))
-        # results = parallelize(jobs, threads, search_and_process2)
-        #
+        # for cdd_gene in cdd_genes:
+        #     jobs.append((rpsblast, cdd_name, tmp_dir, evalue,
+        #                  cdd_gene["GeneID"], cdd_gene["Translation"]))
+        # results = parallelize(jobs, threads, search_and_process_old)
+        # print(results)
+        # input("check")
         # print("results")
-        # # List of dictionaries. Each dictionary:
-        # # keys: "Translation": translation, "Data": list of results
-        # # In each list of results, each element is a dictionary:
-        # # data_dict = {
-        # #     "HitID": align.hit_id,
-        # #     "DomainID": domain_id,
-        # #     "Name": name,
-        # #     "Description": description,
-        # #     "Expect": float(hsp.expect),
-        # #     "QueryStart": int(hsp.query_start),
-        # #     "QueryEnd": int(hsp.query_end)
-        # #     }
         #
-        #
-        # # TODO dev
-        # results_dict = create_results_dict(results)
-        # print("results_dict")
-        #
-        # # Returns a dictionary, where:
-        # # key = unique translation,
-        # # value = list of dictionaries, each dictionary a unique rpsblast result
-        #
-        # # TODO dev
-        # transactions = create_sql_statements(cds_trans_dict, results_dict)
-        # print("transactions")
-        #
-        # insert_domain_data(engine, transactions)
-        #
+        # print("\n")
+        # insert_domain_data(engine, results)
         # engine.dispose()
-        # print("inserted")
+
+
+
+        # TODO below is new pipeline in development.
+
+        # TODO dev
+        log_gene_ids(cdd_genes)
+
+        # Create temp_dir
+        make_tempdir(tmp_dir)
+
+
+        # TODO dev.
+        cds_trans_dict = create_cds_translation_dict(cdd_genes)
+
+        # Build jobs list
+        unique_trans = cds_trans_dict.keys()
+        jobs = []
+        for id, translation in enumerate(unique_trans):
+            jobs.append((rpsblast, cdd_name, tmp_dir, evalue, id, translation))
+        results_temp = parallelize(jobs, threads, search_and_process)
+        # Get rid of unneeded list type which was only needed due to
+        # filter restriction in parallelize.start_processes()
+        results = [i[0] for i in results_temp]
+
+        # List of dictionaries. Each dictionary:
+        # keys: "Translation": translation, "Data": list of results
+        # In each list of results, each element is a dictionary:
+        # data_dict = {
+        #     "HitID": align.hit_id,
+        #     "DomainID": domain_id,
+        #     "Name": name,
+        #     "Description": description,
+        #     "Expect": float(hsp.expect),
+        #     "QueryStart": int(hsp.query_start),
+        #     "QueryEnd": int(hsp.query_end)
+        #     }
+
+        results_dict = create_results_dict(results)
+        # Returns a dictionary, where:
+        # key = unique translation,
+        # value = list of dictionaries, each dictionary a unique rpsblast result
+
+        transactions = construct_sql_txns(cds_trans_dict, results_dict)
+        insert_domain_data(engine, transactions)
+        engine.dispose()
 
     return
 
@@ -450,71 +442,81 @@ def create_cds_translation_dict(cdd_genes):
     return trans_dict
 
 
-# def get_unique_translations(cdd_genes):
-#     """Generate list of unique translations to process."""
-#     translations = set()
-#     for i in range(len(cdd_genes)):
-#         translations.add(cdd_genes[i]["Translation"])
-#     return translations
 
-
-
-
-# TODO dev
-def create_sql_statements(cds_trans_dict, rpsblast_results):
-    """Map domain data back to gene_ids and create SQL statements."""
-    # cds_trans_dict key = translation, value = set of GeneIDs
+def construct_sql_txns(cds_trans_dict, rpsblast_results):
+    """Construct the list of SQL transactions."""
+    # Since identical domain data may be used for > 1 genes, it is simply
+    # duplicated for each gene. This could probably be simplified so that it
+    # only tries to insert domain data once, and if that fails, then
+    # all gene_domain and gene statements that depend on that domain data
+    # will also fail.
     transactions = []
     for translation in rpsblast_results.keys():
-        rps_data = rpsblast_results[translation]
+        # Each translation has a list of rps_data
+        rps_data_list = rpsblast_results[translation]
+        # Each translation has a set of GeneIDs
         gene_ids = cds_trans_dict[translation]
-        txn = []
         for gene_id in gene_ids:
-            for result in rps_data:
-                domain_stmt = construct_domain_stmt(rps_data)
-                gene_domain_stmt = construct_gene_domain_stmt(rps_data, gene_id)
-                txn.append(domain_stmt)
-                txn.append(gene_domain_stmt)
-            update_stmt = construct_gene_update_stmt(gene_id)
-            txn.append(update_stmt)
+            txn = construct_sql_txn(gene_id, rps_data_list)
             transactions.append(txn)
     return transactions
 
 
 
-# TODO dev
+
+# TODO test.
+def construct_sql_txn(gene_id, rps_data_list):
+    """Map domain data back to gene_id and create SQL statements for one transaction.
+
+    rps_data_list is a list of dictionaries, where each dictionary reflects
+    a significat rpsblast domain hit.
+    """
+    txn = []
+    for rps_hit in rps_data_list:
+        domain_stmt = construct_domain_stmt(rps_hit)
+        gene_domain_stmt = construct_gene_domain_stmt(rps_hit, gene_id)
+        txn.append(domain_stmt)
+        txn.append(gene_domain_stmt)
+    update_stmt = construct_gene_update_stmt(gene_id)
+    txn.append(update_stmt)
+    return txn
+
+
+
+
 def construct_domain_stmt(data_dict):
     """Construct the SQL statement to insert data into the domain table."""
-    smt = INSERT_INTO_DOMAIN.format(data_dict["HitID"],
+    stmt = INSERT_INTO_DOMAIN.format(data_dict["HitID"],
                                     data_dict["DomainID"],
                                     data_dict["Name"],
                                     data_dict["Description"])
     return stmt
 
 
-# TODO dev
 def construct_gene_domain_stmt(data_dict, gene_id):
     """Construct the SQL statement to insert data into the gene_domain table."""
-    smt = INSERT_INTO_GENE_DOMAIN.format(gene_id,
-                                         data_dict["HitID"],
-                                         data_dict["Expect"],
-                                         data_dict["QueryStart"],
-                                         data_dict["QueryEnd"])
+    stmt = INSERT_INTO_GENE_DOMAIN.format(gene_id,
+                                          data_dict["HitID"],
+                                          data_dict["Expect"],
+                                          data_dict["QueryStart"],
+                                          data_dict["QueryEnd"])
     return stmt
 
 
 def construct_gene_update_stmt(gene_id):
     """Construct the SQL statement to update data in the gene table."""
-    smt = UPDATE_GENE.format(gene_id)
+    stmt = UPDATE_GENE.format(gene_id)
     return stmt
 
-# TODO dev
+
 def create_results_dict(search_results):
     """Create a dictionary of search results
 
     Input is a list of dictionaries, one dict per translation, where:
-    key = translation, value = list of rpsblast results
-    Each element is a dictionary containing the domain and gene domain data.
+    keys = "Translation" and "Data", where
+    key = "Translation" has value = translation,
+    key = "Data"" has value = list of rpsblast results, where
+    Each result element is a dictionary containing domain and gene_domain data.
 
     Returns a dictionary, where:
     key = unique translation,
