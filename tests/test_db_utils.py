@@ -14,13 +14,10 @@ current_date = datetime.today().replace(hour=0, minute=0,
 
 
 # It is expected that the 'pdm_anon' MySQL user has all privileges
-# for 'test_db' and 'pdm_test_*' databases.
+# for 'pdm_test_*' databases.
 USER = "pdm_anon"
 PWD = "pdm_anon"
-# TODO once developers have added 'pdm_test_db' privileges to 'pdm_anon',
-# remove the 'test_db'
-DB = "test_db"
-DB_NEW = "pdm_test_db"
+DB = "pdm_test_db"
 unittest_file = Path(__file__)
 test_dir = unittest_file.parent
 test_file_dir = Path(test_dir, "test_files")
@@ -89,16 +86,16 @@ def get_data(query, db=DB, user=USER, pwd=PWD):
 
 # Database construction
 
-def create_empty_test_db():
+def create_empty_test_db(db=DB, user=USER, pwd=PWD):
     """Creates a test database with the current schema version and no data."""
-    create_new_db(schema_filepath=SCHEMA_FILEPATH,
+    create_new_db(schema_filepath=SCHEMA_FILEPATH, db=db, user=user, pwd=pwd,
                   version_table_data=VERSION_TABLE_DATA)
 
-def create_filled_test_db():
+def create_filled_test_db(db=DB, user=USER, pwd=PWD):
     """Creates a test database with the current schema version and with data."""
     # No need to add data to version table, since test_db.sql already
     # has data in this table.
-    create_new_db(schema_filepath=TEST_DB_FILEPATH)
+    create_new_db(schema_filepath=TEST_DB_FILEPATH, db=db, user=user, pwd=pwd)
 
 def check_if_exists(db=DB, user=USER, pwd=PWD):
     """Checks whether database exists or not."""
@@ -149,6 +146,13 @@ def install_db(schema_filepath, db=DB, user=USER, pwd=PWD):
     proc = subprocess.check_call(command_list, stdin=handle)
     handle.close()
 
+def create_schema_file(schema_filepath, db=DB, user=USER, pwd=PWD):
+    """Dump empty schema file for a database."""
+    # "mysqldump --no-data -u root -p --skip-comments <db_name> > db_schema_before.sql"
+    command_string = f"mysqldump --no-data -u {user} -p{pwd} --skip-comments {db}"
+    command_list = command_string.split(" ")
+    with schema_filepath.open("w") as handle:
+        subprocess.check_call(command_list, stdout=handle)
 
 
 

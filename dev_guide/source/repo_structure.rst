@@ -49,11 +49,6 @@ misc/
 
 Miscellaneous documentation or reference material for maintaining SEA-PHAGES phage genomics databases on the GitHub repository that should not be included in Sphinx-generated documentation.
 
-legacy/
-*******
-
-A compilation of legacy Python2 scripts used to maintain SEA-PHAGES phage genomics databases.
-
 docs/
 *****
 

@@ -477,8 +477,7 @@ def insert_domain_data(engine, results):
 
     if rolled_back > 0:
         msg = (f"Error executing {rolled_back} transaction(s). "
-              "Unable to complete pipeline. "
-              "Some genes may still contain unidentified domains.")
+               "Some genes may still contain unidentified domains.")
         logger.error(msg)
     else:
         msg = "All genes successfully searched for conserved domains."

@@ -76,14 +76,6 @@ pipelines
    :undoc-members:
    :show-inheritance:
 
-``import``
-----------
-
-.. automodule:: pdm_utils.pipelines.import_phage
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 ``phamerate``
 -------------
 

@@ -9,6 +9,8 @@ In general, data pertaining to a complete phage genome is managed within a MySQL
 
     > python3 -m pdm_utils import Actinobacteriophage ./genomes/ ./import_table.csv -o ./
 
+The first argument ('Actinobacteriophage') following 'import' indicates the database to be used. The next argument ('./genomes/') indicates the directory where the flat files are located. The next argument ('./import_table.csv') indicates the location of the import table. The optional '-o ./' argument indicates the directory where the import results should be stored (if omitted, the default is the working directory from where the pipeline is called).
+
 This tool can be used to specifically update the Actinobacteriophage database, manage different MySQL database instances, and support the process of genome annotation because it:
 
     1. relies on import tickets to substantially automate the import process.

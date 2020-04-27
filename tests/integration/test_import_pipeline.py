@@ -53,6 +53,7 @@
 import csv
 from datetime import datetime
 import logging
+import os
 from pathlib import Path
 import shutil
 import sys
@@ -83,6 +84,12 @@ import test_data_utils
 # current_date = datetime.today().replace(hour=0, minute=0,
 #                                         second=0, microsecond=0)
 #folder_date = date.today().strftime("%Y%m%d")
+
+
+# Since default output folder is the current working directory, change
+# the working directory to tmp to avoid any output created within the
+# pdm_utils repo during testing.
+os.chdir("/tmp")
 
 # Create the main test directory in which all files will be
 # created and managed.
@@ -135,7 +142,6 @@ import_table = Path(base_dir, import_table_name)
 genome_folder = Path(base_dir, "genome_folder")
 output_folder = Path(base_dir, "output_folder")
 log_file_name = Path("import_log.txt")
-log_file = Path(output_folder, log_file_name)
 alice_flat_file = Path("temp_alice.gb")
 l5_flat_file = Path("temp_l5.gb")
 alice_flat_file_path = Path(genome_folder, alice_flat_file)
@@ -242,8 +248,7 @@ def get_unparsed_draft_import_args():
                       "-p",
                       "-e", "draft",
                       "-d", "product",
-                      "-o", str(output_folder),
-                      "-l", str(log_file)
+                      "-o", str(output_folder)
                       ]
     return unparsed_args
 
@@ -438,7 +443,7 @@ class TestImportGenome1(unittest.TestCase):
         # Note: testing whether the log file exists is tricky,
         # due to how the logging module operates.
         # with self.subTest():
-        #     self.assertTrue(self.log_file.exists())
+        #     self.assertTrue(log_file_name.exists())
 
 
     @patch("getpass.getpass")
@@ -508,6 +513,10 @@ class TestImportGenome1(unittest.TestCase):
         """Test pipeline with:
         valid add ticket for draft genome,
         no data in the database, minimal command line arguments."""
+        # The output_folder argument is not minimal, but it is still
+        # specified to ensure that files are created in a
+        # specified directory instead of the default directory, which is
+        # the working directory from which the tests were called.
         logging.info("test_add_3")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")
@@ -516,6 +525,7 @@ class TestImportGenome1(unittest.TestCase):
                          str(genome_folder),
                          str(import_table),
                          "-p",
+                         "-o", str(output_folder)
                          ]
         run.main(unparsed_args)
         phage_table_results = test_db_utils.get_data(test_db_utils.phage_table_query)

@@ -202,3 +202,37 @@ def translate_column(metadata, raw_column):
     raise ValueError(f"Field '{parsed_column[1]}' requested to be filtered"
                      f" is not in '{table_obj.name}'")
 
+def convert_to_encoded(values):
+    """Converts a list of strings to utf-8 encoded values.
+
+    :param values: Strings for a MySQL query to be encoded.
+    :type values: list[str]
+    :returns: List of utf-8 encoded values.
+    :rtype: list[bytes]
+    """
+    if not isinstance(values, list):
+        values = [values]
+
+    converted_values = []
+    for value in values:
+        converted_values.append(value.encode("utf-8"))
+
+    return converted_values
+
+def convert_to_decoded(values):
+    """Converts a list of strings to utf-8 encoded values.
+
+    :param values: Byte values from MySQL queries to be decoded.
+    :type values: list[bytes]
+    :returns: List of utf-8 decoded values.
+    :rtype: list[str]
+    """
+    if not isinstance(values, list):
+        values = [values]
+
+    converted_values = []
+    for value in values:
+        converted_values.append(value.decode("utf-8"))
+
+    return converted_values
+

@@ -2,6 +2,7 @@
 
 import argparse
 from datetime import date
+import os
 import pathlib
 import sys
 from Bio import SeqIO
@@ -14,6 +15,7 @@ from pdm_utils.classes.filter import Filter
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
 
 
+DEFAULT_OUTPUT_FOLDER = os.getcwd()
 CURRENT_DATE = date.today().strftime("%Y%m%d")
 RESULTS_FOLDER = f"{CURRENT_DATE}_get_gb_records"
 TARGET_TABLE = "phage"
@@ -34,7 +36,8 @@ def parse_args(unparsed_args_list):
 
     parser = argparse.ArgumentParser(description=GET_GB_RECORDS_HELP)
     parser.add_argument("database", type=str, help=DATABASE_HELP)
-    parser.add_argument("output_folder", type=pathlib.Path,
+    parser.add_argument("-o", "--output_folder", type=pathlib.Path,
+                        default=pathlib.Path(DEFAULT_OUTPUT_FOLDER),
                         help=OUTPUT_FOLDER_HELP)
     parser.add_argument("-c", "--ncbi_credentials_file", type=pathlib.Path,
                         help=NCBI_CRED_FILE_HELP)
@@ -203,7 +206,7 @@ def get_data(output_folder, acc_id_dict, ncbi_cred_dict={}, batch_size=200):
                                              query_key=search_query_key,
                                              webenv=search_webenv)
 
-        accessions_to_retrieve = get_accessions_to_retrieve(summary_records)
+        accessions_to_retrieve = ncbi.get_accessions_to_retrieve(summary_records)
         if len(accessions_to_retrieve) > 0:
             records = ncbi.get_records(accessions_to_retrieve,
                                        db="nucleotide",
@@ -212,19 +215,6 @@ def get_data(output_folder, acc_id_dict, ncbi_cred_dict={}, batch_size=200):
             for record in records:
                 output_data(record, acc_id_dict, output_folder)
 
-
-# TODO move to ncbi.
-# TODO test.
-def get_accessions_to_retrieve(summary_records):
-    """Save retrieved record to file.
-
-    Returns a list of accessions.
-    """
-    accessions = []
-    for doc_sum in summary_records:
-        doc_sum_accession = doc_sum["Caption"]
-        accessions.append(doc_sum_accession)
-    return accessions
 
 # TODO test.
 def output_data(seqrecord, acc_id_dict, output_folder):

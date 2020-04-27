@@ -154,7 +154,7 @@ def parse_cds_seqfeature(seqfeature):
         translation = Seq(translation, Alphabet.IUPAC.protein)
         cds_ftr.set_translation(translation)
 
-    cds_ftr.set_nucleotide_length()
+    cds_ftr.set_nucleotide_length(translation=True)
 
     try:
         translation_table = seqfeature.qualifiers["transl_table"][0]
@@ -219,10 +219,12 @@ def parse_source_seqfeature(seqfeature):
         src_ftr.organism = str(seqfeature.qualifiers["organism"][0])
     except:
         src_ftr.organism = ""
+
     try:
         src_ftr.host = str(seqfeature.qualifiers["host"][0])
     except:
         src_ftr.host = ""
+
     try:
         src_ftr.lab_host = str(seqfeature.qualifiers["lab_host"][0])
     except:
@@ -315,9 +317,9 @@ def parse_genome_data(seqrecord, filepath=pathlib.Path(),
         gnm.organism = seqrecord.annotations["organism"]
     except:
         gnm.organism = ""
-
-    # Identifies host and phage name from organism field.
-    gnm.parse_organism()
+    finally:
+        # Identifies host and phage name from organism field.
+        gnm.parse_organism()
 
     try:
         # Since accessions are stored in a list, there may be more than
@@ -326,8 +328,8 @@ def parse_genome_data(seqrecord, filepath=pathlib.Path(),
         accession = seqrecord.annotations["accessions"][0]
     except:
         accession = ""
-
-    gnm.set_accession(accession)
+    finally:
+        gnm.set_accession(accession)
 
     try:
         gnm.description = seqrecord.description
@@ -337,17 +339,17 @@ def parse_genome_data(seqrecord, filepath=pathlib.Path(),
             gnm.description = ""
     except:
         gnm.description = ""
-
-    # Identifies host and phage name from description field.
-    gnm.parse_description()
+    finally:
+        # Identifies host and phage name from description field.
+        gnm.parse_description()
 
     try:
         gnm.source = seqrecord.annotations["source"]
     except:
         gnm.source = ""
-
-    # Identifies host and phage name from record source field.
-    gnm.parse_source()
+    finally:
+        # Identifies host and phage name from record source field.
+        gnm.parse_source()
 
     try:
         # The retrieved authors can be stored in multiple Reference elements.

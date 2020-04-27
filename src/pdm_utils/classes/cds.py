@@ -165,29 +165,29 @@ class Cds:
         #    The 'locus_tag' qualifier may or may not be present,
         #    and may or may not have an integer.
         if value is None:
-            name = ""
+            value = ""
             list1 = ["_locus_tag_num", "_gene_num", "_product_num",
                      "_note_num", "_function_num"]
 
             # First see if any num attributes have a float.
             x = 0
-            while (name == "" and x < len(list1)):
-                value = getattr(self, list1[x])
-                if basic.is_float(value):
-                    name = value
+            while (value == "" and x < len(list1)):
+                name = getattr(self, list1[x])
+                if basic.is_float(name):
+                    value = name
                 x += 1
 
             # Second see if any num attributes have non-empty values.
             # At this point, it's very unpredictable. Values could be like
             # 'terL' in the gene or like '10a' in the locus_tag.
-            if name == "":
+            if value == "":
                 list2 = ["gene"]
                 list2.extend(list1)
                 y = 0
-                while (name == "" and y < len(list2)):
-                    value = getattr(self, list2[y])
-                    if value != "":
-                        name = value
+                while (value == "" and y < len(list2)):
+                    name = getattr(self, list2[y])
+                    if name != "":
+                        value = name
                     y += 1
         self.name = value
 
@@ -446,25 +446,31 @@ class Cds:
             self.coordinate_format = new_format
 
 
-    def set_nucleotide_length(self, seq=False):
+    def set_nucleotide_length(self, seq=False, translation=False):
         """Set the length of the nucleotide sequence.
 
+        Nucleotide length can be computed several different ways, including
+        from the difference of the start and stop coordinates, the length
+        of the transcribed nucleotide sequence, or the length of
+        the translation. For compound features, using either the nucleotide or
+        translation sequence is the accurate way to determine the
+        true length of the feature, but 'length' may mean different things
+        in different contexts.
+
         :param seq:
-            Nucleotide length can be computed multiple ways.
-            If the 'seq' parameter is False, the 'start' and 'stop'
-            coordinates are used to determine the length (and take into
-            account the 'coordinate_format' attribute. However, for
-            compound features, this value may not be accurate.
-            If the 'seq' parameter is True, the nucleotide sequence is used
-            to determine the length. When the sequence reflects the
-            entire feature (including compound features), the length
-            will be accurate.
+            Use the nucleotide sequence from the 'seq' attribute to
+            compute the length.
         :type seq: bool
+        :param translation:
+            Use the translation sequence from the 'translation' attribute to
+            compute the length.
+        :type translation: bool
         """
 
         if seq:
             self.length = len(self.seq)
-            pass
+        elif translation:
+            self.length = (len(self.translation) * 3) + 3 # include stop codon
         else:
             if self.coordinate_format == "0_half_open":
                 self.length = self.stop - self.start

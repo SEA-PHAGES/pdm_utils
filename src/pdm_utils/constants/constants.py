@@ -47,6 +47,7 @@ IMPORT_TABLE_STRUCTURE = {
                     "cluster",
                     "subcluster",
                     "annotation_author",
+                    "annotation_status",
                     "accession",
                     "retrieve_record"},
     "valid_retrieve": {

@@ -21,7 +21,7 @@ class TestParsing(unittest.TestCase):
     def setUpClass(self):
         test_db_utils.create_filled_test_db()
 
-    def setUp(self): 
+    def setUp(self):
         self.engine = create_engine(test_db_utils.create_engine_string())
 
         self.metadata = MetaData(bind=self.engine)
@@ -71,7 +71,7 @@ class TestParsing(unittest.TestCase):
         """Verify translate_table() conserves case-sensitive table names.
         """
         table = parsing.translate_table(self.metadata, "phage")
-  
+
         self.assertEqual(table, "phage")
 
     def test_translate_table_2(self):
@@ -111,7 +111,7 @@ class TestParsing(unittest.TestCase):
         """Verify translate_column() returns case-sensitive column names.
         """
         column = parsing.translate_column(self.metadata, "tRNA.tRNAid")
-        
+
         self.assertEqual(column, "TrnaID")
 
     def test_translate_column_4(self):

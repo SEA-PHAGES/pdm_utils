@@ -5,7 +5,7 @@ import sys
 from pdm_utils.functions import mysqldb
 from pdm_utils.constants import schema_conversions
 
-MAX_VERSION = 8
+MAX_VERSION = 9
 CURRENT_VERSION = 8
 VERSIONS = list(range(0, MAX_VERSION + 1))
 CHOICES = set(VERSIONS)
@@ -30,14 +30,17 @@ def get_step_name(dir, step):
 # TODO unittest.
 def parse_args(unparsed_args_list):
     """Verify the correct arguments are selected for converting database."""
-    CONVERT_HELP = ("Pipeline to upgrade or downgrade the "
-                    "schema of a MySQL database.")
-    DATABASE_HELP = "Name of the MySQL database."
-    SCHEMA_VERSION_HELP = ("Database schema version to which "
-                           "the database should be converted.")
-    NEW_DATABASE_NAME_HELP = ("The new name of the converted database"
-                              "if different from the original database name.")
-    VERBOSE_HELP = ("Conversion progress will be printed.")
+    CONVERT_HELP = \
+        "Pipeline to upgrade or downgrade the schema of a MySQL database."
+    DATABASE_HELP = \
+        "Name of the MySQL database."
+    SCHEMA_VERSION_HELP = \
+        "Database schema version to which the database should be converted."
+    NEW_DATABASE_NAME_HELP = \
+        ("The new name of the converted database if different from "
+        "the original database name.")
+    VERBOSE_HELP = \
+        "Conversion progress will be printed."
     parser = argparse.ArgumentParser(description=CONVERT_HELP)
     parser.add_argument("database", type=str, help=DATABASE_HELP)
     parser.add_argument("-s", "--schema_version", type=int,

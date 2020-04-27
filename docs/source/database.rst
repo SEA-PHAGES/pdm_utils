@@ -86,7 +86,7 @@ This table contains information that pertains to individual genes, including coo
 
 **Parts** This field indicates the number of regions in the genome that define the feature. Only two coordinates are stored for each feature, which is an accurate representation of the majority of features. However, the definition of some features, such as those that extend across the genome termini or those that contain a frameshift, are not completely represented with this strategy. This field is used to discriminate between these types of features.
 
-**Length** This field indicates the length of the translation.
+**Length** This field indicates the length of the transcribed and translated nucleotide sequence and is directly proportional to Translation. If the feature is comprised of a single ORF, this is equal to Stop - Start. If the feature is comprised of two ORFs (such as due to ribosome frameshifting), Length will be larger than Stop - Start.
 
 **Translation** This field contains the translated amino acid sequence and is derived directly from the GenBank record. Note: currently, the maximum length of the translation product is 5,000 amino acids.
 

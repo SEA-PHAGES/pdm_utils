@@ -6,6 +6,7 @@ import argparse
 import csv
 from datetime import datetime, date
 import logging
+import os
 import pathlib
 import shutil
 import sys
@@ -30,7 +31,7 @@ logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
 
-DEFAULT_OUTPUT_FOLDER = "/tmp/"
+DEFAULT_OUTPUT_FOLDER = os.getcwd()
 IMPORT_DATE = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
 CURRENT_DATE = date.today().strftime("%Y%m%d")
 RESULTS_FOLDER = f"{CURRENT_DATE}_import"
@@ -40,6 +41,7 @@ GENOMES_FOLDER = "genomes"
 LOGS_FOLDER = "logs"
 VERSION = pdm_utils.__version__
 EDD = eval_descriptions.EVAL_DESCRIPTIONS
+MAIN_LOG_FILE = "import.log"
 
 def main(unparsed_args_list):
     """Runs the complete import pipeline.
@@ -70,10 +72,10 @@ def main(unparsed_args_list):
         print("Unable to create results folder.")
         sys.exit(1)
 
-    args.log_file = pathlib.Path(results_path, args.log_file)
+    log_file = pathlib.Path(results_path, MAIN_LOG_FILE)
 
     # Set up root logger.
-    logging.basicConfig(filename=args.log_file, filemode="w",
+    logging.basicConfig(filename=log_file, filemode="w",
                         level=logging.DEBUG,
                         format="pdm_utils import: %(levelname)s: %(message)s")
                         # format="%(name)s - %(levelname)s - %(message)s")
@@ -144,9 +146,6 @@ def parse_args(unparsed_args_list):
     DESCRIPTION_FIELD_HELP = \
         ("Indicates the field in CDS features that is expected "
          "to store the gene description.")
-    LOG_FILE_HELP = \
-        ("Indicates the name of the file to log the import results. "
-         "This will be created in the output folder.")
     INTERACTIVE_HELP = \
         "Indicates whether interactive evaluation of data is permitted."
 
@@ -176,8 +175,6 @@ def parse_args(unparsed_args_list):
         help=DESCRIPTION_FIELD_HELP)
     parser.add_argument("-o", "--output_folder", type=pathlib.Path,
         default=pathlib.Path(DEFAULT_OUTPUT_FOLDER), help=OUTPUT_FOLDER_HELP)
-    parser.add_argument("-l", "--log_file", type=str, default="import.log",
-        help=LOG_FILE_HELP)
     parser.add_argument("-i", "--interactive", action="store_true",
         default=False, help=INTERACTIVE_HELP)
 
@@ -245,7 +242,9 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
                                   description_field,
                                   constants.IMPORT_TABLE_STRUCTURE)
     if ticket_dict is None:
-        logger.error("Invalid import table. Unable to evaluate flat files.")
+        tkt_msg = "Invalid import table. Unable to evaluate flat files."
+        logger.error(tkt_msg)
+        print(f"\n\n\nError: {tkt_msg}")
         sys.exit(1)
     else:
         progress = f"There are {len(ticket_dict.keys())} import ticket(s)."

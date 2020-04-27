@@ -1,6 +1,7 @@
 """Integration tests for the main import pipeline."""
 
 import csv
+import os
 from pathlib import Path
 import shutil
 import sys
@@ -20,6 +21,16 @@ if str(test_dir) not in set(sys.path):
     sys.path.append(str(test_dir))
 import test_db_utils
 import test_data_utils
+
+# This will match the current working directory data stored in
+# the import_genome module. Since this module has already been imported
+# for these tests, the import_genome.DEFAULT_OUTPUT_FOLDER has already been set.
+default_cwd = os.getcwd()
+
+# Since default output folder is the current working directory, change
+# the working directory to tmp to avoid any output created within the
+# pdm_utils repo during testing.
+os.chdir("/tmp")
 
 # Create the main test directory in which all files will be
 # created and managed.
@@ -531,7 +542,6 @@ class TestImportGenome1(unittest.TestCase):
 class TestImportGenome2(unittest.TestCase):
 
     def setUp(self):
-
         self.test_filepath1 = Path(test_file_dir, "test_flat_file_1.gb")
         self.test_directory1 = Path(test_root_dir, "test_dir")
         self.test_directory1.mkdir()
@@ -568,9 +578,7 @@ class TestImportGenome2(unittest.TestCase):
         with self.subTest():
             self.assertEqual(args.description_field, "product")
         with self.subTest():
-            self.assertEqual(args.output_folder, Path("/tmp/"))
-        with self.subTest():
-            self.assertEqual(args.log_file, "import.log")
+            self.assertEqual(args.output_folder, Path(default_cwd))
         with self.subTest():
             self.assertFalse(args.interactive)
 
@@ -587,13 +595,11 @@ class TestImportGenome2(unittest.TestCase):
         """Verify parsed args when all args are explicitly provided
         using short name."""
         output_folder = "/path/to/output/"
-        log_file = "logfile.txt"
         self.args_list.extend(["-g", "FILENAME",
                                "-p",
                                "-e", "DRAFT",
                                "-d", "FUNCTION",
                                "-o", output_folder,
-                               "-l", log_file,
                                "-i"
                                ])
         args = import_genome.parse_args(self.args_list)
@@ -608,8 +614,6 @@ class TestImportGenome2(unittest.TestCase):
         with self.subTest():
             self.assertEqual(args.output_folder, Path(output_folder))
         with self.subTest():
-            self.assertEqual(args.log_file, log_file)
-        with self.subTest():
             self.assertTrue(args.interactive)
 
 
@@ -617,13 +621,11 @@ class TestImportGenome2(unittest.TestCase):
         """Verify parsed args when all args are explicitly provided
         using long name."""
         output_folder = "/path/to/output/"
-        log_file = "logfile.txt"
         self.args_list.extend(["--genome_id_field", "FILENAME",
                                "--prod_run",
                                "--eval_mode", "DRAFT",
                                "--description_field", "FUNCTION",
                                "--output_folder", output_folder,
-                               "--log_file", log_file,
                                "--interactive"
                                ])
         args = import_genome.parse_args(self.args_list)
@@ -637,8 +639,6 @@ class TestImportGenome2(unittest.TestCase):
             self.assertEqual(args.description_field, "function")
         with self.subTest():
             self.assertEqual(args.output_folder, Path(output_folder))
-        with self.subTest():
-            self.assertEqual(args.log_file, log_file)
         with self.subTest():
             self.assertTrue(args.interactive)
 
@@ -658,7 +658,6 @@ class TestImportGenome3(unittest.TestCase):
 
         self.input_folder = Path(self.base_dir, "input_folder")
         self.output_folder = Path(self.base_dir, "output_folder")
-        self.log_file = Path(self.base_dir, "test_log.txt")
 
         self.engine = sqlalchemy.create_engine(engine_string1, echo=False)
 
@@ -671,8 +670,7 @@ class TestImportGenome3(unittest.TestCase):
                           "-p",
                           "-e", "DRAFT",
                           "-d", "FUNCTION",
-                          "-o", str(self.output_folder),
-                          "-l", str(self.log_file)
+                          "-o", str(self.output_folder)
                           ]
 
     def tearDown(self):
