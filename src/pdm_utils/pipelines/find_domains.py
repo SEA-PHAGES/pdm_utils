@@ -538,6 +538,10 @@ def log_gene_ids(cdd_genes):
 
 def insert_domain_data(engine, results):
     """Attempt to insert domain data into the database."""
+    msg = "Inserting data..."
+    logger.info(msg)
+    print(msg)
+
     rolled_back = 0
     connection = engine.connect()
     for result in results:

@@ -61,7 +61,8 @@ def get_unparsed_args():
     # where the test module is run from.
     unparsed_args = ["run.py", pipeline, DB,
                      "-t", str(1),
-                     "-o", str(test_folder)]
+                     "-o", str(test_folder),
+                     "-b", str(2)]
     return unparsed_args
 
 
@@ -1192,9 +1193,15 @@ class TestFindDomains6(unittest.TestCase):
         cds3["Translation"] = translation
         cds3["GeneID"] = "TRIXIE_0003"
 
+        cds4 = test_data_utils.get_trixie_gene_data()
+        cds4["Translation"] = translation + "A"
+        cds4["GeneID"] = "TRIXIE_0004"
+
         test_db_utils.insert_gene_data(cds1)
         test_db_utils.insert_gene_data(cds2)
         test_db_utils.insert_gene_data(cds3)
+        test_db_utils.insert_gene_data(cds4)
+
         stmt = get_gene_update_statement(1)
         test_db_utils.execute(stmt)
         self.engine = sqlalchemy.create_engine(engine_string, echo=False)
@@ -1228,8 +1235,11 @@ class TestFindDomains6(unittest.TestCase):
 
     @patch("pdm_utils.functions.mysqldb.connect_to_db")
     def test_main_2(self, ctd_mock):
-        """Verify all three genes processed if DomainStatus = 0."""
-        logging.info("test_main_3")
+        """Verify all four genes processed if DomainStatus = 0."""
+        # There are four genes representing three unique translations.
+        # Two translations should have domains, and the third should not.
+        # Since batch size is set to 2, it also tests the batch functionality.
+        logging.info("test_main_2")
         ctd_mock.return_value = self.engine
 
         stmt = get_gene_update_statement(0)
@@ -1246,14 +1256,19 @@ class TestFindDomains6(unittest.TestCase):
         domain_status1 = gene_table_dict["TRIXIE_0001"][0]["DomainStatus"]
         domain_status2 = gene_table_dict["TRIXIE_0002"][0]["DomainStatus"]
         domain_status3 = gene_table_dict["TRIXIE_0003"][0]["DomainStatus"]
+        domain_status4 = gene_table_dict["TRIXIE_0004"][0]["DomainStatus"]
+
         d_rows = len(domain_table_results)
         gd_rows1 = len(gene_domain_table_dict["TRIXIE_0001"])
         gd_rows3 = len(gene_domain_table_dict["TRIXIE_0003"])
+        gd_rows4 = len(gene_domain_table_dict["TRIXIE_0004"])
 
         with self.subTest():
             self.assertTrue(d_rows > 0)
         with self.subTest():
             self.assertTrue(gd_rows1 > 0)
+        with self.subTest():
+            self.assertTrue(gd_rows4 > 0)
         with self.subTest():
             self.assertTrue("TRIXIE_0002" not in gene_domain_table_dict.keys())
         with self.subTest():
@@ -1264,6 +1279,8 @@ class TestFindDomains6(unittest.TestCase):
             self.assertEqual(domain_status2, 1)
         with self.subTest():
             self.assertEqual(domain_status3, 1)
+        with self.subTest():
+            self.assertEqual(domain_status4, 1)
 
 
 
