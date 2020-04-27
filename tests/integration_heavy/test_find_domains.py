@@ -132,6 +132,14 @@ def get_gene_id_dict(list_of_results):
     return dict1
 
 
+def count_status(list_of_results, domain_status):
+    """Count DomainStatus from gene table results."""
+    count = 0
+    for dict in list_of_results:
+        if dict["DomainStatus"] == domain_status:
+            count += 1
+    return count
+
 # INSERT IGNORE INTO domain (HitID, DomainID, Name, Description) VALUES ("gnl|CDD|334841", "pfam02195", "ParBc", "ParB-like nuclease domain.")
 # INSERT IGNORE INTO gene_domain (GeneID, HitID, Expect, QueryStart, QueryEnd) VALUES ("SEA_ABBA_66", "gnl|CDD|334841", 1.78531e-11, 33, 115)
 
@@ -141,7 +149,7 @@ def get_gene_id_dict(list_of_results):
 
 
 
-class TestFindDomains10(unittest.TestCase):
+class TestFindDomains1(unittest.TestCase):
 
     def setUp(self):
         test_db_utils.create_empty_test_db()
@@ -154,6 +162,8 @@ class TestFindDomains10(unittest.TestCase):
         self.gene_data_3["GeneID"] = "TRIXIE_0003"
 
         test_db_utils.insert_gene_data(self.gene_data_1)
+        test_db_utils.insert_gene_data(self.gene_data_2)
+        test_db_utils.insert_gene_data(self.gene_data_3)
 
         self.domain_data = test_data_utils.get_trixie_domain_data()
         self.gene_domain_data = test_data_utils.get_trixie_gene_domain_data()
@@ -276,10 +286,6 @@ class TestFindDomains10(unittest.TestCase):
             self.assertEqual(query_end_1, query_end_2)
 
 
-
-
-
-
     def test_construct_sql_txn_1(self):
         """Verify list of SQL statements representing one transaction
         is constructed."""
@@ -303,8 +309,6 @@ class TestFindDomains10(unittest.TestCase):
             self.assertEqual(len(txns[2]), 5)
 
 
-
-
     def test_create_results_dict_1(self):
         """Verify dictionary is constucted correctly."""
         dict = find_domains.create_results_dict(self.rps_results)
@@ -316,9 +320,134 @@ class TestFindDomains10(unittest.TestCase):
             self.assertEqual(len(dict["FGHIJ"]), 2)
 
 
+    def test_create_cds_translation_dict_1(self):
+        """Verify dictionary is constucted with three unique translations."""
+        t1 = "ABCDE"
+        t2 = "FGHIJ"
+        t3 = "RSTUV"
+        self.gene_data_1["Translation"] = t1
+        self.gene_data_2["Translation"] = t2
+        self.gene_data_3["Translation"] = t3
+        cdd_list = [self.gene_data_1, self.gene_data_2, self.gene_data_3]
+        dict = find_domains.create_cds_translation_dict(cdd_list)
+
+        exp_keys = {t1, t2, t3}
+        with self.subTest():
+            self.assertEqual(dict.keys(), exp_keys)
+        with self.subTest():
+            self.assertEqual(dict[t1], {self.gene_data_1["GeneID"]})
+        with self.subTest():
+            self.assertEqual(dict[t2], {self.gene_data_2["GeneID"]})
+        with self.subTest():
+            self.assertEqual(dict[t3], {self.gene_data_3["GeneID"]})
+
+    def test_create_cds_translation_dict_2(self):
+        """Verify dictionary is constucted with two unique translations."""
+        t1 = "ABCDE"
+        t2 = "FGHIJ"
+        self.gene_data_1["Translation"] = t1
+        self.gene_data_2["Translation"] = t2
+        self.gene_data_3["Translation"] = t2
+        cdd_list = [self.gene_data_1, self.gene_data_2, self.gene_data_3]
+        dict = find_domains.create_cds_translation_dict(cdd_list)
+
+        exp_keys = {t1, t2}
+        with self.subTest():
+            self.assertEqual(dict.keys(), exp_keys)
+        with self.subTest():
+            self.assertEqual(dict[t1], {self.gene_data_1["GeneID"]})
+        with self.subTest():
+            self.assertEqual(dict[t2], {self.gene_data_2["GeneID"],
+                                        self.gene_data_3["GeneID"]})
 
 
-class TestFindDomains1(unittest.TestCase):
+
+
+class TestFindDomains2(unittest.TestCase):
+
+    def setUp(self):
+        test_db_utils.create_empty_test_db()
+        test_db_utils.insert_phage_data(test_data_utils.get_trixie_phage_data())
+
+        # Insert data into gene table.
+        self.gene_data_1 = test_data_utils.get_trixie_gene_data()
+        self.gene_data_1["GeneID"] = "TRIXIE_0001"
+        self.gene_data_1["DomainStatus"] = 1
+        self.gene_data_2 = test_data_utils.get_trixie_gene_data()
+        self.gene_data_2["GeneID"] = "TRIXIE_0002"
+        self.gene_data_2["DomainStatus"] = 1
+        self.gene_data_3 = test_data_utils.get_trixie_gene_data()
+        self.gene_data_3["GeneID"] = "TRIXIE_0003"
+        self.gene_data_3["DomainStatus"] = 1
+        test_db_utils.insert_gene_data(self.gene_data_1)
+        test_db_utils.insert_gene_data(self.gene_data_2)
+        test_db_utils.insert_gene_data(self.gene_data_3)
+
+        # Insert data into domain table.
+        self.domain_data1 = test_data_utils.get_trixie_domain_data()
+        self.domain_data2 = test_data_utils.get_trixie_domain_data()
+        self.domain_data3 = test_data_utils.get_trixie_domain_data()
+        self.domain_data1["HitID"] = "hit_1"
+        self.domain_data2["HitID"] = "hit_2"
+        self.domain_data3["HitID"] = "hit_3"
+        test_db_utils.insert_domain_data(self.domain_data1)
+        test_db_utils.insert_domain_data(self.domain_data2)
+        test_db_utils.insert_domain_data(self.domain_data3)
+
+
+        # Insert data into gene_domain table.
+        self.gene_domain_data1 = test_data_utils.get_trixie_gene_domain_data()
+        self.gene_domain_data2 = test_data_utils.get_trixie_gene_domain_data()
+        self.gene_domain_data3 = test_data_utils.get_trixie_gene_domain_data()
+        self.gene_domain_data1["HitID"] = "hit_1"
+        self.gene_domain_data2["HitID"] = "hit_2"
+        self.gene_domain_data3["HitID"] = "hit_3"
+        test_db_utils.insert_gene_domain_data(self.gene_domain_data1)
+        test_db_utils.insert_gene_domain_data(self.gene_domain_data2)
+        test_db_utils.insert_gene_domain_data(self.gene_domain_data3)
+
+        self.engine = sqlalchemy.create_engine(engine_string, echo=False)
+
+
+    def tearDown(self):
+        self.engine.dispose()
+        test_db_utils.remove_db()
+
+
+    def test_clear_domain_data_1(self):
+        """Verify data in gene, gene_domain, and domain tables are cleared."""
+        # Get data before clearing.
+        gene1 = test_db_utils.get_data(test_db_utils.gene_table_query)
+        gene_domain1 = test_db_utils.get_data(test_db_utils.gene_domain_table_query)
+        domain1 = test_db_utils.get_data(test_db_utils.domain_table_query)
+        status1 = count_status(gene1, 1)
+
+        # Clear data.
+        find_domains.clear_domain_data(self.engine)
+
+        # Get data after clearing.
+        gene2 = test_db_utils.get_data(test_db_utils.gene_table_query)
+        gene_domain2 = test_db_utils.get_data(test_db_utils.gene_domain_table_query)
+        domain2 = test_db_utils.get_data(test_db_utils.domain_table_query)
+        status2 = count_status(gene2, 1)
+
+        with self.subTest():
+            self.assertEqual(status1, 3)
+        with self.subTest():
+            self.assertEqual(len(gene_domain1), 3)
+        with self.subTest():
+            self.assertEqual(len(domain1), 3)
+        with self.subTest():
+            self.assertEqual(status2, 0)
+        with self.subTest():
+            self.assertEqual(len(gene_domain2), 0)
+        with self.subTest():
+            self.assertEqual(len(domain2), 0)
+
+
+
+
+class TestFindDomains3(unittest.TestCase):
 
     def setUp(self):
         test_db_utils.create_empty_test_db()
@@ -644,7 +773,7 @@ class TestFindDomains1(unittest.TestCase):
 
 
 
-class TestFindDomains2(unittest.TestCase):
+class TestFindDomains4(unittest.TestCase):
 
     def setUp(self):
         test_db_utils.create_empty_test_db()
@@ -892,7 +1021,7 @@ class TestFindDomains2(unittest.TestCase):
 
 
 
-class TestFindDomains3(unittest.TestCase):
+class TestFindDomains5(unittest.TestCase):
 
     def setUp(self):
         test_db_utils.create_empty_test_db()
@@ -1070,7 +1199,7 @@ class TestFindDomains3(unittest.TestCase):
 
 
 
-class TestFindDomains4(unittest.TestCase):
+class TestFindDomains6(unittest.TestCase):
 
     def setUp(self):
         test_folder.mkdir()
@@ -1115,35 +1244,8 @@ class TestFindDomains4(unittest.TestCase):
 
 
 
-    # @patch("pdm_utils.functions.mysqldb.connect_to_db")
-    # def test_main_1(self, ctd_mock):
-    #     """Verify one gene is processed."""
-    #     logging.info("test_main_1")
-    #     ctd_mock.return_value = self.engine
-    #
-    #     stmt = "UPDATE gene SET DomainStatus = 0 WHERE GeneID = 'TRIXIE_0001'"
-    #     test_db_utils.execute(stmt)
-    #     run.main(self.unparsed_args)
-    #
-    #     gene_domain_table_results = test_db_utils.get_data(test_db_utils.gene_domain_table_query)
-    #     domain_table_results = test_db_utils.get_data(test_db_utils.domain_table_query)
-    #     gene_table_results = test_db_utils.get_data(test_db_utils.gene_table_query)
-    #
-    #     gene_table_dict = get_gene_id_dict(gene_table_results)
-    #     domain_status = gene_table_dict["TRIXIE_0001"][0]["DomainStatus"]
-    #     d_rows = len(domain_table_results)
-    #     gd_rows = len(gene_domain_table_results)
-    #
-    #     with self.subTest():
-    #         self.assertTrue(d_rows > 0)
-    #     with self.subTest():
-    #         self.assertTrue(gd_rows > 0)
-    #     with self.subTest():
-    #         self.assertEqual(domain_status, 1)
-
-
     @patch("pdm_utils.functions.mysqldb.connect_to_db")
-    def test_main_2(self, ctd_mock):
+    def test_main_1(self, ctd_mock):
         """Verify no genes are processed if all DomainStatus = 1."""
         logging.info("test_main_2")
         ctd_mock.return_value = self.engine
@@ -1160,7 +1262,7 @@ class TestFindDomains4(unittest.TestCase):
 
 
     @patch("pdm_utils.functions.mysqldb.connect_to_db")
-    def test_main_3(self, ctd_mock):
+    def test_main_2(self, ctd_mock):
         """Verify all three genes processed if DomainStatus = 0."""
         logging.info("test_main_3")
         ctd_mock.return_value = self.engine

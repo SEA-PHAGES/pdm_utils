@@ -187,11 +187,11 @@ def insert_gene_domain_data(data_dict, db=DB, user=USER, pwd=PWD):
     """Insert data into the gene_domain table."""
     # No need to insert ID, since that is auto-incremented.
     statement = (
-        "INSERT INTO gene_domain  "
+        "INSERT INTO gene_domain "
         "(GeneID, HitID, Expect, QueryStart, QueryEnd) "
         "VALUES ("
-        f"'{data_dict['GeneID']}', '{data_dict['HitID']}',"
-        f"{data_dict['Expect']}, {data_dict['QueryStart']}"
+        f"'{data_dict['GeneID']}', '{data_dict['HitID']}', "
+        f"{data_dict['Expect']}, {data_dict['QueryStart']}, "
         f"{data_dict['QueryEnd']});"
         )
     execute(statement, db=db, user=user, pwd=pwd)
