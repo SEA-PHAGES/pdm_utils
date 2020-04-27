@@ -316,7 +316,7 @@ def main(argument_list):
         for indices in batch_indices:
             start = indices[0]
             stop = indices[1]
-            msg = f"Searching translations {start + 1} to {stop}..."
+            msg = f"Processing translations {start + 1} to {stop}..."
             logger.info(msg)
             print(msg)
             sublist = unique_trans[start:stop]
@@ -332,8 +332,7 @@ def main(argument_list):
 
 
 def search_summary(rolled_back):
-    """Print search summary search.
-    """
+    """Print search results."""
     if rolled_back > 0:
         msg = (f"Error executing {rolled_back} transaction(s). "
                "Some genes may still contain unidentified domains.")

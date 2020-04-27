@@ -55,6 +55,10 @@ DB2 = "Actinobacteriophage"
 
 def get_unparsed_args():
     """Returns list of command line arguments to find domains."""
+    # Threads are set to 1 so that running tests doesn't completely drain
+    # computing power, although it slows down the tests.
+    # Specify output folder, else it will create folder in working directory
+    # where the test module is run from.
     unparsed_args = ["run.py", pipeline, DB,
                      "-t", str(1),
                      "-o", str(test_folder)]
@@ -68,13 +72,19 @@ def get_trixie_gene_table_domain_status_update_data_1():
         }
     return dict
 
+
+
+### TODO this can now be removed.
 def get_domain_insert_statement(data_dict):
+    """."""
     statement = find_domains.INSERT_INTO_DOMAIN.format(
                     data_dict["HitID"], data_dict["DomainID"],
                     data_dict["Name"], data_dict["Description"]
                     )
     return statement
 
+
+### TODO this can now be removed.
 def get_gene_domain_insert_statement(data_dict):
     statement = find_domains.INSERT_INTO_GENE_DOMAIN.format(
                     data_dict["GeneID"], data_dict["HitID"],
@@ -83,6 +93,8 @@ def get_gene_domain_insert_statement(data_dict):
                     )
     return statement
 
+
+### TODO this can now be removed.
 def get_gene_update_statement(data_dict):
     statement = find_domains.UPDATE_GENE.format(
                     data_dict["GeneID"]
