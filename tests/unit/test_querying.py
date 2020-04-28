@@ -12,7 +12,10 @@ from sqlalchemy.sql.elements import BinaryExpression
 from sqlalchemy.sql.elements import BindParameter
 from sqlalchemy.sql.elements import UnaryExpression
 from sqlalchemy.sql.schema import ForeignKey
-from unittest.mock import Mock, patch, PropertyMock
+from unittest.mock import Mock
+from unittest.mock import MagicMock
+from unittest.mock import patch
+from unittest.mock import PropertyMock
 import unittest
 
 class TestUseMetadata(unittest.TestCase):
@@ -64,14 +67,14 @@ class TestUseMetadata(unittest.TestCase):
         type(self.metadata).tables = PropertyMock(return_value=tables)
 
     @patch("pdm_utils.functions.querying.parsing.translate_table")
-    def test_get_table_1(self, TranslateTable):
+    def test_get_table_1(self, translate_table_mock):
         """Verify translate_table() is called with the correct parameters.
         """
-        TranslateTable.return_value = "phage"
+        translate_table_mock.return_value = "phage"
 
         querying.get_table(self.metadata, "phage") 
 
-        TranslateTable.assert_called_with(self.metadata, "phage")
+        translate_table_mock.assert_called_with(self.metadata, "phage")
 
     def test_get_table_2(self):
         """Verify get_table() returns the correct Table object.
@@ -118,26 +121,26 @@ class TestUseMetadata(unittest.TestCase):
         self.assertEqual(column_obj, self.PhageID)
 
     @patch("pdm_utils.functions.querying.extract_column")
-    def test_get_table_list_1(self, ExtractColumn):  
+    def test_get_table_list_1(self, extract_column_mock):  
         """Verify extract_column() is called with the correct parameters. 
         extract_column() should take Column objects as well as lists.
         """
-        ExtractColumn.return_value = self.PhageID
+        extract_column_mock.return_value = self.PhageID
 
         querying.get_table_list([self.PhageID])
 
-        ExtractColumn.assert_called_with(self.PhageID)
+        extract_column_mock.assert_called_with(self.PhageID)
     
     @patch("pdm_utils.functions.querying.extract_column")
-    def test_get_table_list_2(self, ExtractColumn):
+    def test_get_table_list_2(self, extract_column_mock):
         """Verify extract_column() is called with the correct parameters.
         extract_column() should take Column objects as well as lists.
         """
-        ExtractColumn.return_value = self.PhageID
+        extract_column_mock.return_value = self.PhageID
 
         querying.get_table_list(self.PhageID)
     
-        ExtractColumn.assert_called_with(self.PhageID)
+        extract_column_mock.assert_called_with(self.PhageID)
     
     def test_get_table_list_3(self):
         """Verify get_table_list() retrieves specified Table objects.
@@ -193,15 +196,15 @@ class TestUseMetadata(unittest.TestCase):
         self.assertEqual(phage_trna_edge["key"], self.PhageTrnaKey)
    
     @patch("pdm_utils.functions.querying.parsing.translate_table")
-    def test_build_onclause_1(self, TranslateTable):
+    def test_build_onclause_1(self, translate_table_mock):
         """Verify translate_table() is called with the correct parameters.
         """
-        TranslateTable.return_value = "phage"
+        translate_table_mock.return_value = "phage"
         graph = querying.build_graph(self.metadata)
         
         table = querying.build_onclause(graph, "phage", "phage")
 
-        TranslateTable.assert_called_with(self.metadata, "phage")
+        translate_table_mock.assert_called_with(self.metadata, "phage")
 
     def test_build_onclause_2(self):
         """Verify build_onclause() detects table redundencies
@@ -219,19 +222,19 @@ class TestExtract(unittest.TestCase):
         self.check_type = Mock()
     
     @patch("pdm_utils.functions.querying.isinstance")
-    def test_extract_column_1(self, IsInstance):
+    def test_extract_column_1(self, is_instance_mock):
         """Verify extract_column() raises a TypeError from innate type checks.
         extract_column() should throw an exception when the object is not
         any expected Column-related SQLAlchemy object.
         """
         with self.assertRaises(TypeError):
-            IsInstance.return_value = False
+            is_instance_mock.return_value = False
             querying.extract_column(self.column)
 
-        IsInstance.assert_any_call(self.column, Column)
-        IsInstance.assert_any_call(self.column, functions.count)
-        IsInstance.assert_any_call(self.column, UnaryExpression)
-        IsInstance.assert_any_call(self.column, BinaryExpression)
+        is_instance_mock.assert_any_call(self.column, Column)
+        is_instance_mock.assert_any_call(self.column, functions.count)
+        is_instance_mock.assert_any_call(self.column, UnaryExpression)
+        is_instance_mock.assert_any_call(self.column, BinaryExpression)
 
     def test_extract_column_2(self):
         """Verify extract_column() returns received Column object.
@@ -284,14 +287,14 @@ class TestExtract(unittest.TestCase):
                                                  self.column)
     
     @patch("pdm_utils.functions.querying.isinstance")
-    def test_extract_column_7(self, IsInstance):
+    def test_extract_column_7(self, is_instance_mock):
         """Verify isinstance() is called with correct parameters.
         """
-        IsInstance.return_value = True
+        is_instance_mock.return_value = True
 
         querying.extract_column(self.column, check=self.check_type)
 
-        IsInstance.assert_any_call(self.column, self.check_type)
+        is_instance_mock.assert_any_call(self.column, self.check_type)
 
     def test_extract_column_8(self):
         """Verify extract_column() raises TypeError from imposed type check.
@@ -300,30 +303,30 @@ class TestExtract(unittest.TestCase):
             querying.extract_column(self.column, check=str)
 
     @patch("pdm_utils.functions.querying.isinstance")
-    def test_extract_columns_1(self, IsInstance):
+    def test_extract_columns_1(self, is_instance_mock):
         """Verify isinstance() is called with correct parameters.
         """
         querying.extract_columns(self.columns)
 
-        IsInstance.assert_any_call(self.columns, list)
+        is_instance_mock.assert_any_call(self.columns, list)
 
     @patch("pdm_utils.functions.querying.extract_column")
-    def test_extract_columns_2(self, ExtractColumn):
+    def test_extract_columns_2(self, extract_column_mock):
         """Verify extract_column() is called with correct parameters.
         extract_columns() should accept both Column and list parameters.
         """
         querying.extract_columns(self.columns)
 
-        ExtractColumn.assert_called_with(self.column, check=None)
+        extract_column_mock.assert_called_with(self.column, check=None)
 
     @patch("pdm_utils.functions.querying.extract_column")
-    def test_extract_columns_3(self, ExtractColumn):
+    def test_extract_columns_3(self, extract_column_mock):
         """Verify extract_column() is called with correct parameters. 
         extract_columns() should accept both Column and list parameters.
         """
         querying.extract_columns(self.column)
 
-        ExtractColumn.assert_called_with(self.column, check=None)
+        extract_column_mock.assert_called_with(self.column, check=None)
 
     def test_extract_where_clauses_1(self):
         """Verify extract_where_clauses() accepts NoneType parameter.
@@ -333,12 +336,13 @@ class TestExtract(unittest.TestCase):
         self.assertEqual(where_columns, []) 
 
     @patch("pdm_utils.functions.querying.extract_columns")
-    def test_extract_where_clauses_2(self, ExtractColumns):
+    def test_extract_where_clauses_2(self, extract_columns_mock):
         """Verify extract_columns() is called with correct parameters.
         """
         querying.extract_where_clauses(self.columns)
 
-        ExtractColumns.assert_called_with(self.columns, check=BinaryExpression)
+        extract_columns_mock.assert_called_with(self.columns, 
+                                                check=BinaryExpression)
     
     def test_extract_order_by_clauses_1(self):
         """Verify extract_order_by_clauses() accepts NoneType parameter.
@@ -348,12 +352,12 @@ class TestExtract(unittest.TestCase):
         self.assertEqual(order_by_columns, [])
 
     @patch("pdm_utils.functions.querying.extract_columns")
-    def test_extract_order_by_clauses_2(self, ExtractColumns):
+    def test_extract_order_by_clauses_2(self, extract_columns_mock):
         """Verify extract_columns() is called with correct parameters.
         """
         querying.extract_order_by_clauses(self.columns)
 
-        ExtractColumns.assert_called_with(self.columns, check=Column)
+        extract_columns_mock.assert_called_with(self.columns, check=Column)
         
 class TestUseGraph(unittest.TestCase): 
     def setUp(self):
@@ -426,116 +430,120 @@ class TestUseGraph(unittest.TestCase):
         self.table_pathing_2 = [self.center, []]  
 
     @patch("pdm_utils.functions.querying.shortest_path")
-    def test_get_table_pathing_1(self, ShortestPath):
+    def test_get_table_pathing_1(self, shortest_path_mock):
         """Verify shortest_path() is called with correct parameters.
         """
-        ShortestPath.return_value = self.table_path_1
+        shortest_path_mock.return_value = self.table_path_1
 
         for index in range(len(self.table_names_1)):
             with self.subTest(table_index=index):
                 querying.get_table_pathing(self.graph, self.table_list_1)
 
-                ShortestPath.assert_any_call(self.graph, 
+                shortest_path_mock.assert_any_call(self.graph, 
                                                 "center",
                                                 self.table_names_1[index])
 
-                ShortestPath.clear()
+                shortest_path_mock.clear()
 
     @patch("pdm_utils.functions.querying.shortest_path")
-    def test_get_table_pathing_2(self, ShortestPath):
+    def test_get_table_pathing_2(self, shortest_path_mock):
         """Verify center_table parameter influences shortest_path() parameters.
         """
-        ShortestPath.return_value = self.table_path_1
+        shortest_path_mock.return_value = self.table_path_1
 
         for index in range(len(self.table_names_2)):
             with self.subTest(table_index=index):
                 querying.get_table_pathing(self.graph, self.table_list_2,
                                                 center_table=self.center)
 
-                ShortestPath.assert_any_call(self.graph,
+                shortest_path_mock.assert_any_call(self.graph,
                                                 "center",
                                                 self.table_names_2[index])
 
-                ShortestPath.clear()
+                shortest_path_mock.clear()
 
     @patch("pdm_utils.functions.querying.build_onclause")
     @patch("pdm_utils.functions.querying.join")
-    def test_join_pathed_tables_1(self, Join, BuildOnClause):
+    def test_join_pathed_tables_1(self, join_mock, build_on_clause_mock):
         """Verify build_onclause() influences join() parameters.
         """
-        Join.return_value = self.center
-        BuildOnClause.return_value = "onclause"
+        join_mock.return_value = self.center
+        build_on_clause_mock.return_value = "onclause"
 
         querying.join_pathed_tables(self.graph, self.table_pathing_1)  
 
-        BuildOnClause.assert_any_call(self.graph, "center", "table_1")
-        Join.assert_any_call(self.center, self.table_1,
+        build_on_clause_mock.assert_any_call(self.graph, "center", "table_1")
+        join_mock.assert_any_call(self.center, self.table_1,
                                           isouter=True,
                                           onclause="onclause")
     
     @patch("pdm_utils.functions.querying.build_onclause")
     @patch("pdm_utils.functions.querying.join")
-    def test_join_pathed_tables_2(self, Join, BuildOnClause):
+    def test_join_pathed_tables_2(self, join_mock, build_on_clause_mock):
         """Verify join_pathed_tables() recognizes different Table connections.
         join_pathed_tables() should recognized multiple connections to center.
         """
-        Join.return_value = self.center
-        BuildOnClause.return_value = "onclause"
+        join_mock.return_value = self.center
+        build_on_clause_mock.return_value = "onclause"
         
         querying.join_pathed_tables(self.graph, self.table_pathing_1)  
 
-        BuildOnClause.assert_any_call(self.graph, "center", "table_2")
-        Join.assert_any_call(self.center, self.table_2,
+        build_on_clause_mock.assert_any_call(self.graph, "center", "table_2")
+        join_mock.assert_any_call(self.center, self.table_2,
                                           isouter=True,
                                           onclause="onclause")
 
     @patch("pdm_utils.functions.querying.build_onclause")
     @patch("pdm_utils.functions.querying.join")
-    def test_join_pathed_tables_3(self, Join, BuildOnClause):       
+    def test_join_pathed_tables_3(self, join_mock, build_on_clause_mock):       
         """Verify join_pathed_tables() recognizes already pathed Tables.
         """
-        Join.return_value = self.center
-        BuildOnClause.return_value = "onclause"
+        join_mock.return_value = self.center
+        build_on_clause_mock.return_value = "onclause"
 
         querying.join_pathed_tables(self.graph, self.table_pathing_1)  
 
-        BuildOnClause.assert_any_call(self.graph, "table_2", "table_3")
-        Join.assert_any_call(self.center, self.table_3,
+        build_on_clause_mock.assert_any_call(self.graph, "table_2", "table_3")
+        join_mock.assert_any_call(self.center, self.table_3,
                                           isouter=True,
                                           onclause="onclause")
 
     @patch("pdm_utils.functions.querying.build_onclause")
     @patch("pdm_utils.functions.querying.join")
-    def test_join_pathed_tables_4(self, Join, BuildOnClause):  
+    def test_join_pathed_tables_4(self, join_mock, build_on_clause_mock):  
         """Verify join_pathed_tables() recognizes different Table connections.
         join_pathed_tables() should recognize connections to non-center Tables.
         """
-        Join.return_value = self.center
-        BuildOnClause.return_value = "onclause"
+        join_mock.return_value = self.center
+        build_on_clause_mock.return_value = "onclause"
 
         querying.join_pathed_tables(self.graph, self.table_pathing_1)  
 
-        BuildOnClause.assert_any_call(self.graph, "table_1", "table_4")
-        Join.assert_any_call(self.center, self.table_4,
+        build_on_clause_mock.assert_any_call(self.graph, "table_1", "table_4")
+        join_mock.assert_any_call(self.center, self.table_4,
                                           isouter=True,
                                           onclause="onclause")
 
     @patch("pdm_utils.functions.querying.build_onclause")
     @patch("pdm_utils.functions.querying.join")
-    def test_join_pathed_tables_5(self, Join, BuildOnClause):
+    def test_join_pathed_tables_5(self, join_mock, build_on_clause_mock):
         """Verify join_pathed_tables() recognizes empty pathing.
         """
-        Join.return_value = self.center
-        BuildOnClause.return_value = "onclause"
+        join_mock.return_value = self.center
+        build_on_clause_mock.return_value = "onclause"
 
         querying.join_pathed_tables(self.graph, self.table_pathing_2)
 
-        BuildOnClause.assert_not_called()
-        Join.assert_not_called()
+        build_on_clause_mock.assert_not_called()
+        join_mock.assert_not_called()
 
 class TestBuildClauses(unittest.TestCase):
     def setUp(self):
         self.graph = Mock()
+        self.metadata = Mock()
+        self.graph_properties = {"metadata" : self.metadata}
+        type(self.graph).graph = PropertyMock(
+                                 return_value=self.graph_properties)
 
         self.phage = Mock(spec=Table)
         self.gene  = Mock(spec=Table)
@@ -552,9 +560,14 @@ class TestBuildClauses(unittest.TestCase):
         nodes_dict = {"phage" : {"table" : self.phage},
                       "gene"  : {"table"  : self.gene},
                       "trna"  : {"table"  : self.trna}}
+        tables_dict = {"phage" : self.phage,
+                       "gene"  : self.gene,
+                       "trna"  : self.trna}
     
         mock_nodes = PropertyMock(return_value=nodes_dict)
+        mock_tables = PropertyMock(return_value=tables_dict)
         type(self.graph).nodes = mock_nodes
+        type(self.metadata).tables = mock_tables
 
         self.pathing = [self.phage, [["phage", "gene"], ["phage", "trna"]]]
 
@@ -602,39 +615,40 @@ class TestBuildClauses(unittest.TestCase):
                              self.whereclause_3]
  
     @patch("pdm_utils.functions.querying.parsing.parse_filter")
-    def test_build_where_clause_1(self, ParseFilter): 
+    def test_build_where_clause_1(self, parse_filter_mock): 
         """Verify parse_filter() is called with correct parameters.
         """
-        ParseFilter.return_value = ["phage", "Cluster", "!=", "A"]
+        parse_filter_mock.return_value = ["phage", "Cluster", "!=", "A"]
 
         querying.build_where_clause(self.graph, "phage.Cluster != A")
 
-        ParseFilter.assert_called_with("phage.Cluster != A")
+        parse_filter_mock.assert_called_with("phage.Cluster != A")
 
     @patch("pdm_utils.functions.querying.parsing.check_operator")
-    def test_build_where_clause_2(self, CheckOperator):
+    def test_build_where_clause_2(self, check_operator_mock):
         """Verify check_operator() is called with correct parameters.
         """
         querying.build_where_clause(self.graph, "gene.PhamID = 2")
 
-        CheckOperator.assert_called_with("=", self.PhamID)
+        check_operator_mock.assert_called_with("=", self.PhamID)
    
     @patch("pdm_utils.functions.querying.join_pathed_tables")
     @patch("pdm_utils.functions.querying.get_table_pathing")
     @patch("pdm_utils.functions.querying.get_table_list")
-    def test_build_fromclause_1(self, GetTableList, GetTablePathing, 
-                                                            JoinPathedTables):
+    def test_build_fromclause_1(self, get_table_list_mock, 
+                                      get_table_pathing_mock, 
+                                      join_pathed_tables_mock):
         """Verify function structure of build_fromclause().
         """
-        GetTableList.return_value = self.table_names
-        GetTablePathing.return_value = self.pathing
-        JoinPathedTables.return_value  = Mock()
+        get_table_list_mock.return_value = self.table_names
+        get_table_pathing_mock.return_value = self.pathing
+        join_pathed_tables_mock.return_value  = Mock()
         
         querying.build_fromclause(self.graph, self.tables)
 
-        GetTableList.assert_called_with(self.tables)
-        GetTablePathing.assert_called_with(self.graph, self.table_names)
-        JoinPathedTables.assert_called_with(self.graph, self.pathing)
+        get_table_list_mock.assert_called_with(self.tables)
+        get_table_pathing_mock.assert_called_with(self.graph, self.table_names)
+        join_pathed_tables_mock.assert_called_with(self.graph, self.pathing)
 
     @patch("pdm_utils.functions.querying.append_order_by_clauses")
     @patch("pdm_utils.functions.querying.append_where_clauses")
@@ -730,6 +744,252 @@ class TestBuildClauses(unittest.TestCase):
                                             where=self.whereclauses, 
                                             order_by=self.columns,
                                             add_in=None)
+
+class TestExecute(unittest.TestCase):
+    def setUp(self):
+        self.mock_engine = Mock()
+        self.mock_proxy = Mock()
+
+        self.mock_row_proxy = MagicMock()
+        self.mock_results = [self.mock_row_proxy]
+
+        self.data_tuple = ("Trixie", "Mycobacterium", "A")
+        self.data_dict = {"PhageID"   : "Trixie",
+                          "HostGenus" : "Mycobacterium",
+                          "Cluster"   : "A"}
+        self.mock_row_proxy.keys.return_value.__iter__.return_value = \
+                                                    self.data_dict.keys()
+        self.mock_row_proxy.__getitem__.side_effect = \
+                                                    self.data_tuple
+
+        self.mock_engine.execute.return_value = self.mock_proxy
+        self.mock_proxy.fetchall.return_value = self.mock_results 
+
+        self.mock_executable = Mock()
+        self.mock_in_column = Mock(spec=Column)
+        self.mock_executable.get_children.return_value = [self.mock_in_column]
+        self.values = ["Trixie", "D29", "Myrna"]
+
+    def test_execute_1(self):
+        """Verify function structure of execute().
+        """
+        querying.execute(self.mock_engine, self.mock_executable)
+        
+        self.mock_engine.execute.assert_called()
+        self.mock_proxy.fetchall.assert_called()
+
+    def test_execute_2(self):
+        """Verify execute() converts results to data dictionaries.
+        """
+        results = querying.execute(self.mock_engine, self.mock_executable)
+
+        self.assertEqual(results, [self.data_dict])
+
+    @patch("pdm_utils.functions.querying.dict")
+    def test_execute_3(self, dict_mock):
+        """Verify that execute() calls built-in function dict().
+        """
+        dict_mock.return_value = "dict_return_value"
+
+        results = querying.execute(self.mock_engine, self.mock_executable)
+
+        self.assertEqual(results, ["dict_return_value"])
+
+    @patch("pdm_utils.functions.querying.dict")
+    def test_execute_4(self, dict_mock):
+        """Verify that parameter return_dict controls conversion with dict().
+        """
+        dict_mock.return_value = "dict_return_value"
+
+        results = querying.execute(self.mock_engine, self.mock_executable,
+                                                     return_dict=False)
+
+        self.assertNotEqual(results, ["dict_return_value"])
+        self.assertEqual(results, self.mock_results)
+
+    @patch("pdm_utils.functions.querying.execute_value_subqueries")
+    def test_execute_5(self, subqueries_mock):
+        """Verify that execute() calls execute_value_subqueries().
+        """
+        querying.execute(self.mock_engine, self.mock_executable,
+                         values=self.values, in_column=self.mock_in_column,
+                         limit=8001, return_dict=False)
+
+        subqueries_mock.assert_called_with(self.mock_engine,
+                                           self.mock_executable,
+                                           self.mock_in_column,
+                                           self.values,
+                                           limit=8001, 
+                                           return_dict=False)
+
+    def test_execute_6(self):
+        """Verify that execute() raises ValueError with lacking instruction.
+        """
+        with self.assertRaises(ValueError):
+            querying.execute(self.mock_engine, self.mock_executable,
+                             values=self.values)
+
+    def test_first_column_1(self):
+        """Verify function structure of first_column().
+        """
+        querying.first_column(self.mock_engine, self.mock_executable)
+
+        self.mock_engine.execute.assert_called()
+        self.mock_proxy.fetchall.assert_called()
+
+    def test_first_column_2(self):
+        """Verify that first_column() retreives the first value from each row.
+        """
+        results = querying.first_column(self.mock_engine, self.mock_executable)
+
+        self.assertEqual(results, [self.data_tuple[0]])
+
+    @patch("pdm_utils.functions.querying.first_column_value_subqueries")
+    def test_first_column_3(self, subqueries_mock):
+        """Verify that first_column() calls first_column_value_subqueries().
+        """
+        querying.first_column(self.mock_engine, self.mock_executable,
+                              in_column=self.mock_in_column, 
+                              values=self.values, limit=8001)
+
+        subqueries_mock.assert_called_with(self.mock_engine,
+                                           self.mock_executable,
+                                           self.mock_in_column,
+                                           self.values,
+                                           limit=8001)
+
+    def test_first_column_4(self):
+        """Verify first_column() raises ValueError with lacking instructions.
+        """
+        with self.assertRaises(ValueError):
+            querying.execute(self.mock_engine, self.mock_executable,
+                             values=self.values)
+
+    def test_execute_value_subqueries_1(self):
+        """Verify execute_value_subqueries() raises ValueError from bad column.
+        """
+        with self.assertRaises(ValueError):
+            querying.execute_value_subqueries(
+                                          self.mock_engine,
+                                          self.mock_executable,
+                                          None,
+                                          self.values)
+
+    def test_execute_value_subqueries_2(self):
+        """Verify execute_value_subqueries() raises ValueError from bad column.
+        """
+        self.mock_executable.is_derived_from.return_value = False
+
+        with self.assertRaises(ValueError):
+            querying.execute_value_subqueries(
+                                          self.mock_engine,
+                                          self.mock_executable,
+                                          self.mock_in_column,
+                                          self.values)
+
+    @patch("pdm_utils.functions.querying.parsing.convert_to_encoded")
+    def test_execute_value_subqueries_3(self, convert_to_encoded_mock):
+        """Verify execute_value_subqueries() calls convert_to_encoded().
+        """
+        type_mock = Mock()
+        type(type_mock).python_type = PropertyMock(return_value=bytes)
+        type(self.mock_in_column).type = type_mock
+
+        convert_to_encoded_mock.return_value = self.values
+
+        querying.execute_value_subqueries(self.mock_engine,
+                                          self.mock_executable,
+                                          self.mock_in_column,
+                                          self.values)
+
+        convert_to_encoded_mock.assert_called_with(self.values)
+
+    def test_execute_value_subqueries_4(self):
+        """Verify that execute_value_subqueries() calls Column.in_().
+        """
+        querying.execute_value_subqueries(self.mock_engine, 
+                                          self.mock_executable,
+                                          self.mock_in_column,
+                                          self.values)
+
+        self.mock_in_column.in_.assert_called_with(self.values)
+
+    def test_execute_value_subqueries_5(self):
+        """Verify that execute_value_subqueries chunks values correctly.
+        """
+        querying.execute_value_subqueries(self.mock_engine,
+                                          self.mock_executable,
+                                          self.mock_in_column,
+                                          self.values,
+                                          return_dict=False,
+                                          limit=2)
+        
+        self.mock_in_column.in_.assert_any_call(self.values[:2])
+        self.mock_in_column.in_.assert_any_call([self.values[2]])
+
+    def test_first_column_value_subqueries_1(self):
+        """Verify that first_column_value_subqueries() raises ValueError.
+        First_column_value_subqueries should raise when inputted column
+        is not a Column object.
+        """
+        with self.assertRaises(ValueError):
+            querying.first_column_value_subqueries(
+                                          self.mock_engine,
+                                          self.mock_executable,
+                                          None,
+                                          self.values)
+
+    def test_first_column_value_subqueries_2(self):
+        """Verify that first_column_value_subqueries() raises ValueError.
+        first_column_value_subqueries() should raise when column does not
+        belong to any of the tables joined for the query.
+        """
+        self.mock_executable.is_derived_from.return_value = False
+        with self.assertRaises(ValueError):
+            querying.first_column_value_subqueries(
+                                          self.mock_engine,
+                                          self.mock_executable,
+                                          self.mock_in_column,
+                                          self.values)
+
+    @patch("pdm_utils.functions.querying.parsing.convert_to_encoded")
+    def test_first_column_value_subqueries_3(self, convert_to_encoded_mock):
+        """Verify first_column_value_subqueries() calls convert_to_encoded().
+        """
+        type_mock = Mock()
+        type(type_mock).python_type = PropertyMock(return_value=bytes)
+        type(self.mock_in_column).type = type_mock
+
+        convert_to_encoded_mock.return_value = self.values
+
+        querying.first_column_value_subqueries(self.mock_engine,
+                                          self.mock_executable,
+                                          self.mock_in_column,
+                                          self.values)
+
+        convert_to_encoded_mock.assert_called_with(self.values)
+
+    def test_first_column_value_subqueries_4(self):
+        """Verify first_column_value_subqueries() calls Column.in_().
+        """
+        querying.first_column_value_subqueries(self.mock_engine, 
+                                          self.mock_executable,
+                                          self.mock_in_column,
+                                          self.values)
+
+        self.mock_in_column.in_.assert_called_with(self.values)
+
+    def test_first_column_value_subqueries_5(self):
+        """Verify that first_column_value_subqueries() chunks values correctly.
+        """
+        querying.first_column_value_subqueries(self.mock_engine,
+                                          self.mock_executable,
+                                          self.mock_in_column,
+                                          self.values,
+                                          limit=2)
+        
+        self.mock_in_column.in_.assert_any_call(self.values[:2])
+        self.mock_in_column.in_.assert_any_call([self.values[2]])
 
 if __name__ == "__main__":
     unittest.main()

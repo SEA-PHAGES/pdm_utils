@@ -6,18 +6,27 @@ from sqlalchemy import Column
 from sqlalchemy import join
 from sqlalchemy import MetaData
 from sqlalchemy import select
+from sqlalchemy import Table
 from sqlalchemy.sql import distinct
 from sqlalchemy.sql import func
 from sqlalchemy.sql import functions
 from sqlalchemy.sql.elements import BinaryExpression
 from sqlalchemy.sql.elements import Grouping
+from sqlalchemy.sql.elements import Label
 from sqlalchemy.sql.elements import UnaryExpression
 from datetime import datetime
 from decimal import Decimal
 import re
 
-#GLOBAL CONSTANTS
+#GLOBAL VARIABLES
+#-----------------------------------------------------------------------------
+
 COLUMN_TYPES = [Column, functions.count, BinaryExpression, UnaryExpression]
+
+#-----------------------------------------------------------------------------
+#SQLALCHEMY OBJECT RETRIEVAL
+#Functions that functionalize retrieval of SqlAlchemy objects.
+#-----------------------------------------------------------------------------
 
 def get_table(metadata, table):
     """Get a SQLAlchemy Table object, with a case-insensitive input.
@@ -57,6 +66,11 @@ def get_column(metadata, column):
 
     return column_obj
 
+#-----------------------------------------------------------------------------
+#MySQL DATABASE MAPPING AND TRAVERSAL
+#Functions to traverse MySQL database structures and map valid JOIN clauses.
+#-----------------------------------------------------------------------------
+
 def build_graph(metadata):
     """Get a NetworkX Graph object populated from a SQLAlchemy MetaData object.
 
@@ -89,52 +103,21 @@ def build_graph(metadata):
 
     return graph
 
-def build_where_clause(db_graph, filter_expression): 
-    """Creates a SQLAlchemy BinaryExpression object from a MySQL WHERE 
-       clause expression.
-
+def build_fromclause(db_graph, columns):
+    """Get a joined table from pathing instructions for joining MySQL Tables.
     :param db_graph: SQLAlchemy structured NetworkX Graph object.
     :type db_graph: Graph
-    :param filter_expression: MySQL where clause expression.
-    :type filter_expression: str
-    :returns: MySQL expression-related SQLAlchemy BinaryExpression object.
-    :rtype: BinaryExpression
+    :param columns: SQLAlchemy Column object(s).
+    :type columns: Column
+    :type columns: list
+    :returns: SQLAlchemy Table object containing left outer-joined tables.
+    :rtype: Table
     """
-    filter_params = parsing.parse_filter(filter_expression) 
+    table_list = get_table_list(columns)
+    table_pathing = get_table_pathing(db_graph, table_list)
+    joined_table = join_pathed_tables(db_graph, table_pathing)
 
-    #Retrieve Table and Column objects from split filter expression strings
-    table_object = db_graph.nodes[filter_params[0]]["table"]
-    column_object = table_object.columns[filter_params[1]]
-
-    #Checks the operator and Column type compatability
-    parsing.check_operator(filter_params[2], column_object)
-
-    right = filter_params[3] #Stores the expressions 'right' value
-
-    if column_object.type.python_type == bytes:
-        right = right.encode("utf-8")
-   
-    if right == "None":
-        right = None
-
-    where_clause = None
-
-    if filter_params[2] == "=":
-        where_clause = (column_object  ==  right)
-    elif filter_params[2] == "LIKE":
-        where_clause = (column_object.like(right))
-    elif filter_params[2] == "!=" or filter_params[2] == "IS NOT":
-        where_clause = (column_object  !=  right)
-    elif filter_params[2] == ">" :
-        where_clause = (column_object  >   right)
-    elif filter_params[2] == ">=":
-        where_clause = (column_object  >=  right)
-    elif filter_params[2] == "<" :
-        where_clause = (column_object  <   right)
-    elif filter_params[2] == "<=":
-        where_clause = (column_object  <=  right)
-
-    return where_clause 
+    return joined_table
 
 def build_onclause(db_graph, source_table, adjacent_table):
     """Creates a SQLAlchemy BinaryExpression object for a MySQL ON clause 
@@ -168,117 +151,6 @@ def build_onclause(db_graph, source_table, adjacent_table):
     onclause = referent_column == referenced_column 
 
     return onclause
-
-def extract_column(column, check=None):
-    """Get a column from a supported SQLAlchemy Column-related object.
-
-    :param column: SQLAlchemy Column-related object.
-    :type column: BinaryExpression
-    :type column: Column
-    :type column: count
-    :type column: UnaryExpression
-    :param check: SQLAlchemy Column-related object type.
-    :type check: <type Column>
-    :type check: <type count>
-    :type check: <type UnaryExpression>
-    :type check: <type BinaryExpression>
-    :returns: Corresponding SQLAlchemy Column object.
-    :rtype: Column
-    """
-    if check != None:
-        if not isinstance(column, check):
-            raise TypeError(f"Type {type(column)} object passed as column "
-                             "failed a specified type check.")
-
-    if isinstance(column, Column): 
-        pass
-    #For handling SQLAlchemy count(Column) expressions
-    elif isinstance(column, functions.count):
-        column = column.clauses.clauses[0]
-    #For handling SQLAlchemy Column.distinct expressions
-    elif isinstance(column, UnaryExpression):
-        column = column.element
-    #For handling SQLAlchemy comparison expressions
-    elif isinstance(column, BinaryExpression):
-        expression = column.left
-        #For handling SQLAlchemy Column.in_() expressions
-        if isinstance(expression, UnaryExpression):        
-            column = expression.element
-        #For handling SQLAlchemy count(Column) comparisons
-        elif isinstance(expression, functions.count):
-            column = expression.clauses.clauses[0]
-        #For handling SQLAlchemy Column.distinct() comparisons
-        elif isinstance(expression, Grouping):
-            column = expression.element.element
-        elif isinstance(expression, Column):
-            column = expression
-        else:
-            raise TypeError(f"BinaryExpression type {type(expression)} "
-                            f"of expression {expression} is not supported.")
-
-    else:
-        raise TypeError(f"Input type {column} is not a derivative "
-                         "of a SqlAlchemy Column.")
-    
-    return column
-
-def extract_columns(columns, check=None):
-    """Get a column from a supported SQLAlchemy Column-related object(s).
-
-    :param column: SQLAlchemy Column-related object.
-    :type column: BinaryExpression
-    :type column: Column
-    :type column: count
-    :type column: list
-    :type column: UnaryExpression
-    :param check: SQLAlchemy Column-related object type.
-    :type check: <type Column>
-    :type check: <type count>
-    :type check: <type UnaryExpression>
-    :type check: <type BinaryExpression>
-    :returns: List of SQLAlchemy Column objects.
-    :rtype: list[Column]
-    """
-    extracted_columns = []
-
-    if isinstance(columns, list):
-        for column in columns:
-            extracted_columns.append(extract_column(column, check=check))
-
-    else:
-        extracted_columns.append(extract_column(columns, check=check))
-
-    return extracted_columns
-
-def extract_where_clauses(where_clauses):
-    """Get the column from WHERE clause-related BinaryExpression objects.
-
-    :param where_clauses: SQLAlchemy BinaryExpression object(s).
-    :type where_clauses: BinaryExpression
-    :type where_clauses: list
-    :returns: List of SQLAlchemy Column objects.
-    :rtype: list[Column] 
-    """
-    where_columns = []
-    if not where_clauses is None:
-        where_columns = extract_columns(where_clauses, check=BinaryExpression)
-
-    return where_columns
-
-def extract_order_by_clauses(order_by_clauses):
-    """Get the column from ORDER BY clause-related Column objects.
-
-    :param where_clauses: SQLAlchemy Column object(s).
-    :type where_clauses: Column
-    :type where_clauses: list
-    :returns: List of SQLAlchemy Column objects.
-    :rtype: list[Column] 
-    """
-    order_by_columns = []
-    if not order_by_clauses is None:
-        order_by_columns = extract_columns(order_by_clauses, check=Column)
-
-    return order_by_columns
 
 def get_table_list(columns):
     """Get a nonrepeating list SQLAlchemy Table objects from Column objects.
@@ -373,21 +245,181 @@ def join_pathed_tables(db_graph, table_pathing):
 
     return joined_tables
 
-def build_fromclause(db_graph, columns):
-    """Get a joined table from pathing instructions for joining MySQL Tables.
+#-----------------------------------------------------------------------------
+#SQLALCHEMY COLUMN HANDLING
+#Functions to deal with column formats and constructing column expressions.
+#-----------------------------------------------------------------------------
+
+def build_where_clause(db_graph, filter_expression): 
+    """Creates a SQLAlchemy BinaryExpression object from a MySQL WHERE 
+       clause expression.
+
     :param db_graph: SQLAlchemy structured NetworkX Graph object.
     :type db_graph: Graph
-    :param columns: SQLAlchemy Column object(s).
-    :type columns: Column
-    :type columns: list
-    :returns: SQLAlchemy Table object containing left outer-joined tables.
-    :rtype: Table
+    :param filter_expression: MySQL where clause expression.
+    :type filter_expression: str
+    :returns: MySQL expression-related SQLAlchemy BinaryExpression object.
+    :rtype: BinaryExpression
     """
-    table_list = get_table_list(columns)
-    table_pathing = get_table_pathing(db_graph, table_list)
-    joined_table = join_pathed_tables(db_graph, table_pathing)
+    filter_params = parsing.parse_filter(filter_expression) 
 
-    return joined_table
+    #Retrieve Table and Column objects from split filter expression strings
+    table_object = db_graph.nodes[filter_params[0]]["table"]
+
+    column_name = parsing.translate_column(db_graph.graph["metadata"],
+                                f"{table_object.name}.{filter_params[1]}")
+    column_object = table_object.columns[column_name]
+
+    #Checks the operator and Column type compatability
+    parsing.check_operator(filter_params[2], column_object)
+
+    right = filter_params[3] #Stores the expressions 'right' value
+
+    if column_object.type.python_type == bytes:
+        right = right.encode("utf-8")
+   
+    if right == "None":
+        right = None
+
+    where_clause = None
+
+    if filter_params[2] == "=":
+        where_clause = (column_object  ==  right)
+    elif filter_params[2] == "LIKE":
+        where_clause = (column_object.like(right))
+    elif filter_params[2] == "!=" or filter_params[2] == "IS NOT":
+        where_clause = (column_object  !=  right)
+    elif filter_params[2] == ">" :
+        where_clause = (column_object  >   right)
+    elif filter_params[2] == ">=":
+        where_clause = (column_object  >=  right)
+    elif filter_params[2] == "<" :
+        where_clause = (column_object  <   right)
+    elif filter_params[2] == "<=":
+        where_clause = (column_object  <=  right)
+
+    return where_clause 
+
+def extract_column(column, check=None):
+    """Get a column from a supported SQLAlchemy Column-related object.
+
+    :param column: SQLAlchemy Column-related object.
+    :type column: BinaryExpression
+    :type column: Column
+    :type column: count
+    :type column: UnaryExpression
+    :param check: SQLAlchemy Column-related object type.
+    :type check: <type Column>
+    :type check: <type count>
+    :type check: <type UnaryExpression>
+    :type check: <type BinaryExpression>
+    :returns: Corresponding SQLAlchemy Column object.
+    :rtype: Column
+    """
+    if check != None:
+        if not isinstance(column, check):
+            raise TypeError(f"Type {type(column)} object passed as column "
+                             "failed a specified type check.")
+
+    if isinstance(column, Column): 
+        pass
+    #For handling SQLAlchemy Table input
+    elif isinstance(column, Table):
+        column = list(column.primary_key.columns)[0]
+    #For handling SQLAlchemy count(Column) expressions
+    elif isinstance(column, functions.count):
+        column = column.clauses.clauses[0]
+    #For handling SQLAlchemy Column.distinct expressions
+    elif isinstance(column, UnaryExpression):
+        column = column.element
+    elif isinstance(column, Label):
+        column = column.element
+    #For handling SQLAlchemy comparison expressions
+    elif isinstance(column, BinaryExpression):
+        expression = column.left
+        #For handling SQLAlchemy Column.in_() expressions
+        if isinstance(expression, UnaryExpression):        
+            column = expression.element
+        #For handling SQLAlchemy count(Column) comparisons
+        elif isinstance(expression, functions.count):
+            column = expression.clauses.clauses[0]
+        #For handling SQLAlchemy Column.distinct() comparisons
+        elif isinstance(expression, Grouping):
+            column = expression.element.element
+        elif isinstance(expression, Column):
+            column = expression
+        else:
+            raise TypeError(f"BinaryExpression type {type(expression)} "
+                            f"of expression {expression} is not supported.")
+
+    else:
+        raise TypeError(f"Input type {type(column)} is not a derivative "
+                         "of a SqlAlchemy Column.")
+    
+    return column
+
+def extract_columns(columns, check=None):
+    """Get a column from a supported SQLAlchemy Column-related object(s).
+
+    :param column: SQLAlchemy Column-related object.
+    :type column: BinaryExpression
+    :type column: Column
+    :type column: count
+    :type column: list
+    :type column: UnaryExpression
+    :param check: SQLAlchemy Column-related object type.
+    :type check: <type Column>
+    :type check: <type count>
+    :type check: <type UnaryExpression>
+    :type check: <type BinaryExpression>
+    :returns: List of SQLAlchemy Column objects.
+    :rtype: list[Column]
+    """
+    extracted_columns = []
+
+    if isinstance(columns, list):
+        for column in columns:
+            extracted_columns.append(extract_column(column, check=check))
+
+    else:
+        extracted_columns.append(extract_column(columns, check=check))
+
+    return extracted_columns
+
+def extract_where_clauses(where_clauses):
+    """Get the column from WHERE clause-related BinaryExpression objects.
+
+    :param where_clauses: SQLAlchemy BinaryExpression object(s).
+    :type where_clauses: BinaryExpression
+    :type where_clauses: list
+    :returns: List of SQLAlchemy Column objects.
+    :rtype: list[Column] 
+    """
+    where_columns = []
+    if not where_clauses is None:
+        where_columns = extract_columns(where_clauses, check=BinaryExpression)
+
+    return where_columns
+
+def extract_order_by_clauses(order_by_clauses):
+    """Get the column from ORDER BY clause-related Column objects.
+
+    :param where_clauses: SQLAlchemy Column object(s).
+    :type where_clauses: Column
+    :type where_clauses: list
+    :returns: List of SQLAlchemy Column objects.
+    :rtype: list[Column] 
+    """
+    order_by_columns = []
+    if not order_by_clauses is None:
+        order_by_columns = extract_columns(order_by_clauses, check=Column)
+
+    return order_by_columns
+
+#-----------------------------------------------------------------------------
+#SQLALCHEMY SELECT HANDLING
+#Functions that build and modify SqlAlchemy executable objects.
+#-----------------------------------------------------------------------------
 
 def append_where_clauses(executable, where_clauses):
     """Add WHERE SQLAlchemy BinaryExpression objects to a Select object.
@@ -534,53 +566,81 @@ def build_distinct(db_graph, columns, where=None, order_by=None, add_in=None):
     distinct_query = query.distinct() #Converts a SELECT to a DISTINCT
     return distinct_query
 
-#TODO for Travis: To be evaluated for placement in another module.
-def first_column_value_subqueries(engine, executable, in_column, 
-                                                                 source_values, 
-                                                                 limit=8000):
-    """Execute a single column MySQL query for a set of values with subqueries.
-
+#-----------------------------------------------------------------------------
+#SQLALCHEMY EXECUTE QUERY FUNCTIONS
+#Functions that execute SqlAlchemy select statements and handle outputs.
+#-----------------------------------------------------------------------------
+def execute(engine, executable, in_column=None, values=[], limit=8000, 
+                                                           return_dict=True):
+    """Use SQLAlchemy Engine to execute a MySQL query.
+    
     :param engine: SQLAlchemy Engine object used for executing queries.
     :type engine: Engine
     :param executable: Input a executable MySQL query.
     :type executable: Select
     :type executable: str
-    :param in_column: SQLAlchemy Column object.
-    :type in_column: Column
-    :param source_values: Values from specified MySQL column.
-    :type source_values: list[str]
-    :param return_dict: Toggle whether to return data as a dictionary.
+    :param return_dict: Toggle whether execute returns dict or tuple.
     :type return_dict: Boolean
-    :param limit: SQLAlchemy IN clause query length limiter.
-    :type limit: int
-    :returns: Distinct values fetched from value constraints.
-    :rtype: list
+    :returns: Results from execution of given MySQL query.
+    :rtype: list[dict]
+    :rtype: list[tuple]
     """
-    values = []
-    if in_column.type.python_type == bytes:
-        source_values = parsing.convert_to_encoded(source_values)
+    if values:
+        if in_column is None:
+            raise ValueError("Column input is required to condition "
+                             "SQLAlchemy select for a set of values.")
+        
+        results = execute_value_subqueries(engine, executable,
+                                           in_column, values, 
+                                           return_dict=return_dict, limit=limit)
+                                           
+    else:
+        proxy = engine.execute(executable)
 
-    chunked_values = [source_values[i*limit:(i+1)*limit]\
-                for i in range((len(source_values) + limit - 1) // limit)]  
-
-    for value_chunk in chunked_values: 
-        subquery = executable.where(in_column.in_(value_chunk))
-
-        proxy = engine.execute(subquery)
         results = proxy.fetchall()
 
-        for result in results:
-            values.append(result[0]) 
+        if return_dict:
+            results_dicts = []
+            for result in results:
+                results_dicts.append(dict(result))
 
-    values = list(OrderedDict.fromkeys(values))
+            results = results_dicts 
+
+    return results
+    
+def first_column(engine, executable, in_column=None, values=[], limit=8000):
+    """Use SQLAlchemy Engine to execute and return the first column of fields.
+        
+    :param engine: SQLAlchemy Engine object used for executing queries.
+    :type engine: Engine
+    :param executable: Input an executable MySQL query.
+    :type executable: Select
+    :type executable: str
+    :returns: A column for a set of MySQL values.
+    :rtype: list[str]
+    """     
+    if values:
+        if in_column is None:
+            raise ValueError("Column input is required to condition "
+                             "SQLAlchemy select for a set of values.")
+
+        values = first_column_value_subqueries(engine, executable,
+                                               in_column, values,
+                                               limit=limit)
+    else:
+        proxy = engine.execute(executable)
+        results = proxy.fetchall()
+
+        values = []
+        for result in results:
+            values.append(result[0])
+
     return values
 
-#TODO for Travis: To be evaluated for placement in another module.
-def execute_value_subqueries(engine, executable, in_column, 
-                                                            source_values,
+def execute_value_subqueries(engine, executable, in_column, source_values,
                                                             return_dict=True,
                                                             limit=8000):
-    """Execute a MySQL query for a set of values with subqueries.
+    """Query with a conditional on a set of values using subqueries.
 
     :param engine: SQLAlchemy Engine object used for executing queries.
     :type engine: Engine
@@ -598,6 +658,16 @@ def execute_value_subqueries(engine, executable, in_column,
     :returns: List of grouped data for each value constraint.
     :rtype: list
     """
+    if not isinstance(in_column, Column):
+        raise ValueError("Inputted column to conditional values against "
+                         "is not a SqlAlchemy Column."
+                        f"Object is instead type {type(in_column)}.")
+
+    if not executable.is_derived_from(in_column.table):
+        raise ValueError("Inputted column to conditional values against "
+                         "must be a column from the table(s) joined in the "
+                         "SQLAlchemy select.")
+    
     values=[]
     if in_column.type.python_type == bytes:
         source_values = parsing.convert_to_encoded(source_values)
@@ -619,51 +689,53 @@ def execute_value_subqueries(engine, executable, in_column,
 
     return values
 
-#TODO for Travis: To be evaluated for placement in another module.
-def execute(engine, executable, return_dict=True):
-    """Use SQLAlchemy Engine to execute a MySQL query.
-    
+def first_column_value_subqueries(engine, executable, in_column, source_values, 
+                                                                 limit=8000):
+    """Query with a conditional on a set of values using subqueries.
+
     :param engine: SQLAlchemy Engine object used for executing queries.
     :type engine: Engine
     :param executable: Input a executable MySQL query.
     :type executable: Select
     :type executable: str
-    :param return_dict: Toggle whether execute returns dict or tuple.
+    :param in_column: SQLAlchemy Column object.
+    :type in_column: Column
+    :param source_values: Values from specified MySQL column.
+    :type source_values: list[str]
+    :param return_dict: Toggle whether to return data as a dictionary.
     :type return_dict: Boolean
-    :returns: Results from execution of given MySQL query.
-    :rtype: list[dict]
-    :rtype: list[tuple]
+    :param limit: SQLAlchemy IN clause query length limiter.
+    :type limit: int
+    :returns: Distinct values fetched from value constraints.
+    :rtype: list
     """
-    proxy = engine.execute(executable)
+    if not isinstance(in_column, Column):
+        raise ValueError("Inputted column to conditional values against "
+                         "is not a SqlAlchemy Column."
+                        f"Object is instead type {type(in_column)}.")
 
-    results = proxy.fetchall()
-
-    if return_dict:
-        results_dicts = []
-        for result in results:
-            results_dicts.append(dict(result))
-
-        results = results_dicts 
-
-    return results
-    
-#TODO for Travis: To be evaluated for placement in another module.
-def first_column(engine, executable):
-    """Use SQLAlchemy Engine to execute and grab the first column."
-        
-    :param engine: SQLAlchemy Engine object used for executing queries.
-    :type engine: Engine
-    :param executable: Input an executable MySQL query.
-    :type executable: Select
-    :type executable: str
-    :returns: A column for a set of MySQL values.
-    :rtype: list[str]
-    """
-    proxy = engine.execute(executable)
-    results = proxy.fetchall()
+    if not executable.is_derived_from(in_column.table):
+        raise ValueError("Inputted column to conditional values against "
+                         "must be a column from the table(s) joined in the "
+                         "SQLAlchemy select.")
 
     values = []
-    for result in results:
-        values.append(result[0])
+    if in_column.type.python_type == bytes:
+        source_values = parsing.convert_to_encoded(source_values)
 
+    chunked_values = [source_values[i*limit:(i+1)*limit]\
+                for i in range((len(source_values) + limit - 1) // limit)]  
+
+    for value_chunk in chunked_values: 
+        subquery = executable.where(in_column.in_(value_chunk))
+
+        proxy = engine.execute(subquery)
+        results = proxy.fetchall()
+
+        for result in results:
+            values.append(result[0]) 
+
+    values = list(OrderedDict.fromkeys(values))
     return values
+
+
