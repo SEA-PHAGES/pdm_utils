@@ -158,46 +158,69 @@ def create_schema_file(schema_filepath, db=DB, user=USER, pwd=PWD):
 
 # Inserting data into specific tables
 
-def insert_version_data(data_dict=VERSION_TABLE_DATA, db=DB, user=USER, pwd=PWD):
-    """Insert data into the version table."""
-    # Unlike other tables, version table data is expected to have one row
-    # that reflects the structure of the database. So by default, data_dict
-    # has a default value.
+def version_stmt(data_dict=VERSION_TABLE_DATA):
+    """Construct SQL statement for inserting data into the version table."""
     statement = (
         "INSERT INTO version "
         "(Version, SchemaVersion) "
         "VALUES ("
         f"'{data_dict['Version']}', '{data_dict['SchemaVersion']}');"
         )
+    return statement
+
+def insert_version_data(data_dict=VERSION_TABLE_DATA, db=DB, user=USER, pwd=PWD):
+    """Insert data into the version table."""
+    # Unlike other tables, version table data is expected to have one row
+    # that reflects the structure of the database. So by default, data_dict
+    # has a default value.
+    statement = version_stmt(data_dict)
     execute(statement, db=db, user=user, pwd=pwd)
+
+def domain_stmt(data_dict):
+    """Construct SQL statement for inserting data into the domain table."""
+    # No need to insert ID, since that is auto-incremented.
+    statement = (
+        """INSERT INTO domain """
+        """(HitID, DomainID, Name, Description) VALUES """
+        """("{}", "{}", "{}", "{}")"""
+        )
+    statement = statement.format(
+                    data_dict["HitID"],
+                    data_dict["DomainID"],
+                    data_dict["Name"],
+                    data_dict["Description"])
+    return statement
 
 def insert_domain_data(data_dict, db=DB, user=USER, pwd=PWD):
     """Insert data into the domain table."""
-    # No need to insert ID, since that is auto-incremented.
-    statement = (
-        "INSERT INTO domain  "
-        "(HitID, DomainID, Name, Description) "
-        "VALUES ("
-        f"'{data_dict['HitID']}', '{data_dict['DomainID']}',"
-        f"'{data_dict['Name']}', '{data_dict['Description']}');"
-        )
+    statement = domain_stmt(data_dict)
     execute(statement, db=db, user=user, pwd=pwd)
+
+def gene_domain_stmt(data_dict):
+    """Construct SQL statement for inserting data into the gene_domain table."""
+    # No need to insert ID, since that is auto-incremented.
+
+    statement = (
+        """INSERT INTO gene_domain """
+        """(GeneID, HitID, Expect, QueryStart, QueryEnd) VALUES """
+        """("{}", "{}", {}, {}, {})"""
+        )
+    statement = statement.format(
+                    data_dict["GeneID"], data_dict["HitID"],
+                    data_dict["Expect"], data_dict["QueryStart"],
+                    data_dict["QueryEnd"]
+                    )
+    return statement
+
 
 def insert_gene_domain_data(data_dict, db=DB, user=USER, pwd=PWD):
     """Insert data into the gene_domain table."""
-    # No need to insert ID, since that is auto-incremented.
-    statement = (
-        "INSERT INTO gene_domain  "
-        "(GeneID, HitID, Expect, QueryStart, QueryEnd) "
-        "VALUES ("
-        f"'{data_dict['GeneID']}', '{data_dict['HitID']}',"
-        f"{data_dict['Expect']}, {data_dict['QueryStart']}"
-        f"{data_dict['QueryEnd']});"
-        )
+    statement= gene_domain_stmt(data_dict)
     execute(statement, db=db, user=user, pwd=pwd)
 
-def insert_phage_data(data_dict, db=DB, user=USER, pwd=PWD):
-    """Insert data into the phage table."""
+
+def phage_stmt(data_dict):
+    """Construct SQL statement for inserting data into the phage table."""
 
     cluster = data_dict['Cluster']
     if cluster != "NULL":
@@ -229,10 +252,17 @@ def insert_phage_data(data_dict, db=DB, user=USER, pwd=PWD):
         f"{data_dict['AnnotationAuthor']}, "
         f"{cluster}, {subcluster}, {notes});"
         )
+    return statement
+
+def insert_phage_data(data_dict, db=DB, user=USER, pwd=PWD):
+    """Insert data into the phage table."""
+    statement = phage_stmt(data_dict)
     execute(statement, db=db, user=user, pwd=pwd)
 
-def insert_gene_data(data_dict, db=DB, user=USER, pwd=PWD):
-    """Insert data into the gene table."""
+
+def gene_stmt(data_dict):
+    """Construct SQL statement for inserting data into the gene table."""
+
     # Since PhamID and DomainStatus can be auto-generated,
     # they may not be in the data_dict.
     if "PhamID" not in data_dict.keys():
@@ -254,8 +284,13 @@ def insert_gene_data(data_dict, db=DB, user=USER, pwd=PWD):
         f"{data_dict['Parts']}, {data_dict['DomainStatus']}, "
         f"{data_dict['PhamID']});"
         )
-    execute(statement, db=db, user=user, pwd=pwd)
+    return statement
 
+
+def insert_gene_data(data_dict, db=DB, user=USER, pwd=PWD):
+    """Insert data into the gene table."""
+    statement = gene_stmt(data_dict)
+    execute(statement, db=db, user=user, pwd=pwd)
 
 
 
@@ -292,6 +327,13 @@ def process_gene_table_data(list_of_sql_results):
 
         if data_dict["PhamID"] is None:
             data_dict["PhamID"]  = "NULL"
+
+def process_domain_table_data(list_of_sql_results):
+    """Converts datatype for data retrieved from a few fields
+    in the domain table."""
+    for x in range(len(list_of_sql_results)):
+        data_dict = list_of_sql_results[x]
+        data_dict["Description"] = data_dict["Description"].decode("utf-8")
 
 
 def filter_genome_data(list_of_sql_results, phage_id):

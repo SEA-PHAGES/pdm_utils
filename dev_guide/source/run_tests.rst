@@ -27,3 +27,12 @@ For integration tests that require a MySQL database, it is expected that MySQL u
     mysql> GRANT ALL PRIVILEGES ON `pdm\_test\_%`.* TO 'pdm_anon'@'localhost';
     mysql> GRANT SELECT ON *.* TO 'pdm_anon'@'localhost';
     mysql> FLUSH PRIVILEGES;
+
+
+For the find_domains pipeline integration_heavy tests, it is expected that the path to the NCBI CDD is::
+
+    ~/Databases/Cdd_LE
+
+It may be better to store the CDD in a separate directory though, in which case a symlink can be created::
+
+    > ln -s /path/to/CDD ~/Databases/Cdd_LE

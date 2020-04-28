@@ -7,6 +7,9 @@ import multiprocessing as mp
 
 from pdm_utils.functions.basic import show_progress
 
+# Make sure new processes are forked, not spawned
+mp.set_start_method("fork")
+
 
 def parallelize(inputs, num_processors, task):
     """
@@ -69,8 +72,8 @@ def start_processes(inputs, num_processors):
     :param num_processors: optimized number of processors
     :return: results
     """
-    # Make sure new processes are forked, not spawned
-    mp.set_start_method("fork")
+    # # Make sure new processes are forked, not spawned
+    # mp.set_start_method("fork")
 
     job_queue = mp.Queue()
     done_queue = mp.Queue()
