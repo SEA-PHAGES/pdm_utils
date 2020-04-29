@@ -175,9 +175,6 @@ class TestCdsClass(unittest.TestCase):
         """Verify that name is set from the supplied parameter value."""
         self.feature._locus_tag_num = "2"
         self.feature._gene_num = "3"
-        self.feature._product_num = "4"
-        self.feature._note_num = "5"
-        self.feature._function_num = "6"
         self.feature.gene = "7"
         self.feature.set_name(value="1")
         self.assertEqual(self.feature.name, "1")
@@ -186,9 +183,6 @@ class TestCdsClass(unittest.TestCase):
         """Verify that name is set from '_locus_tag_num' attribute."""
         self.feature._locus_tag_num = "2"
         self.feature._gene_num = "3"
-        self.feature._product_num = "4"
-        self.feature._note_num = "5"
-        self.feature._function_num = "6"
         self.feature.gene = "7"
         self.feature.set_name()
         self.assertEqual(self.feature.name, "2")
@@ -197,53 +191,14 @@ class TestCdsClass(unittest.TestCase):
         """Verify that name is set from '_gene_num' attribute."""
         self.feature._locus_tag_num = ""
         self.feature._gene_num = "3"
-        self.feature._product_num = "4"
-        self.feature._note_num = "5"
-        self.feature._function_num = "6"
         self.feature.gene = "7"
         self.feature.set_name()
         self.assertEqual(self.feature.name, "3")
-
-    def test_set_name_4(self):
-        """Verify that name is set from '_product_num' attribute."""
-        self.feature._locus_tag_num = ""
-        self.feature._gene_num = ""
-        self.feature._product_num = "4"
-        self.feature._note_num = "5"
-        self.feature._function_num = "6"
-        self.feature.gene = "7"
-        self.feature.set_name()
-        self.assertEqual(self.feature.name, "4")
-
-    def test_set_name_5(self):
-        """Verify that name is set from '_note_num' attribute."""
-        self.feature._locus_tag_num = ""
-        self.feature._gene_num = ""
-        self.feature._product_num = ""
-        self.feature._note_num = "5"
-        self.feature._function_num = "6"
-        self.feature.gene = "7"
-        self.feature.set_name()
-        self.assertEqual(self.feature.name, "5")
-
-    def test_set_name_6(self):
-        """Verify that name is set from '_function_num' attribute."""
-        self.feature._locus_tag_num = ""
-        self.feature._gene_num = ""
-        self.feature._product_num = ""
-        self.feature._note_num = ""
-        self.feature._function_num = "6"
-        self.feature.gene = "7"
-        self.feature.set_name()
-        self.assertEqual(self.feature.name, "6")
 
     def test_set_name_7(self):
         """Verify that name is set from 'gene' attribute."""
         self.feature._locus_tag_num = ""
         self.feature._gene_num = ""
-        self.feature._product_num = ""
-        self.feature._note_num = ""
-        self.feature._function_num = ""
         self.feature.gene = "7"
         self.feature.set_name()
         self.assertEqual(self.feature.name, "7")
@@ -252,9 +207,6 @@ class TestCdsClass(unittest.TestCase):
         """Verify that name is set as empty."""
         self.feature._locus_tag_num = ""
         self.feature._gene_num = ""
-        self.feature._product_num = ""
-        self.feature._note_num = ""
-        self.feature._function_num = ""
         self.feature.gene = ""
         self.feature.set_name()
         self.assertEqual(self.feature.name, "")
@@ -263,35 +215,17 @@ class TestCdsClass(unittest.TestCase):
         """Verify that name is set from first float attribute."""
         self.feature._locus_tag_num = "2b"
         self.feature._gene_num = "3b"
-        self.feature._product_num = "4"
-        self.feature._note_num = "5"
-        self.feature._function_num = "6"
         self.feature.gene = "7"
         self.feature.set_name()
-        self.assertEqual(self.feature.name, "4")
+        self.assertEqual(self.feature.name, "7")
 
     def test_set_name_10(self):
         """Verify that name is set from first non-float attribute."""
         self.feature._locus_tag_num = "2b"
         self.feature._gene_num = "3b"
-        self.feature._product_num = "4b"
-        self.feature._note_num = "5b"
-        self.feature._function_num = "6b"
         self.feature.gene = "7b"
         self.feature.set_name()
         self.assertEqual(self.feature.name, "7b")
-
-    def test_set_name_11(self):
-        """Verify that name is set from first non-float attribute."""
-        self.feature._locus_tag_num = ""
-        self.feature._gene_num = ""
-        self.feature._product_num = ""
-        self.feature._note_num = "5b"
-        self.feature._function_num = "6b"
-        self.feature.gene = ""
-        self.feature.set_name()
-        self.assertEqual(self.feature.name, "5b")
-
 
     def test_set_orientation_1(self):
         """Verify 'f' is converted correctly."""
