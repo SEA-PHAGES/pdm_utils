@@ -78,33 +78,32 @@ def main(unparsed_args_list):
 # TODO test.
 def install_db(database, db_filepath=None, schema_version=None):
     """Install database. If database already exists, it is first removed."""
-    engine1, msg = mysqldb.get_engine(database="", echo=False)
-    if engine1 is None:
-        print("Invalid MySQL credentials.")
+    # No need to specify database yet, since it needs to first check if the
+    # database exists.
+    engine1 = mysqldb.connect_to_db(database="")
+    result = mysqldb.drop_create_db(engine1, database)
+    if result != 0:
+        print("Unable to create new, empty database.")
     else:
-        result2 = mysqldb.drop_create_db(engine1, database)
-        if result2 != 0:
-            print("Unable to create new, empty database.")
+        engine2, msg = mysqldb.get_engine(database=database,
+                                          username=engine1.url.username,
+                                          password=engine1.url.password,
+                                          echo=False)
+        if engine2 is None:
+            print(f"No connection to the {database} database due "
+                  "to invalid credentials or database.")
         else:
-            engine2, msg = mysqldb.get_engine(database=database,
-                                              username=engine1.url.username,
-                                              password=engine1.url.password,
-                                              echo=False)
-            if engine2 is None:
-                print(f"No connection to the {database} database due "
-                      "to invalid credentials or database.")
+            if db_filepath is not None:
+                mysqldb.install_db(engine2, db_filepath)
             else:
-                if db_filepath is not None:
-                    mysqldb.install_db(engine2, db_filepath)
-                else:
-                    mysqldb.execute_transaction(engine2, db_schema_0.STATEMENTS)
-                    convert_args = ["pdm_utils.run", "convert", database,
-                                    "-s", str(schema_version)]
-                    convert_db.main(convert_args, engine2)
-                # Close up all connections in the connection pool.
-                engine2.dispose()
-        # Close up all connections in the connection pool.
-        engine1.dispose()
+                mysqldb.execute_transaction(engine2, db_schema_0.STATEMENTS)
+                convert_args = ["pdm_utils.run", "convert", database,
+                                "-s", str(schema_version)]
+                convert_db.main(convert_args, engine2)
+            # Close up all connections in the connection pool.
+            engine2.dispose()
+    # Close up all connections in the connection pool.
+    engine1.dispose()
 
 # TODO test.
 def prepare_download(local_folder, url_folder, db_name, extension):
