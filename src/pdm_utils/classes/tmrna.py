@@ -49,7 +49,7 @@ class TmrnaFeature:
 
         # Useful for processing data from various sources:
         self.evaluations = list()
-        self.type = "tmRNA"
+        self.type = ""
         self._start_stop_orient_id = tuple()
         self._end_orient_id = tuple()
         self._start_end_id = tuple()
@@ -156,8 +156,7 @@ class TmrnaFeature:
         #    and may or may not have an integer.
         if value is None:
             name = ""
-            list1 = ["_locus_tag_num", "_gene_num", "_product_num",
-                     "_note_num", "_function_num"]
+            list1 = ["_locus_tag_num", "_gene_num"]
 
             # First see if any num attributes have a float.
             x = 0

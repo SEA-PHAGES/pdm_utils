@@ -80,7 +80,7 @@ class TrnaFeature:
 
         # Useful for processing data from various sources:
         self.evaluations = list()
-        self.type = "tRNA"
+        self.type = ""
         self._start_stop_orient_id = tuple()
         self._end_orient_id = tuple()
         self._start_end_id = tuple()
@@ -132,7 +132,7 @@ class TrnaFeature:
                 else:
                     # If the check_value was found anywhere else in locus tag,
                     # value is probably found in the next index
-                    parsed_value = parts[-1]        # TODO: why is this not parts[i+1]?
+                    parsed_value = parts[-1]
                 # No need to keep searching if we found a match
                 break
 
@@ -187,8 +187,7 @@ class TrnaFeature:
         #    and may or may not have an integer.
         if value is None:
             name = ""
-            list1 = ["_locus_tag_num", "_gene_num", "_product_num",
-                     "_note_num", "_function_num"]
+            list1 = ["_locus_tag_num", "_gene_num"]
 
             # First see if any num attributes have a float.
             x = 0
