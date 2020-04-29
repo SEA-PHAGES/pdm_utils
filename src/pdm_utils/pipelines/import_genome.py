@@ -800,10 +800,14 @@ def prepare_bundle(filepath=pathlib.Path(), ticket_dict={}, engine=None,
             ff_gnm.set_feature_ids(use_type=True, use_cds=True)
             ff_gnm.set_feature_ids(use_type=True, use_source=True)
             # TODO set tRNA and tmRNA feature ids.
+            ff_gnm.set_feature_ids(use_type=True, use_trna=True)
+            ff_gnm.set_feature_ids(use_type=True, use_tmrna=True)
 
             ff_gnm.set_feature_genome_ids("cds")
             ff_gnm.set_feature_genome_ids("source")
             # TODO set tRNA and tmRNA feature genome_ids.
+            ff_gnm.set_feature_genome_ids("trna")
+            ff_gnm.set_feature_genome_ids("tmrna")
 
         bndl.genome_dict[ff_gnm.type] = ff_gnm
 
@@ -1477,7 +1481,7 @@ def check_genome(gnm, tkt_type, eval_flags, phage_id_set=set(),
 
     if eval_flags["check_coords"]:
         # TODO set trna=True and tmrna=True after they are implemented.
-        gnm.check_feature_coordinates(cds_ftr=True, trna_ftr=False, tmrna_ftr=False,
+        gnm.check_feature_coordinates(cds_ftr=True, trna_ftr=True, tmrna_ftr=True,
                                       strand=False, eval_id="GNM_030",
                                       eval_def=EDD["GNM_030"], fail="warning")
 
