@@ -3,78 +3,34 @@ classes
 
 Each submodule contains a specific class.
 
-.. Submodules
-.. ----------
 
-``bundle``
-----------
-
-.. automodule:: pdm_utils.classes.bundle
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-``cds``
--------
-
-.. automodule:: pdm_utils.classes.cds
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-``cdspair``
------------
-
-.. automodule:: pdm_utils.classes.cdspair
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-``eval``
---------
-
-.. automodule:: pdm_utils.classes.eval
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-``genome``
-----------
-
-.. automodule:: pdm_utils.classes.genome
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-``genomepair``
---------------
-
-.. automodule:: pdm_utils.classes.genomepair
-   :members:
-   :undoc-members:
-   :show-inheritance:
+Database ORM
+------------
 
 
-``source``
-----------
+.. toctree::
+    :maxdepth: 1
 
-.. automodule:: pdm_utils.classes.source
-   :members:
-   :undoc-members:
-   :show-inheritance:
+    cds <./classes_submodules/cds_submodule>
+    genome <./classes_submodules/genome_submodule>
+    tmrna <./classes_submodules/tmrna_submodule>
+    trna <./classes_submodules/trna_submodule>
+    source <./classes_submodules/source_submodule>
 
-``ticket``
-----------
 
-.. automodule:: pdm_utils.classes.ticket
-   :members:
-   :undoc-members:
-   :show-inheritance:
+Data processing
+---------------
 
-``trna``
---------
+.. toctree::
+    :maxdepth: 1
 
-.. automodule:: pdm_utils.classes.trna
-   :members:
-   :undoc-members:
-   :show-inheritance:
+    alchemyhandler <./classes_submodules/alchemyhandler_submodule>
+    aragornhandler <./classes_submodules/aragornhandler_submodule>
+    bundle <./classes_submodules/bundle_submodule>
+    cdspair <./classes_submodules/cdspair_submodule>
+    eval <./classes_submodules/eval_submodule>
+    filter <./classes_submodules/filter_submodule>
+    genomepair <./classes_submodules/genomepair_submodule>
+    randomfieldupdatehandler <./classes_submodules/randomfieldupdatehandler_submodule>
+    ticket <./classes_submodules/ticket_submodule>
+    trnascansehandler <./classes_submodules/trnascansehandler_submodule>

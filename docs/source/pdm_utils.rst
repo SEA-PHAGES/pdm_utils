@@ -25,6 +25,7 @@ Subpackages
 -----------
 
 .. toctree::
+   :maxdepth: 1
 
    constants <./subpackages/constants>
    classes <./subpackages/classes>
@@ -34,13 +35,11 @@ Subpackages
 Submodules
 ----------
 
-``run``
-*******
+.. toctree::
+   :maxdepth: 1
 
-.. automodule:: pdm_utils.run
-   :members:
-   :undoc-members:
-   :show-inheritance:
+   run <./run_module>
+
 
 
 .. Module contents

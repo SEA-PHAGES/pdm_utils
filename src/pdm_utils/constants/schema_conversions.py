@@ -1,3 +1,4 @@
+"""Database schema conversion steps."""
 # MySQL statements to change database structure.
 # Every conversion step between schema versions is represented by a
 # dictionary, with a key for all statements and a key for all data loss info.

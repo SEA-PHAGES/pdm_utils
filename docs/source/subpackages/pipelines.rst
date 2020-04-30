@@ -1,104 +1,25 @@
 pipelines
 =========
 
-.. Submodules
-.. ----------
 
-``find_domains``
-----------------
+.. toctree::
+    :maxdepth: 1
 
-.. automodule:: pdm_utils.pipelines.find_domains
-   :members:
-   :undoc-members:
-   :show-inheritance:
+    compare <./pipelines_submodules/compare_submodule>
+    convert <./pipelines_submodules/convert_submodule>
+    export <./pipelines_submodules/export_submodule>
+    find_domains <./pipelines_submodules/find_domains_submodule>
+    freeze <./pipelines_submodules/freeze_submodule>
+    get_data <./pipelines_submodules/get_data_submodule>
+    get_db <./pipelines_submodules/get_db_submodule>
+    get_gb_records <./pipelines_submodules/get_gb_records_submodule>
+    import <./pipelines_submodules/import_submodule>
+    phamerate <./pipelines_submodules/phamerate_submodule>
+    push <./pipelines_submodules/push_submodule>
+    update <./pipelines_submodules/update_submodule>
 
-``compare``
------------
 
-.. automodule:: pdm_utils.pipelines.compare_db
-   :members:
-   :undoc-members:
-   :show-inheritance:
 
-``convert``
------------
-
-.. automodule:: pdm_utils.pipelines.convert_db
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-``export``
-----------
-
-.. automodule:: pdm_utils.pipelines.export_db
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-``freeze``
-----------
-
-.. automodule:: pdm_utils.pipelines.freeze_db
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-``get_data``
-------------
-
-.. automodule:: pdm_utils.pipelines.get_data
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-``get_db``
-----------
-
-.. automodule:: pdm_utils.pipelines.get_db
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-``get_gb_records``
-------------------
-
-.. automodule:: pdm_utils.pipelines.get_gb_records
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-``import_genome``
------------------
-
-.. automodule:: pdm_utils.pipelines.import_genome
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-``phamerate``
--------------
-
-.. automodule:: pdm_utils.pipelines.phamerate
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-``push``
---------
-
-.. automodule:: pdm_utils.pipelines.push_db
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-``update``
-----------
-
-.. automodule:: pdm_utils.pipelines.update_field
-   :members:
-   :undoc-members:
-   :show-inheritance:
 
 
 .. Module contents
