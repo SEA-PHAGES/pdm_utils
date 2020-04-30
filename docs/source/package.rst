@@ -27,10 +27,10 @@ Subpackages
 .. toctree::
    :maxdepth: 1
 
-   constants <./subpackages/constants>
-   classes <./subpackages/classes>
-   functions <./subpackages/functions>
-   pipelines <./subpackages/pipelines>
+   constants <./package/subpackages/constants>
+   classes <./package/subpackages/classes>
+   functions <./package/subpackages/functions>
+   pipelines <./package/subpackages/pipelines>
 
 Submodules
 ----------
@@ -38,7 +38,7 @@ Submodules
 .. toctree::
    :maxdepth: 1
 
-   run <./run_module>
+   run <./package/run_module>
 
 
 

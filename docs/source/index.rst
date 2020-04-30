@@ -16,7 +16,7 @@
    Database structure <database_info>
    Command line toolkit <tools>
    Package applications <applications>
-   Source code library <pdm_utils>
+   Source code library <package>
    How to contribute <contribute>
    References <bibliography>
 
