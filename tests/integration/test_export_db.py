@@ -1,5 +1,3 @@
-"""Tests the functionality of the export pipeline"""
-
 from Bio.Alphabet.IUPAC import *
 from Bio.Seq import Seq
 from Bio.SeqFeature import CompoundLocation
@@ -47,6 +45,11 @@ class TestFileExport(unittest.TestCase):
 
         self.test_dir.mkdir()
 
+    @classmethod
+    def tearDownClass(self):
+        test_db_utils.remove_db()
+        shutil.rmtree(TEST_DIR)
+
     def setUp(self):
         self.alchemist = AlchemyHandler()
         self.alchemist.username=USER
@@ -58,6 +61,10 @@ class TestFileExport(unittest.TestCase):
         self.db_filter = Filter(alchemist=self.alchemist)
         
         self.export_test_dir = self.test_dir.joinpath("export_test_dir")
+
+    def tearDown(self):
+        if self.export_test_dir.is_dir():
+            shutil.rmtree(str(self.export_test_dir))
 
     def test_execute_export_1(self):
         """Verify execute_export() creates new directory as expected.
@@ -116,10 +123,10 @@ class TestFileExport(unittest.TestCase):
     def test_execute_export_5(self):
         """Verify execute_export() filter parameter functions as expected.
         """
-        parsed_filters = [["phage.PhageID!=Trixie"],["phage.Cluster=A"]]
+        filters = "phage.PhageID!=Trixie AND phage.Cluster=A"
         export_db.execute_export(self.alchemist, self.test_dir,
                                  self.export_test_dir.name, "fasta",
-                                 filters=parsed_filters)
+                                 filters=filters)
 
         D29_file_path = self.export_test_dir.joinpath("D29.fasta")
         Trixie_file_path = self.export_test_dir.joinpath("Trixie.fasta")
@@ -253,15 +260,6 @@ class TestFileExport(unittest.TestCase):
                 self.assertTrue(flat_file_path.is_file())
 
                 shutil.rmtree(str(self.export_test_dir))
-
-    def tearDown(self):
-        if self.export_test_dir.is_dir():
-            shutil.rmtree(str(self.export_test_dir))
-
-    @classmethod
-    def tearDownClass(self):
-        test_db_utils.remove_db()
-        shutil.rmtree(TEST_DIR)
-
+ 
 if __name__ == "__main__":
     unittest.main()

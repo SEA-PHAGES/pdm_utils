@@ -28,6 +28,10 @@ class TestFilter(unittest.TestCase):
     def setUpClass(self):
         test_db_utils.create_filled_test_db()
 
+    @classmethod
+    def tearDownClass(self):
+        test_db_utils.remove_db()
+
     def setUp(self):
         alchemist = AlchemyHandler()
         alchemist.username=user
@@ -51,45 +55,92 @@ class TestFilter(unittest.TestCase):
         self.TrnaID = self.trna.c.TrnaID
         self.Product = self.trna.c.Product
 
-    def test_add_1(self):
-        """Verify that add() creates a dictionary key as expected.
+    def test_and__1(self):
+        """Verify that and_() creates a dictionary key as expected.
         """
-        self.db_filter.add("phage.PhageID=Myrna")
-        self.assertTrue("phage.PhageID=" in self.db_filter.filters.keys())
+        self.db_filter.and_("phage.PhageID=Myrna")
 
-    def test_add_2(self):
-        """Verify that add() stores BinaryExpression data as expected.
+        or_block = self.db_filter.filters[0]
+        self.assertTrue("phage.PhageID=Myrna" in or_block.keys())
+
+    def test_and__2(self):
+        """Verify that and_() stores BinaryExpression data as expected.
         """
 
-        self.db_filter.add("phage.PhageID=Myrna")
-        where_clauses = self.db_filter.filters["phage.PhageID="]
-        self.assertTrue(isinstance(where_clauses, list))
-        self.assertTrue(isinstance(where_clauses[0], BinaryExpression))
+        self.db_filter.and_("phage.PhageID=Myrna")
 
-    def test_add_3(self):
-        """Verify that add() recognizes previous add() data.
+        or_block = self.db_filter.filters[0]
+        self.assertTrue(isinstance(or_block, dict))
+
+        where_clauses = or_block["phage.PhageID=Myrna"]
+        self.assertTrue(isinstance(where_clauses, BinaryExpression))
+
+    def test_and_3(self):
+        """Verify that and_() recognizes previous and_() data.
         """
-        self.db_filter.add("phage.PhageID=Myrna")
-        self.db_filter.add("phage.PhageID=D29")
-        where_clauses = self.db_filter.filters["phage.PhageID="]
-        self.assertEqual(len(where_clauses), 2)
+        self.db_filter.and_("phage.PhageID =  Myrna")
+        self.db_filter.and_("phage.PhageID=Myrna")
+        self.db_filter.and_("phage.PhageID=D29")
+
+        or_block = self.db_filter.filters[0]
+        self.assertEqual(len(or_block), 2)
 
     def test_remove_1(self):
         """Verify that remove() removes dictionary entry after depleted.
         """
-        self.db_filter.add("phage.PhageID=Myrna")
+        self.db_filter.and_("phage.PhageID=Myrna")
         self.db_filter.remove("phage.PhageID=Myrna")
-        self.assertEqual(self.db_filter.filters, {})
+        self.assertEqual(self.db_filter.filters, [{}])
 
     def test_remove_2(self):
         """Verify that remove() conserves dictionary entry if not depleted.
         """
-        self.db_filter.add("phage.PhageID=Myrna")
-        self.db_filter.add("phage.PhageID=D29")
+        self.db_filter.and_("phage.PhageID=Myrna")
+        self.db_filter.and_("phage.PhageID=D29")
+
         self.db_filter.remove("phage.PhageID=Myrna")
-        where_clauses = self.db_filter.filters["phage.PhageID="]
-        self.assertTrue(len(where_clauses) == 1)
-        self.assertEqual(where_clauses[0].right.value, "D29")
+        
+        or_block = self.db_filter.filters[0]
+        where_clauses = or_block["phage.PhageID=D29"]
+
+        self.assertEqual(where_clauses.right.value, "D29")
+
+    def test_add_1(self):
+        """Verify that add() creates a dictionary key as expected.
+        """
+        self.db_filter.add("phage.PhageID=Myrna")
+
+        or_block = self.db_filter.filters[0]
+        self.assertTrue("phage.PhageID=Myrna" in or_block.keys())
+
+    def test_add_2(self):
+        """Verify that add() creates multiple keys as expected.
+        """
+        self.db_filter.add("phage.PhageID=Myrna AND phage.PhageID = Trixie")
+        
+        or_block = self.db_filter.filters[0]
+        
+        self.assertTrue(len(or_block) == 2)
+        
+        self.assertTrue("phage.PhageID=Myrna" in or_block.keys())
+        self.assertTrue("phage.PhageID=Trixie" in or_block.keys())
+
+    def test_add_3(self):
+        """Verify that add() creates multiple or blocks as expected.
+        """
+        self.db_filter.add("phage.PhageID=Myrna OR phage.PhageID = Trixie")
+       
+        self.assertTrue(len(self.db_filter.filters) == 2)
+
+        first_or_block = self.db_filter.filters[0]
+        second_or_block = self.db_filter.filters[1]
+         
+        self.assertTrue("phage.PhageID=Myrna" in first_or_block.keys())
+        self.assertFalse("phage.PhageID=Trixie" in first_or_block.keys())
+        
+        self.assertFalse("phage.PhageID=Myrna" in second_or_block.keys())
+        self.assertTrue("phage.PhageID=Trixie" in second_or_block.keys())
+
 
     def test_convert_column_input_1(self):
         """Verify that convert_column_input() converts string column input.
@@ -122,8 +173,8 @@ class TestFilter(unittest.TestCase):
     def test_build_where_clauses_1(self):
         """Verify that build_where_clauses() forms list of expected length.
         """
-        self.db_filter.add("phage.PhageID=Myrna")
-        self.db_filter.add("phage.PhageID=D29")
+        self.db_filter.and_("phage.PhageID=Myrna")
+        self.db_filter.and_("phage.PhageID=D29")
 
         queries = self.db_filter.build_where_clauses()
 
@@ -132,8 +183,8 @@ class TestFilter(unittest.TestCase):
     def test_build_where_clauses_2(self):
         """Verify that build_where_clauses() forms list of BinaryExpressions.
         """
-        self.db_filter.add("phage.PhageID=Myrna")
-        self.db_filter.add("phage.PhageID=D29")
+        self.db_filter.and_("phage.PhageID=Myrna")
+        self.db_filter.and_("phage.PhageID=D29")
 
         queries = self.db_filter.build_where_clauses()
 
@@ -304,7 +355,7 @@ class TestFilter(unittest.TestCase):
         """
         self.db_filter.key = self.PhageID
         self.db_filter.values = ["Myrna", "D29"]
-        self.db_filter.add("phage.PhageID=Myrna")
+        self.db_filter.and_("phage.PhageID=Myrna")
         self.db_filter.update()
 
         self.assertTrue("Myrna" in self.db_filter.values)
@@ -358,11 +409,7 @@ class TestFilter(unittest.TestCase):
 
         self.assertTrue("Myrna" in group_results["C"])
         self.assertTrue("D29" in group_results["A"])
-        self.assertTrue("Trixie" in group_results["A"])
-
-    @classmethod
-    def tearDownClass(self):
-        test_db_utils.remove_db()
+        self.assertTrue("Trixie" in group_results["A"]) 
 
 if __name__ == "__main__":
     unittest.main()

@@ -21,6 +21,10 @@ class TestParsing(unittest.TestCase):
     def setUpClass(self):
         test_db_utils.create_filled_test_db()
 
+    @classmethod
+    def tearDownClass(self):
+        test_db_utils.remove_db()
+
     def setUp(self):
         self.engine = create_engine(test_db_utils.create_engine_string())
 
@@ -118,11 +122,7 @@ class TestParsing(unittest.TestCase):
         """Verify translate_column() raises ValueError from invalid column name.
         """
         with self.assertRaises(ValueError):
-            parsing.translate_column(self.metadata, "phage.not_column")
-
-    @classmethod
-    def tearDownClass(self):
-        test_db_utils.remove_db()
+            parsing.translate_column(self.metadata, "phage.not_column") 
 
 if __name__ == "__main__":
     unittest.main()

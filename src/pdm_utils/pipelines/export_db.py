@@ -222,7 +222,6 @@ def parse_export(unparsed_args_list):
         optional_parser.add_argument("-in", "--import_names", nargs="*",
                                 help=SINGLE_GENOMES_HELP, dest="input")
         optional_parser.add_argument("-f", "--filter", nargs="?",
-                                type=parsing.parse_cmd_string,
                                 help=FILTERS_HELP,
                                 dest="filters")
         optional_parser.add_argument("-g", "--group", nargs="*",
@@ -253,7 +252,7 @@ def parse_export(unparsed_args_list):
                                  output_name=default_folder_name,
                                  output_path=default_folder_path,
                                  verbose=False, input=[],
-                                 table="phage", filters=[], groups=[], sort=[],
+                                 table="phage", filters="", groups=[], sort=[],
                                  include_columns=[], exclude_columns=[],
                                  sequence_columns=False, concatenate=False,
                                  raw_bytes=False)
@@ -264,7 +263,7 @@ def parse_export(unparsed_args_list):
 
 def execute_export(alchemist, output_path, output_name, pipeline,
                         values=[], verbose=False, table="phage",
-                        filters=[], groups=[], sort=[],
+                        filters="", groups=[], sort=[],
                         include_columns=[], exclude_columns=[],
                         sequence_columns=False, raw_bytes=False,
                         concatenate=False):
@@ -313,7 +312,6 @@ def execute_export(alchemist, output_path, output_name, pipeline,
     if pipeline in FILTERABLE_PIPELINES:
         if verbose:
             print("Processing columns for sorting...")
-        sort_columns = get_sort_columns(alchemist, sort)
         db_filter = apply_filters(alchemist, table, filters, verbose=verbose)
 
     if verbose:
@@ -328,39 +326,44 @@ def execute_export(alchemist, output_path, output_name, pipeline,
 
     elif pipeline in FILTERABLE_PIPELINES:
         conditionals_map = {}
-        if groups:
-            if verbose:
-                print("Starting grouping process...")
-            build_groups_map(db_filter, export_path, groups=groups,
-                                        conditionals_map=conditionals_map,
-                                        verbose=verbose)
-        else:
-            conditionals_map.update({export_path : \
-                                        db_filter.build_where_clauses()})
+        build_groups_map(db_filter, export_path, conditionals_map,
+                                                 groups=groups, 
+                                                 verbose=verbose)
 
         if verbose:
             print("Prepared query and path structure, beginning export...")
+
         for mapped_path in conditionals_map.keys():
+            db_filter.reset()
+            db_filter.values = values
+            
             conditionals = conditionals_map[mapped_path]
+            db_filter.values = db_filter.build_values(where=conditionals)
+
+            if db_filter.hits() == 0:
+                print(f"No database entries received from {table} "
+                      f"for '{mapped_path}'.")
+                continue
+
+            if sort:
+                sort_columns = get_sort_columns(alchemist, sort)
+                db_filter.sort(sort_columns)
 
             if pipeline in BIOPYTHON_PIPELINES:
-                execute_ffx_export(alchemist, mapped_path, export_path,
-                                   pipeline, db_version,
-                                   table=table, sort=sort_columns,
-                                   conditionals=conditionals, values=values,
-                                   concatenate=concatenate, verbose=verbose)
+                execute_ffx_export(alchemist, mapped_path, export_path, 
+                                   db_filter.values, pipeline, db_version, 
+                                   table=table, concatenate=concatenate, 
+                                   verbose=verbose)
             else:
-                execute_csv_export(alchemist, mapped_path, export_path,
-                                   csv_columns, table=table, sort=sort_columns,
-                                   conditionals=conditionals, values=values,
-                                   raw_bytes=raw_bytes, verbose=verbose)
+                execute_csv_export(db_filter, mapped_path, export_path,
+                                   csv_columns, raw_bytes=raw_bytes, 
+                                   verbose=verbose)
     else:
         print("Unrecognized export pipeline, aborting export")
         sys.exit(1)
 
-def execute_csv_export(alchemist, export_path, output_path, columns,
-                                        table="phage", conditionals=None,
-                                        sort=[], values=[], raw_bytes=False,
+def execute_csv_export(db_filter, export_path, output_path, columns,
+                                        sort=[], raw_bytes=False,
                                         verbose=False):
     """Executes csv export of a MySQL database table with select columns.
 
@@ -381,28 +384,22 @@ def execute_csv_export(alchemist, export_path, output_path, columns,
     :param verbose: A boolean value to toggle progress print statements.
     :type verbose: bool
     """
-    table_obj = querying.get_table(alchemist.metadata, table)
-    primary_key = list(table_obj.primary_key.columns)[0]
-
     if verbose:
         relative_path = str(export_path.relative_to(output_path))
         print(f"Preparing {table} export for '{relative_path}'...")
 
-    headers = [primary_key.name]
+    headers = [db_filter._key.name]
     for column in columns:
-        if column.name != primary_key.name:
+        if column.name != db_filter._key.name:
             headers.append(column.name)
 
-    query = querying.build_select(alchemist.graph, columns, where=conditionals,
-                                                            order_by=sort)
+    results = db_filter.select(columns)
 
-    results = querying.execute(alchemist.engine, query, primary_key, values)
     if not raw_bytes:
         decode_results(results, columns, verbose=verbose)
 
     if len(results) == 0:
-        if verbose:
-            print(f"No database entries received for '{export_path.name}'.")
+        print(f"No database entries received from {table}.")
         export_path.rmdir()
 
     else:
@@ -414,9 +411,8 @@ def execute_csv_export(alchemist, export_path, output_path, columns,
         basic.export_data_dict(results, file_path, headers,
                                                include_headers=True)
 
-def execute_ffx_export(alchemist, export_path, output_path,
-                       file_format, db_version, table="phage",
-                       values=[], conditionals=None, sort=[],
+def execute_ffx_export(alchemist, export_path, output_path, values,
+                       file_format, db_version, table="phage", 
                        concatenate=False, verbose=False):
     """Executes SeqRecord export of the compilation of data from a MySQL emtry.
 
@@ -444,26 +440,7 @@ def execute_ffx_export(alchemist, export_path, output_path,
     :type verbose: bool
     """
     if verbose:
-        print(f"Retrieving {export_path.name} data...")
-
-    table_obj = querying.get_table(alchemist.metadata, table)
-    primary_key = list(table_obj.primary_key.columns)[0]
-
-    values_query = querying.build_distinct(alchemist.graph, primary_key,
-                                                     where=conditionals,
-                                                     order_by=sort)
-    if values:
-        values = querying.first_column_value_subqueries(alchemist.engine,
-                                                        values_query,
-                                                        primary_key,
-                                                        values)
-    else:
-        values = alchemist.first_column(values_query)
-
-    if len(values) == 0:
-        print(f"No database entries received for '{export_path.name}'.")
-        export_path.rmdir()
-        return
+        print(f"Retrieving {export_path.name} data...") 
 
     if verbose:
         print(f"...Database entries retrieved: {len(values)}")
@@ -723,30 +700,23 @@ def apply_filters(alchemist, table, filters, values=None,
     :returns: filter-Loaded Filter object.
     :rtype: Filter
     """
-    table_obj = alchemist.get_table(table)
-    primary_key = list(table_obj.primary_key.columns)[0]
-
-    db_filter = Filter(alchemist=alchemist, key=primary_key)
+    db_filter = Filter(alchemist=alchemist, key=table)
+    db_filter.key = table
     db_filter.values = values
 
-    if verbose:
-        print("Processing and building filters...")
-    for or_filters in filters:
-        for filter in or_filters:
-            try:
-                db_filter.add(filter)
-            except:
-                print("Error occured while processing filters.")
-                print(f"Filter '{filter}' is not a valid filter.")
-                sys.exit(1)
+    try:
+        db_filter.add(filters)
+    except:
+        print("Please check your syntax for the conditional string: "
+             f"{filters}")
+        exit(1)
 
-    db_filter.values = values
     return db_filter
 
-def build_groups_map(db_filter, export_path, groups=[], conditionals_map={},
-                                                       verbose=False,
-                                                       previous=None,
-                                                       depth=0):
+def build_groups_map(db_filter, export_path, conditionals_map, groups=[],
+                                                               verbose=False,
+                                                               previous=None,
+                                                               depth=0):
     """Recursive function that generates conditionals and maps them to a Path.
 
     :param db_filter: A connected and fully loaded Filter object.
@@ -767,6 +737,11 @@ def build_groups_map(db_filter, export_path, groups=[], conditionals_map={},
     :rtype: dict{Path:list}
     """
     groups = groups.copy()
+    conditionals = db_filter.build_where_clauses()
+    if not groups:
+        conditionals_map.update({export_path : conditionals})
+        return
+
     current_group = groups.pop(0)
     if verbose:
         if depth > 0:
@@ -782,7 +757,7 @@ def build_groups_map(db_filter, export_path, groups=[], conditionals_map={},
         sys.exit(1)
 
     transposed_values = db_filter.build_values(column=current_group,
-                                        where=db_filter.build_where_clauses())
+                                               where=conditionals)
 
     if not transposed_values:
         export_path.rmdir()
@@ -793,18 +768,12 @@ def build_groups_map(db_filter, export_path, groups=[], conditionals_map={},
         db_filter_copy = db_filter.copy()
         db_filter_copy.add(f"{current_group}={group}")
 
-        if groups:
-            previous = f"{current_group} {group}"
-            build_groups_map(db_filter_copy, group_path, groups=groups,
-                                                    conditionals_map=\
-                                                            conditionals_map,
-                                                    verbose=verbose,
-                                                    previous=previous,
-                                                    depth=depth+1)
-        else:
-            previous = f"{current_group} {group}"
-            conditionals_map.update({group_path : \
-                                        db_filter_copy.build_where_clauses()})
+        previous = f"{current_group} {group}"
+        build_groups_map(db_filter_copy, group_path, conditionals_map,
+                                                     groups=groups,
+                                                     verbose=verbose,
+                                                     previous=previous,
+                                                     depth=depth+1)
 
 def get_sort_columns(alchemist, sort_inputs):
     """Function that converts input for sorting to SQLAlchemy Columns.
