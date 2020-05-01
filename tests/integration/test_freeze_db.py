@@ -16,10 +16,10 @@ if str(test_dir) not in set(sys.path):
 import test_db_utils
 
 pipeline = "freeze"
-user = test_db_utils.USER
-pwd = test_db_utils.PWD
-db = test_db_utils.DB
-db2 = "pdm_test_2"
+USER = test_db_utils.USER
+PWD = test_db_utils.PWD
+DB = test_db_utils.DB
+DB2 = "pdm_test_2"
 COUNT_PHAGE = "SELECT COUNT(*) as count FROM phage"
 
 def create_update(table, field, value, phage_id=None):
@@ -32,8 +32,8 @@ def create_update(table, field, value, phage_id=None):
 
 def get_unparsed_freeze_args():
     """Returns list of command line arguments to freeze database."""
-    unparsed_args = ["run.py", pipeline, db,
-                      "-n", db2
+    unparsed_args = ["run.py", pipeline, DB,
+                      "-n", DB2
                     ]
     return unparsed_args
 
@@ -49,7 +49,7 @@ class TestFreeze(unittest.TestCase):
         test_db_utils.remove_db()
 
     def setUp(self):
-        self.alchemist = AlchemyHandler(database=db, username=user, password=pwd)
+        self.alchemist = AlchemyHandler(database=DB, username=USER, password=PWD)
         self.alchemist.build_engine()
         # Standardize values in certain fields to define the data
         stmt1 = create_update("phage", "Status", "draft")
@@ -64,9 +64,9 @@ class TestFreeze(unittest.TestCase):
 
     def tearDown(self):
         # Remove 'pdm_test_2'
-        exists = test_db_utils.check_if_exists(db=db2)
+        exists = test_db_utils.check_if_exists(db=DB2)
         if exists:
-            test_db_utils.remove_db(db=db2)
+            test_db_utils.remove_db(db=DB2)
 
 
 
@@ -77,10 +77,10 @@ class TestFreeze(unittest.TestCase):
         no change in genome count when no filters are provided."""
         edc_mock.return_value = self.alchemist
         run.main(self.unparsed_args)
-        count1 = test_db_utils.get_data(COUNT_PHAGE, db=db)
-        count2 = test_db_utils.get_data(COUNT_PHAGE, db=db2)
+        count1 = test_db_utils.get_data(COUNT_PHAGE, db=DB)
+        count2 = test_db_utils.get_data(COUNT_PHAGE, db=DB2)
         version = test_db_utils.get_data(test_db_utils.version_table_query,
-                                         db=db2)
+                                         db=DB2)
         with self.subTest():
             self.assertEqual(count1[0]["count"], count2[0]["count"])
         with self.subTest():
@@ -93,7 +93,7 @@ class TestFreeze(unittest.TestCase):
         edc_mock.return_value = self.alchemist
         self.unparsed_args.extend(["-f", "phage.Status != draft"])
         run.main(self.unparsed_args)
-        count2 = test_db_utils.get_data(COUNT_PHAGE, db=db2)
+        count2 = test_db_utils.get_data(COUNT_PHAGE, db=DB2)
         self.assertEqual(count2[0]["count"], 0)
 
     @patch("pdm_utils.pipelines.freeze_db.establish_database_connection")
@@ -105,7 +105,7 @@ class TestFreeze(unittest.TestCase):
         test_db_utils.execute(stmt)
         self.unparsed_args.extend(["-f", "phage.Status!=draft"])
         run.main(self.unparsed_args)
-        count2 = test_db_utils.get_data(COUNT_PHAGE, db=db2)
+        count2 = test_db_utils.get_data(COUNT_PHAGE, db=DB2)
         self.assertEqual(count2[0]["count"], 1)
 
     @patch("pdm_utils.pipelines.freeze_db.establish_database_connection")
@@ -118,7 +118,7 @@ class TestFreeze(unittest.TestCase):
         filters = "phage.Status != draft AND phage.HostGenus = Mycobacterium"
         self.unparsed_args.extend(["-f", filters])
         run.main(self.unparsed_args)
-        count2 = test_db_utils.get_data(COUNT_PHAGE, db=db2)
+        count2 = test_db_utils.get_data(COUNT_PHAGE, db=DB2)
         self.assertEqual(count2[0]["count"], 1)
 
     @patch("pdm_utils.pipelines.freeze_db.establish_database_connection")
@@ -131,7 +131,7 @@ class TestFreeze(unittest.TestCase):
         filters = "phage.Status != draft AND phage.HostGenus = Gordonia"
         self.unparsed_args.extend(["-f", filters])
         run.main(self.unparsed_args)
-        count2 = test_db_utils.get_data(COUNT_PHAGE, db=db2)
+        count2 = test_db_utils.get_data(COUNT_PHAGE, db=DB2)
         self.assertEqual(count2[0]["count"], 0)
 
     @patch("pdm_utils.pipelines.freeze_db.establish_database_connection")
@@ -144,7 +144,7 @@ class TestFreeze(unittest.TestCase):
         filters = "phage.Status != draft AND gene.Notes = repressor"
         self.unparsed_args.extend(["-f", filters])
         run.main(self.unparsed_args)
-        count2 = test_db_utils.get_data(COUNT_PHAGE, db=db2)
+        count2 = test_db_utils.get_data(COUNT_PHAGE, db=DB2)
         self.assertEqual(count2[0]["count"], 1)
 
     @patch("sys.exit")
@@ -192,9 +192,9 @@ class TestFreeze(unittest.TestCase):
         test_db_utils.execute(stmt)
         self.unparsed_args.extend(["-f", "phage.Status != draft", "-r"])
         run.main(self.unparsed_args)
-        count = test_db_utils.get_data(COUNT_PHAGE, db=db2)
+        count = test_db_utils.get_data(COUNT_PHAGE, db=DB2)
         version = test_db_utils.get_data(test_db_utils.version_table_query,
-                                         db=db2)
+                                         db=DB2)
         with self.subTest():
             self.assertEqual(count[0]["count"], 1)
         with self.subTest():
@@ -207,9 +207,9 @@ class TestFreeze(unittest.TestCase):
         edc_mock.return_value = self.alchemist
         self.unparsed_args.extend(["-f", "phage.Status != draft", "-r"])
         run.main(self.unparsed_args)
-        count = test_db_utils.get_data(COUNT_PHAGE, db=db2)
+        count = test_db_utils.get_data(COUNT_PHAGE, db=DB2)
         version = test_db_utils.get_data(test_db_utils.version_table_query,
-                                         db=db2)
+                                         db=DB2)
         with self.subTest():
             self.assertEqual(count[0]["count"], 0)
         with self.subTest():

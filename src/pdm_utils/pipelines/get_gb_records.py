@@ -5,14 +5,15 @@ from datetime import date
 import os
 import pathlib
 import sys
+
 from Bio import SeqIO
+
+from pdm_utils.classes.filter import Filter
+from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.functions import basic
 from pdm_utils.functions import ncbi
 from pdm_utils.functions import mysqldb
-
 from pdm_utils.functions import parsing
-from pdm_utils.classes.filter import Filter
-from pdm_utils.classes.alchemyhandler import AlchemyHandler
 
 
 DEFAULT_OUTPUT_FOLDER = os.getcwd()

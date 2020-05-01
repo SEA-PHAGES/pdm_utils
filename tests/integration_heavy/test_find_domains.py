@@ -7,8 +7,6 @@ import sys
 import unittest
 from unittest.mock import patch
 
-import sqlalchemy
-
 from pdm_utils import run
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.pipelines import find_domains

@@ -9,9 +9,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-import pymysql
-import sqlalchemy
-
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.functions.phameration import *
 from pdm_utils.functions import mysqldb

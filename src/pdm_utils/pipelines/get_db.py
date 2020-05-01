@@ -95,11 +95,8 @@ def install_db(database, db_filepath=None, schema_version=None):
     # No need to specify database yet, since it needs to first check if the
     # database exists.
 
-
     alchemist = establish_database_connection(database="", echo=False)
     engine1 = alchemist.engine
-
-    # engine1 = mysqldb.connect_to_db(database="")
     result = mysqldb.drop_create_db(engine1, database)
     if result != 0:
         print("Unable to create new, empty database.")

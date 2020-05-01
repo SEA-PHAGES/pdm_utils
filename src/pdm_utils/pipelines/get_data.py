@@ -158,7 +158,6 @@ def main(unparsed_args_list):
 
     # Verify database connection and schema compatibility.
     print("Preparing genome data sets from the MySQL database...")
-
     alchemist = establish_database_connection(args.database, echo=False)
     engine = alchemist.engine
     mysqldb.check_schema_compatibility(engine, "the get_data pipeline")

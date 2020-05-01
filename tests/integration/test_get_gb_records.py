@@ -5,9 +5,10 @@ import shutil
 import sys
 import unittest
 from unittest.mock import patch
+
 from pdm_utils import run
-from pdm_utils.pipelines import get_gb_records
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
+from pdm_utils.pipelines import get_gb_records
 
 # Import helper functions to build mock database
 unittest_file = Path(__file__)
@@ -32,9 +33,9 @@ results_folder = Path(get_gb_records.RESULTS_FOLDER)
 results_path = Path(test_folder, results_folder)
 
 pipeline = "get_gb_records"
-user = test_db_utils.USER
-pwd = test_db_utils.PWD
-db = test_db_utils.DB
+USER = test_db_utils.USER
+PWD = test_db_utils.PWD
+DB = test_db_utils.DB
 
 def create_update(table, field, value, phage_id=None):
     """Creates a MySQL UPDATE statement."""
@@ -45,7 +46,7 @@ def create_update(table, field, value, phage_id=None):
 
 def get_unparsed_args():
     """Returns list of command line arguments to get gb records."""
-    unparsed_args = ["run.py", pipeline, db, "-o", str(test_folder)]
+    unparsed_args = ["run.py", pipeline, DB, "-o", str(test_folder)]
     return unparsed_args
 
 D29_ACC = "AF022214"
@@ -71,7 +72,7 @@ class TestGetGBRecords(unittest.TestCase):
 
     def setUp(self):
         test_folder.mkdir()
-        self.alchemist = AlchemyHandler(database=db, username=user, password=pwd)
+        self.alchemist = AlchemyHandler(database=DB, username=USER, password=PWD)
         self.alchemist.build_engine()
         # Standardize values in certain fields to define the data
         stmt1 = create_update("phage", "Status", "draft")
