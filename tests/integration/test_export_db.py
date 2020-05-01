@@ -99,7 +99,7 @@ class TestFileExport(unittest.TestCase):
                 self.assertTrue(self.export_test_dir.is_dir())
 
                 csv_file_path = self.export_test_dir.joinpath(
-                                            f"{self.export_test_dir.name}.csv")
+                                            f"{table}.csv")
 
                 self.assertTrue(csv_file_path.is_file())
 
@@ -196,7 +196,7 @@ class TestFileExport(unittest.TestCase):
                                  include_columns=include_columns)
 
         csv_path = self.export_test_dir.joinpath(
-                                        f"{self.export_test_dir.name}.csv")
+                                        f"gene.csv")
 
         with open(csv_path) as csv_handle:
             reader = csv.reader(csv_handle)
@@ -215,7 +215,7 @@ class TestFileExport(unittest.TestCase):
                                  exclude_columns=exclude_columns)
         
         csv_path = self.export_test_dir.joinpath(
-                                        f"{self.export_test_dir.name}.csv")
+                                        f"phage.csv")
 
         with open(csv_path) as csv_handle:
             reader = csv.reader(csv_handle)
@@ -234,7 +234,7 @@ class TestFileExport(unittest.TestCase):
                                  sequence_columns=True)
 
         csv_path = self.export_test_dir.joinpath(
-                                        f"{self.export_test_dir.name}.csv")
+                                        f"phage.csv")
 
         with open(csv_path) as csv_handle:
             reader = csv.reader(csv_handle)
