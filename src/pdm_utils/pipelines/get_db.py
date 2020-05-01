@@ -7,6 +7,7 @@ import shutil
 import subprocess
 import sys
 
+from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.constants import constants, db_schema_0
 from pdm_utils.functions import basic, mysqldb
 from pdm_utils.pipelines import convert_db
@@ -75,12 +76,30 @@ def main(unparsed_args_list):
             shutil.rmtree(results_path)
 
 
+# TODO this may be moved elsewhere as a more generalized function.
+def establish_database_connection(database: str, echo=False):
+    alchemist = AlchemyHandler(database=database)
+    try:
+        alchemist.connect()
+    except ValueError as err:
+        print(err)
+        print("Unable to login to MySQL.")
+        sys.exit(1)
+    else:
+        alchemist._engine.echo = echo
+    return alchemist
+
 # TODO test.
 def install_db(database, db_filepath=None, schema_version=None):
     """Install database. If database already exists, it is first removed."""
     # No need to specify database yet, since it needs to first check if the
     # database exists.
-    engine1 = mysqldb.connect_to_db(database="")
+
+
+    alchemist = establish_database_connection(database="", echo=False)
+    engine1 = alchemist.engine
+
+    # engine1 = mysqldb.connect_to_db(database="")
     result = mysqldb.drop_create_db(engine1, database)
     if result != 0:
         print("Unable to create new, empty database.")

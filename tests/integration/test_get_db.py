@@ -9,6 +9,7 @@ from unittest.mock import patch
 import sqlalchemy
 
 from pdm_utils import run
+from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.pipelines import get_db
 
 # Import helper functions to build mock database
@@ -18,13 +19,10 @@ if str(test_dir) not in set(sys.path):
     sys.path.append(str(test_dir))
 import test_db_utils
 
-#sqlalchemy setup
-# Since these tests involve installing databases instead of accessing them,
-# do not specify a database, but instead leave as "".
-engine_string = test_db_utils.create_engine_string(db="")
-
 pipeline = "get_db"
 DB = test_db_utils.DB
+USER = test_db_utils.USER
+PWD = test_db_utils.PWD
 DB2 = "Actinobacteriophage"
 
 # Create the main test directory in which all files will be
@@ -67,7 +65,10 @@ class TestGetDb(unittest.TestCase):
 
     def setUp(self):
         output_path.mkdir()
-        self.engine = sqlalchemy.create_engine(engine_string, echo=False)
+        # Since these tests involve installing databases instead of
+        # accessing them, do not specify a database, but instead leave as "".
+        self.alchemist = AlchemyHandler(username=USER, password=PWD)
+        self.alchemist.build_engine()
 
     def tearDown(self):
         shutil.rmtree(output_path)
@@ -76,10 +77,10 @@ class TestGetDb(unittest.TestCase):
             test_db_utils.remove_db()
 
 
-    @patch("pdm_utils.functions.mysqldb.connect_to_db")
-    def test_main_1(self, ctd_mock):
+    @patch("pdm_utils.pipelines.get_db.establish_database_connection")
+    def test_main_1(self, edc_mock):
         """Verify database is installed from file."""
-        ctd_mock.return_value = self.engine
+        edc_mock.return_value = self.alchemist
         unparsed_args = get_unparsed_args(option="file")
         run.main(unparsed_args)
         # Query for version data. This verifies that the databases exists
@@ -88,10 +89,10 @@ class TestGetDb(unittest.TestCase):
         self.assertEqual(len(version_data), 1)
 
 
-    @patch("pdm_utils.functions.mysqldb.connect_to_db")
-    def test_main_2(self, ctd_mock):
+    @patch("pdm_utils.pipelines.get_db.establish_database_connection")
+    def test_main_2(self, edc_mock):
         """Verify new database is created."""
-        ctd_mock.return_value = self.engine
+        edc_mock.return_value = self.alchemist
         unparsed_args = get_unparsed_args(option="new")
         run.main(unparsed_args)
 
@@ -101,10 +102,10 @@ class TestGetDb(unittest.TestCase):
         self.assertEqual(len(version_data), 1)
 
 
-    @patch("pdm_utils.functions.mysqldb.connect_to_db")
-    def test_main_3(self, ctd_mock):
+    @patch("pdm_utils.pipelines.get_db.establish_database_connection")
+    def test_main_3(self, edc_mock):
         """Verify database is downloaded and installed from server."""
-        ctd_mock.return_value = self.engine
+        edc_mock.return_value = self.alchemist
         # Since the entire Actinobacteriophage database is being downloaded,
         # be sure to only download the SQL file and do NOT install it,
         # else it will overwrite the existing Actinobacteriophage database.
@@ -122,11 +123,11 @@ class TestGetDb(unittest.TestCase):
             self.assertTrue(file2.exists())
 
 
-    @patch("pdm_utils.functions.mysqldb.connect_to_db")
-    def test_main_4(self, ctd_mock):
+    @patch("pdm_utils.pipelines.get_db.establish_database_connection")
+    def test_main_4(self, edc_mock):
         """Verify database is installed from file and overwrites
         existing database."""
-        ctd_mock.return_value = self.engine
+        edc_mock.return_value = self.alchemist
         # First install a database with data. Then delete version table.
         test_db_utils.create_filled_test_db()
         test_db_utils.execute("DROP TABLE version")
