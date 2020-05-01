@@ -7,9 +7,8 @@ import sys
 import unittest
 from unittest.mock import patch
 
-import sqlalchemy
-
 from pdm_utils import run
+from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.pipelines import update_field
 
 # Import helper functions to build mock database
@@ -19,11 +18,11 @@ if str(test_dir) not in set(sys.path):
     sys.path.append(str(test_dir))
 import test_db_utils
 
-#sqlalchemy setup
-engine_string = test_db_utils.create_engine_string()
-
 pipeline = "update"
 DB = test_db_utils.DB
+USER = test_db_utils.USER
+PWD = test_db_utils.PWD
+
 
 # Create the main test directory in which all files will be
 # created and managed.
@@ -106,7 +105,9 @@ class TestUpdate(unittest.TestCase):
         test_db_utils.remove_db()
 
     def setUp(self):
-        self.engine = sqlalchemy.create_engine(engine_string, echo=False)
+
+        self.alchemist = AlchemyHandler(database=DB, username=USER, password=PWD)
+        self.alchemist.build_engine()
         test_folder.mkdir()
 
         # Standardize values in certain fields to define the data
@@ -129,10 +130,10 @@ class TestUpdate(unittest.TestCase):
 
 
 
-    @patch("pdm_utils.functions.mysqldb.connect_to_db")
-    def test_main_1(self, ctd_mock):
+    @patch("pdm_utils.pipelines.update_field.establish_database_connection")
+    def test_main_1(self, edc_mock):
         """Verify update runs with empty ticket table."""
-        ctd_mock.return_value = self.engine
+        edc_mock.return_value = self.alchemist
         create_update_table([], update_table)
         unparsed_args = get_unparsed_args(file=update_table)
         run.main(unparsed_args)
@@ -149,10 +150,10 @@ class TestUpdate(unittest.TestCase):
         with self.subTest():
             self.assertEqual(version_table[0]["Version"], 0)
 
-    @patch("pdm_utils.functions.mysqldb.connect_to_db")
-    def test_main_2(self, ctd_mock):
+    @patch("pdm_utils.pipelines.update_field.establish_database_connection")
+    def test_main_2(self, edc_mock):
         """Verify update runs with five tickets in ticket table."""
-        ctd_mock.return_value = self.engine
+        edc_mock.return_value = self.alchemist
         host_genus = "Mycobacterium"
         cluster = "A"
         subcluster = "A2"
@@ -188,10 +189,10 @@ class TestUpdate(unittest.TestCase):
         with self.subTest():
             self.assertEqual(version_table[0]["Version"], 0)
 
-    @patch("pdm_utils.functions.mysqldb.connect_to_db")
-    def test_main_3(self, ctd_mock):
+    @patch("pdm_utils.pipelines.update_field.establish_database_connection")
+    def test_main_3(self, edc_mock):
         """Verify version data is updated."""
-        ctd_mock.return_value = self.engine
+        edc_mock.return_value = self.alchemist
         unparsed_args = get_unparsed_args(version=True)
         run.main(unparsed_args)
         version_table = test_db_utils.get_data(test_db_utils.version_table_query)
@@ -204,10 +205,10 @@ class TestUpdate(unittest.TestCase):
         with self.subTest():
             self.assertEqual(alice["HostGenus"], "unknown")
 
-    @patch("pdm_utils.functions.mysqldb.connect_to_db")
-    def test_main_4(self, ctd_mock):
+    @patch("pdm_utils.pipelines.update_field.establish_database_connection")
+    def test_main_4(self, edc_mock):
         """Verify version data and phage table data are updated."""
-        ctd_mock.return_value = self.engine
+        edc_mock.return_value = self.alchemist
         host_genus = "Mycobacterium"
         tkt = get_alice_ticket("HostGenus", host_genus)
         create_update_table([tkt], update_table)
