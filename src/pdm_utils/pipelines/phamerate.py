@@ -4,6 +4,9 @@ import argparse
 import datetime
 import os
 import shutil
+import sys
+
+from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.functions.phameration import *
 from pdm_utils.functions import mysqldb
 
@@ -56,7 +59,9 @@ def main(argument_list):
     temp_dir = args.temp_dir
 
     # Initialize SQLAlchemy engine with database provided at CLI
-    engine = mysqldb.connect_to_db(args.db)
+    alchemist = establish_database_connection(args.db, echo=False)
+    engine = alchemist.engine
+
 
     # If we made it past the above connection_status() check, database access
     # works (user at least has SELECT privileges on the indicated database).
@@ -131,3 +136,18 @@ def main(argument_list):
 
     # Report phameration elapsed time
     print("Elapsed time: {}".format(str(stop - start)))
+
+
+
+# TODO this may be moved elsewhere as a more generalized function.
+def establish_database_connection(database: str, echo=False):
+    alchemist = AlchemyHandler(database=database)
+    try:
+        alchemist.connect()
+    except ValueError as err:
+        print(err)
+        print("Unable to login to MySQL.")
+        sys.exit(1)
+    else:
+        alchemist._engine.echo = echo
+    return alchemist

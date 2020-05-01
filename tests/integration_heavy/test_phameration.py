@@ -12,6 +12,7 @@ from pathlib import Path
 import pymysql
 import sqlalchemy
 
+from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.functions.phameration import *
 from pdm_utils.functions import mysqldb
 
@@ -24,15 +25,21 @@ if str(test_dir) not in set(sys.path):
 import test_db_utils
 
 # Standard pdm_anon user/pwd and pdm_test_db
-engine_string = test_db_utils.create_engine_string()
+DB = test_db_utils.DB
+USER = test_db_utils.USER
+PWD = test_db_utils.PWD
 
 
 class TestPhamerationFunctions(unittest.TestCase):
     def setUp(self):
-        self.engine = sqlalchemy.create_engine(engine_string, echo=False)
-        self.temp_dir = "/tmp/pdm_utils_tests_phamerate"
+
         # Create test database that contains data for several phages.
         test_db_utils.create_filled_test_db()
+
+        self.alchemist = AlchemyHandler(database=DB, username=USER, password=PWD)
+        self.alchemist.build_engine()
+        self.engine = self.alchemist.engine
+        self.temp_dir = "/tmp/pdm_utils_tests_phamerate"
 
 
     def tearDown(self):
