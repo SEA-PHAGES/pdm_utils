@@ -2,14 +2,15 @@
 
 from pathlib import Path
 import shutil
-import sqlalchemy
 import sys
 import unittest
 from unittest.mock import patch
+
 from pdm_utils import run
-from pdm_utils.pipelines import get_data
+from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.classes import genomepair
 from pdm_utils.classes import genome
+from pdm_utils.pipelines import get_data
 
 # Import helper functions to build mock database
 unittest_file = Path(__file__)
@@ -18,11 +19,10 @@ if str(test_dir) not in set(sys.path):
     sys.path.append(str(test_dir))
 import test_db_utils
 
-#sqlalchemy setup
-engine_string = test_db_utils.create_engine_string()
-
 pipeline = "get_data"
-db = test_db_utils.DB
+DB = test_db_utils.DB
+USER = test_db_utils.USER
+PWD = test_db_utils.PWD
 
 # Create the main test directory in which all files will be
 # created and managed.
@@ -70,7 +70,7 @@ def create_update(table, field, value, phage_id=None):
 def get_unparsed_args(draft=False, final=False, genbank=False, update=False,
                       force_download=False, genbank_results=True):
     """Returns list of command line arguments to get data."""
-    unparsed_args = ["run.py", pipeline, db, "-o", str(test_folder)]
+    unparsed_args = ["run.py", pipeline, DB, "-o", str(test_folder)]
     if draft:
         unparsed_args.append("-d")
     if final:
@@ -145,7 +145,9 @@ class TestGetData(unittest.TestCase):
         test_db_utils.remove_db()
 
     def setUp(self):
-        self.engine = sqlalchemy.create_engine(engine_string, echo=False)
+
+        self.alchemist = AlchemyHandler(database=DB, username=USER, password=PWD)
+        self.alchemist.build_engine()
         test_folder.mkdir()
 
         # Standardize values in certain fields to define the data
@@ -166,13 +168,13 @@ class TestGetData(unittest.TestCase):
 
 
 
-    @patch("pdm_utils.functions.mysqldb.connect_to_db")
-    def test_main_1(self, ctd_mock):
+    @patch("pdm_utils.pipelines.get_data.establish_database_connection")
+    def test_main_1(self, edc_mock):
         """Verify update data and final data are retrieved."""
         # Testing the update flag and final flag have been merged so that
         # PhagesDB is only queried once for all data in the genome, since
         # it is time-intensive.
-        ctd_mock.return_value = self.engine
+        edc_mock.return_value = self.alchemist
         # If final=True, any genome in database will be checked on PhagesDB
         # regardless of AnnotationAuthor
         unparsed_args = get_unparsed_args(update=True, final=True)
@@ -196,10 +198,10 @@ class TestGetData(unittest.TestCase):
         with self.subTest():
             self.assertEqual(count2, count4)
 
-    @patch("pdm_utils.functions.mysqldb.connect_to_db")
-    def test_main_2(self, ctd_mock):
+    @patch("pdm_utils.pipelines.get_data.establish_database_connection")
+    def test_main_2(self, edc_mock):
         """Verify genbank data is retrieved."""
-        ctd_mock.return_value = self.engine
+        edc_mock.return_value = self.alchemist
         stmt1 = create_update("phage", "RetrieveRecord", "1", phage_id="Trixie")
         test_db_utils.execute(stmt1)
         stmt2 = create_update("phage", "Accession", TRIXIE_ACC, phage_id="Trixie")
@@ -219,11 +221,11 @@ class TestGetData(unittest.TestCase):
             self.assertEqual(count1, count4)
 
     @patch("pdm_utils.pipelines.get_data.match_genomes")
-    @patch("pdm_utils.functions.mysqldb.connect_to_db")
-    def test_main_3(self, ctd_mock, mg_mock):
+    @patch("pdm_utils.pipelines.get_data.establish_database_connection")
+    def test_main_3(self, edc_mock, mg_mock):
         """Verify draft data is retrieved."""
         matched_genomes = create_matched_genomes()
-        ctd_mock.return_value = self.engine
+        edc_mock.return_value = self.alchemist
         mg_mock.return_value = (matched_genomes, {"EagleEye"})
         unparsed_args = get_unparsed_args(draft=True)
         run.main(unparsed_args)
@@ -234,11 +236,11 @@ class TestGetData(unittest.TestCase):
         with self.subTest():
             self.assertEqual(count1, count2)
 
-    @patch("pdm_utils.functions.mysqldb.connect_to_db")
-    def test_main_4(self, ctd_mock):
+    @patch("pdm_utils.pipelines.get_data.establish_database_connection")
+    def test_main_4(self, edc_mock):
         """Verify final data with very recent date are retrieved
         with force_download."""
-        ctd_mock.return_value = self.engine
+        edc_mock.return_value = self.alchemist
         stmt = create_update("phage", "DateLastModified", "2200-01-01")
         test_db_utils.execute(stmt)
         unparsed_args = get_unparsed_args(final=True, force_download=True)
@@ -253,14 +255,14 @@ class TestGetData(unittest.TestCase):
             self.assertTrue(count > 0)
 
     @patch("pdm_utils.pipelines.get_data.match_genomes")
-    @patch("pdm_utils.functions.mysqldb.connect_to_db")
-    def test_main_5(self, ctd_mock, mg_mock):
+    @patch("pdm_utils.pipelines.get_data.establish_database_connection")
+    def test_main_5(self, edc_mock, mg_mock):
         """Verify draft data already in database is retrieved
         with force_download."""
         # Create a list of 2 matched genomes, only one of which has
         # status = draft.
         matched_genomes = create_matched_genomes()
-        ctd_mock.return_value = self.engine
+        edc_mock.return_value = self.alchemist
         mg_mock.return_value = (matched_genomes, {"EagleEye"})
         unparsed_args = get_unparsed_args(draft=True, force_download=True)
         run.main(unparsed_args)

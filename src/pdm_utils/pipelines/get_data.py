@@ -6,7 +6,10 @@ from datetime import datetime, date
 import os
 import pathlib
 import sys
+
 from Bio import SeqIO
+
+from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.classes import genomepair
 from pdm_utils.classes import ticket
 from pdm_utils.constants import constants
@@ -121,6 +124,20 @@ def parse_args(unparsed_args_list):
     return args
 
 
+# TODO this may be moved elsewhere as a more generalized function.
+def establish_database_connection(database: str, echo=False):
+    alchemist = AlchemyHandler(database=database)
+    try:
+        alchemist.connect()
+    except ValueError as err:
+        print(err)
+        print("Unable to login to MySQL.")
+        sys.exit(1)
+    else:
+        alchemist._engine.echo = echo
+    return alchemist
+
+
 # TODO unittest.
 def main(unparsed_args_list):
     """Run main retrieve_updates pipeline."""
@@ -141,7 +158,9 @@ def main(unparsed_args_list):
 
     # Verify database connection and schema compatibility.
     print("Preparing genome data sets from the MySQL database...")
-    engine = mysqldb.connect_to_db(args.database)
+
+    alchemist = establish_database_connection(args.database, echo=False)
+    engine = alchemist.engine
     mysqldb.check_schema_compatibility(engine, "the get_data pipeline")
 
     # Get existing data from MySQL to determine what needs to be updated.
