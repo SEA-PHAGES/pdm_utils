@@ -9,7 +9,7 @@ import sys
 
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.constants import constants, db_schema_0
-from pdm_utils.functions import basic, mysqldb
+from pdm_utils.functions import basic, mysqldb, mysqldb_basic
 from pdm_utils.pipelines import convert_db
 
 DEFAULT_OUTPUT_FOLDER = "/tmp/"
@@ -97,7 +97,7 @@ def install_db(database, db_filepath=None, schema_version=None):
 
     alchemist = establish_database_connection(database="", echo=False)
     engine1 = alchemist.engine
-    result = mysqldb.drop_create_db(engine1, database)
+    result = mysqldb_basic.drop_create_db(engine1, database)
     if result != 0:
         print("Unable to create new, empty database.")
     else:
@@ -110,7 +110,7 @@ def install_db(database, db_filepath=None, schema_version=None):
                   "to invalid credentials or database.")
         else:
             if db_filepath is not None:
-                mysqldb.install_db(engine2, db_filepath)
+                mysqldb_basic.install_db(engine2, db_filepath)
             else:
                 mysqldb.execute_transaction(engine2, db_schema_0.STATEMENTS)
                 convert_args = ["pdm_utils.run", "convert", database,
