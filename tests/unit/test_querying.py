@@ -1,6 +1,10 @@
+import unittest
+from unittest.mock import Mock
+from unittest.mock import MagicMock
+from unittest.mock import patch
+from unittest.mock import PropertyMock
+
 from networkx import Graph
-from pdm_utils.classes.filter import Filter
-from pdm_utils.functions import querying
 from sqlalchemy import create_engine
 from sqlalchemy import Column
 from sqlalchemy import MetaData
@@ -12,11 +16,8 @@ from sqlalchemy.sql.elements import BinaryExpression
 from sqlalchemy.sql.elements import BindParameter
 from sqlalchemy.sql.elements import UnaryExpression
 from sqlalchemy.sql.schema import ForeignKey
-from unittest.mock import Mock
-from unittest.mock import MagicMock
-from unittest.mock import patch
-from unittest.mock import PropertyMock
-import unittest
+
+from pdm_utils.functions import querying
 
 class TestUseMetadata(unittest.TestCase):
     def setUp(self):

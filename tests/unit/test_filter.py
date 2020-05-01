@@ -1,14 +1,16 @@
-from networkx import Graph
-from sqlalchemy import Column
-from sqlalchemy.engine.base import Engine
-from sqlalchemy.sql.elements import BinaryExpression
-from pdm_utils.classes.filter import Filter
-from pdm_utils.classes.alchemyhandler import AlchemyHandler
+import unittest
 from unittest.mock import call
 from unittest.mock import patch
 from unittest.mock import Mock 
 from unittest.mock import PropertyMock
-import unittest
+
+from networkx import Graph
+from sqlalchemy import Column
+from sqlalchemy.engine.base import Engine
+from sqlalchemy.sql.elements import BinaryExpression
+
+from pdm_utils.classes.filter import Filter
+from pdm_utils.classes.alchemyhandler import AlchemyHandler
 
 class TestFilter(unittest.TestCase):
     @patch("pdm_utils.classes.filter.isinstance")

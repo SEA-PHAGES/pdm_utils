@@ -1,10 +1,14 @@
+import re
+import sys
+import unittest
 from datetime import datetime
 from decimal import Decimal
+from pathlib import Path
+from unittest.mock import Mock
+from unittest.mock import patch
+
 from networkx import Graph
 from networkx import shortest_path
-from pathlib import Path
-from pdm_utils.functions import querying
-from pdm_utils.functions.mysqldb import query_dict_list
 from sqlalchemy import Column
 from sqlalchemy import and_
 from sqlalchemy import create_engine
@@ -17,11 +21,10 @@ from sqlalchemy.sql import functions
 from sqlalchemy.sql.elements import BinaryExpression
 from sqlalchemy.sql.elements import Grouping
 from sqlalchemy.sql.elements import UnaryExpression
-from unittest.mock import Mock
-from unittest.mock import patch
-import re
-import sys
-import unittest
+
+
+from pdm_utils.functions import querying
+from pdm_utils.functions.mysqldb import query_dict_list
 
 # Import helper functions to build mock database
 unittest_file = Path(__file__)

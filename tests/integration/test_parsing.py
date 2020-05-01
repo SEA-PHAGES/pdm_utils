@@ -1,13 +1,15 @@
+import unittest
+import re
+import sys
 from pathlib import Path
-from pdm_utils.functions import parsing
+from unittest.mock import Mock, patch, PropertyMock
+
 from sqlalchemy import Column
 from sqlalchemy import create_engine
 from sqlalchemy import MetaData
 from sqlalchemy import Table
-from unittest.mock import Mock, patch, PropertyMock
-import unittest
-import re
-import sys
+
+from pdm_utils.functions import parsing
 
 # Import helper functions to build mock database
 unittest_file = Path(__file__)

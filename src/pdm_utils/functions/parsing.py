@@ -1,7 +1,8 @@
 from datetime import datetime
 from decimal import Decimal
-from sqlalchemy import Column
 import re
+
+from sqlalchemy import Column
 #----------------------------------------------------------------------------
 #GLOBAL VARIABLES
 NUMERIC_OPERATORS     = [">", ">=", "<", "<="]

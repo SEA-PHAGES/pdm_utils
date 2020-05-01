@@ -1,10 +1,14 @@
-from pdm_utils.functions import parsing
+import unittest
+import re
+from unittest.mock import Mock 
+from unittest.mock import patch
+from unittest.mock import PropertyMock
+
 from sqlalchemy import Column
 from sqlalchemy import MetaData
 from sqlalchemy import Table
-from unittest.mock import Mock, patch, PropertyMock
-import unittest
-import re
+
+from pdm_utils.functions import parsing
 
 class TestParsing(unittest.TestCase):
     def test_parse_out_ends_1(self):

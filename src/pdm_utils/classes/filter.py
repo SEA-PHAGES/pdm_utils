@@ -1,27 +1,18 @@
-"""Object to provide a formatted filtering query
+"""Object to provide a formatted filtering query 
 for retrieving data from a SQL database."""
-
-import cmd
-import copy
-import readline
-import os
-import sys
-import re
-import string
-import math
-import time
 from collections import OrderedDict
+
 from networkx import Graph
-from pathlib import Path
-from pdm_utils.classes.alchemyhandler import AlchemyHandler
-from pdm_utils.functions import parsing
-from pdm_utils.functions import querying as q
 from sqlalchemy import Column
 from sqlalchemy import and_
 from sqlalchemy import or_
 from sqlalchemy.engine.base import Engine
 from sqlalchemy.sql.elements import Null
 from sqlalchemy.sql.elements import BooleanClauseList
+
+from pdm_utils.classes.alchemyhandler import AlchemyHandler
+from pdm_utils.functions import parsing
+from pdm_utils.functions import querying as q
 
 class Filter:
     def __init__(self, alchemist=None, key=None):

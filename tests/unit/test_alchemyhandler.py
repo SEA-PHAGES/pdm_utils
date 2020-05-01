@@ -1,9 +1,13 @@
+import unittest
+from unittest.mock import Mock
+from unittest.mock import patch
+from unittest.mock import PropertyMock
+
 from sqlalchemy import MetaData
 from sqlalchemy.engine.base import Engine
 from sqlalchemy.exc import OperationalError
+
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
-from unittest.mock import patch, Mock, PropertyMock
-import unittest
 
 class TestAlchemyHandler(unittest.TestCase):
     def setUp(self):

@@ -1,21 +1,22 @@
 """Tests the functionality of the unique functions in the export_db pipeline"""
-
+import os
+import unittest
 from argparse import ArgumentError
+from pathlib import Path
+from unittest.mock import call
+from unittest.mock import Mock
+from unittest.mock import patch
+from unittest.mock import PropertyMock
+
 from Bio.Seq import Seq
 from Bio.SeqFeature import CompoundLocation
 from Bio.SeqFeature import FeatureLocation
 from Bio.SeqFeature import SeqFeature
 from Bio.SeqRecord import SeqRecord
-from pathlib import Path
+
 from pdm_utils.classes import genome, cds
 from pdm_utils.functions import flat_files
 from pdm_utils.pipelines import export_db
-from unittest.mock import call
-from unittest.mock import Mock
-from unittest.mock import patch
-from unittest.mock import PropertyMock
-import unittest
-import os
 
 class TestExportMain(unittest.TestCase):
     def setUp(self):

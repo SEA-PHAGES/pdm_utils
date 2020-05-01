@@ -1,13 +1,15 @@
+import sys
+import unittest
+from pathlib import Path
+from unittest.mock import patch, Mock, PropertyMock
+
 from networkx import Graph
 from sqlalchemy import MetaData
 from sqlalchemy.engine.base import Engine
 from sqlalchemy.exc import OperationalError
-from pathlib import Path
+
 from pdm_utils.functions import querying
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
-from unittest.mock import patch, Mock, PropertyMock
-import sys
-import unittest
 
 # Import helper functions to build mock database
 unittest_file = Path(__file__)

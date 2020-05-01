@@ -1,11 +1,20 @@
 """Pipeline for exporting database information into files."""
+import argparse
+import csv
+import os
+import shutil
+import sys
+import time
+from functools import singledispatch
+from pathlib import Path
+from typing import List, Dict
 
 from Bio import SeqIO
 from Bio.Alphabet import IUPAC
 from Bio.SeqFeature import SeqFeature
 from Bio.SeqRecord import SeqRecord
-from functools import singledispatch
-from pathlib import Path
+from sqlalchemy.sql.elements import Null
+
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.classes.filter import Filter
 from pdm_utils.functions import basic
@@ -13,17 +22,7 @@ from pdm_utils.functions import flat_files
 from pdm_utils.functions import mysqldb
 from pdm_utils.functions import parsing
 from pdm_utils.functions import querying
-from sqlalchemy.sql.elements import Null
-from typing import List, Dict
-import argparse
-import cmd
-import copy
-import csv
-import os
-import re
-import shutil
-import sys
-import time
+
 
 #GLOBAL VARIABLES
 #-----------------------------------------------------------------------------

@@ -1,15 +1,16 @@
 """Integration unittests for the filter module"""
+import sys
+import unittest
+from pathlib import Path
+from unittest.mock import Mock, patch
 
 from networkx import Graph
-from pathlib import Path
+from sqlalchemy.engine.base import Engine
+from sqlalchemy.sql.elements import BinaryExpression
+
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.classes.filter import Filter
 from pdm_utils.functions import querying
-from sqlalchemy.engine.base import Engine
-from sqlalchemy.sql.elements import BinaryExpression
-from unittest.mock import Mock, patch
-import sys
-import unittest
 
 # Import helper functions to build mock database
 unittest_file = Path(__file__)

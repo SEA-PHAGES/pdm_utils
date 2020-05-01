@@ -1,7 +1,10 @@
+import re
 from collections import OrderedDict
+from datetime import datetime
+from decimal import Decimal
+
 from networkx import Graph
 from networkx import shortest_path
-from pdm_utils.functions import parsing
 from sqlalchemy import Column
 from sqlalchemy import join
 from sqlalchemy import MetaData
@@ -15,9 +18,8 @@ from sqlalchemy.sql.elements import BooleanClauseList
 from sqlalchemy.sql.elements import Grouping
 from sqlalchemy.sql.elements import Label
 from sqlalchemy.sql.elements import UnaryExpression
-from datetime import datetime
-from decimal import Decimal
-import re
+
+from pdm_utils.functions import parsing
 
 #GLOBAL VARIABLES
 #-----------------------------------------------------------------------------
