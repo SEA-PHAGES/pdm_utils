@@ -2,6 +2,8 @@
 
 import argparse
 import sys
+
+from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.functions import mysqldb
 from pdm_utils.constants import schema_conversions
 
@@ -65,7 +67,8 @@ def main(unparsed_args_list, engine1=None):
     # Parse command line arguments
     args = parse_args(unparsed_args_list)
     if engine1 is None:
-        engine1 = mysqldb.connect_to_db(args.database)
+        alchemist = establish_database_connection(args.database, echo=False)
+        engine1 = alchemist.engine
     target = args.schema_version
     actual = mysqldb.get_schema_version(engine1)
     steps, dir = get_conversion_direction(actual, target)
@@ -114,6 +117,20 @@ def main(unparsed_args_list, engine1=None):
             if args.verbose == True:
                 print_summary(summary)
     engine1.dispose()
+
+
+# TODO this may be moved elsewhere as a more generalized function.
+def establish_database_connection(database: str, echo=False):
+    alchemist = AlchemyHandler(database=database)
+    try:
+        alchemist.connect()
+    except ValueError as err:
+        print(err)
+        print("Unable to login to MySQL.")
+        sys.exit(1)
+    else:
+        alchemist._engine.echo = echo
+    return alchemist
 
 # TODO unittest.
 def get_conversion_direction(actual, target):
