@@ -4,15 +4,15 @@ import os
 import pathlib
 import platform
 import shlex
-import sqlalchemy
 import sys
-# import warnings
-from subprocess import Popen, PIPE
+from subprocess import Popen, PIPE # import warnings
 
 from Bio.Blast import NCBIXML
 from Bio.Blast.Applications import NcbirpsblastCommandline
+import sqlalchemy
 
 import pdm_utils
+from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.constants import constants
 from pdm_utils.functions import basic
 from pdm_utils.functions import mysqldb
@@ -276,7 +276,8 @@ def main(argument_list):
         rpsblast = get_rpsblast_path(command)
 
     # Verify database connection and schema compatibility.
-    engine = mysqldb.connect_to_db(database)
+    alchemist = establish_database_connection(database, echo=False)
+    engine = alchemist.engine
     logger.info(f"Connected to database: {database}.")
     mysqldb.check_schema_compatibility(engine, "the find_domains pipeline")
     logger.info(f"Schema version is compatible.")
@@ -330,6 +331,19 @@ def main(argument_list):
 
     return
 
+
+# TODO this may be moved elsewhere as a more generalized function.
+def establish_database_connection(database: str, echo=False):
+    alchemist = AlchemyHandler(database=database)
+    try:
+        alchemist.connect()
+    except ValueError as err:
+        print(err)
+        print("Unable to login to MySQL.")
+        sys.exit(1)
+    else:
+        alchemist._engine.echo = echo
+    return alchemist
 
 def search_summary(rolled_back):
     """Print search results."""

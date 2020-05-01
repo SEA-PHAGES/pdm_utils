@@ -6,8 +6,11 @@ import shutil
 import sys
 import unittest
 from unittest.mock import patch
+
 import sqlalchemy
+
 from pdm_utils import run
+from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.pipelines import find_domains
 
 # Import helper functions to build mock database and mock flat files
@@ -43,15 +46,14 @@ logging.basicConfig(filename=log, filemode="w",level=logging.DEBUG)
 
 # The following integration tests user the 'pdm_anon' MySQL user.
 # It is expected that this user has all privileges for 'pdm_test_db' database.
-engine_string = test_db_utils.create_engine_string()
+pipeline = "find_domains"
+USER = test_db_utils.USER
+PWD = test_db_utils.PWD
+DB = test_db_utils.DB
+DB2 = "Actinobacteriophage"
 
 # Assumes that output message contains "SQLAlchemy Error..."
 error_msg = "SQLAlchemy"
-
-
-pipeline = "find_domains"
-DB = test_db_utils.DB
-DB2 = "Actinobacteriophage"
 
 def get_unparsed_args():
     """Returns list of command line arguments to find domains."""
@@ -382,7 +384,10 @@ class TestFindDomains2(unittest.TestCase):
         test_db_utils.insert_gene_domain_data(self.gene_domain_data2)
         test_db_utils.insert_gene_domain_data(self.gene_domain_data3)
 
-        self.engine = sqlalchemy.create_engine(engine_string, echo=False)
+
+        self.alchemist = AlchemyHandler(database=DB, username=USER, password=PWD)
+        self.alchemist.build_engine()
+        self.engine = self.alchemist.engine
 
 
     def tearDown(self):
@@ -430,7 +435,9 @@ class TestFindDomains3(unittest.TestCase):
         test_db_utils.insert_phage_data(test_data_utils.get_trixie_phage_data())
         test_db_utils.insert_gene_data(test_data_utils.get_trixie_gene_data())
 
-        self.engine = sqlalchemy.create_engine(engine_string, echo=False)
+        self.alchemist = AlchemyHandler(database=DB, username=USER, password=PWD)
+        self.alchemist.build_engine()
+        self.engine = self.alchemist.engine
         self.connection = self.engine.connect()
         self.trans = self.connection.begin()
 
@@ -754,7 +761,9 @@ class TestFindDomains4(unittest.TestCase):
         test_db_utils.insert_phage_data(test_data_utils.get_trixie_phage_data())
         test_db_utils.insert_gene_data(test_data_utils.get_trixie_gene_data())
 
-        self.engine = sqlalchemy.create_engine(engine_string, echo=False)
+        self.alchemist = AlchemyHandler(database=DB, username=USER, password=PWD)
+        self.alchemist.build_engine()
+        self.engine = self.alchemist.engine
         self.connection = self.engine.connect()
 
 
@@ -1007,7 +1016,10 @@ class TestFindDomains5(unittest.TestCase):
         test_db_utils.insert_gene_data(cds3)
         stmt = get_gene_update_statement(0)
         test_db_utils.execute(stmt)
-        self.engine = sqlalchemy.create_engine(engine_string, echo=False)
+
+        self.alchemist = AlchemyHandler(database=DB, username=USER, password=PWD)
+        self.alchemist.build_engine()
+        self.engine = self.alchemist.engine
 
     def tearDown(self):
         test_db_utils.remove_db()
@@ -1204,23 +1216,25 @@ class TestFindDomains6(unittest.TestCase):
 
         stmt = get_gene_update_statement(1)
         test_db_utils.execute(stmt)
-        self.engine = sqlalchemy.create_engine(engine_string, echo=False)
+
+        self.alchemist = AlchemyHandler(database=DB, username=USER, password=PWD)
+        self.alchemist.build_engine()
         self.unparsed_args = get_unparsed_args()
 
 
     def tearDown(self):
         shutil.rmtree(test_folder)
         test_db_utils.remove_db()
-        self.engine.dispose()
+        self.alchemist.engine.dispose()
 
 
 
 
-    @patch("pdm_utils.functions.mysqldb.connect_to_db")
-    def test_main_1(self, ctd_mock):
+    @patch("pdm_utils.pipelines.find_domains.establish_database_connection")
+    def test_main_1(self, edc_mock):
         """Verify no genes are processed if all DomainStatus = 1."""
         logging.info("test_main_2")
-        ctd_mock.return_value = self.engine
+        edc_mock.return_value = self.alchemist
         run.main(self.unparsed_args)
         gene_domain_table_results = test_db_utils.get_data(test_db_utils.gene_domain_table_query)
         domain_table_results = test_db_utils.get_data(test_db_utils.domain_table_query)
@@ -1233,14 +1247,14 @@ class TestFindDomains6(unittest.TestCase):
             self.assertEqual(gd_rows, 0)
 
 
-    @patch("pdm_utils.functions.mysqldb.connect_to_db")
-    def test_main_2(self, ctd_mock):
+    @patch("pdm_utils.pipelines.find_domains.establish_database_connection")
+    def test_main_2(self, edc_mock):
         """Verify all four genes processed if DomainStatus = 0."""
         # There are four genes representing three unique translations.
         # Two translations should have domains, and the third should not.
         # Since batch size is set to 2, it also tests the batch functionality.
         logging.info("test_main_2")
-        ctd_mock.return_value = self.engine
+        edc_mock.return_value = self.alchemist
 
         stmt = get_gene_update_statement(0)
         test_db_utils.execute(stmt)
