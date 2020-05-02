@@ -13,6 +13,15 @@ from pdm_utils.functions import querying
 from pdm_utils.functions import mysqldb
 from pdm_utils.functions import parsing
 
+#-----------------------------------------------------------------------------
+#GLOBAL VARIABLES
+CREDENTIALS_MSG = ("Credentials invalid and maximum login attempts reached. " 
+                   "Please check your MySQL credentials and try again.")
+
+DATABASE_MSG = ("Unable to connect to database with valid credentials.\n" 
+                "Please check your MySQL database access, "
+                "and/or your database availability.")
+
 class AlchemyHandler:
     def __init__(self, database=None, username=None, password=None):  
         self._database = database
@@ -25,19 +34,23 @@ class AlchemyHandler:
         self._engine = None
         self.metadata = None
         self.graph = None
-        self.session = None
-        
+        self.session = None 
         self.echo = False
+
         self.connected = False
-        self.connected_database = False
         self.has_credentials = False
-        self.has_database = False
-  
-        if database != None:
-            self.has_database = True
 
         if username != None and password != None:
             self.has_credentials = True
+
+        self.has_database = False 
+        self.connected_database = False
+        self._databases = []
+
+        if database != None:
+            self.has_database = True
+
+        
 
 #-----------------------------------------------------------------------------
 #ALCHEMYHANDLER PROPERTIES
@@ -158,12 +171,22 @@ class AlchemyHandler:
         """Returns the tables within the AlchemyHandler's metadata object.
 
         :returns: Returns the AlchemyHandler's stored engine object.
-        :rtype: list[tables]
+        :rtype: list[Table]
         """
         if not self.metadata:
             self.build_metadata()
            
         return list(self.metadata.tables)
+
+    @property
+    def databases(self):
+        """Returns a copy of the databases available to the current credentials 
+
+        :returns: Returns the AlchemyHandler's available databases.
+        :rtype: list[str]
+        """
+        databases = self._databases.copy()
+        return databases
 
 #-----------------------------------------------------------------------------
 #CONNECTION METHODS
@@ -188,21 +211,16 @@ class AlchemyHandler:
     
     def validate_database(self):
         """Validate access to database using stored MySQL credentials.
-        """
+        """ 
         if not self.connected:
             raise ValueError("AlchemyHandler currently not connected to MySQL.")
         if not self.has_database:
             raise AttributeError("No database in AlchemyHandler to validate")
+        
+        if not self._databases:
+            self.get_mysql_dbs()
 
-        proxy = self._engine.execute("SHOW DATABASES")   
-
-        results = proxy.fetchall()
-
-        databases = []
-        for result in results:
-            databases.append(result[0])
-
-        if self._database not in databases:
+        if self._database not in self._databases:
             raise ValueError("User does not have access to "
                             f"database {self._database}")
 
@@ -213,7 +231,7 @@ class AlchemyHandler:
             if not self.has_credentials:
                 self.ask_credentials()
 
-            login_string = mysqldb.construct_engine_string(
+            login_string = self.construct_engine_string(
                                             username=self._username,
                                             password=self._password)
 
@@ -226,12 +244,14 @@ class AlchemyHandler:
             self.metadata = None
             self.graph = None
 
+            self.get_mysql_dbs()
+
         if self.has_database:
             database = self._database
 
             self.validate_database()
 
-            login_string = mysqldb.construct_engine_string(
+            login_string = self.construct_engine_string(
                                         username=self._username,
                                         password=self._password,
                                         database=self._database)
@@ -242,7 +262,7 @@ class AlchemyHandler:
             
             self.connected_database = True 
         
-    def connect(self, ask_database=False, login_attempts=5):
+    def connect(self, ask_database=False, login_attempts=5, pipeline=False):
         """Ask for input to connect to MySQL and MySQL databases.
 
         :param ask_database: Toggle whether to connect to a database.
@@ -267,8 +287,12 @@ class AlchemyHandler:
                 pass 
 
         if not self.connected:
-            raise ValueError("Maximum login attempts reached.  Please check "
-                             "your MySQL credentials and try again.")
+            if not pipeline:
+                raise ValueError(CREDENTIALS_MSG)
+            else:
+                print(CREDENTIALS_MSG)
+                exit(1)
+
         if ask_database:
             try:
                 self.build_engine()
@@ -285,9 +309,49 @@ class AlchemyHandler:
                     pass
             
             if not self.connected_database:
-                raise ValueError("Maximum database login attempts reached. "
-                                 "Please your database access and try again.")
+                if not pipeline:
+                    raise ValueError(DATABASE_MSG)
+                else:
+                    print(DATABASE_MSG)
+                    exit(1)
 
+    def construct_engine_string(self, db_type="mysql", driver="pymysql",
+                            username="", password="", database=""):
+        """Construct a SQLAlchemy engine URL.
+
+        :param db_type: Type of SQL database.
+        :type db_type: str
+        :param driver: Name of the Python DBAPI used to connect.
+        :type driver: str
+        :param username: Username to login to SQL database.
+        :type username: str
+        :param password: Password to login to SQL database.
+        :type password: str
+        :param database: Name of the database to connect to.
+        :type database: str
+        :returns: URL string to create SQLAlchemy engine.
+        :rtype: str
+        """
+        engine_string = f"{db_type}+{driver}://{username}:{password}@localhost/{database}"
+        return engine_string
+   
+    def get_mysql_dbs(self):
+        """Retrieve database names from MySQL.
+
+        :returns: List of database names.
+        :rtype: list
+        """
+        if not self.connected:
+            raise ValueError("AlchemyHandler currently not connected to MySQL.")
+
+        proxy = self._engine.execute("SHOW DATABASES")  
+        results = proxy.fetchall()
+
+        databases = []
+        for result in results:
+            databases.append(result[0])
+
+        self._databases = databases
 
 #-----------------------------------------------------------------------------
 #EXECUTE METHODS

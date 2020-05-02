@@ -77,8 +77,9 @@ def main(unparsed_args_list):
     #Returns after printing appropriate error message from parsing/connecting.
     args = parse_export(unparsed_args_list)
 
-    alchemist = establish_connection(args.database)
-
+    alchemist = AlchemyHandler(database=args.database)
+    alchemist.connect(ask_database=True, pipeline=True)
+    alchemist.build_graph()
 
     # Exporting as a SQL file is not constricted by schema version.
     if args.pipeline != "sql":
