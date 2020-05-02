@@ -4,7 +4,7 @@ import argparse
 import sys
 
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
-from pdm_utils.functions import mysqldb
+from pdm_utils.functions import mysqldb, mysqldb_basic
 from pdm_utils.constants import schema_conversions
 
 MAX_VERSION = 9
@@ -84,9 +84,9 @@ def main(unparsed_args_list, engine1=None):
     if convert == True:
         if (args.new_database_name is not None and
                 args.new_database_name != args.database):
-            result = mysqldb.drop_create_db(engine1, args.new_database_name)
+            result = mysqldb_basic.drop_create_db(engine1, args.new_database_name)
             if result == 0:
-                result = mysqldb.copy_db(engine1, args.new_database_name)
+                result = mysqldb_basic.copy_db(engine1, args.new_database_name)
                 if result == 0:
                     # Create a new connection to the new database.
                     engine2, msg = mysqldb.get_engine(

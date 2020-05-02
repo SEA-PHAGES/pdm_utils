@@ -3,7 +3,7 @@
 import argparse
 import sys
 from pdm_utils.functions import basic
-from pdm_utils.functions import mysqldb
+from pdm_utils.functions import mysqldb, mysqldb_basic
 from pdm_utils.functions import parsing
 from pdm_utils.classes.filter import Filter
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
@@ -64,7 +64,7 @@ def main(unparsed_args_list):
 
     # Create the new database, but prevent overwriting of current database.
     if engine1.url.database != new_database:
-        result = mysqldb.drop_create_db(engine1, new_database)
+        result = mysqldb_basic.drop_create_db(engine1, new_database)
     else:
         print("Error: names of the reference and frozen databases are the same.")
         print("No database will be created.")
@@ -74,7 +74,7 @@ def main(unparsed_args_list):
     if result == 0:
         print(f"Reference database: {ref_database}")
         print(f"New database: {new_database}")
-        result = mysqldb.copy_db(engine1, new_database)
+        result = mysqldb_basic.copy_db(engine1, new_database)
         if result == 0:
             print(f"Deleting genomes...")
             engine2, msg = mysqldb.get_engine(

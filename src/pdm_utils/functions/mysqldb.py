@@ -607,18 +607,18 @@ def get_version_table_data(engine):
     return result_dict_list[0]
 
 
-# TODO unittest.
-def get_mysql_dbs(engine):
-    """Retrieve database names from MySQL.
-
-    :param engine: SQLAlchemy Engine object able to connect to a MySQL database.
-    :type engine: Engine
-    :returns: Set of database names.
-    :rtype: set
-    """
-    query = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA"
-    databases = query_set(engine, query)
-    return databases
+# # TODO unittest.
+# def get_mysql_dbs(engine):
+#     """Retrieve database names from MySQL.
+#
+#     :param engine: SQLAlchemy Engine object able to connect to a MySQL database.
+#     :type engine: Engine
+#     :returns: Set of database names.
+#     :rtype: set
+#     """
+#     query = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA"
+#     databases = query_set(engine, query)
+#     return databases
 
 
 # TODO unittest.
@@ -743,113 +743,113 @@ def check_schema_compatibility(engine, pipeline, code_version=None):
         sys.exit(1)
 
 
-# TODO unittest.
-def drop_create_db(engine, database):
-    """Creates a new, empty database.
-
-    :param engine: SQLAlchemy Engine object able to connect to a MySQL database.
-    :type engine: Engine
-    :param database: Name of the database to drop and create.
-    :type database: str
-    :returns: Indicates if drop/create was successful (0) or failed (1).
-    :rtype: int
-    """
-    # First, test if the database already exists within mysql.
-    # If there is, delete it so that a new database is installed.
-    databases = get_mysql_dbs(engine)
-    if database in databases:
-        result = drop_db(engine, database)
-    else:
-        result = 0
-    if result == 0:
-        result = create_db(engine, database)
-    return result
-
-
-# TODO unittest.
-def drop_db(engine, database):
-    """Delete a database.
-
-    :param engine: SQLAlchemy Engine object able to connect to a MySQL database.
-    :type engine: Engine
-    :param database: Name of the database to drop.
-    :type database: str
-    :returns: Indicates if drop was successful (0) or failed (1).
-    :rtype: int
-    """
-    statement = f"DROP DATABASE {database}"
-    try:
-        engine.execute(statement)
-        return 0
-    except:
-        return 1
-
-# TODO unittest.
-def create_db(engine, database):
-    """Create a new, empty database.
-
-    :param engine: SQLAlchemy Engine object able to connect to a MySQL database.
-    :type engine: Engine
-    :param database: Name of the database to create.
-    :type database: str
-    :returns: Indicates if create was successful (0) or failed (1).
-    :rtype: int
-    """
-    statement = f"CREATE DATABASE {database}"
-    try:
-        engine.execute(statement)
-        return 0
-    except:
-        return 1
+# # TODO unittest.
+# def drop_create_db(engine, database):
+#     """Creates a new, empty database.
+#
+#     :param engine: SQLAlchemy Engine object able to connect to a MySQL database.
+#     :type engine: Engine
+#     :param database: Name of the database to drop and create.
+#     :type database: str
+#     :returns: Indicates if drop/create was successful (0) or failed (1).
+#     :rtype: int
+#     """
+#     # First, test if the database already exists within mysql.
+#     # If there is, delete it so that a new database is installed.
+#     databases = get_mysql_dbs(engine)
+#     if database in databases:
+#         result = drop_db(engine, database)
+#     else:
+#         result = 0
+#     if result == 0:
+#         result = create_db(engine, database)
+#     return result
 
 
-# TODO unittest.
-def copy_db(engine, new_database):
-    """Copies a database.
+# # TODO unittest.
+# def drop_db(engine, database):
+#     """Delete a database.
+#
+#     :param engine: SQLAlchemy Engine object able to connect to a MySQL database.
+#     :type engine: Engine
+#     :param database: Name of the database to drop.
+#     :type database: str
+#     :returns: Indicates if drop was successful (0) or failed (1).
+#     :rtype: int
+#     """
+#     statement = f"DROP DATABASE {database}"
+#     try:
+#         engine.execute(statement)
+#         return 0
+#     except:
+#         return 1
 
-    :param engine:
-        SQLAlchemy Engine object able to connect to a MySQL database, which
-        contains the name of the database that will be copied into
-        the new database.
-    :type engine: Engine
-    :param new_database: Name of the new copied database.
-    :type new_database: str
-    :returns: Indicates if copy was successful (0) or failed (1).
-    :rtype: int
-    """
-    #mysqldump -u root -pPWD database1 | mysql -u root -pPWD database2
-    command_string1 = ("mysqldump "
-                      f"-u {engine.url.username} "
-                      f"-p{engine.url.password} "
-                      f"{engine.url.database}")
-    command_string2 = ("mysql -u "
-                      f"{engine.url.username} "
-                      f"-p{engine.url.password} "
-                      f"{new_database}")
-    command_list1 = command_string1.split(" ")
-    command_list2 = command_string2.split(" ")
-    print("Copying database...")
-    if engine.url.database == new_database:
-        print("Databases are the same so no copy needed.")
-        result = 0
-    else:
-        try:
-            # Per subprocess documentation:
-            # 1. For pipes, use Popen instead of check_call.
-            # 2. Call p1.stdout.close() to allow p1 to receive a SIGPIPE if p2 exits.
-            #    which gets called when used as a context manager.
-            # communicate() waits for the process to complete.
-            with subprocess.Popen(command_list1, stdout=subprocess.PIPE) as p1:
-                with subprocess.Popen(command_list2, stdin=p1.stdout) as p2:
-                    p2.communicate()
-        except:
-            print(f"Unable to copy {engine.url.database} to {new_database} in MySQL.")
-            result = 1
-        else:
-            print("Copy complete.")
-            result = 0
+# # TODO unittest.
+# def create_db(engine, database):
+#     """Create a new, empty database.
+#
+#     :param engine: SQLAlchemy Engine object able to connect to a MySQL database.
+#     :type engine: Engine
+#     :param database: Name of the database to create.
+#     :type database: str
+#     :returns: Indicates if create was successful (0) or failed (1).
+#     :rtype: int
+#     """
+#     statement = f"CREATE DATABASE {database}"
+#     try:
+#         engine.execute(statement)
+#         return 0
+#     except:
+#         return 1
 
-    return result
+
+# # TODO unittest.
+# def copy_db(engine, new_database):
+#     """Copies a database.
+#
+#     :param engine:
+#         SQLAlchemy Engine object able to connect to a MySQL database, which
+#         contains the name of the database that will be copied into
+#         the new database.
+#     :type engine: Engine
+#     :param new_database: Name of the new copied database.
+#     :type new_database: str
+#     :returns: Indicates if copy was successful (0) or failed (1).
+#     :rtype: int
+#     """
+#     #mysqldump -u root -pPWD database1 | mysql -u root -pPWD database2
+#     command_string1 = ("mysqldump "
+#                       f"-u {engine.url.username} "
+#                       f"-p{engine.url.password} "
+#                       f"{engine.url.database}")
+#     command_string2 = ("mysql -u "
+#                       f"{engine.url.username} "
+#                       f"-p{engine.url.password} "
+#                       f"{new_database}")
+#     command_list1 = command_string1.split(" ")
+#     command_list2 = command_string2.split(" ")
+#     print("Copying database...")
+#     if engine.url.database == new_database:
+#         print("Databases are the same so no copy needed.")
+#         result = 0
+#     else:
+#         try:
+#             # Per subprocess documentation:
+#             # 1. For pipes, use Popen instead of check_call.
+#             # 2. Call p1.stdout.close() to allow p1 to receive a SIGPIPE if p2 exits.
+#             #    which gets called when used as a context manager.
+#             # communicate() waits for the process to complete.
+#             with subprocess.Popen(command_list1, stdout=subprocess.PIPE) as p1:
+#                 with subprocess.Popen(command_list2, stdin=p1.stdout) as p2:
+#                     p2.communicate()
+#         except:
+#             print(f"Unable to copy {engine.url.database} to {new_database} in MySQL.")
+#             result = 1
+#         else:
+#             print("Copy complete.")
+#             result = 0
+#
+#     return result
 
 
 def connect_to_db(database):
@@ -870,26 +870,26 @@ def connect_to_db(database):
         return engine
 
 
-# TODO unittest.
-def install_db(engine, schema_filepath):
-    """Install a MySQL file into the indicated database.
-
-    :param engine:
-        SQLAlchemy Engine object able to connect to a MySQL databas.
-    :type engine: Engine
-    :param schema_filepath: Path to the MySQL database file.
-    :type schema_filepath: Path
-    """
-    command_string = (f"mysql -u {engine.url.username} "
-                      f"-p{engine.url.password} {engine.url.database}")
-    command_list = command_string.split(" ")
-    with schema_filepath.open("r") as fh:
-        try:
-            print("Installing database...")
-            subprocess.check_call(command_list, stdin=fh)
-            print("Installation complete.")
-        except:
-            print(f"Unable to install {schema_filepath.name} in MySQL.")
+# # TODO unittest.
+# def install_db(engine, schema_filepath):
+#     """Install a MySQL file into the indicated database.
+#
+#     :param engine:
+#         SQLAlchemy Engine object able to connect to a MySQL databas.
+#     :type engine: Engine
+#     :param schema_filepath: Path to the MySQL database file.
+#     :type schema_filepath: Path
+#     """
+#     command_string = (f"mysql -u {engine.url.username} "
+#                       f"-p{engine.url.password} {engine.url.database}")
+#     command_list = command_string.split(" ")
+#     with schema_filepath.open("r") as fh:
+#         try:
+#             print("Installing database...")
+#             subprocess.check_call(command_list, stdin=fh)
+#             print("Installation complete.")
+#         except:
+#             print(f"Unable to install {schema_filepath.name} in MySQL.")
 
 
 # TODO function is to replace MySQLConnectionHandler usage.

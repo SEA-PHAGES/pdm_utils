@@ -6,7 +6,6 @@ from pdm_utils.functions import basic
 
 
 # TODO remove duplicated function in mysqldb module.
-# TODO unittest.
 def drop_create_db(engine, database):
     """Creates a new, empty database.
 
@@ -30,7 +29,6 @@ def drop_create_db(engine, database):
 
 
 # TODO remove duplicated function in mysqldb module.
-# TODO unittest.
 def drop_db(engine, database):
     """Delete a database.
 
@@ -44,12 +42,12 @@ def drop_db(engine, database):
     statement = f"DROP DATABASE {database}"
     try:
         engine.execute(statement)
-        return 0
     except:
         return 1
+    else:
+        return 0
 
 # TODO remove duplicated function in mysqldb module.
-# TODO unittest.
 def create_db(engine, database):
     """Create a new, empty database.
 
@@ -63,13 +61,13 @@ def create_db(engine, database):
     statement = f"CREATE DATABASE {database}"
     try:
         engine.execute(statement)
-        return 0
     except:
         return 1
+    else:
+        return 0
 
 
 # TODO remove duplicated function in mysqldb module.
-# TODO unittest.
 def copy_db(engine, new_database):
     """Copies a database.
 
@@ -83,43 +81,64 @@ def copy_db(engine, new_database):
     :returns: Indicates if copy was successful (0) or failed (1).
     :rtype: int
     """
-    #mysqldump -u root -pPWD database1 | mysql -u root -pPWD database2
-    command_string1 = ("mysqldump "
-                      f"-u {engine.url.username} "
-                      f"-p{engine.url.password} "
-                      f"{engine.url.database}")
-    command_string2 = ("mysql -u "
-                      f"{engine.url.username} "
-                      f"-p{engine.url.password} "
-                      f"{new_database}")
-    command_list1 = command_string1.split(" ")
-    command_list2 = command_string2.split(" ")
-    print("Copying database...")
     if engine.url.database == new_database:
         print("Databases are the same so no copy needed.")
         result = 0
     else:
-        try:
-            # Per subprocess documentation:
-            # 1. For pipes, use Popen instead of check_call.
-            # 2. Call p1.stdout.close() to allow p1 to receive a SIGPIPE if p2 exits.
-            #    which gets called when used as a context manager.
-            # communicate() waits for the process to complete.
-            with subprocess.Popen(command_list1, stdout=subprocess.PIPE) as p1:
-                with subprocess.Popen(command_list2, stdin=p1.stdout) as p2:
-                    p2.communicate()
-        except:
-            print(f"Unable to copy {engine.url.database} to {new_database} in MySQL.")
+        dbs = get_mysql_dbs(engine)
+        if new_database not in dbs:
+            print(f"Unable to copy {engine.url.database} to "
+                  f"{new_database} since {new_database} does not exist.")
             result = 1
         else:
-            print("Copy complete.")
-            result = 0
+            #mysqldump -u root -pPWD database1 | mysql -u root -pPWD database2
+            cmd1 = mysqldump_command(engine.url.username,
+                                     engine.url.password,
+                                     engine.url.database)
+            cmd2 = mysql_login_command(engine.url.username,
+                                       engine.url.password,
+                                       new_database)
+            print("Copying database...")
+            try:
+                pipe_commands(cmd1, cmd2)
+            except:
+                print(f"Unable to copy {engine.url.database} to "
+                      f"{new_database} in MySQL due to copying error.")
+                result = 1
+            else:
+                print("Copy complete.")
+                result = 0
 
     return result
 
+# TODO test.
+def pipe_commands(command1, command2):
+    """Pipe one command into the other."""
+    # Per subprocess documentation:
+    # 1. For pipes, use Popen instead of check_call.
+    # 2. Call p1.stdout.close() to allow p1 to receive a SIGPIPE
+    #    if p2 exits, which is called when used as a context manager.
+    # communicate() waits for the process to complete.
+    with subprocess.Popen(command1, stdout=subprocess.PIPE) as p1:
+        with subprocess.Popen(command2, stdin=p1.stdout) as p2:
+            p2.communicate()
+
+def mysqldump_command(username, password, database):
+    """Construct list of strings representing a mysqldump command."""
+    # mysqldump -u root -pPWD database1 > database.sql
+    # output filename is not needed since redirecting stdout.
+    cmd = f"mysqldump -u {username} -p{password} {database}"
+    cmd_list = cmd.split(" ")
+    return cmd_list
+
+def mysql_login_command(username, password, database):
+    """Construct list of strings representing a mysql command."""
+    # mysql -u root -pPWD database
+    cmd = (f"mysql -u {username} -p{password} {database}")
+    cmd_list = cmd.split(" ")
+    return cmd_list
 
 # TODO remove duplicated function in mysqldb module.
-# TODO unittest.
 def install_db(engine, schema_filepath):
     """Install a MySQL file into the indicated database.
 
@@ -128,17 +147,27 @@ def install_db(engine, schema_filepath):
     :type engine: Engine
     :param schema_filepath: Path to the MySQL database file.
     :type schema_filepath: Path
+    :returns: Indicates if copy was successful (0) or failed (1).
+    :rtype: int
     """
-    command_string = (f"mysql -u {engine.url.username} "
-                      f"-p{engine.url.password} {engine.url.database}")
-    command_list = command_string.split(" ")
+    cmd = mysql_login_command(engine.url.username,
+                              engine.url.password,
+                              engine.url.database)
     with schema_filepath.open("r") as fh:
+        print("Installing database...")
         try:
-            print("Installing database...")
-            subprocess.check_call(command_list, stdin=fh)
-            print("Installation complete.")
+            subprocess.check_call(cmd, stdin=fh)
         except:
             print(f"Unable to install {schema_filepath.name} in MySQL.")
+            result = 1
+        else:
+            print("Installation complete.")
+            result = 0
+    return result
+
+
+
+
 
 # TODO remove duplicated function in mysqldb module.
 # TODO probably move to AlchemyHandler or other module.
@@ -195,6 +224,7 @@ def query_dict_list(engine, query):
         result_dict_list.append(row_as_dict)
     return result_dict_list
 
+# TODO this can be abstracted to convert phage_id_list to primary_key_list.
 # TODO remove duplicated function in mysqldb module.
 # TODO move tests if available.
 def retrieve_data(engine, column=None, query=None, phage_id_list=None):
@@ -297,10 +327,10 @@ def get_table_columns(engine, database, table_name):
     return columns
 
 
-
+# TODO can be used to replace calls to mysqldb.get_phage_table_count()
 # TODO remove duplicated function in mysqldb module.
 # TODO move tests if available.
-def get_phage_table_count(engine):
+def get_table_count(engine, table):
     """Get the current number of genomes in the database.
 
     :param engine: SQLAlchemy Engine object able to connect to a MySQL database.
@@ -308,7 +338,7 @@ def get_phage_table_count(engine):
     :returns: Number of rows from the phage table.
     :rtype: int
     """
-    query = "SELECT COUNT(*) FROM phage"
+    query = f"SELECT COUNT(*) FROM {table}"
     result_list = engine.execute(query).fetchall()
     count = result_list[0][0]
     return count
@@ -332,7 +362,7 @@ def get_version_table_data(engine):
     return result_dict_list[0]
 
 
-
+# TODO this should probably only return a set of basic data type, not biopython Seq.
 # TODO remove duplicated function in mysqldb module.
 # TODO move tests if available.
 def create_seq_set(engine):
