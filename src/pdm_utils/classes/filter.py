@@ -275,7 +275,7 @@ class Filter:
             self.new_or_()
 
         where_clause = q.build_where_clause(self.graph, filter)
-        filter_key = parsing.parse_out_spaces(filter)
+        filter_key = parsing.create_filter_key(filter)
      
         or_block = self._filters[self._or_index]
 
@@ -285,7 +285,7 @@ class Filter:
         self._updated = False
 
     def new_or_(self):
-        """Create a new and_ conditional block to the Filter object class.
+        """Create a new conditional block to the Filter object class.
         """
         if self._or_index >= 0:
             if not self._filters[self._or_index]:

@@ -30,8 +30,8 @@ class TestExportMain(unittest.TestCase):
         type(self.mock_alchemist).engine = \
                             PropertyMock(return_value=self.mock_engine)
 
-        self.mock_output_path = Mock()
-        self.mock_output_name = Mock() 
+        self.mock_folder_path = Mock()
+        self.mock_folder_name = Mock() 
         self.mock_input = Mock()
         self.mock_values = Mock()
         self.mock_verbose = Mock() 
@@ -53,10 +53,10 @@ class TestExportMain(unittest.TestCase):
         type(self.mock_args).database = \
                             PropertyMock(return_value=self.mock_database)
 
-        type(self.mock_args).output_path = \
-                            PropertyMock(return_value=self.mock_output_path)
-        type(self.mock_args).output_name = \
-                            PropertyMock(return_value=self.mock_output_name) 
+        type(self.mock_args).folder_path = \
+                            PropertyMock(return_value=self.mock_folder_path)
+        type(self.mock_args).folder_name = \
+                            PropertyMock(return_value=self.mock_folder_name) 
         type(self.mock_args).input = \
                             PropertyMock(return_value=self.mock_input)
         type(self.mock_args).verbose = \
@@ -108,8 +108,8 @@ class TestExportMain(unittest.TestCase):
 
         execute_export_mock.assert_called_with(
                                     self.mock_alchemist,
-                                    self.mock_output_path,
-                                    self.mock_output_name,
+                                    self.mock_folder_path,
+                                    self.mock_folder_name,
                                     self.mock_pipeline,
                                     table=self.mock_table,
                                     values=self.mock_values,

@@ -139,10 +139,11 @@ def parse_filter(unparsed_filter):
     :param unparsed_filter: Formatted MySQL WHERE clause.
     :type unparsed_filters: str
     :returns: List containing segments of a MySQL WHERE clause.
-    :rtype: ist[str]
+    :rtype: list[str]
     """
     filter_format = re.compile(" *\w+\.\w+ *([=<>!]+ *| +LIKE +| +IS NOT +) *"
-                               "[%\w]+ *")
+                               "([\w\W]+|'[ \w\W]+') *")
+    quote_value_format = re.compile("'[ \w\W]+'")
 
     if re.match(filter_format, unparsed_filter) != None:
         operators = re.compile("( *[=<>!]+ *| +LIKE +| +IS NOT +)")
@@ -151,14 +152,32 @@ def parse_filter(unparsed_filter):
         parsed_column = parse_column(operator_split[0])
        
         operator_split[1] = parse_out_ends(operator_split[1])
-        operator_split[2] = parse_out_ends(operator_split[2])
 
-        parsed_filter = parsed_column + operator_split[1:]
+        operator_split[2] = parse_out_ends(operator_split[2])
+        if re.match(quote_value_format, operator_split[2]) != None:
+            operator_split[2] = operator_split[2].replace("'", "")
+
+        parsed_filter = parsed_column + operator_split[1:] 
                 
     else:
         raise ValueError(f"Unsupported filtering format: '{unparsed_filter}'")
      
     return parsed_filter
+
+def create_filter_key(unparsed_filter):
+    """Creates a standardized filter string from a valid unparsed_filter.
+
+    :param unparsed_filter: Formatted MySQL WHERE clause.
+    :type unparsed_filters: str
+    :returns: Standardized MySQL conditional string.
+    :rtype: str
+    """
+    parsed_filter = parse_filter(unparsed_filter)
+    column = ".".join(parsed_filter[0:2])
+    filter_right = "".join(parsed_filter[2:])
+
+    filter_key = column + filter_right
+    return filter_key
 
 def check_operator(operator, column_object):
     """Validates an operator's application on a MySQL column.

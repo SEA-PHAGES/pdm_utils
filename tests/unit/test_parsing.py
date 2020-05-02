@@ -235,6 +235,37 @@ class TestParsing(unittest.TestCase):
         with self.assertRaises(ValueError):
             parsed_filter = parsing.parse_filter(filter)
 
+    def test_parse_filter_5(self):
+        """Verify parse_filter() recognizes quoted conditional value.
+        """
+        filter = "gene.Notes = 'helix-turn-helix DNA binding domain protein'"
+
+        parsed_filter = parsing.parse_filter(filter)
+        
+        self.assertEqual(parsed_filter[3], 
+                         "helix-turn-helix DNA binding domain protein")
+
+    @patch("pdm_utils.functions.parsing.parse_filter")
+    def test_create_filter_key_1(self, parse_filter_mock):
+        """Verify create_filter_key() calls parse_filter()
+        """
+        filter = "gene.Notes = 'helix-turn-helix DNA binding domain protein'"
+        
+        filter_key = parsing.create_filter_key(filter)
+
+        parse_filter_mock.assert_called() 
+
+    def test_create_filter_key_2(self):
+        """Verify create_filter_key() standardizes MySQL filters.
+        """
+        filter_1 = "phage.PhageID    =     Myrna"
+        filter_2 = "phage.PhageID =      Myrna"
+
+        key_1 = parsing.create_filter_key(filter_1)
+        key_2 = parsing.create_filter_key(filter_2)
+
+        self.assertEqual(key_1, key_2)
+
 class TestCheckOperator(unittest.TestCase):
     def setUp(self):
         self.str_column = Mock(spec=Column)

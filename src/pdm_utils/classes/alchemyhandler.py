@@ -45,6 +45,11 @@ class AlchemyHandler:
 
     @property
     def database(self):
+        """Returns the AlchemyHandler's set database.
+
+        :returns: Returns a copy of the database attribute.
+        :rtype: str
+        """
         database = self._database
         return database
 
@@ -66,9 +71,9 @@ class AlchemyHandler:
     @property
     def username(self):
         """Returns the AlchemynHandler's set username.
-        :return username:
-            Returns a copy of the username attribute.
-        :type username: str
+
+        :returns: Returns a copy of the username attribute.
+        :rtype: str
         """
         username = self._username
         return username
@@ -92,9 +97,9 @@ class AlchemyHandler:
     @property
     def password(self):
         """Returns the AlchemyHandler's set password.
-        :return password:
-            Returns a copy of the password attribute.
-        :type password: str
+
+        :returns: Returns a copy of the password attribute.
+        :rtype: str
         """
         password = self._password
         return password
@@ -117,11 +122,21 @@ class AlchemyHandler:
 
     @property
     def login_attempts(self):
+        """Returns the AlchemyHandler's number of login attempts for login.
+
+        :returns: Returns the number of login attempts for login.
+        :rtype: str
+        """
         login_attempts = self._login_attempts
         return login_attempts
 
     @property
     def engine(self):
+        """Returns the AlchemyHandler's stored engine object.
+
+        :returns: Returns the AlchemyHandler's stored engine object.
+        :rtype: str
+        """
         engine = self._engine
         return engine
 
@@ -140,10 +155,15 @@ class AlchemyHandler:
 
     @property
     def tables(self):
+        """Returns the tables within the AlchemyHandler's metadata object.
+
+        :returns: Returns the AlchemyHandler's stored engine object.
+        :rtype: list[tables]
+        """
         if not self.metadata:
             self.build_metadata()
            
-        return self.metadata.tables
+        return list(self.metadata.tables)
 
 #-----------------------------------------------------------------------------
 #CONNECTION METHODS
@@ -376,56 +396,4 @@ class AlchemyHandler:
             self.build_metadata()
         
         self.graph = querying.build_graph(self.metadata)
-
-    #PROTOTYPE SESSION FUNCTION
-    #def build_session(self):
-    #    if not self.has_database:
-    #        self.connect(ask_database=True)
-    #    if not self.connected:
-    #        self.build_engine()
-            
-
-    #    session_maker = sessionmaker()
-    #    self.session = session_maker(bind=self.engine)
-    #    return 
-
-#-----------------------------------------------------------------------------
-#SUPPLEMENTARY FUNCTIONS
-#-----------------------------------------------------------------------------
-    
-    #TODO for Travis: To be evaluated for removal from this module.
-    def translate_table(self, raw_table): 
-        if not self.metadata:
-            self.build_metadata()
-
-        return parsing.translate_table(self.metadata, raw_table)  
-
-    #TODO for Travis: To be evaluated for removal from this module.
-    def translate_column(self, raw_column):
-        if not self.metadata:
-            self.build_metadata()
-
-        return parsing.translate_column(self.metadata, raw_column) 
-
-    #TODO for Travis: To be evaluated for removal from this module.
-    def get_table(self, table): 
-        if not self.metadata:
-            self.build_metadata() 
-
-        return querying.get_table(self.metadata, table)
-
-    #TODO for Travis: To be evaluated for removal from this module.
-    def get_column(self, column):
-        if not self.metadata:
-            self.build_metadata() 
-
-        return querying.get_column(self.metadata, column)  
-        
-    #TODO for Travis: To be evaluated for removal from this module.
-    def get_map(self, template):
-        if not self.metadata:
-            self.build_metadata()
-
-        return cartography.get_map(self.metadata, template)
-
 

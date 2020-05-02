@@ -55,14 +55,14 @@ TABLES = ["phage", "gene", "domain", "gene_domain", "pham",
           #"trna", "tmrna", "trna_structures",
           "version"]
 SEQUENCE_COLUMNS = {"phage"           : ["Sequence"],
-                     "gene"            : ["Translation"],
-                     "domain"          : [],
-                     "gene_domain"     : [],
-                     "pham"            : [],
-                     "trna"            : ["Sequence"],
-                     "tmrna"           : [],
-                     "trna_structures" : [],
-                     "version"         : []}
+                    "gene"            : ["Translation"],
+                    "domain"          : [],
+                    "gene_domain"     : [],
+                    "pham"            : [],
+                    "trna"            : ["Sequence"],
+                    "tmrna"           : [],
+                    "trna_structures" : [],
+                    "version"         : []}
 
 #-----------------------------------------------------------------------------
 #MAIN FUNCTIONS
@@ -152,17 +152,17 @@ def parse_export(unparsed_args_list):
         Selection option that changes the table in the database selected from.
             Follow selection argument with a valid table from the database.
         """
-    FILTERS_HELP = """
+    WHERE_HELP = """
         Data filtering option that filters data by the inputted expressions.
             Follow selection argument with formatted filter expression:
                 {Table}.{Column}={Value}
         """
-    GROUPS_HELP = """
+    GROUP_BY_HELP = """
         Data selection option that groups data by the inputted columns.
             Follow selection argument with formatted column expressions:
                 {Table}.{Column}={Value}
         """
-    SORT_HELP = """
+    ORDER_BY_HELP = """
         Data selection option that sorts data by the inputted columns.
             Follow selection argument with formatted column expressions:
                 {Table}.{Column}={Value}
@@ -227,14 +227,14 @@ def parse_export(unparsed_args_list):
                                 default=[])
         optional_parser.add_argument("-in", "--import_names", nargs="*",
                                 help=SINGLE_GENOMES_HELP, dest="input")
-        optional_parser.add_argument("-f", "--filter", nargs="?",
-                                help=FILTERS_HELP,
+        optional_parser.add_argument("-f", "--where", nargs="?",
+                                help=WHERE_HELP,
                                 dest="filters")
-        optional_parser.add_argument("-g", "--group", nargs="*",
-                                help=GROUPS_HELP,
+        optional_parser.add_argument("-g", "--group_by", nargs="*",
+                                help=GROUP_BY_HELP,
                                 dest="groups")
-        optional_parser.add_argument("-s", "--sort", nargs="*",
-                                help=SORT_HELP)
+        optional_parser.add_argument("-s", "--order_by", nargs="*",
+                                help=ORDER_BY_HELP)
 
         if initial.pipeline in BIOPYTHON_PIPELINES:
             optional_parser.add_argument("-cc", "--concatenate",
@@ -501,7 +501,7 @@ def write_seqrecord(seqrecord_list, file_format, export_path, concatenate=False,
         file_handle.close()
 
 def write_database(alchemist, version, export_path):
-    """Output *.sql file from the selected database.
+    """Output .sql file from the selected database.
 
     :param alchemist: A connected and fully built AlchemyHandler object.
     :type alchemist: AlchemyHandler
