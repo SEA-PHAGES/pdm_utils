@@ -6,6 +6,46 @@ from pdm_utils.functions import basic
 
 
 # TODO remove duplicated function in mysqldb module.
+def drop_db(engine, database):
+    """Delete a database.
+
+    :param engine: SQLAlchemy Engine object able to connect to a MySQL database.
+    :type engine: Engine
+    :param database: Name of the database to drop.
+    :type database: str
+    :returns: Indicates if drop was successful (0) or failed (1).
+    :rtype: int
+    """
+    statement = f"DROP DATABASE {database}"
+    try:
+        engine.execute(statement)
+    except:
+        return 1
+    else:
+        return 0
+
+
+# TODO remove duplicated function in mysqldb module.
+def create_db(engine, database):
+    """Create a new, empty database.
+
+    :param engine: SQLAlchemy Engine object able to connect to a MySQL database.
+    :type engine: Engine
+    :param database: Name of the database to create.
+    :type database: str
+    :returns: Indicates if create was successful (0) or failed (1).
+    :rtype: int
+    """
+    statement = f"CREATE DATABASE {database}"
+    try:
+        engine.execute(statement)
+    except:
+        return 1
+    else:
+        return 0
+
+
+# TODO remove duplicated function in mysqldb module.
 def drop_create_db(engine, database):
     """Creates a new, empty database.
 
@@ -29,42 +69,31 @@ def drop_create_db(engine, database):
 
 
 # TODO remove duplicated function in mysqldb module.
-def drop_db(engine, database):
-    """Delete a database.
+def install_db(engine, schema_filepath):
+    """Install a MySQL file into the indicated database.
 
-    :param engine: SQLAlchemy Engine object able to connect to a MySQL database.
+    :param engine:
+        SQLAlchemy Engine object able to connect to a MySQL databas.
     :type engine: Engine
-    :param database: Name of the database to drop.
-    :type database: str
-    :returns: Indicates if drop was successful (0) or failed (1).
+    :param schema_filepath: Path to the MySQL database file.
+    :type schema_filepath: Path
+    :returns: Indicates if copy was successful (0) or failed (1).
     :rtype: int
     """
-    statement = f"DROP DATABASE {database}"
-    try:
-        engine.execute(statement)
-    except:
-        return 1
-    else:
-        return 0
-
-# TODO remove duplicated function in mysqldb module.
-def create_db(engine, database):
-    """Create a new, empty database.
-
-    :param engine: SQLAlchemy Engine object able to connect to a MySQL database.
-    :type engine: Engine
-    :param database: Name of the database to create.
-    :type database: str
-    :returns: Indicates if create was successful (0) or failed (1).
-    :rtype: int
-    """
-    statement = f"CREATE DATABASE {database}"
-    try:
-        engine.execute(statement)
-    except:
-        return 1
-    else:
-        return 0
+    cmd = mysql_login_command(engine.url.username,
+                              engine.url.password,
+                              engine.url.database)
+    with schema_filepath.open("r") as fh:
+        print("Installing database...")
+        try:
+            subprocess.check_call(cmd, stdin=fh)
+        except:
+            print(f"Unable to install {schema_filepath.name} in MySQL.")
+            result = 1
+        else:
+            print("Installation complete.")
+            result = 0
+    return result
 
 
 # TODO remove duplicated function in mysqldb module.
@@ -138,40 +167,8 @@ def mysql_login_command(username, password, database):
     cmd_list = cmd.split(" ")
     return cmd_list
 
-# TODO remove duplicated function in mysqldb module.
-def install_db(engine, schema_filepath):
-    """Install a MySQL file into the indicated database.
-
-    :param engine:
-        SQLAlchemy Engine object able to connect to a MySQL databas.
-    :type engine: Engine
-    :param schema_filepath: Path to the MySQL database file.
-    :type schema_filepath: Path
-    :returns: Indicates if copy was successful (0) or failed (1).
-    :rtype: int
-    """
-    cmd = mysql_login_command(engine.url.username,
-                              engine.url.password,
-                              engine.url.database)
-    with schema_filepath.open("r") as fh:
-        print("Installing database...")
-        try:
-            subprocess.check_call(cmd, stdin=fh)
-        except:
-            print(f"Unable to install {schema_filepath.name} in MySQL.")
-            result = 1
-        else:
-            print("Installation complete.")
-            result = 0
-    return result
-
-
-
-
 
 # TODO remove duplicated function in mysqldb module.
-# TODO probably move to AlchemyHandler or other module.
-# TODO unittest.
 def get_mysql_dbs(engine):
     """Retrieve database names from MySQL.
 
@@ -184,8 +181,44 @@ def get_mysql_dbs(engine):
     databases = query_set(engine, query)
     return databases
 
+
+# TODO remove duplicated get_db_tables() function in mysqldb module.
+def get_tables(engine, database):
+    """Retrieve tables names from the database.
+
+    :param engine: SQLAlchemy Engine object able to connect to a MySQL database.
+    :type engine: Engine
+    :returns: Set of table names.
+    :rtype: set
+    """
+    query = ("SELECT table_name FROM information_schema.tables "
+             f"WHERE table_schema = '{database}'")
+    tables = query_set(engine, query)
+    return tables
+
+
+# TODO remove duplicated get_table_columns() function in mysqldb module.
+def get_columns(engine, database, table_name):
+    """Retrieve columns names from a table.
+
+    :param engine: SQLAlchemy Engine object able to connect to a MySQL database.
+    :type engine: Engine
+    :param database: Name of the database to query.
+    :type database: str
+    :param table_name: Name of the table to query.
+    :type table_name: str
+    :returns: Set of column names.
+    :rtype: set
+    """
+    query = ("SELECT column_name FROM information_schema.columns WHERE "
+              f"table_schema = '{database}' AND "
+              f"table_name = '{table_name}'")
+    columns = query_set(engine, query)
+    return columns
+
+
 # TODO remove duplicated function in mysqldb module.
-# TODO move tests if available.
+# TODO test.
 def query_set(engine, query):
     """Retrieve set of data from MySQL query.
 
@@ -199,10 +232,6 @@ def query_set(engine, query):
     result_list = engine.execute(query).fetchall()
     set_of_data = basic.get_values_from_tuple_list(result_list)
     return set_of_data
-
-
-
-
 
 # TODO remove duplicated function in mysqldb module.
 # TODO unittest.
@@ -224,48 +253,46 @@ def query_dict_list(engine, query):
         result_dict_list.append(row_as_dict)
     return result_dict_list
 
-# TODO this can be abstracted to convert phage_id_list to primary_key_list.
 # TODO remove duplicated function in mysqldb module.
-# TODO move tests if available.
-def retrieve_data(engine, column=None, query=None, phage_id_list=None):
+# TODO remove duplicated tests in test_mysqldb module.
+def retrieve_data(engine, column=None, query=None, id_list=None):
     """Retrieve genome data from a MySQL database for a single genome.
 
-    The query is modified to include one or more PhageIDs
+    The query is modified to include one or more values.
 
     :param engine: SQLAlchemy Engine object able to connect to a MySQL database.
     :type engine: Engine
     :param query:
         A MySQL query that selects valid, specific columns
-        from the a valid table without conditioning on a PhageID
-        (e.g. 'SELECT PhageID, Cluster FROM phage').
+        from the a valid table without conditioning on a specific column
+        (e.g. 'SELECT Column1, Column2 FROM table1').
     :type query: str
     :param column:
         A valid column in the table upon which the query can be conditioned.
     :type column: str
-    :param phage_id_list:
-        A list of valid PhageIDs upon which the query can be conditioned.
+    :param id_list:
+        A list of valid values upon which the query can be conditioned.
         In conjunction with the 'column' parameter, the 'query' is
-        modified (e.g. "WHERE PhageID IN ('L5', 'Trixie')").
-    :type phage_id_list: list
+        modified (e.g. "WHERE Column1 IN ('Value1', 'Value2')").
+    :type id_list: list
     :returns:
         A list of items, where each item is a dictionary of
         SQL data for each PhageID.
     :rtype: list
     """
-    if (phage_id_list is not None and len(phage_id_list) > 0):
+    if (id_list is not None and len(id_list) > 0):
         query = query \
                 + f" WHERE {column} IN ('" \
-                + "','".join(phage_id_list) \
+                + "','".join(id_list) \
                 + "')"
     query = query + ";"
     result_dict_list = query_dict_list(engine, query)
     return result_dict_list
 
 
-
-# TODO remove duplicated function in mysqldb module.
-# TODO move tests if available.
-def get_distinct_data(engine, table, column, null=None):
+# TODO remove duplicated get_distinct_data() function in mysqldb module.
+# TODO remove duplicated tests in test_mysqldb module.
+def get_distinct(engine, table, column, null=None):
     """Get set of distinct values currently in a MySQL database.
 
     :param engine: SQLAlchemy Engine object able to connect to a MySQL database.
@@ -289,47 +316,8 @@ def get_distinct_data(engine, table, column, null=None):
     return result_set
 
 
-# TODO remove duplicated function in mysqldb module.
-# TODO unittest.
-def get_db_tables(engine, database):
-    """Retrieve tables names from the database.
-
-    :param engine: SQLAlchemy Engine object able to connect to a MySQL database.
-    :type engine: Engine
-    :returns: Set of table names.
-    :rtype: set
-    """
-    query = ("SELECT table_name FROM information_schema.tables "
-             f"WHERE table_schema = '{database}'")
-    db_tables = query_set(engine, query)
-    return db_tables
-
-
-
-# TODO remove duplicated function in mysqldb module.
-# TODO unittest.
-def get_table_columns(engine, database, table_name):
-    """Retrieve columns names from a table.
-
-    :param engine: SQLAlchemy Engine object able to connect to a MySQL database.
-    :type engine: Engine
-    :param database: Name of the database to query.
-    :type database: str
-    :param table_name: Name of the table to query.
-    :type table_name: str
-    :returns: Set of column names.
-    :rtype: set
-    """
-    query = ("SELECT column_name FROM information_schema.columns WHERE "
-              f"table_schema = '{database}' AND "
-              f"table_name = '{table_name}'")
-    columns = query_set(engine, query)
-    return columns
-
-
-# TODO can be used to replace calls to mysqldb.get_phage_table_count()
-# TODO remove duplicated function in mysqldb module.
-# TODO move tests if available.
+# TODO remove duplicated get_phage_table_count() function in mysqldb module.
+# TODO remove duplicated tests in test_mysqldb module.
 def get_table_count(engine, table):
     """Get the current number of genomes in the database.
 
@@ -344,54 +332,26 @@ def get_table_count(engine, table):
     return count
 
 
-
-
-# TODO remove duplicated function in mysqldb module.
-# TODO originally coded in export pipeline, so ensure that function is removed.
-# TODO unittest.
-def get_version_table_data(engine):
-    """Retrieves data from the version table.
+# TODO remove duplicated function get_version_table_data() in mysqldb module.
+def get_first_row_data(engine, table):
+    """Retrieves data from the first row of a table.
 
     :param engine: SQLAlchemy Engine object able to connect to a MySQL database.
     :type engine: Engine
-    :returns: Dictionary containing keys "Version" and "SchemaVersion".
+    :returns: Dictionary where key = column name.
     :rtype: dict
     """
-    query = "SELECT * FROM version"
+    query = f"SELECT * FROM {table}"
     result_dict_list = query_dict_list(engine, query)
-    return result_dict_list[0]
-
-
-# TODO this should probably only return a set of basic data type, not biopython Seq.
-# TODO remove duplicated function in mysqldb module.
-# TODO move tests if available.
-def create_seq_set(engine):
-    """Create set of genome sequences currently in a MySQL database.
-
-    :param engine: SQLAlchemy Engine object able to connect to a MySQL database.
-    :type engine: Engine
-    :returns: A set of unique values from phage.Sequence.
-    :rtype: set
-    """
-    query = "SELECT Sequence FROM phage"
-
-    # Returns a list of items, where each item is a tuple of
-    # SQL data for each row in the table.
-    result_list = engine.execute(query).fetchall()
-
-    # Convert to a set of sequences.
-    # Sequence data is stored as MEDIUMBLOB, so data is returned as bytes
-    # "b'AATT", "b'TTCC", etc.
-    result_set = set()
-    for tup in result_list:
-        gnm_seq = tup[0].decode("utf-8")
-        gnm_seq = Seq(gnm_seq, IUPAC.ambiguous_dna).upper()
-        result_set.add(gnm_seq)
-    return result_set
+    if len(result_dict_list) > 0:
+        dict = result_dict_list[0]
+    else:
+        dict = {}
+    return dict
 
 
 # TODO remove duplicated function in mysqldb module.
-# TODO move tests if available.
+# TODO remove duplicated tests in test_mysqldb module.
 def convert_for_sql(value, check_set=set(), single=True):
     """Convert a value for inserting into MySQL.
 
