@@ -13,17 +13,21 @@ from pdm_utils.classes import eval
 from pdm_utils.classes.aragornhandler import AragornHandler
 from pdm_utils.functions import basic
 
+# Extracts peptide tag from note field acid and anticodon from note field for Aragorn-determinate
+# or tRNAscan-SE- determinate or indeterminate tRNAs
+NOTE_STANDARD_REGEX = re.compile("Peptide tag: ([\w|*]*)")
+
 
 class TmrnaFeature:
     def __init__(self):
         """
         Constructor method for a tmRNA object.
         """
-        # The only attribute a tRNA really needs to have is a sequence
+        # The only attribute a tmRNA really needs to have is a sequence
         self.seq = Seq("", IUPAC.ambiguous_dna)
         self.length = 0
 
-        # Information about the tRNA with respect to its parent genome
+        # Information about the tmRNA with respect to its parent genome
         self.genome_id = ""     # Identifier for the parent genome
         self.genome_length = -1
         self.start = -1         # Start coord in parent genome, 0-indexed
@@ -31,21 +35,23 @@ class TmrnaFeature:
         self.coordinate_format = ""
         self.orientation = ""   # "F" or "R", etc. - relative to parent genome
 
-        # MySQL tRNAs will also need these:
+        # MySQL tmRNAs will also need these:
         self.id = ""            # Identifier for this gene
         self.name = ""          # tRNA number in the parent genome
         self.peptide_tag = ""   # Degradation tag
-
-        # Aragorn data
-        self.aragorn_data = None
 
         # Genbank-formatted flat files should also have these attributes:
         self.seqfeature = None  # BioPython SeqFeature object for this tRNA
         self.locus_tag = ""     # Gene ID comprised of PhageID and Gene name
         self._locus_tag_num = ""
+        self._gene_num = ""
         self.parts = 0          # Number of regions this gene encompasses
         self.gene = ""          # Gene number parsed from feature
         self.note = ""          # Raw note field
+
+        # Aragorn data
+        self.aragorn_run = False
+        self.aragorn_data = None
 
         # Useful for processing data from various sources:
         self.evaluations = list()
@@ -101,7 +107,7 @@ class TmrnaFeature:
                 else:
                     # If the check_value was found anywhere else in locus tag,
                     # value is probably found in the next index
-                    parsed_value = parts[-1]        # TODO: why is this not parts[i+1]?
+                    parsed_value = parts[-1]
                 # No need to keep searching if we found a match
                 break
 
@@ -126,16 +132,14 @@ class TmrnaFeature:
 
     # TODO: create base feature class
     def set_name(self, value=None):
-        """Set the feature name.
-
-        Ideally, the name of the CDS will be an integer. This information
-        can be stored in multiple fields in the GenBank-formatted flat file.
-        The name is derived from one of several qualifiers.
-
-        :param value:
-            Indicates a value that should be used to directly set
-            the name regardless of the 'gene' and '_locus_tag_num'
-            attributes.
+        """
+        Set the feature name. Ideally, the name of the CDS will be an
+        integer. This information can be stored in multiple fields in
+        the GenBank-formatted flat file. The name is derived from one
+        of several qualifiers.
+        :param value: Indicates a value that should be used to
+        directly set the name regardless of the 'gene' and
+        '_locus_tag_num' attributes.
         :type value: str
         """
         # The CDS feature number may be stored in several places in the
@@ -180,22 +184,63 @@ class TmrnaFeature:
                     y += 1
         self.name = value
 
-    # TODO: create base feature class - use this version of the method unless
-    #  Travis objects, because it's documented more cleanly and avoids using
-    #  keyword 'format'.
-    def set_orientation(self, value, fmt, capitalize=False):
+    # TODO: create base feature class
+    def set_num(self, attr, description, delimiter=None, prefix_set=None):
         """
-        Set the orientation based on the indicated format.
-        :param value: orientation value
-        :type value: int or str
-        :param fmt: how orientation should be formatted
-        :type fmt: str
-        :param capitalize: whether to capitalize the first letter of
-        orientation
-        :type capitalize: bool
-        :return:
+        Set a number attribute from a description.
+        :param attr: Attribute to set the number.
+        :type attr: str
+        :param description: Description data from which to parse the number.
+        :type description: str
+        :param delimiter: Value used to split the description data.
+        :type delimiter: str
+        :param prefix_set: Valid possible delimiters in the description.
+        :type prefix_set: set
         """
-        self.orientation = basic.reformat_strand(value, fmt, capitalize)
+        # Used to set product_num, function_num, note_num, gene_num
+        # Sometimes feature number is stored within the description
+        # (e.g. 'gp10; terminase' or 'terminase; gp10')
+        # List of delimiters found in description fields
+        # ";" is probably the most common.
+        delimiters = [";", ","]
+        if delimiter is None:
+            delimiter = basic.choose_most_common(description, delimiters)
+        if prefix_set is None:
+            prefix_set = {"gp", "orf", ""}
+
+        # Iterate through the list of strings, and select the first
+        # string that looks like a gene number.
+        split_value = description.split(delimiter)
+        num = ""
+        x = 0
+        while (num == "" and x < len(split_value)):
+            string = split_value[x]
+            string = string.strip()
+            left, right = basic.split_string(string)
+            # Possible returns:
+            # 1. left is alpha and right is number or float (gp10 = gp, 10),
+            # 2. string is alpha (terminase = terminase, ""),
+            # 3. string is number (10 = "", 10).
+            if left.lower() in prefix_set:
+                num = right
+            x += 1
+        setattr(self, attr, num)
+
+    def set_gene(self, value, delimiter=None, prefix_set=None):
+        """Set the gene attribute.
+
+        :param value: Gene data to parse. Also passed to set_num().
+        :type value: str
+        :param delimiter: Passed to set_num().
+        :type delimiter: str
+        :param prefix_set: Passed to set_num().
+        :type prefix_set: set
+        """
+        value = value.strip()
+        self.gene = value
+        self._gene_num = value
+        self.set_num("_gene_num", value,
+                     delimiter=delimiter, prefix_set=prefix_set)
 
     # TODO: create base feature class - use this version of the method unless
     #  Travis objects, because it's more Pythonic.
@@ -217,7 +262,24 @@ class TmrnaFeature:
             # Unexpected orientation
             begin = end = -1
 
-        return begin, end                       # tuple format is implicit
+        return begin, end
+
+    # TODO: create base feature class - use this version of the method unless
+    #  Travis objects, because it's documented more cleanly and avoids using
+    #  keyword 'format'.
+    def set_orientation(self, value, fmt, case=False):
+        """
+        Set the orientation based on the indicated format.
+        :param value: orientation value
+        :type value: int or str
+        :param fmt: how orientation should be formatted
+        :type fmt: str
+        :param case: whether to capitalize the first letter of
+        orientation
+        :type case: bool
+        :return:
+        """
+        self.orientation = basic.reformat_strand(value, fmt, case)
 
     # TODO: create base feature class
     def set_location_id(self):
@@ -259,18 +321,66 @@ class TmrnaFeature:
                 self.start, self.stop, self.coordinate_format, fmt)
             self.coordinate_format = fmt
 
-    def set_peptide_tag(self, value):
+    # TODO: create base feature class - fully equivalent to version in Cds,
+    #  but documented differently.
+    def set_nucleotide_length(self, use_seq=False):
         """
-        Set the `amino_acid` attribute.
-        :param value: what to use as the amino acid
-        :type value: str
+        Set the nucleotide length of this gene feature.
+        :param use_seq: whether to use the Seq feature to calculate
+        nucleotide length of this feature
+        :type use_seq: bool
+        :return:
+        """
+        if use_seq:
+            self.length = len(self.seq)
+        else:
+            if self.coordinate_format == "0_half_open":
+                # Python coordinate format
+                self.length = self.stop - self.start
+            elif self.coordinate_format == "1_closed":
+                # Genbank coordinate format
+                self.length = self.stop - self.start + 1
+            else:
+                # Unknown coordinate format
+                self.length = -1
+
+    # TODO: create base feature class - use this version of the method unless
+    #  Travis objects, because the logic is slightly better and it raises an
+    #  Error if something is wrong with given seq.
+    def set_nucleotide_sequence(self, value=None, parent_genome_seq=None):
+        """
+        Set this feature's nucleotide sequence
+        :param value: sequence
+        :type value: str or Seq
+        :param parent_genome_seq: parent genome sequence
+        :type parent_genome_seq: Seq
         :raise: ValueError
         :return:
         """
-        if isinstance(value, str):
-            self.peptide_tag = value
+        # If seq is given we'll try to use that
+        if value is not None:
+            # If seq is a BioPython Seq object, use it directly
+            if isinstance(value, Seq):
+                self.seq = value.upper()
+            # If seq is a string, we can coerce it to a BioPython Seq object
+            elif isinstance(value, str):
+                self.seq = Seq(value.upper(), IUPAC.ambiguous_dna)
+            # If seq is something else entirely, we cannot use it
+            else:
+                pass
+                # raise ValueError(f"tRNA.seq cannot use type '{type(seq)}'")
+        # If instead a parent_genome_seq is given, we'll try to use that
+        elif parent_genome_seq is not None and self.seqfeature is not None:
+            try:
+                self.seq = self.seqfeature.extract(parent_genome_seq)
+            # TODO: tighten exception clause, OR let the error pass to a higher
+            #  level in the call stack
+            except:
+                # Leave as default
+                pass
+        # If neither is given, leave self.seq as default
         else:
-            raise ValueError(f"Invalid type '{type(value)}' for peptide tag.")
+            pass
 
     # TODO: create base feature class - fully equivalent to the version in Cds,
     #  but better documented.
@@ -314,66 +424,32 @@ class TmrnaFeature:
 
         return qualifiers
 
-    # TODO: create base feature class - use this version of the method unless
-    #  Travis objects, because the logic is slightly better and it raises an
-    #  Error if something is wrong with given seq.
-    def set_nucleotide_sequence(self, value=None, parent_genome_seq=None):
+    def run_aragorn(self):
         """
-        Set this feature's nucleotide sequence
-        :param value: sequence
-        :type value: str or Seq
-        :param parent_genome_seq: parent genome sequence
-        :type parent_genome_seq: Seq
-        :raise: ValueError
+        Uses an AragornHandler object to negotiate the flow of
+        information between this object and Aragorn.
         :return:
         """
-        # If seq is given we'll try to use that
-        if value is not None:
-            # If seq is a BioPython Seq object, use it directly
-            if isinstance(value, Seq):
-                self.seq = value.upper()
-            # If seq is a string, we can coerce it to a BioPython Seq object
-            elif isinstance(value, str):
-                self.seq = Seq(value.upper(), IUPAC.ambiguous_dna)
-            # If seq is something else entirely, we cannot use it
-            else:
-                pass
-                # raise ValueError(f"tRNA.seq cannot use type '{type(seq)}'")
-        # If instead a parent_genome_seq is given, we'll try to use that
-        elif parent_genome_seq is not None and self.seqfeature is not None:
-            try:
-                self.seq = self.seqfeature.extract(parent_genome_seq)
-            # TODO: tighten exception clause, OR let the error pass to a higher
-            #  level in the call stack
-            except:
-                # Leave as default
-                pass
-        # If neither is given, leave self.seq as default
+        ah = AragornHandler(self.id, str(self.seq))
+        ah.write_fasta()
+        ah.run_aragorn(m=True, t=False)  # search (linear) self.seq for tmRNAs
+        ah.read_output()
+        ah.parse_tmrnas()
+        if ah.tmrna_tally == 1:
+            self.aragorn_data = ah.tmrnas[0]
         else:
-            pass
+            print(f"Aragorn found {ah.tmrna_tally} tRNAs in this region.")
+        self.aragorn_run = True
 
-    # TODO: create base feature class - fully equivalent to version in Cds,
-    #  but documented differently.
-    def set_nucleotide_length(self, use_seq=False):
+    def parse_peptide_tag(self):
         """
-        Set the nucleotide length of this gene feature.
-        :param use_seq: whether to use the Seq feature to calculate
-        nucleotide length of this feature
-        :type use_seq: bool
+        Parse the `peptide_tag` attribute out of the note field.
         :return:
         """
-        if use_seq:
-            self.length = len(self.seq)
-        else:
-            if self.coordinate_format == "0_half_open":
-                # Python coordinate format
-                self.length = self.stop - self.start
-            elif self.coordinate_format == "1_closed":
-                # Genbank coordinate format
-                self.length = self.stop - self.start + 1
-            else:
-                # Unknown coordinate format
-                self.length = -1
+        # For SEA annotations, the note should contain the peptide tag
+        results = NOTE_STANDARD_REGEX.findall(self.note)
+        if len(results) == 1:
+            self.peptide_tag = results[0]
 
     # Evaluations
     # TODO: create base feature class - fully equivalent to version in Cds,
@@ -662,12 +738,11 @@ class TmrnaFeature:
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
-    def check_length(self, eval_id=None, success="correct", fail="error",
-                     eval_def=None):
+    def check_peptide_tag_valid(self, eval_id=None, success="correct",
+                                fail="error", eval_def=None):
         """
-        Checks that the tRNA is in the expected range of lengths. The
-        average tRNA gene is 70-90bp in length, but it is not uncommon
-        to identify high-scoring tRNAs in the 60-100bp range.
+        Checks whether the annotated peptide tag contains any letters
+        not strictly within the protein alphabet.
         :param eval_id: unique identifier for the evaluation
         :type eval_id: str
         :param success: status if the outcome is successful
@@ -678,31 +753,43 @@ class TmrnaFeature:
         :type eval_def: str
         :return:
         """
-        result = f"The tRNA length ({self.length}) is "
-        if self.length in range(60, 101):
-            result += "in the expected range."
-            status = success
-        elif self.length < 60:
-            result += "shorter than expected."
-            status = fail
+        result = f"The annotated peptide tag '{self.peptide_tag}' is "
+        if self.peptide_tag != "" and self.peptide_tag[-1] == "*":
+            letters = set(self.peptide_tag[:-1])
+            bad_letters = letters.difference(IUPAC.IUPACProtein.letters)
+            if not bad_letters:
+                result += "formatted correctly, and uses the correct " \
+                          "alphabet."
+                status = success
+            else:
+                result += f"formatted correctly, but has " \
+                          f"{len(bad_letters)} characters that fall outside " \
+                          f"the protein alphabet."
+                status = fail
+        elif self.peptide_tag != "" and self.peptide_tag[-1] != "*":
+            letters = set(self.peptide_tag)
+            bad_letters = letters.difference(IUPAC.IUPACProtein.letters)
+            if not bad_letters:
+                result += "using the correct alphabet, but doesn't end in '*'."
+                status = fail
+            else:
+                result += f"using {len(bad_letters)} characters outside the " \
+                          f"protein alphabet, and doesn't end in '*'."
+                status = fail
         else:
-            result += "longer than expected."
-            status = fail
+            result += "does not exist, so could not be checked."
+            status = "unchecked"
 
-        definition = f"Check if the tRNA length is in the expected range " \
-                     f"for {self.id}."
+        definition = f"Check that the peptide tag appears to be structured" \
+                     f"correctly and fits the protein alphabet for {self.id}."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
-    def check_note_structure(self, eval_id=None, success="correct",
-                             fail="error", eval_def=None):
+    def check_peptide_tag_correct(self, eval_id=None, success="correct",
+                                  fail="error", eval_def=None):
         """
-        Checks that the note field is formatted properly.
-
-        Genbank does not enforce any standard for the note field.
-        This means that a note does not have to exist.
-
-        SEA-PHAGES note fields should look like 'tRNA-Xxx(nnn)'.
+        Checks whether the annotated peptide tag matches the Aragorn
+        output.
         :param eval_id: unique identifier for the evaluation
         :type eval_id: str
         :param success: status if the outcome is successful
@@ -713,18 +800,26 @@ class TmrnaFeature:
         :type eval_def: str
         :return:
         """
-        result = f"The tRNA note is "
-        if self.note != "":
-            result += f"present ('{self.note}'). "
+        result = f"The annotated peptide tag '{self.peptide_tag}' "
 
-            # CHECK NOTE
+        if self.aragorn_run and self.aragorn_data is not None:
+            aragorn_tag = self.aragorn_data["PeptideTag"]
+
+            if self.peptide_tag == aragorn_tag:
+                result += "matches the Aragorn output."
+                status = success
+            else:
+                result += f"does not match the Aragorn output ({aragorn_tag})."
+                status = fail
+        elif self.aragorn_run and self.aragorn_data is None:
+            result += "does not match the Aragorn output (no tmRNA)."
+            status = fail
         else:
-            result += "missing (''). "
-            result += "Note cannot be checked."
+            result += "could not be checked, because Aragorn wasn't run."
             status = "unchecked"
 
-        definition = f"Check that the note is formatted properly for " \
-                     f"{self.id}."
+        definition = f"Check that the annotated peptide tag matches the" \
+                     f"Aragorn output for {self.id}."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
@@ -753,19 +848,3 @@ class TmrnaFeature:
         definition = f"Make sure there is only one region for {self.id}."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
-
-    def run_aragorn(self):
-        """
-        Runs Aragorn locally using this tmRNA's DNA sequence as the
-        input sequence.
-        :return:
-        """
-        ah = AragornHandler(self.id, str(self.seq))
-        ah.write_fasta()
-        ah.run_aragorn(m=True, t=False)         # turn on/off tmRNA/tRNA search
-        ah.read_output()
-        ah.parse_tmrnas()
-        if ah.tmrna_tally == 1:
-            self.aragorn_data = ah.tmrnas[0]
-        else:
-            print(f"Aragorn found {ah.tmrna_tally} tmRNA(s) for {self.id}")
