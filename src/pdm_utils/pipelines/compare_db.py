@@ -1,9 +1,7 @@
-#!/usr/bin/env python
-#Database comparison script
-#University of Pittsburgh
-#Travis Mavrich
-#20170203
-#The purpose of this script is to compare the MySQL, phagesdb, and NCBI databases for inconsistencies and report what needs to be updated.
+"""Pipeline to compare data between MySQL, PhagesDB, and GenBank databases."""
+
+# TODO this object-oriented pipeline is not fully integrated into
+# the pdm_utils package.
 
 # Note this script compares and matches data from Genbank data and MySQL data. As a result, there are many similarly
 # named variables. Variables are prefixed to indicate database:
@@ -13,14 +11,21 @@
 
 
 #Built-in libraries
-import time, sys, os, getpass, csv, re
-import json
-import urllib.request
 import argparse
+import csv
+from datetime import date
+import json
+import os
 import pathlib
+import re
+import sys
+import time
+import urllib.request
+
+from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.functions import ncbi
 from pdm_utils.functions import basic
-
+from pdm_utils.functions import mysqldb
 
 
 #Third-party libraries
@@ -42,6 +47,29 @@ except:
     print("\n\nInstall modules and try again.\n\n")
     sys.exit(1)
 
+
+
+DEFAULT_OUTPUT_FOLDER = os.getcwd()
+
+
+#Set up dna and protein alphabets to verify sequence integrity
+DNA_ALPHABET = set(IUPAC.IUPACUnambiguousDNA.letters)
+PROTEIN_ALPHABET = set(IUPAC.ExtendedIUPACProtein.letters)
+
+
+#Create output directories
+CURRENT_DATE = date.today().strftime("%Y%m%d")
+RESULTS_FOLDER = f"{CURRENT_DATE}_compare"
+
+
+DUPLICATE_MYSQL_NAMES = "duplicate_mysql_phage_names.csv"
+DUPLICATE_MYSQL_ACC = "duplicate_mysql_phage_accessions.csv"
+DUPLICATE_PDB_NAMES = "duplicate_phagesdb_phage_names.csv"
+FAILED_ACC_RETRIEVE = "_failed_accession_retrieval.csv"
+UNMATCHED_GENOMES = "_database_comparison_unmatched_genomes.csv"
+SUMMARY_OUTPUT = "_database_comparison_summary_output.csv"
+GENOME_OUTPUT = "_database_comparison_genome_output.csv"
+GENE_OUTPUT = "_database_comparison_gene_output.csv"
 
 
 #Define several functions
@@ -145,34 +173,12 @@ def find_name(expression,list_of_items):
     return search_tally
 
 
-#Allows user to select specific options
-def select_option(message,valid_response_set):
-
-    response_valid = False
-    while response_valid == False:
-        response = input(message)
-        if response.isdigit():
-            response = int(response)
-        else:
-            response = response.lower()
-
-        if response in valid_response_set:
-            response_valid = True
-            if response == 'y':
-                response  = 'yes'
-            elif response == 'n':
-                response  = 'no'
-        else:
-            print('Invalid response.')
-    return response
-
-
 
 #Output list to file
 def output_to_file(data_list,filename,genome_status_selected,database_string,genome_author_selected):
-    filename_fh = open(os.path.join(main_output_path,date + "_" + filename), 'w')
+    filename_fh = open(os.path.join(main_output_path,CURRENT_DATE + "_" + filename), 'w')
     filename_writer = csv.writer(filename_fh)
-    filename_writer.writerow([date + ' Database comparison'])
+    filename_writer.writerow([CURRENT_DATE + ' Database comparison'])
     filename_writer.writerow([database_string])
     filename_writer.writerow([genome_author_selected])
     filename_writer.writerow([genome_status_selected])
@@ -262,9 +268,9 @@ class UnannotatedGenome:
         else:
             value = value.strip()
             self.__accession = value.split('.')[0]
-    def compute_nucleotide_errors(self,dna_alphabet_set):
+    def compute_nucleotide_errors(self,DNA_ALPHABET):
         nucleotide_set = set(self.__sequence)
-        nucleotide_error_set = nucleotide_set - dna_alphabet_set
+        nucleotide_error_set = nucleotide_set - DNA_ALPHABET
         if len(nucleotide_error_set) > 0:
             self.__nucleotide_errors = True
 
@@ -619,9 +625,9 @@ class CdsFeature:
         self.__translation_length = len(self.__translation)
     def set_type_id(self,value):
         self.__type_id = value
-    def compute_amino_acid_errors(self,protein_alphabet_set):
+    def compute_amino_acid_errors(self,PROTEIN_ALPHABET):
         amino_acid_set = set(self.__translation)
-        amino_acid_error_set = amino_acid_set - protein_alphabet_set
+        amino_acid_error_set = amino_acid_set - PROTEIN_ALPHABET
         if len(amino_acid_error_set) > 0:
             self.__amino_acid_errors = True
     def set_start_end_strand_id(self):
@@ -1747,11 +1753,48 @@ def parse_args(unparsed_args_list):
     OUTPUT_FOLDER_HELP = ("Path to the folder to store results.")
     NCBI_CRED_FILE_HELP = ("Path to the file containing NCBI credentials.")
 
+    PHAGESDB_HELP = "Indicates that PhagesDB data should be compared."
+    GENBANK_HELP = "Indicates that GenBank data should be compared."
+    SAVE_RECORDS_HELP = \
+        ("Indicates that records retrieved from external "
+         "databases will be saved.")
+    INTERNAL_AUTHORS_HELP = \
+        "Indicates that genomes with internal authorship will be evaluated."
+    EXTERNAL_AUTHORS_HELP = \
+        "Indicates that genomes with external authorship will be evaluated."
+
+    DRAFT_HELP = \
+        "Indicates that genomes with 'draft' status will be evaluated."
+    FINAL_HELP = \
+        "Indicates that genomes with 'final' status will be evaluated."
+    UNKNOWN_HELP = \
+        "Indicates that genomes with 'unknown' status will be evaluated."
+
     parser = argparse.ArgumentParser(description=COMPARE_HELP)
     parser.add_argument("database", type=str, help=DATABASE_HELP)
-    parser.add_argument("output_folder", type=pathlib.Path, help=OUTPUT_FOLDER_HELP)
+    parser.add_argument("-o", "--output_folder", type=pathlib.Path,
+                        default=pathlib.Path(DEFAULT_OUTPUT_FOLDER),
+                        help=OUTPUT_FOLDER_HELP)
+    parser.add_argument("-p", "--phagesdb", action="store_true",
+        default=False, help=PHAGESDB_HELP)
+    parser.add_argument("-g", "--genbank", action="store_true",
+        default=False, help=GENBANK_HELP)
     parser.add_argument("-c", "--ncbi_credentials_file", type=pathlib.Path,
         help=NCBI_CRED_FILE_HELP)
+    parser.add_argument("-s", "--save_records", action="store_true",
+        default=False, help=SAVE_RECORDS_HELP)
+    parser.add_argument("-i", "--internal_authors", action="store_true",
+        default=False, help=INTERNAL_AUTHORS_HELP)
+    parser.add_argument("-e", "--external_authors", action="store_true",
+        default=False, help=EXTERNAL_AUTHORS_HELP)
+    parser.add_argument("-d", "--draft", action="store_true",
+        default=False, help=DRAFT_HELP)
+    parser.add_argument("-f", "--final", action="store_true",
+        default=False, help=FINAL_HELP)
+    parser.add_argument("-u", "--unknown", action="store_true",
+        default=False, help=UNKNOWN_HELP)
+
+
 
     # Assumed command line arg structure:
     # python3 -m pdm_utils <pipeline> <additional args...>
@@ -1760,7 +1803,35 @@ def parse_args(unparsed_args_list):
     return args
 
 
+def get_dbs(phagesdb, genbank):
+    """Create set of databases to compare to MySQL."""
+    dbs = set()
+    if phagesdb == True:
+        dbs.add("phagesdb")
+    if genbank == True:
+        dbs.add("ncbi")
+    return dbs
 
+
+def get_authors(internal, external):
+    """Create set of authorship to compare."""
+    authorship = set()
+    if internal == True:
+        authorship.add(1)
+    if external == True:
+        authorship.add(0)
+    return authorship
+
+def get_status(draft, final, unknown):
+    """Create set of status to compare."""
+    status = set()
+    if draft == True:
+        status.add("draft")
+    if final == True:
+        status.add("final")
+    if unknown == True:
+        status.add("unknown")
+    return status
 
 
 
@@ -1773,106 +1844,42 @@ def main(unparsed_args_list):
     #Get the command line parameters
     args = parse_args(unparsed_args_list)
     database = args.database
-    output_dir = basic.set_path(args.output_folder, kind="dir", expect=True)
-    output_dir = str(output_dir)
+    save_records = args.save_records
 
     #Get email info for NCBI
     ncbi_cred_dict = ncbi.get_ncbi_creds(args.ncbi_credentials_file)
 
-
-    #Set up MySQL parameters
-    mysqlhost = 'localhost'
-    print("\n\n")
-    username = getpass.getpass(prompt='mySQL username:')
-    print("\n\n")
-    password = getpass.getpass(prompt='mySQL password:')
-    print("\n\n")
-
-
-
-
-    #Set up dna and protein alphabets to verify sequence integrity
-    dna_alphabet_set = set(IUPAC.IUPACUnambiguousDNA.letters)
-    protein_alphabet_set = set(IUPAC.ExtendedIUPACProtein.letters)
-
-
-    #Create output directories
-    date = time.strftime("%Y%m%d")
-
-    main_output_folder = '%s_compare' % date
-    main_output_path = os.path.join(output_dir,main_output_folder)
-
-
-    try:
-        os.mkdir(main_output_path)
-    except:
-        print("\nUnable to create output folder: %s" % main_output_path)
+    output_folder = basic.set_path(args.output_folder, kind="dir",
+                                        expect=True)
+    working_dir = pathlib.Path(RESULTS_FOLDER)
+    working_path = basic.make_new_dir(output_folder, working_dir,
+                                      attempt=50)
+    if working_path is None:
+        print(f"Invalid working directory '{working_dir}'")
         sys.exit(1)
 
+    main_output_path = str(working_path)
     os.chdir(main_output_path)
 
 
 
+    #HERE
+    # Verify database connection and schema compatibility.
+    print("Connecting to the MySQL database...")
+    alchemist = AlchemyHandler(database=database)
+    alchemist.connect(pipeline=True)
+    engine = alchemist.engine
+    mysqldb.check_schema_compatibility(engine, "the compare pipeline")
 
+    # Determine which database should be compared in addition to
+    # MySQL: PhagesDB, GenBank.
+    valid_dbs = get_dbs(args.phagesdb, args.genbank)
+    selected_dbs = "Databases compared to MySQL: " + ", ".join(valid_dbs)
 
-
-
-
-
-
-
-
-
-
-
-
-
-    #Determine which database should be compared: MySQL, phagesdb, NCBI
-    analyze_database_options = [\
-        'MySQL database',\
-        'MySQL database and phagesdb',\
-        'MySQL database and NCBI',\
-        'MySQL database, phagesdb, and NCBI']
-    print('\n\nThe following databases can be compared:')
-    print('0: ' + analyze_database_options[0])
-    print('1: ' + analyze_database_options[1])
-    print('2: ' + analyze_database_options[2])
-    print('3: ' + analyze_database_options[3])
-    analyze_database = select_option(\
-        "\nWhich databases do you want to compare? ", \
-        set([0,1,2,3]))
-
-    analyze_database_output = \
-        'Databases compared: ' + \
-        analyze_database_options[analyze_database]
-
-
-
-    valid_database_set = set()
-    if analyze_database == 1:
-        valid_database_set.add('phagesdb')
-    elif analyze_database == 2:
-        valid_database_set.add('ncbi')
-    elif analyze_database == 3:
-        valid_database_set.add('phagesdb')
-        valid_database_set.add('ncbi')
-    else:
-        #By default, all MySQL genomes are checked, \
-        #so 'else' results in only MySQL genomes checked
-        pass
-
-
-
-
-
-    #Determine if fasta files should be saved.
-    save_phamerator_records = select_option(\
-        "\n\nDo you want to save retrieved MySQL records to disk? (yes or no) ", \
-        set(['yes','y','no','n']))
 
 
     #Create a folder to store MySQL records
-    phamerator_output_folder = '%s_mysql_records' % date
+    phamerator_output_folder = '%s_mysql_records' % CURRENT_DATE
     phamerator_output_path = os.path.join(main_output_path,phamerator_output_folder)
     os.mkdir(phamerator_output_path)
 
@@ -1882,17 +1889,10 @@ def main(unparsed_args_list):
 
 
     #Set up phagesdb fasta file folder if selected by user
-    if 'phagesdb' in valid_database_set:
-
-
-        #Determine if fasta files should be saved.
-        save_phagesdb_records = select_option(\
-            "\n\nDo you want to save retrieved phagesdb records to disk? (yes or no) ", \
-            set(['yes','y','no','n']))
-
+    if 'phagesdb' in valid_dbs:
 
         #Create a folder to store phagesdb records
-        phagesdb_output_folder = '%s_phagesdb_records' % date
+        phagesdb_output_folder = '%s_phagesdb_records' % CURRENT_DATE
         phagesdb_output_path = os.path.join(main_output_path,phagesdb_output_folder)
         os.mkdir(phagesdb_output_path)
 
@@ -1900,33 +1900,12 @@ def main(unparsed_args_list):
 
 
     #Set up NCBI parameters if selected by user
-    if 'ncbi' in valid_database_set:
+    if 'ncbi' in valid_dbs:
 
-
-        batch_size = ''
-        batch_size_valid = False
-        while batch_size_valid == False:
-            batch_size = input('\nRecord retrieval batch size (must be greater than 0 and recommended is 100-200): ')
-            print("\n\n")
-            if batch_size.isdigit():
-                batch_size = int(batch_size)
-                if batch_size > 0:
-                    batch_size_valid = True
-                else:
-                    print('Invalid choice.')
-                    print("\n\n")
-            else:
-                print('Invalid choice.')
-                print("\n\n")
-
-        #Determine if NCBI records should be saved
-        save_ncbi_records = select_option(\
-            "\n\nDo you want to save retrieved NCBI records to disk? (yes or no) ", \
-            set(['yes','y','no','n']))
-
+        batch_size = 200
 
         #Create a folder to store NCBI records
-        ncbi_output_folder = '%s_ncbi_records' % date
+        ncbi_output_folder = '%s_ncbi_records' % CURRENT_DATE
         ncbi_output_path = os.path.join(main_output_path,ncbi_output_folder)
         os.mkdir(ncbi_output_path)
 
@@ -1935,95 +1914,27 @@ def main(unparsed_args_list):
 
     #Determine which type of genomes should be checked based on
     #who annotated the genome: Hatfull or Gbk authors
-    analyze_genome_author_options = [\
-        'none',\
-        'Hatfull only',\
-        'Genbank only',\
-        'Hatfull and Genbank']
-    print('\n\nThe following types of genomes based on authorship can be analyzed:')
-    #print('0: ' + analyze_genome_author_options[0])
-    print('1: ' + analyze_genome_author_options[1])
-    print('2: ' + analyze_genome_author_options[2])
-    print('3: ' + analyze_genome_author_options[3])
-    analyze_genome_author = select_option(\
-        "\nWhich type of analysis do you want? ", \
-        set([1,2,3]))
-
-    analyze_genome_author_output = \
-        'Annotation author analyzed: ' + \
-        analyze_genome_author_options[analyze_genome_author]
+    #HERE
 
 
-    valid_genome_author_set = set()
-    if analyze_genome_author == 1:
-        valid_genome_author_set.add(1)
-    elif analyze_genome_author == 2:
-        valid_genome_author_set.add(0)
-    elif analyze_genome_author == 3:
-        valid_genome_author_set.add(1)
-        valid_genome_author_set.add(0)
-    else:
-        pass
-
+    valid_authors = get_authors(args.internal_authors, args.external_authors)
+    author_str = []
+    for i in valid_authors:
+        author_str.append(str(i))
+    selected_authors = \
+        ("Genomes with following AnnotationAuthor will be compared: "
+         + ", ".join(author_str))
 
 
 
 
     #Determine which types of genomes should be checked based on
     #the status of the annotations: draft, final, unknown
-    analyze_genome_status_options = [\
-        'none',\
-        'draft only',\
-        'final only',\
-        'unknown only',\
-        'draft and final',\
-        'draft and unknown',\
-        'final and unknown',\
-        'draft, final, and unknown']
-    print('\n\nThe following types of genomes based on annotation status can be analyzed:')
-    #print('0: ' + analyze_genome_status_options[0])
-    print('1: ' + analyze_genome_status_options[1])
-    print('2: ' + analyze_genome_status_options[2])
-    print('3: ' + analyze_genome_status_options[3])
-    print('4: ' + analyze_genome_status_options[4])
-    print('5: ' + analyze_genome_status_options[5])
-    print('6: ' + analyze_genome_status_options[6])
-    print('7: ' + analyze_genome_status_options[7])
-    analyze_genome_status = select_option(\
-        "\nWhich type of analysis do you want? ", \
-        set([1,2,3,4,5,6,7]))
-
-    analyze_genome_status_output = \
-        'Annotation status analyzed: ' + \
-        analyze_genome_status_options[analyze_genome_status]
-
-
-    valid_genome_status_set = set()
-    if analyze_genome_status == 1:
-        valid_genome_status_set.add('draft')
-    elif analyze_genome_status == 2:
-        valid_genome_status_set.add('final')
-    elif analyze_genome_status == 3:
-        valid_genome_status_set.add('unknown')
-    elif analyze_genome_status == 4:
-        valid_genome_status_set.add('draft')
-        valid_genome_status_set.add('final')
-    elif analyze_genome_status == 5:
-        valid_genome_status_set.add('draft')
-        valid_genome_status_set.add('unknown')
-    elif analyze_genome_status == 6:
-        valid_genome_status_set.add('final')
-        valid_genome_status_set.add('unknown')
-    elif analyze_genome_status == 7:
-        valid_genome_status_set.add('draft')
-        valid_genome_status_set.add('final')
-        valid_genome_status_set.add('unknown')
-    else:
-        pass
-
-
-
-
+    # ncbi_credentials_file
+    valid_status = get_status(args.draft, args.final, args.unknown)
+    selected_status = \
+        ("Genomes with following Annotation Status will be compared: "
+         + ", ".join(valid_status))
 
 
 
@@ -2056,8 +1967,7 @@ def main(unparsed_args_list):
     #7 = Notes
 
     try:
-        con = pms.connect("localhost", username, password, database)
-        # con = mdb.connect(mysqlhost, username, password, database)
+        con = pms.connect("localhost", alchemist.username, alchemist.password, alchemist.database)
         con.autocommit(False)
         cur = con.cursor()
     except pms.err.Error as err:
@@ -2102,8 +2012,8 @@ def main(unparsed_args_list):
                 %(ph_genome_count,ph_total_genome_count))
 
         #Check to see if the genome has a user-selected status and authorship
-        if genome_tuple[5] not in valid_genome_status_set or \
-            genome_tuple[10] not in valid_genome_author_set:
+        if genome_tuple[5] not in valid_status or \
+            genome_tuple[10] not in valid_authors:
             continue
         else:
             genome_object = PhameratorGenome()
@@ -2117,7 +2027,7 @@ def main(unparsed_args_list):
             genome_object.set_ncbi_update_flag(genome_tuple[8])
             genome_object.set_date_last_modified(genome_tuple[9])
             genome_object.set_annotation_author(genome_tuple[10])
-            genome_object.compute_nucleotide_errors(dna_alphabet_set)
+            genome_object.compute_nucleotide_errors(DNA_ALPHABET)
             ph_genome_object_dict[genome_tuple[0]] = genome_object
 
             #This keeps track of whether there are duplicate phage names that will be used
@@ -2140,7 +2050,7 @@ def main(unparsed_args_list):
 
 
             #If selected by user, save retrieved record to file
-            if save_phamerator_records == 'yes':
+            if save_records == True:
 
                 #To output a fasta file, a Biopython SeqRecord must be created first
                 phamerator_fasta_seqrecord = SeqRecord(Seq(genome_object.get_sequence()),\
@@ -2170,10 +2080,10 @@ def main(unparsed_args_list):
         print('Warning: There are duplicate phage search names in the MySQL database.')
         print('Some MySQL genomes will not be able to be matched to phagesdb.')
         output_to_file(list(ph_search_name_duplicate_set),\
-                        'duplicate_mysql_phage_names.csv',\
-                        analyze_genome_status_output,\
+                        DUPLICATE_MYSQL_NAMES,\
+                        selected_status,\
                         database + '_v' + ph_version,\
-                        analyze_genome_author_output)
+                        selected_authors)
         input('Press ENTER to proceed')
 
     #Accessions aren't required to be unique in the MySQL database (but they should be), so there could be duplicates
@@ -2182,10 +2092,10 @@ def main(unparsed_args_list):
         print('Warning: There are duplicate accessions in the MySQL database.')
         print('Some MySQL genomes will not be able to be matched to NCBI records.')
         output_to_file(list(ph_accession_duplicate_set),\
-                        'duplicate_mysql_phage_accessions.csv',\
-                        analyze_genome_status_output,\
+                        DUPLICATE_MYSQL_ACC,\
+                        selected_status,\
                         database + '_v' + ph_version,\
-                        analyze_genome_author_output)
+                        selected_authors)
         input('Press ENTER to proceed')
 
 
@@ -2215,7 +2125,7 @@ def main(unparsed_args_list):
         gene_object.set_notes(gene_object_description, gene_object_search_description)
 
 
-        gene_object.compute_amino_acid_errors(protein_alphabet_set)
+        gene_object.compute_amino_acid_errors(PROTEIN_ALPHABET)
         gene_object.set_start_end_strand_id()
         gene_object.compute_boundary_error()
 
@@ -2260,7 +2170,7 @@ def main(unparsed_args_list):
 
 
 
-    if 'phagesdb' in valid_database_set:
+    if 'phagesdb' in valid_dbs:
         #Retrieve a list of all sequenced phages listed on phagesdb
         #You have to specify how many results to return at once. If you set it to 1 page long and 100,000 genomes/page, then this will return everything
         print('\n\nRetrieving data from phagesdb...')
@@ -2321,7 +2231,7 @@ def main(unparsed_args_list):
                     pdb_sequence = pdb_sequence + split_fasta_data[index].strip() #Strip off potential whitespace before appending, such as '\r'
                     index += 1
                 genome_object.set_sequence(pdb_sequence)
-                genome_object.compute_nucleotide_errors(dna_alphabet_set)
+                genome_object.compute_nucleotide_errors(DNA_ALPHABET)
 
             pdb_search_name = genome_object.get_search_name()
             if pdb_search_name in pdb_search_name_set:
@@ -2334,7 +2244,7 @@ def main(unparsed_args_list):
 
 
             #If selected by user, save retrieved record to file
-            if save_phagesdb_records == 'yes':
+            if save_records == True:
 
                 #To output a fasta file, a Biopython SeqRecord must be created first
                 phagesdb_fasta_seqrecord = SeqRecord(Seq(genome_object.get_sequence()),\
@@ -2360,10 +2270,10 @@ def main(unparsed_args_list):
             print('Warning: There are duplicate phage search names in phagesdb.')
             print('Some phagesdb genomes will not be able to be matched to genomes in MySQL.')
             output_to_file(list(pdb_search_name_duplicate_set),\
-                            'duplicate_phagesdb_phage_names.csv',\
-                            analyze_genome_status_output,\
+                            DUPLICATE_PDB_NAMES,\
+                            selected_status,\
                             database + '_v' + ph_version,\
-                            analyze_genome_author_output)
+                            selected_authors)
             input('Press ENTER to proceed')
 
         #Make sure all sequenced phage data has been retrieved
@@ -2388,7 +2298,7 @@ def main(unparsed_args_list):
     ncbi_genome_count = 1
 
 
-    if 'ncbi' in valid_database_set:
+    if 'ncbi' in valid_dbs:
 
         print("\n\nRetrieving records from NCBI")
 
@@ -2468,13 +2378,13 @@ def main(unparsed_args_list):
 
 
         #Report the accessions that could not be retrieved.
-        failed_accession_report_fh = open(os.path.join(main_output_path,date + '_failed_accession_retrieval.csv'), 'w')
+        failed_accession_report_fh = open(os.path.join(main_output_path,CURRENT_DATE + FAILED_ACC_RETRIEVE), 'w')
         failed_accession_report_writer = csv.writer(failed_accession_report_fh)
-        failed_accession_report_writer.writerow([date + ' Database comparison'])
+        failed_accession_report_writer.writerow([CURRENT_DATE + ' Database comparison'])
         failed_accession_report_writer.writerow([database + '_v' + ph_version])
-        failed_accession_report_writer.writerow([analyze_genome_author_output])
-        failed_accession_report_writer.writerow([analyze_genome_status_output])
-        failed_accession_report_writer.writerow([analyze_database_output])
+        failed_accession_report_writer.writerow([selected_authors])
+        failed_accession_report_writer.writerow([selected_status])
+        failed_accession_report_writer.writerow([selected_dbs])
         failed_accession_report_writer.writerow(['Accessions unable to be retrieved from NCBI:'])
         for retrieval_error_accession in retrieval_error_list:
             failed_accession_report_writer.writerow([retrieval_error_accession])
@@ -2546,7 +2456,7 @@ def main(unparsed_args_list):
 
             #Nucleotide sequence and errors
             genome_object.set_sequence(retrieved_record.seq)
-            genome_object.compute_nucleotide_errors(dna_alphabet_set)
+            genome_object.compute_nucleotide_errors(DNA_ALPHABET)
 
 
             #Iterate through all features
@@ -2639,7 +2549,7 @@ def main(unparsed_args_list):
                         pass
 
                     #Compute other fields
-                    gene_object.compute_amino_acid_errors(protein_alphabet_set)
+                    gene_object.compute_amino_acid_errors(PROTEIN_ALPHABET)
                     gene_object.set_start_end_strand_id()
                     gene_object.compute_boundary_error()
                     gene_object.compute_description_error()
@@ -2676,7 +2586,7 @@ def main(unparsed_args_list):
             ncbi_genome_dict[genome_object.get_record_accession()] = genome_object
 
             #If selected by user, save retrieved record to file
-            if save_ncbi_records == 'yes':
+            if save_records == True:
 
                 #Save the file, but use a truncated version of the full organism name
                 name_prefix = genome_object.get_record_organism().lower()
@@ -2763,16 +2673,16 @@ def main(unparsed_args_list):
 
 
     #Output unmatched data to file
-    unmatched_genome_output_fh = open(os.path.join(main_output_path,date + '_database_comparison_unmatched_genomes.csv'), 'w')
+    unmatched_genome_output_fh = open(os.path.join(main_output_path,CURRENT_DATE + UNMATCHED_GENOMES), 'w')
     unmatched_genome_output_writer = csv.writer(unmatched_genome_output_fh)
-    unmatched_genome_output_writer.writerow([date + ' Database comparison'])
+    unmatched_genome_output_writer.writerow([CURRENT_DATE + ' Database comparison'])
     unmatched_genome_output_writer.writerow([database + '_v' + ph_version])
-    unmatched_genome_output_writer.writerow([analyze_genome_author_output])
-    unmatched_genome_output_writer.writerow([analyze_genome_status_output])
-    unmatched_genome_output_writer.writerow([analyze_database_output])
+    unmatched_genome_output_writer.writerow([selected_authors])
+    unmatched_genome_output_writer.writerow([selected_status])
+    unmatched_genome_output_writer.writerow([selected_dbs])
     unmatched_genome_output_writer.writerow([''])
 
-    if 'phagesdb' in valid_database_set:
+    if 'phagesdb' in valid_dbs:
 
         unmatched_genome_output_writer.writerow(['The following MySQL genomes were not matched to phagesdb:'])
         unmatched_genome_output_writer.writerow(['PhageID','PhageName','Author','Status'])
@@ -2782,7 +2692,7 @@ def main(unparsed_args_list):
                                                         element.get_annotation_author(),\
                                                         element.get_status()])
 
-    if 'ncbi' in valid_database_set:
+    if 'ncbi' in valid_dbs:
         unmatched_genome_output_writer.writerow([''])
         unmatched_genome_output_writer.writerow(['\nThe following MySQL genomes were not matched to NCBI:'])
         unmatched_genome_output_writer.writerow(['PhageID','PhageName','Author','Status','Accession'])
@@ -2838,14 +2748,14 @@ def main(unparsed_args_list):
 
 
     #Create database summary output file
-    database_summary_report_fh = open(os.path.join(main_output_path,date + '_database_comparison_summary_output.csv'), 'w')
+    database_summary_report_fh = open(os.path.join(main_output_path,CURRENT_DATE + SUMMARY_OUTPUT), 'w')
     file_handle_list.append(database_summary_report_fh)
     database_summary_report_writer = csv.writer(database_summary_report_fh)
-    database_summary_report_writer.writerow([date + ' Database comparison'])
+    database_summary_report_writer.writerow([CURRENT_DATE + ' Database comparison'])
     database_summary_report_writer.writerow([database + '_v' + ph_version])
-    database_summary_report_writer.writerow([analyze_genome_author_output])
-    database_summary_report_writer.writerow([analyze_genome_status_output])
-    database_summary_report_writer.writerow([analyze_database_output])
+    database_summary_report_writer.writerow([selected_authors])
+    database_summary_report_writer.writerow([selected_status])
+    database_summary_report_writer.writerow([selected_dbs])
 
     #Create vector of column headers
     summary_report_fields = [\
@@ -2945,14 +2855,14 @@ def main(unparsed_args_list):
 
 
 
-    genome_report_fh = open(os.path.join(main_output_path,date + '_database_comparison_genome_output.csv'), 'w')
+    genome_report_fh = open(os.path.join(main_output_path,CURRENT_DATE + GENOME_OUTPUT), 'w')
     file_handle_list.append(genome_report_fh)
     genome_report_writer = csv.writer(genome_report_fh)
-    genome_report_writer.writerow([date + ' Database comparison'])
+    genome_report_writer.writerow([CURRENT_DATE + ' Database comparison'])
     genome_report_writer.writerow([database + '_v' + ph_version])
-    genome_report_writer.writerow([analyze_genome_author_output])
-    genome_report_writer.writerow([analyze_genome_status_output])
-    genome_report_writer.writerow([analyze_database_output])
+    genome_report_writer.writerow([selected_authors])
+    genome_report_writer.writerow([selected_status])
+    genome_report_writer.writerow([selected_dbs])
 
 
 
@@ -3071,14 +2981,14 @@ def main(unparsed_args_list):
 
 
 
-    gene_report_fh = open(os.path.join(main_output_path,date + '_database_comparison_gene_output.csv'), 'w')
+    gene_report_fh = open(os.path.join(main_output_path,CURRENT_DATE + GENE_OUTPUT), 'w')
     file_handle_list.append(gene_report_fh)
     gene_report_writer = csv.writer(gene_report_fh)
-    gene_report_writer.writerow([date + ' Database comparison'])
+    gene_report_writer.writerow([CURRENT_DATE + ' Database comparison'])
     gene_report_writer.writerow([database + '_v' + ph_version])
-    gene_report_writer.writerow([analyze_genome_author_output])
-    gene_report_writer.writerow([analyze_genome_status_output])
-    gene_report_writer.writerow([analyze_database_output])
+    gene_report_writer.writerow([selected_authors])
+    gene_report_writer.writerow([selected_status])
+    gene_report_writer.writerow([selected_dbs])
 
     #Create vector of column headers
     gene_report_column_headers = [\
