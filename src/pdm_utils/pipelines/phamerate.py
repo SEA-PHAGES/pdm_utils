@@ -59,7 +59,8 @@ def main(argument_list):
     temp_dir = args.temp_dir
 
     # Initialize SQLAlchemy engine with database provided at CLI
-    alchemist = establish_database_connection(args.db, echo=False)
+    alchemist = AlchemyHandler(database=args.db)
+    alchemist.connect(pipeline=True)
     engine = alchemist.engine
 
 
@@ -136,18 +137,3 @@ def main(argument_list):
 
     # Report phameration elapsed time
     print("Elapsed time: {}".format(str(stop - start)))
-
-
-
-# TODO this may be moved elsewhere as a more generalized function.
-def establish_database_connection(database: str, echo=False):
-    alchemist = AlchemyHandler(database=database)
-    try:
-        alchemist.connect()
-    except ValueError as err:
-        print(err)
-        print("Unable to login to MySQL.")
-        sys.exit(1)
-    else:
-        alchemist._engine.echo = echo
-    return alchemist

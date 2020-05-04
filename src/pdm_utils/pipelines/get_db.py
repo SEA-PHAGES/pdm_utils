@@ -75,27 +75,14 @@ def main(unparsed_args_list):
             print("Removing downloaded data.")
             shutil.rmtree(results_path)
 
-
-# TODO this may be moved elsewhere as a more generalized function.
-def establish_database_connection(database: str, echo=False):
-    alchemist = AlchemyHandler(database=database)
-    try:
-        alchemist.connect()
-    except ValueError as err:
-        print(err)
-        print("Unable to login to MySQL.")
-        sys.exit(1)
-    else:
-        alchemist._engine.echo = echo
-    return alchemist
-
 # TODO test.
 def install_db(database, db_filepath=None, schema_version=None):
     """Install database. If database already exists, it is first removed."""
     # No need to specify database yet, since it needs to first check if the
     # database exists.
 
-    alchemist = establish_database_connection(database="", echo=False)
+    alchemist = AlchemyHandler(database="")
+    alchemist.connect(pipeline=True)
     engine1 = alchemist.engine
     result = mysqldb_basic.drop_create_db(engine1, database)
     if result != 0:

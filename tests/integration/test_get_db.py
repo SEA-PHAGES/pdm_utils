@@ -77,10 +77,10 @@ class TestGetDb(unittest.TestCase):
             test_db_utils.remove_db()
 
 
-    @patch("pdm_utils.pipelines.get_db.establish_database_connection")
-    def test_main_1(self, edc_mock):
+    @patch("pdm_utils.pipelines.get_db.AlchemyHandler")
+    def test_main_1(self, alchemy_mock):
         """Verify database is installed from file."""
-        edc_mock.return_value = self.alchemist
+        alchemy_mock.return_value = self.alchemist
         unparsed_args = get_unparsed_args(option="file")
         run.main(unparsed_args)
         # Query for version data. This verifies that the databases exists
@@ -89,10 +89,10 @@ class TestGetDb(unittest.TestCase):
         self.assertEqual(len(version_data), 1)
 
 
-    @patch("pdm_utils.pipelines.get_db.establish_database_connection")
-    def test_main_2(self, edc_mock):
+    @patch("pdm_utils.pipelines.get_db.AlchemyHandler")
+    def test_main_2(self, alchemy_mock):
         """Verify new database is created."""
-        edc_mock.return_value = self.alchemist
+        alchemy_mock.return_value = self.alchemist
         unparsed_args = get_unparsed_args(option="new")
         run.main(unparsed_args)
 
@@ -102,10 +102,10 @@ class TestGetDb(unittest.TestCase):
         self.assertEqual(len(version_data), 1)
 
 
-    @patch("pdm_utils.pipelines.get_db.establish_database_connection")
-    def test_main_3(self, edc_mock):
+    @patch("pdm_utils.pipelines.get_db.AlchemyHandler")
+    def test_main_3(self, alchemy_mock):
         """Verify database is downloaded and installed from server."""
-        edc_mock.return_value = self.alchemist
+        alchemy_mock.return_value = self.alchemist
         # Since the entire Actinobacteriophage database is being downloaded,
         # be sure to only download the SQL file and do NOT install it,
         # else it will overwrite the existing Actinobacteriophage database.
@@ -123,11 +123,11 @@ class TestGetDb(unittest.TestCase):
             self.assertTrue(file2.exists())
 
 
-    @patch("pdm_utils.pipelines.get_db.establish_database_connection")
-    def test_main_4(self, edc_mock):
+    @patch("pdm_utils.pipelines.get_db.AlchemyHandler")
+    def test_main_4(self, alchemy_mock):
         """Verify database is installed from file and overwrites
         existing database."""
-        edc_mock.return_value = self.alchemist
+        alchemy_mock.return_value = self.alchemist
         # First install a database with data. Then delete version table.
         test_db_utils.create_filled_test_db()
         test_db_utils.execute("DROP TABLE version")

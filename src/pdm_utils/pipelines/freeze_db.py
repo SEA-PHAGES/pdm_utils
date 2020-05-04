@@ -28,7 +28,8 @@ def main(unparsed_args_list):
 
     # Verify database connection and schema compatibility.
     print("Connecting to the MySQL database...")
-    alchemist = establish_database_connection(ref_database, echo=False)
+    alchemist = AlchemyHandler(database=ref_database)
+    alchemist.connect(pipeline=True)
     engine1 = alchemist.engine
     mysqldb.check_schema_compatibility(engine1, "the freeze pipeline")
 
@@ -97,19 +98,6 @@ def main(unparsed_args_list):
     else:
         print(f"Error creating new database: {new_database}.")
     print("Freeze database script completed.")
-
-# TODO this may be moved elsewhere as a more generalized function.
-def establish_database_connection(database: str, echo=False):
-    alchemist = AlchemyHandler(database=database)
-    try:
-        alchemist.connect()
-    except ValueError as err:
-        print(err)
-        print("Unable to login to MySQL.")
-        sys.exit(1)
-    else:
-        alchemist._engine.echo = echo
-    return alchemist
 
 # TODO unittest.
 def parse_args(unparsed_args_list):

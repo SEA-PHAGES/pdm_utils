@@ -255,7 +255,7 @@ def parse_export(unparsed_args_list):
                                  folder_name=DEFAULT_FOLDER_NAME,
                                  folder_path=DEFAULT_FOLDER_PATH,
                                  verbose=False, input=[],
-                                 table=DEFAULT_TABLE, 
+                                 table=DEFAULT_TABLE,
                                  filters="", groups=[], sort=[],
                                  include_columns=[], exclude_columns=[],
                                  sequence_columns=False, concatenate=False,
@@ -331,7 +331,7 @@ def execute_export(alchemist, folder_path, folder_name, pipeline,
     elif pipeline in FILTERABLE_PIPELINES:
         conditionals_map = {}
         build_groups_map(db_filter, export_path, conditionals_map,
-                                                 groups=groups, 
+                                                 groups=groups,
                                                  verbose=verbose)
 
         if verbose:
@@ -340,7 +340,7 @@ def execute_export(alchemist, folder_path, folder_name, pipeline,
         for mapped_path in conditionals_map.keys():
             db_filter.reset()
             db_filter.values = values
-            
+
             conditionals = conditionals_map[mapped_path]
             db_filter.values = db_filter.build_values(where=conditionals)
 
@@ -354,13 +354,13 @@ def execute_export(alchemist, folder_path, folder_name, pipeline,
                 db_filter.sort(sort_columns)
 
             if pipeline in BIOPYTHON_PIPELINES:
-                execute_ffx_export(alchemist, mapped_path, export_path, 
-                                   db_filter.values, pipeline, db_version, 
-                                   table, concatenate=concatenate, 
+                execute_ffx_export(alchemist, mapped_path, export_path,
+                                   db_filter.values, pipeline, db_version,
+                                   table, concatenate=concatenate,
                                    verbose=verbose)
             else:
                 execute_csv_export(db_filter, mapped_path, export_path,
-                                   csv_columns, table, raw_bytes=raw_bytes, 
+                                   csv_columns, table, raw_bytes=raw_bytes,
                                    verbose=verbose)
     else:
         print("Unrecognized export pipeline, aborting export")
@@ -416,7 +416,7 @@ def execute_csv_export(db_filter, export_path, folder_path, columns, csv_name,
                                                include_headers=True)
 
 def execute_ffx_export(alchemist, export_path, folder_path, values,
-                       file_format, db_version, table, 
+                       file_format, db_version, table,
                        concatenate=False, verbose=False):
     """Executes SeqRecord export of the compilation of data from a MySQL emtry.
 
@@ -444,7 +444,7 @@ def execute_ffx_export(alchemist, export_path, folder_path, values,
     :type verbose: bool
     """
     if verbose:
-        print(f"Retrieving {export_path.name} data...") 
+        print(f"Retrieving {export_path.name} data...")
 
     if verbose:
         print(f"...Database entries retrieved: {len(values)}")
@@ -568,40 +568,6 @@ def _(value_list_input):
 @parse_value_input.register(list)
 def _(value_list_input):
     return value_list_input
-
-def establish_connection(database):
-    """Establishes a connection to a MySQL database using an AlchemyHandler.
-
-    :param database: Name of a MySQL database.
-    :type database: str
-    """
-    alchemist = AlchemyHandler()
-
-    alchemist.database = database
-    try:
-        alchemist.connect(login_attempts=3)
-    except ValueError:
-        print("Credentials invalid. "
-              "Please check your MySQL credentials and try again.")
-        sys.exit(1)
-    except:
-        print("Unknown error occured when logging into MySQL.")
-        raise
-
-    try:
-        alchemist.connect(ask_database=True, login_attempts=0)
-    except ValueError:
-        print("Please check your MySQL database access, "
-              "and/or your database availability.\n"
-             f"Unable to connect to database '{database}' "
-              "with valid credentials.")
-        sys.exit(1)
-    except:
-        print("Unknown error occured when connecting to MySQL database.")
-        raise
-
-    alchemist.build_graph()
-    return alchemist
 
 #-----------------------------------------------------------------------------
 #EXPORT-SPECIFIC HELPER FUNCTIONS
@@ -1001,7 +967,7 @@ def append_database_version(genome_seqrecord, version_data):
     except:
         if isinstance(genome_seqrecord, SeqRecord):
             return
-            
+
         raise TypeError("Object must be of type SeqRecord."
                        f"Object was of type {type}.")
 

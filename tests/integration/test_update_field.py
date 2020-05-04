@@ -130,10 +130,10 @@ class TestUpdate(unittest.TestCase):
 
 
 
-    @patch("pdm_utils.pipelines.update_field.establish_database_connection")
-    def test_main_1(self, edc_mock):
+    @patch("pdm_utils.pipelines.update_field.AlchemyHandler")
+    def test_main_1(self, alchemy_mock):
         """Verify update runs with empty ticket table."""
-        edc_mock.return_value = self.alchemist
+        alchemy_mock.return_value = self.alchemist
         create_update_table([], update_table)
         unparsed_args = get_unparsed_args(file=update_table)
         run.main(unparsed_args)
@@ -150,10 +150,10 @@ class TestUpdate(unittest.TestCase):
         with self.subTest():
             self.assertEqual(version_table[0]["Version"], 0)
 
-    @patch("pdm_utils.pipelines.update_field.establish_database_connection")
-    def test_main_2(self, edc_mock):
+    @patch("pdm_utils.pipelines.update_field.AlchemyHandler")
+    def test_main_2(self, alchemy_mock):
         """Verify update runs with five tickets in ticket table."""
-        edc_mock.return_value = self.alchemist
+        alchemy_mock.return_value = self.alchemist
         host_genus = "Mycobacterium"
         cluster = "A"
         subcluster = "A2"
@@ -189,10 +189,10 @@ class TestUpdate(unittest.TestCase):
         with self.subTest():
             self.assertEqual(version_table[0]["Version"], 0)
 
-    @patch("pdm_utils.pipelines.update_field.establish_database_connection")
-    def test_main_3(self, edc_mock):
+    @patch("pdm_utils.pipelines.update_field.AlchemyHandler")
+    def test_main_3(self, alchemy_mock):
         """Verify version data is updated."""
-        edc_mock.return_value = self.alchemist
+        alchemy_mock.return_value = self.alchemist
         unparsed_args = get_unparsed_args(version=True)
         run.main(unparsed_args)
         version_table = test_db_utils.get_data(test_db_utils.version_table_query)
@@ -205,10 +205,10 @@ class TestUpdate(unittest.TestCase):
         with self.subTest():
             self.assertEqual(alice["HostGenus"], "unknown")
 
-    @patch("pdm_utils.pipelines.update_field.establish_database_connection")
-    def test_main_4(self, edc_mock):
+    @patch("pdm_utils.pipelines.update_field.AlchemyHandler")
+    def test_main_4(self, alchemy_mock):
         """Verify version data and phage table data are updated."""
-        edc_mock.return_value = self.alchemist
+        alchemy_mock.return_value = self.alchemist
         host_genus = "Mycobacterium"
         tkt = get_alice_ticket("HostGenus", host_genus)
         create_update_table([tkt], update_table)

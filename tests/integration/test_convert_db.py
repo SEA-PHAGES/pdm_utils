@@ -75,12 +75,11 @@ class TestConvert(unittest.TestCase):
         if exists:
             test_db_utils.remove_db(db=DB2)
 
-
-    @patch("pdm_utils.pipelines.convert_db.establish_database_connection")
-    def test_main_1(self, edc_mock):
+    @patch("pdm_utils.pipelines.convert_db.AlchemyHandler")
+    def test_main_1(self, alchemy_mock):
         """Verify step-by-step database conversion round trip is successful and
         generates identical empty schema files."""
-        edc_mock.return_value = self.alchemist
+        alchemy_mock.return_value = self.alchemist
 
         # Downgrade one schema version at a time and generate empty schema file.
         # If current = 4, down = [3, 2, 1, 0]
@@ -128,11 +127,11 @@ class TestConvert(unittest.TestCase):
                 self.assertEqual(result, 0)
 
 
-    @patch("pdm_utils.pipelines.convert_db.establish_database_connection")
-    def test_main_2(self, edc_mock):
+    @patch("pdm_utils.pipelines.convert_db.AlchemyHandler")
+    def test_main_2(self, alchemy_mock):
         """Verify non-step-by-step database conversion round trip is successful
         and generates identical empty schema files."""
-        edc_mock.return_value = self.alchemist
+        alchemy_mock.return_value = self.alchemist
 
         # Get current schema file.
         schema_filepath1 = Path(results_path, "before.sql")
@@ -168,10 +167,10 @@ class TestConvert(unittest.TestCase):
         self.assertEqual(result, 0)
 
 
-    @patch("pdm_utils.pipelines.convert_db.establish_database_connection")
-    def test_main_3(self, edc_mock):
+    @patch("pdm_utils.pipelines.convert_db.AlchemyHandler")
+    def test_main_3(self, alchemy_mock):
         """Verify database with new name is created."""
-        edc_mock.return_value = self.alchemist
+        alchemy_mock.return_value = self.alchemist
 
         # Downgrade one step.
         step = self.current - 1

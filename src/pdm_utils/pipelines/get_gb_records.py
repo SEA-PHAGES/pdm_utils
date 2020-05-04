@@ -76,7 +76,8 @@ def main(unparsed_args_list):
 
     # Verify database connection and schema compatibility.
     print("Connecting to the MySQL database...")
-    alchemist = establish_database_connection(args.database, echo=False)
+    alchemist = AlchemyHandler(database=args.database)
+    alchemist.connect(pipeline=True)
     engine = alchemist.engine
     mysqldb.check_schema_compatibility(engine, "the get_gb_records pipeline")
 
@@ -228,20 +229,6 @@ def output_data(seqrecord, acc_id_dict, output_folder):
         filename = (f"{phage_id}__{accession}.gb")
         filepath = pathlib.Path(output_folder, filename)
         SeqIO.write(seqrecord, str(filepath), "genbank")
-
-
-# TODO this may be moved elsewhere as a more generalized function.
-def establish_database_connection(database: str, echo=False):
-    alchemist = AlchemyHandler(database=database)
-    try:
-        alchemist.connect()
-    except ValueError as err:
-        print(err)
-        print("Unable to login to MySQL.")
-        sys.exit(1)
-    else:
-        alchemist._engine.echo = echo
-    return alchemist
 
 # TODO move to basic or mysqldb.
 # TODO test.

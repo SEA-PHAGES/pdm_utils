@@ -276,7 +276,8 @@ def main(argument_list):
         rpsblast = get_rpsblast_path(command)
 
     # Verify database connection and schema compatibility.
-    alchemist = establish_database_connection(database, echo=False)
+    alchemist = AlchemyHandler(database=database)
+    alchemist.connect(pipeline=True)
     engine = alchemist.engine
     logger.info(f"Connected to database: {database}.")
     mysqldb.check_schema_compatibility(engine, "the find_domains pipeline")
@@ -330,20 +331,6 @@ def main(argument_list):
         engine.dispose()
 
     return
-
-
-# TODO this may be moved elsewhere as a more generalized function.
-def establish_database_connection(database: str, echo=False):
-    alchemist = AlchemyHandler(database=database)
-    try:
-        alchemist.connect()
-    except ValueError as err:
-        print(err)
-        print("Unable to login to MySQL.")
-        sys.exit(1)
-    else:
-        alchemist._engine.echo = echo
-    return alchemist
 
 def search_summary(rolled_back):
     """Print search results."""

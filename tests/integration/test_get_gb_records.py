@@ -91,10 +91,10 @@ class TestGetGBRecords(unittest.TestCase):
         shutil.rmtree(test_folder)
 
 
-    @patch("pdm_utils.pipelines.get_gb_records.establish_database_connection")
-    def test_main_1(self, edc_mock):
+    @patch("pdm_utils.pipelines.get_gb_records.AlchemyHandler")
+    def test_main_1(self, alchemy_mock):
         """Verify no GenBank record is retrieved."""
-        edc_mock.return_value = self.alchemist
+        alchemy_mock.return_value = self.alchemist
         run.main(self.unparsed_args)
         count = count_files(results_path)
         with self.subTest():
@@ -102,10 +102,10 @@ class TestGetGBRecords(unittest.TestCase):
         with self.subTest():
             self.assertEqual(count, 0)
 
-    @patch("pdm_utils.pipelines.get_gb_records.establish_database_connection")
-    def test_main_2(self, edc_mock):
+    @patch("pdm_utils.pipelines.get_gb_records.AlchemyHandler")
+    def test_main_2(self, alchemy_mock):
         """Verify one GenBank record is retrieved."""
-        edc_mock.return_value = self.alchemist
+        alchemy_mock.return_value = self.alchemist
         stmt = create_update("phage", "Accession", TRIXIE_ACC, "Trixie")
         test_db_utils.execute(stmt)
         run.main(self.unparsed_args)
@@ -115,10 +115,10 @@ class TestGetGBRecords(unittest.TestCase):
         with self.subTest():
             self.assertEqual(count, 1)
 
-    @patch("pdm_utils.pipelines.get_gb_records.establish_database_connection")
-    def test_main_3(self, edc_mock):
+    @patch("pdm_utils.pipelines.get_gb_records.AlchemyHandler")
+    def test_main_3(self, alchemy_mock):
         """Verify no GenBank record is retrieved based on one filter."""
-        edc_mock.return_value = self.alchemist
+        alchemy_mock.return_value = self.alchemist
         stmt = create_update("phage", "Accession", TRIXIE_ACC, "Trixie")
         test_db_utils.execute(stmt)
         self.unparsed_args.extend(["-f", "phage.Status!=draft"])
@@ -129,10 +129,10 @@ class TestGetGBRecords(unittest.TestCase):
         with self.subTest():
             self.assertEqual(count, 0)
 
-    @patch("pdm_utils.pipelines.get_gb_records.establish_database_connection")
-    def test_main_4(self, edc_mock):
+    @patch("pdm_utils.pipelines.get_gb_records.AlchemyHandler")
+    def test_main_4(self, alchemy_mock):
         """Verify one GenBank record is retrieved based on one filter."""
-        edc_mock.return_value = self.alchemist
+        alchemy_mock.return_value = self.alchemist
         stmt1 = create_update("phage", "Accession", TRIXIE_ACC, "Trixie")
         test_db_utils.execute(stmt1)
         stmt2 = create_update("phage", "Status", "final", "Trixie")

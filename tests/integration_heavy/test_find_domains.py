@@ -1227,12 +1227,11 @@ class TestFindDomains6(unittest.TestCase):
 
 
 
-
-    @patch("pdm_utils.pipelines.find_domains.establish_database_connection")
-    def test_main_1(self, edc_mock):
+    @patch("pdm_utils.pipelines.find_domains.AlchemyHandler")
+    def test_main_1(self, alchemy_mock):
         """Verify no genes are processed if all DomainStatus = 1."""
         logging.info("test_main_2")
-        edc_mock.return_value = self.alchemist
+        alchemy_mock.return_value = self.alchemist
         run.main(self.unparsed_args)
         gene_domain_table_results = test_db_utils.get_data(test_db_utils.gene_domain_table_query)
         domain_table_results = test_db_utils.get_data(test_db_utils.domain_table_query)
@@ -1245,14 +1244,14 @@ class TestFindDomains6(unittest.TestCase):
             self.assertEqual(gd_rows, 0)
 
 
-    @patch("pdm_utils.pipelines.find_domains.establish_database_connection")
-    def test_main_2(self, edc_mock):
+    @patch("pdm_utils.pipelines.find_domains.AlchemyHandler")
+    def test_main_2(self, alchemy_mock):
         """Verify all four genes processed if DomainStatus = 0."""
         # There are four genes representing three unique translations.
         # Two translations should have domains, and the third should not.
         # Since batch size is set to 2, it also tests the batch functionality.
         logging.info("test_main_2")
-        edc_mock.return_value = self.alchemist
+        alchemy_mock.return_value = self.alchemist
 
         stmt = get_gene_update_statement(0)
         test_db_utils.execute(stmt)

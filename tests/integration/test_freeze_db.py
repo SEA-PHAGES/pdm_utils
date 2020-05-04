@@ -71,11 +71,11 @@ class TestFreeze(unittest.TestCase):
 
 
 
-    @patch("pdm_utils.pipelines.freeze_db.establish_database_connection")
-    def test_main_1(self, edc_mock):
+    @patch("pdm_utils.pipelines.freeze_db.AlchemyHandler")
+    def test_main_1(self, alchemy_mock):
         """Verify frozen database is created from database with
         no change in genome count when no filters are provided."""
-        edc_mock.return_value = self.alchemist
+        alchemy_mock.return_value = self.alchemist
         run.main(self.unparsed_args)
         count1 = test_db_utils.get_data(COUNT_PHAGE, db=DB)
         count2 = test_db_utils.get_data(COUNT_PHAGE, db=DB2)
@@ -86,21 +86,21 @@ class TestFreeze(unittest.TestCase):
         with self.subTest():
             self.assertEqual(version[0]["Version"], 1)
 
-    @patch("pdm_utils.pipelines.freeze_db.establish_database_connection")
-    def test_main_2(self, edc_mock):
+    @patch("pdm_utils.pipelines.freeze_db.AlchemyHandler")
+    def test_main_2(self, alchemy_mock):
         """Verify frozen database is created from database with
         all genomes removed."""
-        edc_mock.return_value = self.alchemist
+        alchemy_mock.return_value = self.alchemist
         self.unparsed_args.extend(["-f", "phage.Status != draft"])
         run.main(self.unparsed_args)
         count2 = test_db_utils.get_data(COUNT_PHAGE, db=DB2)
         self.assertEqual(count2[0]["count"], 0)
 
-    @patch("pdm_utils.pipelines.freeze_db.establish_database_connection")
-    def test_main_3(self, edc_mock):
+    @patch("pdm_utils.pipelines.freeze_db.AlchemyHandler")
+    def test_main_3(self, alchemy_mock):
         """Verify frozen database is created from database with
         only one 'final' genome."""
-        edc_mock.return_value = self.alchemist
+        alchemy_mock.return_value = self.alchemist
         stmt = create_update("phage", "Status", "final", "Trixie")
         test_db_utils.execute(stmt)
         self.unparsed_args.extend(["-f", "phage.Status!=draft"])
@@ -108,11 +108,11 @@ class TestFreeze(unittest.TestCase):
         count2 = test_db_utils.get_data(COUNT_PHAGE, db=DB2)
         self.assertEqual(count2[0]["count"], 1)
 
-    @patch("pdm_utils.pipelines.freeze_db.establish_database_connection")
-    def test_main_4(self, edc_mock):
+    @patch("pdm_utils.pipelines.freeze_db.AlchemyHandler")
+    def test_main_4(self, alchemy_mock):
         """Verify frozen database is created from database with
         one genome based on two filters."""
-        edc_mock.return_value = self.alchemist
+        alchemy_mock.return_value = self.alchemist
         stmt = create_update("phage", "Status", "final", "Trixie")
         test_db_utils.execute(stmt)
         filters = "phage.Status != draft AND phage.HostGenus = Mycobacterium"
@@ -121,11 +121,11 @@ class TestFreeze(unittest.TestCase):
         count2 = test_db_utils.get_data(COUNT_PHAGE, db=DB2)
         self.assertEqual(count2[0]["count"], 1)
 
-    @patch("pdm_utils.pipelines.freeze_db.establish_database_connection")
-    def test_main_5(self, edc_mock):
+    @patch("pdm_utils.pipelines.freeze_db.AlchemyHandler")
+    def test_main_5(self, alchemy_mock):
         """Verify frozen database is created from database with
         no genomes based on two filters."""
-        edc_mock.return_value = self.alchemist
+        alchemy_mock.return_value = self.alchemist
         stmt = create_update("phage", "Status", "final", "Trixie")
         test_db_utils.execute(stmt)
         filters = "phage.Status != draft AND phage.HostGenus = Gordonia"
@@ -134,11 +134,11 @@ class TestFreeze(unittest.TestCase):
         count2 = test_db_utils.get_data(COUNT_PHAGE, db=DB2)
         self.assertEqual(count2[0]["count"], 0)
 
-    @patch("pdm_utils.pipelines.freeze_db.establish_database_connection")
-    def test_main_6(self, edc_mock):
+    @patch("pdm_utils.pipelines.freeze_db.AlchemyHandler")
+    def test_main_6(self, alchemy_mock):
         """Verify frozen database is created from database with
         one genome based on two filters from two tables."""
-        edc_mock.return_value = self.alchemist
+        alchemy_mock.return_value = self.alchemist
         stmt = create_update("phage", "Status", "final", "Trixie")
         test_db_utils.execute(stmt)
         filters = "phage.Status != draft AND gene.Notes = repressor"
@@ -148,46 +148,46 @@ class TestFreeze(unittest.TestCase):
         self.assertEqual(count2[0]["count"], 1)
 
     @patch("sys.exit")
-    @patch("pdm_utils.pipelines.freeze_db.establish_database_connection")
-    def test_main_7(self, edc_mock, exit_mock):
+    @patch("pdm_utils.pipelines.freeze_db.AlchemyHandler")
+    def test_main_7(self, alchemy_mock, exit_mock):
         """Verify pipeline exits with invalid filter column."""
-        edc_mock.return_value = self.alchemist
+        alchemy_mock.return_value = self.alchemist
         self.unparsed_args.extend(["-f", "phage.Invalid != draft"])
         run.main(self.unparsed_args)
         exit_mock.assert_called()
 
     @patch("sys.exit")
-    @patch("pdm_utils.pipelines.freeze_db.establish_database_connection")
-    def test_main_8(self, edc_mock, exit_mock):
+    @patch("pdm_utils.pipelines.freeze_db.AlchemyHandler")
+    def test_main_8(self, alchemy_mock, exit_mock):
         """Verify pipeline exits with invalid filter table."""
-        edc_mock.return_value = self.alchemist
+        alchemy_mock.return_value = self.alchemist
         self.unparsed_args.extend(["-f", "Invalid.Invalid != draft"])
         run.main(self.unparsed_args)
         exit_mock.assert_called()
 
     @patch("sys.exit")
-    @patch("pdm_utils.pipelines.freeze_db.establish_database_connection")
-    def test_main_9(self, edc_mock, exit_mock):
+    @patch("pdm_utils.pipelines.freeze_db.AlchemyHandler")
+    def test_main_9(self, alchemy_mock, exit_mock):
         """Verify pipeline exits with invalid filter string."""
-        edc_mock.return_value = self.alchemist
+        alchemy_mock.return_value = self.alchemist
         self.unparsed_args.extend(["-f", "Invalid != draft"])
         run.main(self.unparsed_args)
         exit_mock.assert_called()
 
     @patch("sys.exit")
-    @patch("pdm_utils.pipelines.freeze_db.establish_database_connection")
-    def test_main_10(self, edc_mock, exit_mock):
+    @patch("pdm_utils.pipelines.freeze_db.AlchemyHandler")
+    def test_main_10(self, alchemy_mock, exit_mock):
         """Verify pipeline exits with invalid filter."""
-        edc_mock.return_value = self.alchemist
+        alchemy_mock.return_value = self.alchemist
         self.unparsed_args.extend(["-f", "phage.Status 'draft'"])
         run.main(self.unparsed_args)
         exit_mock.assert_called()
 
-    @patch("pdm_utils.pipelines.freeze_db.establish_database_connection")
-    def test_main_11(self, edc_mock):
+    @patch("pdm_utils.pipelines.freeze_db.AlchemyHandler")
+    def test_main_11(self, alchemy_mock):
         """Verify frozen database is created from database
         using quoted filter value."""
-        edc_mock.return_value = self.alchemist
+        alchemy_mock.return_value = self.alchemist
         stmt = create_update("phage", "Status", "final", "Trixie")
         test_db_utils.execute(stmt)
         self.unparsed_args.extend(["-f", "phage.Status != 'draft'"])
@@ -195,11 +195,11 @@ class TestFreeze(unittest.TestCase):
         count2 = test_db_utils.get_data(COUNT_PHAGE, db=DB2)
         self.assertEqual(count2[0]["count"], 1)
 
-    @patch("pdm_utils.pipelines.freeze_db.establish_database_connection")
-    def test_main_12(self, edc_mock):
+    @patch("pdm_utils.pipelines.freeze_db.AlchemyHandler")
+    def test_main_12(self, alchemy_mock):
         """Verify data is changed when there is data in the database
         and reset = True."""
-        edc_mock.return_value = self.alchemist
+        alchemy_mock.return_value = self.alchemist
         stmt = create_update("phage", "Status", "final", "Trixie")
         test_db_utils.execute(stmt)
         self.unparsed_args.extend(["-f", "phage.Status != draft", "-r"])
@@ -212,11 +212,11 @@ class TestFreeze(unittest.TestCase):
         with self.subTest():
             self.assertEqual(version[0]["Version"], 0)
 
-    @patch("pdm_utils.pipelines.freeze_db.establish_database_connection")
-    def test_main_13(self, edc_mock):
+    @patch("pdm_utils.pipelines.freeze_db.AlchemyHandler")
+    def test_main_13(self, alchemy_mock):
         """Verify data is changed when there is NO data in the database
         and reset = True."""
-        edc_mock.return_value = self.alchemist
+        alchemy_mock.return_value = self.alchemist
         self.unparsed_args.extend(["-f", "phage.Status != draft", "-r"])
         run.main(self.unparsed_args)
         count = test_db_utils.get_data(COUNT_PHAGE, db=DB2)

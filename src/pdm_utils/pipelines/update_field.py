@@ -16,8 +16,8 @@ def main(unparsed_args):
 
     # Verify database connection and schema compatibility.
     print("Connecting to the MySQL database...")
-
-    alchemist = establish_database_connection(args.database, echo=False)
+    alchemist = AlchemyHandler(database=args.database)
+    alchemist.connect(pipeline=True)
     engine = alchemist.engine
     mysqldb.check_schema_compatibility(engine, "the update pipeline")
 
@@ -94,18 +94,3 @@ def parse_args(unparsed_args_list):
         default=False, help=VERSION_HELP)
     args = parser.parse_args(unparsed_args_list)
     return args
-
-
-
-# TODO this may be moved elsewhere as a more generalized function.
-def establish_database_connection(database: str, echo=False):
-    alchemist = AlchemyHandler(database=database)
-    try:
-        alchemist.connect()
-    except ValueError as err:
-        print(err)
-        print("Unable to login to MySQL.")
-        sys.exit(1)
-    else:
-        alchemist._engine.echo = echo
-    return alchemist
