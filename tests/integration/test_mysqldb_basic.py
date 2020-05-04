@@ -29,7 +29,7 @@ DB3 = "pdm_test_3" # This db is never created.
 TABLE = "phage"
 COLUMN = "PhageID"
 
-
+COUNT_QUERY = "SELECT COUNT(*) FROM phage"
 PHAGE_QUERY = "SELECT * FROM phage"
 GENE_QUERY = "SELECT * FROM gene"
 
@@ -403,9 +403,42 @@ class TestMysqldbBasic3(unittest.TestCase):
 
 
 
+    def test_first_1(self):
+        """Verify dictionary is returned when there are two rows of data."""
+        phage_data1 = test_data_utils.get_trixie_phage_data()
+        phage_data2 = test_data_utils.get_trixie_phage_data()
+        phage_data1["PhageID"] = "Trixie"
+        phage_data2["PhageID"] = "L5"
+        test_db_utils.insert_phage_data(phage_data1)
+        test_db_utils.insert_phage_data(phage_data2)
+        data = mysqldb_basic.first(self.engine, PHAGE_QUERY, return_dict=True)
+        self.assertTrue(COLUMN in data.keys())
+
+    def test_first_2(self):
+        """Verify tuple is returned when there are two rows of data."""
+        phage_data1 = test_data_utils.get_trixie_phage_data()
+        phage_data2 = test_data_utils.get_trixie_phage_data()
+        phage_data1["PhageID"] = "Trixie"
+        phage_data2["PhageID"] = "L5"
+        test_db_utils.insert_phage_data(phage_data1)
+        test_db_utils.insert_phage_data(phage_data2)
+        data = mysqldb_basic.first(self.engine, PHAGE_QUERY, return_dict=False)
+        with self.subTest():
+            self.assertIsInstance(data, tuple)
+        with self.subTest():
+            self.assertTrue(len(data) > 1)
 
 
-
+    def test_scalar_1(self):
+        """Verify dictionary is returned when there are two rows of data."""
+        phage_data1 = test_data_utils.get_trixie_phage_data()
+        phage_data2 = test_data_utils.get_trixie_phage_data()
+        phage_data1["PhageID"] = "Trixie"
+        phage_data2["PhageID"] = "L5"
+        test_db_utils.insert_phage_data(phage_data1)
+        test_db_utils.insert_phage_data(phage_data2)
+        count = mysqldb_basic.scalar(self.engine, COUNT_QUERY)
+        self.assertEqual(count, 2)
 
 
 class TestMysqldbBasic4(unittest.TestCase):

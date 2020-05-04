@@ -350,6 +350,47 @@ def get_first_row_data(engine, table):
     return dict
 
 
+# TODO remove duplicated method in AlchemyHandler?
+def first(engine, executable, return_dict=True):
+    """Execute a query and get the first row of data.
+
+    :param engine: SQLAlchemy Engine object able to connect to a MySQL database.
+    :type engine: Engine
+    :param executable: Input an executable MySQL query.
+    :type executable: Select
+    :type executable: str
+    :param return_dict: Toggle whether execute returns dict or tuple.
+    :type return_dict: Boolean
+    :returns: Results from execution of given MySQL query.
+    :rtype: dict
+    :rtype: tuple
+    """
+    proxy = engine.execute(executable)
+    first_row = proxy.first()
+    if return_dict:
+        first_row = dict(first_row)
+    else:
+        first_row = tuple(first_row)
+    return first_row
+
+
+# TODO remove duplicated method in AlchemyHandler?
+def scalar(engine, executable):
+    """Execute a query and get the first field.
+
+    :param engine: SQLAlchemy Engine object able to connect to a MySQL database.
+    :type engine: Engine
+    :param executable: Input an executable MySQL query.
+    :type executable: Select
+    :type executable: str
+    :returns: Scalar result from execution of given MySQL query.
+    :rtype: int
+    """
+    proxy = engine.execute(executable)
+    scalar = proxy.scalar()
+    return scalar
+
+
 # TODO remove duplicated function in mysqldb module.
 # TODO remove duplicated tests in test_mysqldb module.
 def convert_for_sql(value, check_set=set(), single=True):
