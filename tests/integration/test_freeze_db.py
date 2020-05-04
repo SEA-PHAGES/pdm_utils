@@ -177,14 +177,26 @@ class TestFreeze(unittest.TestCase):
     @patch("sys.exit")
     @patch("pdm_utils.pipelines.freeze_db.establish_database_connection")
     def test_main_10(self, edc_mock, exit_mock):
-        """Verify pipeline exits with invalid quoted filter value."""
+        """Verify pipeline exits with invalid filter."""
         edc_mock.return_value = self.alchemist
-        self.unparsed_args.extend(["-f", "phage.Status != 'draft'"])
+        self.unparsed_args.extend(["-f", "phage.Status 'draft'"])
         run.main(self.unparsed_args)
         exit_mock.assert_called()
 
     @patch("pdm_utils.pipelines.freeze_db.establish_database_connection")
     def test_main_11(self, edc_mock):
+        """Verify frozen database is created from database
+        using quoted filter value."""
+        edc_mock.return_value = self.alchemist
+        stmt = create_update("phage", "Status", "final", "Trixie")
+        test_db_utils.execute(stmt)
+        self.unparsed_args.extend(["-f", "phage.Status != 'draft'"])
+        run.main(self.unparsed_args)
+        count2 = test_db_utils.get_data(COUNT_PHAGE, db=DB2)
+        self.assertEqual(count2[0]["count"], 1)
+
+    @patch("pdm_utils.pipelines.freeze_db.establish_database_connection")
+    def test_main_12(self, edc_mock):
         """Verify data is changed when there is data in the database
         and reset = True."""
         edc_mock.return_value = self.alchemist
@@ -201,7 +213,7 @@ class TestFreeze(unittest.TestCase):
             self.assertEqual(version[0]["Version"], 0)
 
     @patch("pdm_utils.pipelines.freeze_db.establish_database_connection")
-    def test_main_12(self, edc_mock):
+    def test_main_13(self, edc_mock):
         """Verify data is changed when there is NO data in the database
         and reset = True."""
         edc_mock.return_value = self.alchemist

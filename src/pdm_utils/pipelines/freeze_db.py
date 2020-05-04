@@ -2,11 +2,13 @@
 
 import argparse
 import sys
+
 from pdm_utils.functions import basic
 from pdm_utils.functions import mysqldb, mysqldb_basic
 from pdm_utils.functions import parsing
-from pdm_utils.classes.filter import Filter
+from pdm_utils.functions import querying
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
+from pdm_utils.classes.filter import Filter
 
 RESET_VERSION = "UPDATE version SET Version = 0"
 TARGET_TABLE = "phage"
@@ -34,7 +36,8 @@ def main(unparsed_args_list):
     # table_obj.primary_key.columns is a
     # SQLAlchemy ColumnCollection iterable object
     # Set primary key = 'phage.PhageID'
-    table = alchemist.get_table(TARGET_TABLE)
+    alchemist.build_metadata()
+    table = querying.get_table(alchemist.metadata, TARGET_TABLE)
     for column in table.primary_key.columns:
         primary_key = column
 

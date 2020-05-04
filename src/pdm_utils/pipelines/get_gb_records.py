@@ -14,6 +14,7 @@ from pdm_utils.functions import basic
 from pdm_utils.functions import ncbi
 from pdm_utils.functions import mysqldb
 from pdm_utils.functions import parsing
+from pdm_utils.functions import querying
 
 
 DEFAULT_OUTPUT_FOLDER = os.getcwd()
@@ -83,7 +84,8 @@ def main(unparsed_args_list):
     # table_obj.primary_key.columns is a
     # SQLAlchemy ColumnCollection iterable object
     # Set primary key = 'phage.PhageID'
-    table = alchemist.get_table(TARGET_TABLE)
+    alchemist.build_metadata()
+    table = querying.get_table(alchemist.metadata, TARGET_TABLE)
     for column in table.primary_key.columns:
         primary_key = column
 
