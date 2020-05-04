@@ -1,4 +1,13 @@
-"""Tests the functionality of the export pipeline"""
+import csv
+import os
+import shutil 
+import sys 
+import unittest
+from pathlib import Path
+from unittest.mock import call
+from unittest.mock import MagicMock
+from unittest.mock import Mock 
+from unittest.mock import patch 
 
 from Bio.Alphabet.IUPAC import *
 from Bio.Seq import Seq
@@ -6,21 +15,11 @@ from Bio.SeqFeature import CompoundLocation
 from Bio.SeqFeature import FeatureLocation
 from Bio.SeqFeature import SeqFeature
 from Bio.SeqRecord import SeqRecord
-from pathlib import Path
+
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.classes.filter import Filter
 from pdm_utils.classes import genome
 from pdm_utils.pipelines import export_db
-from unittest.mock import call
-from unittest.mock import MagicMock
-from unittest.mock import Mock 
-from unittest.mock import patch 
-import csv
-import os
-import pymysql
-import shutil 
-import sys 
-import unittest
 
 
 # Import helper functions to build mock database
@@ -47,6 +46,11 @@ class TestFileExport(unittest.TestCase):
 
         self.test_dir.mkdir()
 
+    @classmethod
+    def tearDownClass(self):
+        test_db_utils.remove_db()
+        shutil.rmtree(TEST_DIR)
+
     def setUp(self):
         self.alchemist = AlchemyHandler()
         self.alchemist.username=USER
@@ -58,6 +62,10 @@ class TestFileExport(unittest.TestCase):
         self.db_filter = Filter(alchemist=self.alchemist)
         
         self.export_test_dir = self.test_dir.joinpath("export_test_dir")
+
+    def tearDown(self):
+        if self.export_test_dir.is_dir():
+            shutil.rmtree(str(self.export_test_dir))
 
     def test_execute_export_1(self):
         """Verify execute_export() creates new directory as expected.
@@ -92,7 +100,7 @@ class TestFileExport(unittest.TestCase):
                 self.assertTrue(self.export_test_dir.is_dir())
 
                 csv_file_path = self.export_test_dir.joinpath(
-                                            f"{self.export_test_dir.name}.csv")
+                                            f"{table}.csv")
 
                 self.assertTrue(csv_file_path.is_file())
 
@@ -116,10 +124,10 @@ class TestFileExport(unittest.TestCase):
     def test_execute_export_5(self):
         """Verify execute_export() filter parameter functions as expected.
         """
-        parsed_filters = [["phage.PhageID!=Trixie"],["phage.Cluster=A"]]
+        filters = "phage.PhageID!=Trixie AND phage.Cluster=A"
         export_db.execute_export(self.alchemist, self.test_dir,
                                  self.export_test_dir.name, "fasta",
-                                 filters=parsed_filters)
+                                 filters=filters)
 
         D29_file_path = self.export_test_dir.joinpath("D29.fasta")
         Trixie_file_path = self.export_test_dir.joinpath("Trixie.fasta")
@@ -189,7 +197,7 @@ class TestFileExport(unittest.TestCase):
                                  include_columns=include_columns)
 
         csv_path = self.export_test_dir.joinpath(
-                                        f"{self.export_test_dir.name}.csv")
+                                        f"gene.csv")
 
         with open(csv_path) as csv_handle:
             reader = csv.reader(csv_handle)
@@ -208,7 +216,7 @@ class TestFileExport(unittest.TestCase):
                                  exclude_columns=exclude_columns)
         
         csv_path = self.export_test_dir.joinpath(
-                                        f"{self.export_test_dir.name}.csv")
+                                        f"phage.csv")
 
         with open(csv_path) as csv_handle:
             reader = csv.reader(csv_handle)
@@ -227,7 +235,7 @@ class TestFileExport(unittest.TestCase):
                                  sequence_columns=True)
 
         csv_path = self.export_test_dir.joinpath(
-                                        f"{self.export_test_dir.name}.csv")
+                                        f"phage.csv")
 
         with open(csv_path) as csv_handle:
             reader = csv.reader(csv_handle)
@@ -253,15 +261,6 @@ class TestFileExport(unittest.TestCase):
                 self.assertTrue(flat_file_path.is_file())
 
                 shutil.rmtree(str(self.export_test_dir))
-
-    def tearDown(self):
-        if self.export_test_dir.is_dir():
-            shutil.rmtree(str(self.export_test_dir))
-
-    @classmethod
-    def tearDownClass(self):
-        test_db_utils.remove_db()
-        shutil.rmtree(TEST_DIR)
-
+ 
 if __name__ == "__main__":
     unittest.main()

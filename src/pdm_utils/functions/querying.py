@@ -1,7 +1,10 @@
+import re
 from collections import OrderedDict
+from datetime import datetime
+from decimal import Decimal
+
 from networkx import Graph
 from networkx import shortest_path
-from pdm_utils.functions import parsing
 from sqlalchemy import Column
 from sqlalchemy import join
 from sqlalchemy import MetaData
@@ -11,12 +14,12 @@ from sqlalchemy.sql import distinct
 from sqlalchemy.sql import func
 from sqlalchemy.sql import functions
 from sqlalchemy.sql.elements import BinaryExpression
+from sqlalchemy.sql.elements import BooleanClauseList
 from sqlalchemy.sql.elements import Grouping
 from sqlalchemy.sql.elements import Label
 from sqlalchemy.sql.elements import UnaryExpression
-from datetime import datetime
-from decimal import Decimal
-import re
+
+from pdm_utils.functions import parsing
 
 #GLOBAL VARIABLES
 #-----------------------------------------------------------------------------
@@ -351,7 +354,6 @@ def extract_column(column, check=None):
         else:
             raise TypeError(f"BinaryExpression type {type(expression)} "
                             f"of expression {expression} is not supported.")
-
     else:
         raise TypeError(f"Input type {type(column)} is not a derivative "
                          "of a SqlAlchemy Column.")
@@ -377,93 +379,23 @@ def extract_columns(columns, check=None):
     """
     extracted_columns = []
 
-    if isinstance(columns, list):
+    if isinstance(columns, list) or isinstance(columns, BooleanClauseList):
         for column in columns:
-            extracted_columns.append(extract_column(column, check=check))
-
+            if isinstance(column, BooleanClauseList):
+                extracted_columns = extracted_columns + extract_columns(column)
+            else:
+                extracted_columns.append(extract_column(column, check=check))
+    elif columns is None:
+        pass
     else:
         extracted_columns.append(extract_column(columns, check=check))
 
     return extracted_columns
 
-def extract_where_clauses(where_clauses):
-    """Get the column from WHERE clause-related BinaryExpression objects.
-
-    :param where_clauses: SQLAlchemy BinaryExpression object(s).
-    :type where_clauses: BinaryExpression
-    :type where_clauses: list
-    :returns: List of SQLAlchemy Column objects.
-    :rtype: list[Column] 
-    """
-    where_columns = []
-    if not where_clauses is None:
-        where_columns = extract_columns(where_clauses, check=BinaryExpression)
-
-    return where_columns
-
-def extract_order_by_clauses(order_by_clauses):
-    """Get the column from ORDER BY clause-related Column objects.
-
-    :param where_clauses: SQLAlchemy Column object(s).
-    :type where_clauses: Column
-    :type where_clauses: list
-    :returns: List of SQLAlchemy Column objects.
-    :rtype: list[Column] 
-    """
-    order_by_columns = []
-    if not order_by_clauses is None:
-        order_by_columns = extract_columns(order_by_clauses, check=Column)
-
-    return order_by_columns
-
 #-----------------------------------------------------------------------------
 #SQLALCHEMY SELECT HANDLING
 #Functions that build and modify SqlAlchemy executable objects.
 #-----------------------------------------------------------------------------
-
-def append_where_clauses(executable, where_clauses):
-    """Add WHERE SQLAlchemy BinaryExpression objects to a Select object.
-
-    :param executable: SQLAlchemy executable query object.
-    :type executable: Select
-    :param where_clauses: MySQL WHERE clause-related SQLAlchemy object(s).
-    :type where_clauses: BinaryExpression
-    :type where_clauses: list
-    :returns: MySQL expression-related SQLAlchemy exectuable.
-    :rtype: Select
-    """
-    if where_clauses is None:
-        return executable
-
-    if isinstance(where_clauses, list):
-        for clause in where_clauses:
-            executable = executable.where(clause)
-    else:
-        executable = executable.where(where_clauses)
-
-    return executable
-    
-def append_order_by_clauses(executable, order_by_clauses):
-    """Add ORDER BY SQLAlchemy Column objects to a Select object.
-
-    :param executable: SQLAlchemy executable query object.
-    :type executable: Select
-    :param order_by_clauses: MySQL ORDER BY clause-related SQLAlchemy object(s).
-    :type order_by_clauses: Column
-    :type order_by_clauses: list
-    :returns: MySQL expression-related SQLAlchemy exectuable.
-    :rtype: Select
-    """
-    if order_by_clauses is None:
-        return executable
-
-    if isinstance(order_by_clauses, list):
-        for clause in order_by_clauses:
-            executable = executable.order_by(clause)
-    else:
-        executable = executable.order_by(order_by_clauses)
-
-    return executable
 
 def build_select(db_graph, columns, where=None, order_by=None, add_in=None):
     """Get MySQL SELECT expression SQLAlchemy executable.
@@ -485,9 +417,9 @@ def build_select(db_graph, columns, where=None, order_by=None, add_in=None):
     :returns: MySQL SELECT expression-related SQLAlchemy executable.
     :rtype: Select
     """
-    where_columns = extract_where_clauses(where)
-    add_in_columns = extract_order_by_clauses(add_in)
-    order_by_columns = extract_order_by_clauses(order_by)
+    where_columns = extract_columns(where)
+    add_in_columns = extract_columns(add_in, check=Column)
+    order_by_columns = extract_columns(order_by, check=Column)
 
     if not isinstance(columns, list):
         columns = [columns]
@@ -519,8 +451,8 @@ def build_count(db_graph, columns, where=None, add_in=None):
     :returns: MySQL COUNT() expression-related SQLAlchemy executable.
     :rtype: Select
     """
-    where_columns = extract_where_clauses(where) 
-    add_in_columns = extract_order_by_clauses(add_in)
+    where_columns = extract_columns(where)  
+    add_in_columns = extract_columns(add_in, check=Column)
 
     if not isinstance(columns, list):
         columns = [columns]
@@ -565,6 +497,50 @@ def build_distinct(db_graph, columns, where=None, order_by=None, add_in=None):
     
     distinct_query = query.distinct() #Converts a SELECT to a DISTINCT
     return distinct_query
+
+def append_where_clauses(executable, where_clauses):
+    """Add WHERE SQLAlchemy BinaryExpression objects to a Select object.
+
+    :param executable: SQLAlchemy executable query object.
+    :type executable: Select
+    :param where_clauses: MySQL WHERE clause-related SQLAlchemy object(s).
+    :type where_clauses: BinaryExpression
+    :type where_clauses: list
+    :returns: MySQL expression-related SQLAlchemy exectuable.
+    :rtype: Select
+    """
+    if where_clauses is None:
+        return executable
+
+    if isinstance(where_clauses, list):
+        for clause in where_clauses:
+            executable = append_where_clauses(executable, clause)
+    else:
+        executable = executable.where(where_clauses)
+
+    return executable
+    
+def append_order_by_clauses(executable, order_by_clauses):
+    """Add ORDER BY SQLAlchemy Column objects to a Select object.
+
+    :param executable: SQLAlchemy executable query object.
+    :type executable: Select
+    :param order_by_clauses: MySQL ORDER BY clause-related SQLAlchemy object(s).
+    :type order_by_clauses: Column
+    :type order_by_clauses: list
+    :returns: MySQL expression-related SQLAlchemy exectuable.
+    :rtype: Select
+    """
+    if order_by_clauses is None:
+        return executable
+
+    if isinstance(order_by_clauses, list):
+        for clause in order_by_clauses:
+            executable = executable.order_by(clause)
+    else: 
+        executable = executable.order_by(order_by_clauses)
+
+    return executable
 
 #-----------------------------------------------------------------------------
 #SQLALCHEMY EXECUTE QUERY FUNCTIONS

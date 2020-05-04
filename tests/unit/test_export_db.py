@@ -1,21 +1,22 @@
 """Tests the functionality of the unique functions in the export_db pipeline"""
-
+import os
+import unittest
 from argparse import ArgumentError
+from pathlib import Path
+from unittest.mock import call
+from unittest.mock import Mock
+from unittest.mock import patch
+from unittest.mock import PropertyMock
+
 from Bio.Seq import Seq
 from Bio.SeqFeature import CompoundLocation
 from Bio.SeqFeature import FeatureLocation
 from Bio.SeqFeature import SeqFeature
 from Bio.SeqRecord import SeqRecord
-from pathlib import Path
+
 from pdm_utils.classes import genome, cds
 from pdm_utils.functions import flat_files
 from pdm_utils.pipelines import export_db
-from unittest.mock import call
-from unittest.mock import Mock
-from unittest.mock import patch
-from unittest.mock import PropertyMock
-import unittest
-import os
 
 class TestExportMain(unittest.TestCase):
     def setUp(self):
@@ -29,8 +30,8 @@ class TestExportMain(unittest.TestCase):
         type(self.mock_alchemist).engine = \
                             PropertyMock(return_value=self.mock_engine)
 
-        self.mock_output_path = Mock()
-        self.mock_output_name = Mock() 
+        self.mock_folder_path = Mock()
+        self.mock_folder_name = Mock() 
         self.mock_input = Mock()
         self.mock_values = Mock()
         self.mock_verbose = Mock() 
@@ -52,10 +53,10 @@ class TestExportMain(unittest.TestCase):
         type(self.mock_args).database = \
                             PropertyMock(return_value=self.mock_database)
 
-        type(self.mock_args).output_path = \
-                            PropertyMock(return_value=self.mock_output_path)
-        type(self.mock_args).output_name = \
-                            PropertyMock(return_value=self.mock_output_name) 
+        type(self.mock_args).folder_path = \
+                            PropertyMock(return_value=self.mock_folder_path)
+        type(self.mock_args).folder_name = \
+                            PropertyMock(return_value=self.mock_folder_name) 
         type(self.mock_args).input = \
                             PropertyMock(return_value=self.mock_input)
         type(self.mock_args).verbose = \
@@ -85,9 +86,9 @@ class TestExportMain(unittest.TestCase):
     @patch("pdm_utils.pipelines.export_db.execute_export")
     @patch("pdm_utils.pipelines.export_db.parse_value_input")
     @patch("pdm_utils.pipelines.export_db.mysqldb.check_schema_compatibility")
-    @patch("pdm_utils.pipelines.export_db.establish_connection")
+    @patch("pdm_utils.pipelines.export_db.AlchemyHandler")
     @patch("pdm_utils.pipelines.export_db.parse_export")
-    def test_main_1(self, parse_export_mock, establish_connection_mock,
+    def test_main_1(self, parse_export_mock, alchemyhandler_mock,
                                              check_schema_compatibility_mock,
                                              parse_value_input_mock,
                                              execute_export_mock):
@@ -95,20 +96,20 @@ class TestExportMain(unittest.TestCase):
         """ 
         parse_export_mock.return_value = self.mock_args
         parse_value_input_mock.return_value = self.mock_values
-        establish_connection_mock.return_value = self.mock_alchemist
+        alchemyhandler_mock.return_value = self.mock_alchemist
         
         export_db.main(["cmd", "args"])
 
         parse_export_mock.assert_called_with(["cmd", "args"])
-        establish_connection_mock.assert_called_with(self.mock_database)
+        alchemyhandler_mock.assert_called_with(database=self.mock_database)
         check_schema_compatibility_mock.assert_called_with(self.mock_engine,
                                                            "export")
         parse_value_input_mock.assert_called_with(self.mock_input)
 
         execute_export_mock.assert_called_with(
                                     self.mock_alchemist,
-                                    self.mock_output_path,
-                                    self.mock_output_name,
+                                    self.mock_folder_path,
+                                    self.mock_folder_name,
                                     self.mock_pipeline,
                                     table=self.mock_table,
                                     values=self.mock_values,

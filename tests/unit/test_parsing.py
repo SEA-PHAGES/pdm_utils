@@ -1,10 +1,14 @@
-from pdm_utils.functions import parsing
+import unittest
+import re
+from unittest.mock import Mock 
+from unittest.mock import patch
+from unittest.mock import PropertyMock
+
 from sqlalchemy import Column
 from sqlalchemy import MetaData
 from sqlalchemy import Table
-from unittest.mock import Mock, patch, PropertyMock
-import unittest
-import re
+
+from pdm_utils.functions import parsing
 
 class TestParsing(unittest.TestCase):
     def test_parse_out_ends_1(self):
@@ -40,21 +44,47 @@ class TestParsing(unittest.TestCase):
         with self.assertRaises(TypeError):
             parsing.parse_out_ends(["Fail"])
 
-    def test_parse_in_ends_1(self):
-        """Verify parse_in_ends() raises TypeError from bad input type.
+    def test_parse_in_spaces_1(self):
+        """Verify parse_in_spaces() raises TypeError from bad input type.
         """
         with self.assertRaises(TypeError):
-            parsing.parse_in_ends("Not a list")
+            parsing.parse_in_spaces("Not a list")
 
-    def test_parse_in_ends_2(self):
-        """Verify parse_in_ends() splits up strings without whitespace.
+    def test_parse_in_spaces_2(self):
+        """Verify parse_in_spaces() splits up strings without whitespace.
         """
         expected_string = "Example of final joined string"
 
         string_list = ["Example", "of", "final", "joined", "string"]
-        final_string = parsing.parse_in_ends(string_list)
+        final_string = parsing.parse_in_spaces(string_list)
 
         self.assertEqual(expected_string, final_string)
+
+    def test_parse_out_spaces_1(self):
+        """Verify parse_out_spaces() raises TypeError from bad input.
+        """
+        with self.assertRaises(TypeError):
+            parsing.parse_out_spaces(None)
+
+    def test_parse_out_spaces_2(self):
+        """Verify parse_out_spaces() removes internal spaces.
+        """
+        input_string = "phage.Cluster = C"
+        expected_output = "phage.Cluster=C"
+
+        output = parsing.parse_out_spaces(input_string)
+
+        self.assertEqual(output, expected_output)
+
+    def test_parse_out_spaces_3(self):
+        """Verify parse_out_spaces() removes terminal spaces.
+        """
+        input_string = " phage.PhageID=Trixie "
+        expected_output = "phage.PhageID=Trixie"
+
+        output = parsing.parse_out_spaces(input_string)
+
+        self.assertEqual(output, expected_output)
 
     def test_parse_cmd_string_1(self):
         """Verify parse_cmd_string() recognizes and splits WHERE clauses.
@@ -63,9 +93,9 @@ class TestParsing(unittest.TestCase):
         
         parsed_string = parsing.parse_cmd_string(filters_string)
 
-        self.assertTrue(len(parsed_string) == 2)
-        self.assertEqual(parsed_string[0], ["phage.PhageID=Trixie"])
-        self.assertEqual(parsed_string[1], ["gene.Notes=Antirepressor"])
+        self.assertTrue(len(parsed_string) == 1)
+        self.assertEqual(parsed_string[0][0], "phage.PhageID=Trixie")
+        self.assertEqual(parsed_string[0][1], "gene.Notes=Antirepressor")
 
     def test_parse_cmd_string_2(self):
         """Verify parse_cmd_string() groups ORed WHERE clauses.
@@ -75,10 +105,10 @@ class TestParsing(unittest.TestCase):
 
         parsed_string = parsing.parse_cmd_string(filters_string)
 
-        self.assertTrue(len(parsed_string) == 1)
-        self.assertTrue(len(parsed_string[0]) == 2)
+        self.assertTrue(len(parsed_string) == 2)
+        self.assertTrue(len(parsed_string[0]) == 1)
         self.assertEqual(parsed_string[0][0], "phage.PhageID = Trixie")
-        self.assertEqual(parsed_string[0][1], "gene.Notes  = Antirepressor")
+        self.assertEqual(parsed_string[1][0], "gene.Notes  = Antirepressor")
 
     def test_parse_cmd_filter_3(self):
         """Verify parse_cmd_string() recognizes LIKE operator.
@@ -95,10 +125,10 @@ class TestParsing(unittest.TestCase):
  
         parsed_string = parsing.parse_cmd_string(filters_string)
 
-        self.assertTrue(len(parsed_string) == 1)
-        self.assertTrue(len(parsed_string[0]) == 2)
+        self.assertTrue(len(parsed_string) == 2)
+        self.assertTrue(len(parsed_string[0]) == 1)
         self.assertEqual(parsed_string[0][0], "phage.PhageID LIKE Trixie")
-        self.assertEqual(parsed_string[0][1], "gene.Notes IS NOT Antirepressor")
+        self.assertEqual(parsed_string[1][0], "gene.Notes IS NOT Antirepressor")
 
     def test_parse_cmd_string_5(self):
         """Verify parse_cmd_string() raises ValueError from incomplete clause.
@@ -108,20 +138,20 @@ class TestParsing(unittest.TestCase):
         with self.assertRaises(ValueError):
             parsed_cmd_line = parsing.parse_cmd_string(filters_string) 
   
-    @patch("pdm_utils.functions.parsing.parse_in_ends")
-    def test_parse_cmd_list_1(self, ParseInEnds):
-        """Verify parse_in_ends() is called with correct parameters.
+    @patch("pdm_utils.functions.parsing.parse_in_spaces")
+    def test_parse_cmd_list_1(self, parse_in_spaces_mock):
+        """Verify parse_in_spaces() is called with correct parameters.
         """
-        ParseInEnds.return_value = ("phage.PhageID LIKE Trixie OR "
+        parse_in_spaces_mock.return_value = ("phage.PhageID LIKE Trixie OR "
                                     "gene.Notes LIKE Antirepressor")
 
         unparsed_string_list = ["Example", "unparsed", "string", "list"]
         parsing.parse_cmd_list(unparsed_string_list)
 
-        ParseInEnds.assert_called_with(unparsed_string_list)
+        parse_in_spaces_mock.assert_called_with(unparsed_string_list)
 
     @patch("pdm_utils.functions.parsing.parse_cmd_string") 
-    def test_parse_cmd_list_2(self, ParseCmdString):
+    def test_parse_cmd_list_2(self, parse_cmd_string_mock):
         """Verify parse_cmd_string() is called with correct parameters.
         """
         expected_parsed_string = ("phage.PhageID LIKE Trixie OR "
@@ -132,7 +162,7 @@ class TestParsing(unittest.TestCase):
 
         parsing.parse_cmd_list(unparsed_string_list)
 
-        ParseCmdString.assert_called_with(expected_parsed_string)
+        parse_cmd_string_mock.assert_called_with(expected_parsed_string)
 
 
     def test_parse_column_1(self):
@@ -204,6 +234,37 @@ class TestParsing(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             parsed_filter = parsing.parse_filter(filter)
+
+    def test_parse_filter_5(self):
+        """Verify parse_filter() recognizes quoted conditional value.
+        """
+        filter = "gene.Notes = 'helix-turn-helix DNA binding domain protein'"
+
+        parsed_filter = parsing.parse_filter(filter)
+        
+        self.assertEqual(parsed_filter[3], 
+                         "helix-turn-helix DNA binding domain protein")
+
+    @patch("pdm_utils.functions.parsing.parse_filter")
+    def test_create_filter_key_1(self, parse_filter_mock):
+        """Verify create_filter_key() calls parse_filter()
+        """
+        filter = "gene.Notes = 'helix-turn-helix DNA binding domain protein'"
+        
+        filter_key = parsing.create_filter_key(filter)
+
+        parse_filter_mock.assert_called() 
+
+    def test_create_filter_key_2(self):
+        """Verify create_filter_key() standardizes MySQL filters.
+        """
+        filter_1 = "phage.PhageID    =     Myrna"
+        filter_2 = "phage.PhageID =      Myrna"
+
+        key_1 = parsing.create_filter_key(filter_1)
+        key_2 = parsing.create_filter_key(filter_2)
+
+        self.assertEqual(key_1, key_2)
 
 class TestCheckOperator(unittest.TestCase):
     def setUp(self):
@@ -357,6 +418,7 @@ class TestConvert(unittest.TestCase):
             with self.subTest(list_index=index):
                 self.assertEqual(decoded_values[index],
                                  self.test_values[index])
+
 if __name__ == "__main__":
     unittest.main()
 

@@ -1,13 +1,19 @@
+import re
+import sys
+import unittest
 from datetime import datetime
 from decimal import Decimal
+from pathlib import Path
+from unittest.mock import Mock
+from unittest.mock import patch
+
 from networkx import Graph
 from networkx import shortest_path
-from pathlib import Path
-from pdm_utils.functions import querying
-from pdm_utils.functions.mysqldb import query_dict_list
 from sqlalchemy import Column
+from sqlalchemy import and_
 from sqlalchemy import create_engine
 from sqlalchemy import MetaData
+from sqlalchemy import or_
 from sqlalchemy import select
 from sqlalchemy.exc import InternalError
 from sqlalchemy.sql import func
@@ -15,11 +21,10 @@ from sqlalchemy.sql import functions
 from sqlalchemy.sql.elements import BinaryExpression
 from sqlalchemy.sql.elements import Grouping
 from sqlalchemy.sql.elements import UnaryExpression
-from unittest.mock import Mock
-from unittest.mock import patch
-import re
-import sys
-import unittest
+
+
+from pdm_utils.functions import querying
+from pdm_utils.functions.mysqldb import query_dict_list
 
 # Import helper functions to build mock database
 unittest_file = Path(__file__)
@@ -32,6 +37,10 @@ class TestQuerying(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         test_db_utils.create_filled_test_db()
+
+    @classmethod
+    def tearDownClass(self):
+        test_db_utils.remove_db()
 
     def setUp(self):
         self.engine = create_engine(test_db_utils.create_engine_string())
@@ -138,6 +147,41 @@ class TestQuerying(unittest.TestCase):
                                                         "phage.PhageID=Trixie")
 
         self.assertEqual(where_clause.right.value, "Trixie")
+
+    def test_extract_columns_1(self):
+        """Verify extract_columns() extracts from BooleanClauseLists.
+        """
+        phageid_clause = (self.PhageID == "Trixie")
+        cluster_clause = (self.Cluster == "A")
+        phamid_clause  = (self.PhamID == 2)
+
+        clauses = [phageid_clause, cluster_clause, phamid_clause]
+        and_clauses = and_(*clauses)
+        expected_columns = [self.PhageID, self.Cluster, self.PhamID]
+
+        column_output = querying.extract_columns(and_clauses)
+
+        self.assertEqual(expected_columns, column_output)
+
+    def test_extract_columns_2(self):
+        """Verify extract_columns() extracts layered BooleanClauseList.
+        """
+        phageid_clause = (self.PhageID == "Trixie")
+        cluster_clause = (self.Cluster == "A")
+        phamid_clause  = (self.PhamID == 2)
+
+        subcluster_clause = (self.Subcluster == "A2")
+
+        clauses = [phageid_clause, cluster_clause, phamid_clause]
+        and_clauses = and_(*clauses)
+        or_clauses = or_(and_clauses, subcluster_clause)
+        expected_columns = [self.PhageID, self.Cluster, self.PhamID, 
+                            self.Subcluster]
+
+        column_output = querying.extract_columns(or_clauses)
+
+        self.assertEqual(expected_columns, column_output)
+
 
     def test_build_onclause_1(self):
         """Verify build_onclause() returns a BinaryExpression object.
@@ -485,11 +529,7 @@ class TestQuerying(unittest.TestCase):
         self.assertTrue("Trixie" in results)
         self.assertTrue("D29" in results)
         self.assertFalse("Alice" in results)
-        self.assertFalse("Myrna" in results)
-
-    @classmethod
-    def tearDownClass(self):
-        test_db_utils.remove_db()
+        self.assertFalse("Myrna" in results) 
 
 if __name__ == "__main__":
     unittest.main()

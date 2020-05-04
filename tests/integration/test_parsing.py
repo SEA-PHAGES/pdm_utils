@@ -1,13 +1,15 @@
+import unittest
+import re
+import sys
 from pathlib import Path
-from pdm_utils.functions import parsing
+from unittest.mock import Mock, patch, PropertyMock
+
 from sqlalchemy import Column
 from sqlalchemy import create_engine
 from sqlalchemy import MetaData
 from sqlalchemy import Table
-from unittest.mock import Mock, patch, PropertyMock
-import unittest
-import re
-import sys
+
+from pdm_utils.functions import parsing
 
 # Import helper functions to build mock database
 unittest_file = Path(__file__)
@@ -20,6 +22,10 @@ class TestParsing(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         test_db_utils.create_filled_test_db()
+
+    @classmethod
+    def tearDownClass(self):
+        test_db_utils.remove_db()
 
     def setUp(self):
         self.engine = create_engine(test_db_utils.create_engine_string())
@@ -118,11 +124,7 @@ class TestParsing(unittest.TestCase):
         """Verify translate_column() raises ValueError from invalid column name.
         """
         with self.assertRaises(ValueError):
-            parsing.translate_column(self.metadata, "phage.not_column")
-
-    @classmethod
-    def tearDownClass(self):
-        test_db_utils.remove_db()
+            parsing.translate_column(self.metadata, "phage.not_column") 
 
 if __name__ == "__main__":
     unittest.main()

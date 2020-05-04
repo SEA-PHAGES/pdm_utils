@@ -1,14 +1,16 @@
-from networkx import Graph
-from sqlalchemy import Column
-from sqlalchemy.engine.base import Engine
-from sqlalchemy.sql.elements import BinaryExpression
-from pdm_utils.classes.filter import Filter
-from pdm_utils.classes.alchemyhandler import AlchemyHandler
+import unittest
 from unittest.mock import call
 from unittest.mock import patch
 from unittest.mock import Mock 
 from unittest.mock import PropertyMock
-import unittest
+
+from networkx import Graph
+from sqlalchemy import Column
+from sqlalchemy.engine.base import Engine
+from sqlalchemy.sql.elements import BinaryExpression
+
+from pdm_utils.classes.filter import Filter
+from pdm_utils.classes.alchemyhandler import AlchemyHandler
 
 class TestFilter(unittest.TestCase):
     @patch("pdm_utils.classes.filter.isinstance")
@@ -152,7 +154,7 @@ class TestFilter(unittest.TestCase):
         self.assertEqual(self.db_filter.key, self.mock_key)
 
     def test_key_2(self):
-        """Verify that the ky property raises TypeError on invalid input.
+        """Verify that the key property raises TypeError on invalid input.
         """
         with self.assertRaises(TypeError):
             self.db_filter.key = Mock()
@@ -191,7 +193,33 @@ class TestFilter(unittest.TestCase):
 
         self.mock_alchemist.connect.assert_called()
         self.mock_alchemist.build_graph.assert_called()
-    
+
+    @patch("pdm_utils.classes.filter.isinstance")
+    def test_link_1(self, isinstance_mock):
+        """Verify link() calls isinstance().
+        """
+        self.db_filter.link(self.mock_alchemist)
+
+        isinstance_mock.assert_called()
+
+    def test_link_2(self):
+        """Verify link() raises TypeError upon bad alchemist input.
+        """
+        with self.assertRaises(TypeError):
+            self.db_filter.link("Bad input")
+
+    def test_link_3(self):
+        """Verify function structure of link().
+        """
+        type(self.mock_alchemist).connected = PropertyMock(return_value=False)
+        type(self.mock_alchemist).graph = PropertyMock(return_value=None)
+
+        self.db_filter.link(self.mock_alchemist)
+
+
+        self.mock_alchemist.connect.assert_called()
+        self.mock_alchemist.build_graph.assert_called()
+
     @patch("pdm_utils.classes.filter.Filter.connect")
     def test_check_1(self, connect_mock):
         """Verify that the Filter will connect if not connected.
@@ -248,21 +276,8 @@ class TestFilter(unittest.TestCase):
 
         build_distinct_mock.assert_called_with(self.mock_graph, self.mock_key,
                                                where="Not a list", 
-                                               order_by=None,
                                                add_in=self.mock_key)
-
-    @patch("pdm_utils.classes.filter.q.build_distinct")
-    def test_build_values_2(self, build_distinct_mock):
-        """Verify that build_distinct() is called with correct parameters.
-        """
-        self.db_filter.build_values(order_by="Column")
-
-        build_distinct_mock.assert_called_with(self.mock_graph, self.mock_key,
-                                               where=[],
-                                               order_by="Column",
-                                               add_in=self.mock_key)
-
-    
+ 
     @patch("pdm_utils.classes.filter.Filter.check")
     def test_transpose_1(self, check_mock): 
         """Verify that transpose() returns without values.
@@ -358,26 +373,29 @@ class TestFilter(unittest.TestCase):
 
         self.assertTrue(self.db_filter._values_valid)
         self.assertTrue(self.db_filter._values_valid)
-   
+  
+    @patch("pdm_utils.classes.filter.q.first_column")
+    @patch("pdm_utils.classes.filter.q.build_select")
     @patch("pdm_utils.classes.filter.Filter.convert_column_input")
-    @patch("pdm_utils.classes.filter.Filter.build_values")
-    def test_sort_1(self, build_values_mock, convert_column_input_mock):
+    def test_sort_1(self, convert_column_input_mock, build_select_mock,
+                                                     first_column_mock):
         """Verify function structure of sort().
         """
-        build_values_mock.return_value = ["Phage"]
-
         self.db_filter._values_valid = False
+
+        first_column_mock.return_value = ["Phage"]
 
         self.db_filter.sort("column")
 
+    
         convert_column_input_mock.assert_called()
-        build_values_mock.assert_called()
+        build_select_mock.assert_called()
+        first_column_mock.assert_called()
 
         self.assertTrue(self.db_filter._values_valid)
         self.assertEqual(self.db_filter.values, ["Phage"])
 
-    @patch("pdm_utils.classes.filter.Filter.build_values")
-    def test_sort_2(self, build_values_mock):
+    def test_sort_2(self):
         """Verify that sort() raises TypeError at bad ORDER BY input.
         """
         with self.assertRaises(TypeError):
@@ -386,11 +404,11 @@ class TestFilter(unittest.TestCase):
     def test_reset_1(self):
         """Verify that reset() clears filters.
         """
-        self.db_filter._filters = {"Expression" : "Some Whereclause"}
+        self.db_filter._filters = [{"Expression" : "Some Whereclause"}]
 
         self.db_filter.reset()
 
-        self.assertEqual(self.db_filter.filters, {})
+        self.assertEqual(self.db_filter.filters, [])
 
     def test_reset_2(self):
         """Verify that reset() clears values.
@@ -411,13 +429,22 @@ class TestFilter(unittest.TestCase):
         self.assertTrue(self.db_filter.values_valid)
 
     def test_reset_4(self):
-        """Verify that rest() sets updated Filter property.
+        """Verify that reset() sets updated Filter property.
         """
         self.db_filter._updated = False
 
         self.db_filter.reset()
 
         self.assertTrue(self.db_filter.updated)
+
+    def test_reset_5(self):
+        """Verify that reset sets on_index property.
+        """
+        self.db_filter._on_index = 5
+
+        self.db_filter.reset()
+
+        self.assertEqual(self.db_filter.or_index, -1)
 
     def test_hits_1(self):
         """Verify that hits() accurately portrays no values.
@@ -495,7 +522,7 @@ class TestFilter(unittest.TestCase):
     def test_copy_filters_1(self):
         """Verify that copy_filters() replicates filters.
         """
-        self.db_filter._filters = {"Filter1" : ["Filter1"], "Filter2" : ["Filter2"], "Filter3" : ["Filter3"]}
+        self.db_filter._filters = [{"Filter1" : "Filter1", "Filter2" : "Filter2", "Filter3" : "Filter3"}]
 
         filters_copy = self.db_filter.copy_filters()
 
@@ -505,11 +532,11 @@ class TestFilter(unittest.TestCase):
     def test_copy_filters_2(self):
         """Verify that copy_filters() creates new address for copied filters.
         """
-        self.db_filter._filters = {"Filter1" : ["Filter1"], "Filter2" : ["Filter2"], "Filter3" : ["Filter3"]}
+        self.db_filter._filters = [{"Filter1" : "Filter1", "Filter2" : "Filter2", "Filter3" : "Filter3"}]
 
         filters_copy = self.db_filter.copy_filters()
 
-        self.db_filter._filters.update({"Filter2" : []})
+        self.db_filter._filters[0].update({"Filter2" : "filter2"})
 
         self.assertNotEqual(filters_copy, self.db_filter._filters)
 

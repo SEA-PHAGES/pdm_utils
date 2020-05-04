@@ -1,6 +1,10 @@
+import unittest
+from unittest.mock import Mock
+from unittest.mock import MagicMock
+from unittest.mock import patch
+from unittest.mock import PropertyMock
+
 from networkx import Graph
-from pdm_utils.classes.filter import Filter
-from pdm_utils.functions import querying
 from sqlalchemy import create_engine
 from sqlalchemy import Column
 from sqlalchemy import MetaData
@@ -12,11 +16,8 @@ from sqlalchemy.sql.elements import BinaryExpression
 from sqlalchemy.sql.elements import BindParameter
 from sqlalchemy.sql.elements import UnaryExpression
 from sqlalchemy.sql.schema import ForeignKey
-from unittest.mock import Mock
-from unittest.mock import MagicMock
-from unittest.mock import patch
-from unittest.mock import PropertyMock
-import unittest
+
+from pdm_utils.functions import querying
 
 class TestUseMetadata(unittest.TestCase):
     def setUp(self):
@@ -302,16 +303,8 @@ class TestExtract(unittest.TestCase):
         with self.assertRaises(TypeError):
             querying.extract_column(self.column, check=str)
 
-    @patch("pdm_utils.functions.querying.isinstance")
-    def test_extract_columns_1(self, is_instance_mock):
-        """Verify isinstance() is called with correct parameters.
-        """
-        querying.extract_columns(self.columns)
-
-        is_instance_mock.assert_any_call(self.columns, list)
-
     @patch("pdm_utils.functions.querying.extract_column")
-    def test_extract_columns_2(self, extract_column_mock):
+    def test_extract_columns_1(self, extract_column_mock):
         """Verify extract_column() is called with correct parameters.
         extract_columns() should accept both Column and list parameters.
         """
@@ -320,7 +313,7 @@ class TestExtract(unittest.TestCase):
         extract_column_mock.assert_called_with(self.column, check=None)
 
     @patch("pdm_utils.functions.querying.extract_column")
-    def test_extract_columns_3(self, extract_column_mock):
+    def test_extract_columns_2(self, extract_column_mock): 
         """Verify extract_column() is called with correct parameters. 
         extract_columns() should accept both Column and list parameters.
         """
@@ -328,37 +321,6 @@ class TestExtract(unittest.TestCase):
 
         extract_column_mock.assert_called_with(self.column, check=None)
 
-    def test_extract_where_clauses_1(self):
-        """Verify extract_where_clauses() accepts NoneType parameter.
-        """
-        where_columns = querying.extract_where_clauses(None)
-        
-        self.assertEqual(where_columns, []) 
-
-    @patch("pdm_utils.functions.querying.extract_columns")
-    def test_extract_where_clauses_2(self, extract_columns_mock):
-        """Verify extract_columns() is called with correct parameters.
-        """
-        querying.extract_where_clauses(self.columns)
-
-        extract_columns_mock.assert_called_with(self.columns, 
-                                                check=BinaryExpression)
-    
-    def test_extract_order_by_clauses_1(self):
-        """Verify extract_order_by_clauses() accepts NoneType parameter.
-        """
-        order_by_columns = querying.extract_order_by_clauses(None)
-
-        self.assertEqual(order_by_columns, [])
-
-    @patch("pdm_utils.functions.querying.extract_columns")
-    def test_extract_order_by_clauses_2(self, extract_columns_mock):
-        """Verify extract_columns() is called with correct parameters.
-        """
-        querying.extract_order_by_clauses(self.columns)
-
-        extract_columns_mock.assert_called_with(self.columns, check=Column)
-        
 class TestUseGraph(unittest.TestCase): 
     def setUp(self):
         self.graph = Mock()
@@ -654,20 +616,18 @@ class TestBuildClauses(unittest.TestCase):
     @patch("pdm_utils.functions.querying.append_where_clauses")
     @patch("pdm_utils.functions.querying.select")
     @patch("pdm_utils.functions.querying.build_fromclause")
-    @patch("pdm_utils.functions.querying.extract_order_by_clauses")
-    @patch("pdm_utils.functions.querying.extract_where_clauses")
-    def test_build_select_1(self, extract_where_clauses_mock, extract_order_by_clauses_mock,
+    @patch("pdm_utils.functions.querying.extract_columns")
+    def test_build_select_1(self, extract_columns_mock,
                                   build_from_clause_mock, select_mock,
                                   append_where_clauses_mock, append_order_by_clauses_mock):
-        """Verify function structure of build_count().
+        """Verify function structure of build_select().
         """
         executable_mock = Mock()
         select_from_mock = Mock()
         type(executable_mock).select_from = select_from_mock
         select_from_mock.return_value = executable_mock
 
-        extract_where_clauses_mock.return_value = self.columns
-        extract_order_by_clauses_mock.return_value = self.columns
+        extract_columns_mock.return_value = self.columns
         build_from_clause_mock.return_value = self.phage
         select_mock.return_value = executable_mock
         append_where_clauses_mock.return_value = executable_mock
@@ -677,8 +637,8 @@ class TestBuildClauses(unittest.TestCase):
                                             order_by=self.columns,
                                             add_in=self.columns)
 
-        extract_where_clauses_mock.assert_called_with(None)
-        extract_order_by_clauses_mock.assert_any_call(self.columns)
+        extract_columns_mock.assert_any_call(None)
+        extract_columns_mock.assert_any_call(self.columns, check=Column)
         total_columns = self.columns * 4
         build_from_clause_mock.assert_called_once_with(self.graph, total_columns)
         
@@ -692,8 +652,8 @@ class TestBuildClauses(unittest.TestCase):
     @patch("pdm_utils.functions.querying.select")
     @patch("pdm_utils.functions.querying.func.count")
     @patch("pdm_utils.functions.querying.build_fromclause")
-    @patch("pdm_utils.functions.querying.extract_where_clauses")
-    def test_build_count_1(self, extract_where_clauses_mock, 
+    @patch("pdm_utils.functions.querying.extract_columns")
+    def test_build_count_1(self, extract_columns_mock, 
                                  build_from_clause_mock, count_mock, select_mock,
                                  append_where_clauses_mock):
         """Verify function structure of build_count().
@@ -703,7 +663,7 @@ class TestBuildClauses(unittest.TestCase):
         type(executable_mock).select_from = select_from_mock
         select_from_mock.return_value = executable_mock
 
-        extract_where_clauses_mock.return_value = self.columns
+        extract_columns_mock.return_value = self.columns
         build_from_clause_mock.return_value = self.phage
         count_mock.return_value = self.count_column
         select_mock.return_value = executable_mock
@@ -712,8 +672,9 @@ class TestBuildClauses(unittest.TestCase):
         querying.build_count(self.graph, self.columns, 
                                             where=self.whereclauses)
 
-        extract_where_clauses_mock.assert_called_once_with(self.whereclauses)
-        total_columns = self.columns + self.columns
+        extract_columns_mock.assert_any_call(self.whereclauses)
+        extract_columns_mock.assert_any_call(None, check=Column)
+        total_columns = self.columns + self.columns + self.columns
         build_from_clause_mock.assert_called_once_with(self.graph, total_columns)
         
         for index in range(len(self.columns)):
