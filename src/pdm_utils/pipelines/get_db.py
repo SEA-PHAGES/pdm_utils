@@ -81,17 +81,18 @@ def install_db(database, db_filepath=None, schema_version=None):
     # No need to specify database yet, since it needs to first check if the
     # database exists.
 
-    alchemist = AlchemyHandler(database="")
-    alchemist.connect(pipeline=True)
-    engine1 = alchemist.engine
+    alchemist1 = AlchemyHandler(database="")
+    alchemist1.connect(pipeline=True)
+    engine1 = alchemist1.engine
     result = mysqldb_basic.drop_create_db(engine1, database)
     if result != 0:
         print("Unable to create new, empty database.")
     else:
-        engine2, msg = mysqldb.get_engine(database=database,
-                                          username=engine1.url.username,
-                                          password=engine1.url.password,
-                                          echo=False)
+        alchemist2 = AlchemyHandler(database=database,
+                                    username=engine1.url.username,
+                                    password=engine1.url.password)
+        alchemist2.connect(pipeline=True)
+        engine2 = alchemist2.engine
         if engine2 is None:
             print(f"No connection to the {database} database due "
                   "to invalid credentials or database.")

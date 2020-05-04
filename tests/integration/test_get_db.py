@@ -6,10 +6,7 @@ import shutil
 import unittest
 from unittest.mock import patch
 
-import sqlalchemy
-
 from pdm_utils import run
-from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.pipelines import get_db
 
 # Import helper functions to build mock database
@@ -65,10 +62,6 @@ class TestGetDb(unittest.TestCase):
 
     def setUp(self):
         output_path.mkdir()
-        # Since these tests involve installing databases instead of
-        # accessing them, do not specify a database, but instead leave as "".
-        self.alchemist = AlchemyHandler(username=USER, password=PWD)
-        self.alchemist.build_engine()
 
     def tearDown(self):
         shutil.rmtree(output_path)
@@ -76,11 +69,11 @@ class TestGetDb(unittest.TestCase):
         if exists:
             test_db_utils.remove_db()
 
-
-    @patch("pdm_utils.pipelines.get_db.AlchemyHandler")
-    def test_main_1(self, alchemy_mock):
+    # Can't mock call to AlchemyHandler since that is called twice.
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
+    def test_main_1(self, getpass_mock):
         """Verify database is installed from file."""
-        alchemy_mock.return_value = self.alchemist
+        getpass_mock.side_effect = [USER, PWD]
         unparsed_args = get_unparsed_args(option="file")
         run.main(unparsed_args)
         # Query for version data. This verifies that the databases exists
@@ -89,10 +82,10 @@ class TestGetDb(unittest.TestCase):
         self.assertEqual(len(version_data), 1)
 
 
-    @patch("pdm_utils.pipelines.get_db.AlchemyHandler")
-    def test_main_2(self, alchemy_mock):
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
+    def test_main_2(self, getpass_mock):
         """Verify new database is created."""
-        alchemy_mock.return_value = self.alchemist
+        getpass_mock.side_effect = [USER, PWD]
         unparsed_args = get_unparsed_args(option="new")
         run.main(unparsed_args)
 
@@ -102,10 +95,10 @@ class TestGetDb(unittest.TestCase):
         self.assertEqual(len(version_data), 1)
 
 
-    @patch("pdm_utils.pipelines.get_db.AlchemyHandler")
-    def test_main_3(self, alchemy_mock):
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
+    def test_main_3(self, getpass_mock):
         """Verify database is downloaded and installed from server."""
-        alchemy_mock.return_value = self.alchemist
+        getpass_mock.side_effect = [USER, PWD]
         # Since the entire Actinobacteriophage database is being downloaded,
         # be sure to only download the SQL file and do NOT install it,
         # else it will overwrite the existing Actinobacteriophage database.
@@ -123,11 +116,11 @@ class TestGetDb(unittest.TestCase):
             self.assertTrue(file2.exists())
 
 
-    @patch("pdm_utils.pipelines.get_db.AlchemyHandler")
-    def test_main_4(self, alchemy_mock):
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
+    def test_main_4(self, getpass_mock):
         """Verify database is installed from file and overwrites
         existing database."""
-        alchemy_mock.return_value = self.alchemist
+        getpass_mock.side_effect = [USER, PWD]
         # First install a database with data. Then delete version table.
         test_db_utils.create_filled_test_db()
         test_db_utils.execute("DROP TABLE version")

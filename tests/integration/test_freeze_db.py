@@ -4,9 +4,9 @@ from pathlib import Path
 import sys
 import unittest
 from unittest.mock import patch
+
 from pdm_utils import run
 from pdm_utils.pipelines import freeze_db
-from pdm_utils.classes.alchemyhandler import AlchemyHandler
 
 # Import helper functions to build mock database
 unittest_file = Path(__file__)
@@ -49,8 +49,6 @@ class TestFreeze(unittest.TestCase):
         test_db_utils.remove_db()
 
     def setUp(self):
-        self.alchemist = AlchemyHandler(database=DB, username=USER, password=PWD)
-        self.alchemist.build_engine()
         # Standardize values in certain fields to define the data
         stmt1 = create_update("phage", "Status", "draft")
         test_db_utils.execute(stmt1)
@@ -71,11 +69,12 @@ class TestFreeze(unittest.TestCase):
 
 
 
-    @patch("pdm_utils.pipelines.freeze_db.AlchemyHandler")
-    def test_main_1(self, alchemy_mock):
+    # Can't mock call to AlchemyHandler since that is called twice.
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
+    def test_main_1(self, getpass_mock):
         """Verify frozen database is created from database with
         no change in genome count when no filters are provided."""
-        alchemy_mock.return_value = self.alchemist
+        getpass_mock.side_effect = [USER, PWD]
         run.main(self.unparsed_args)
         count1 = test_db_utils.get_data(COUNT_PHAGE, db=DB)
         count2 = test_db_utils.get_data(COUNT_PHAGE, db=DB2)
@@ -86,33 +85,34 @@ class TestFreeze(unittest.TestCase):
         with self.subTest():
             self.assertEqual(version[0]["Version"], 1)
 
-    @patch("pdm_utils.pipelines.freeze_db.AlchemyHandler")
-    def test_main_2(self, alchemy_mock):
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
+    def test_main_2(self, getpass_mock):
         """Verify frozen database is created from database with
         all genomes removed."""
-        alchemy_mock.return_value = self.alchemist
+        getpass_mock.side_effect = [USER, PWD]
         self.unparsed_args.extend(["-f", "phage.Status != draft"])
         run.main(self.unparsed_args)
         count2 = test_db_utils.get_data(COUNT_PHAGE, db=DB2)
         self.assertEqual(count2[0]["count"], 0)
 
-    @patch("pdm_utils.pipelines.freeze_db.AlchemyHandler")
-    def test_main_3(self, alchemy_mock):
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
+    def test_main_3(self, getpass_mock):
         """Verify frozen database is created from database with
         only one 'final' genome."""
-        alchemy_mock.return_value = self.alchemist
+        getpass_mock.side_effect = [USER, PWD]
         stmt = create_update("phage", "Status", "final", "Trixie")
         test_db_utils.execute(stmt)
         self.unparsed_args.extend(["-f", "phage.Status!=draft"])
+        print(self.unparsed_args)
         run.main(self.unparsed_args)
         count2 = test_db_utils.get_data(COUNT_PHAGE, db=DB2)
         self.assertEqual(count2[0]["count"], 1)
 
-    @patch("pdm_utils.pipelines.freeze_db.AlchemyHandler")
-    def test_main_4(self, alchemy_mock):
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
+    def test_main_4(self, getpass_mock):
         """Verify frozen database is created from database with
         one genome based on two filters."""
-        alchemy_mock.return_value = self.alchemist
+        getpass_mock.side_effect = [USER, PWD]
         stmt = create_update("phage", "Status", "final", "Trixie")
         test_db_utils.execute(stmt)
         filters = "phage.Status != draft AND phage.HostGenus = Mycobacterium"
@@ -121,11 +121,11 @@ class TestFreeze(unittest.TestCase):
         count2 = test_db_utils.get_data(COUNT_PHAGE, db=DB2)
         self.assertEqual(count2[0]["count"], 1)
 
-    @patch("pdm_utils.pipelines.freeze_db.AlchemyHandler")
-    def test_main_5(self, alchemy_mock):
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
+    def test_main_5(self, getpass_mock):
         """Verify frozen database is created from database with
         no genomes based on two filters."""
-        alchemy_mock.return_value = self.alchemist
+        getpass_mock.side_effect = [USER, PWD]
         stmt = create_update("phage", "Status", "final", "Trixie")
         test_db_utils.execute(stmt)
         filters = "phage.Status != draft AND phage.HostGenus = Gordonia"
@@ -134,11 +134,11 @@ class TestFreeze(unittest.TestCase):
         count2 = test_db_utils.get_data(COUNT_PHAGE, db=DB2)
         self.assertEqual(count2[0]["count"], 0)
 
-    @patch("pdm_utils.pipelines.freeze_db.AlchemyHandler")
-    def test_main_6(self, alchemy_mock):
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
+    def test_main_6(self, getpass_mock):
         """Verify frozen database is created from database with
         one genome based on two filters from two tables."""
-        alchemy_mock.return_value = self.alchemist
+        getpass_mock.side_effect = [USER, PWD]
         stmt = create_update("phage", "Status", "final", "Trixie")
         test_db_utils.execute(stmt)
         filters = "phage.Status != draft AND gene.Notes = repressor"
@@ -148,46 +148,46 @@ class TestFreeze(unittest.TestCase):
         self.assertEqual(count2[0]["count"], 1)
 
     @patch("sys.exit")
-    @patch("pdm_utils.pipelines.freeze_db.AlchemyHandler")
-    def test_main_7(self, alchemy_mock, exit_mock):
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
+    def test_main_7(self, getpass_mock, exit_mock):
         """Verify pipeline exits with invalid filter column."""
-        alchemy_mock.return_value = self.alchemist
+        getpass_mock.side_effect = [USER, PWD]
         self.unparsed_args.extend(["-f", "phage.Invalid != draft"])
         run.main(self.unparsed_args)
         exit_mock.assert_called()
 
     @patch("sys.exit")
-    @patch("pdm_utils.pipelines.freeze_db.AlchemyHandler")
-    def test_main_8(self, alchemy_mock, exit_mock):
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
+    def test_main_8(self, getpass_mock, exit_mock):
         """Verify pipeline exits with invalid filter table."""
-        alchemy_mock.return_value = self.alchemist
+        getpass_mock.side_effect = [USER, PWD]
         self.unparsed_args.extend(["-f", "Invalid.Invalid != draft"])
         run.main(self.unparsed_args)
         exit_mock.assert_called()
 
     @patch("sys.exit")
-    @patch("pdm_utils.pipelines.freeze_db.AlchemyHandler")
-    def test_main_9(self, alchemy_mock, exit_mock):
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
+    def test_main_9(self, getpass_mock, exit_mock):
         """Verify pipeline exits with invalid filter string."""
-        alchemy_mock.return_value = self.alchemist
+        getpass_mock.side_effect = [USER, PWD]
         self.unparsed_args.extend(["-f", "Invalid != draft"])
         run.main(self.unparsed_args)
         exit_mock.assert_called()
 
     @patch("sys.exit")
-    @patch("pdm_utils.pipelines.freeze_db.AlchemyHandler")
-    def test_main_10(self, alchemy_mock, exit_mock):
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
+    def test_main_10(self, getpass_mock, exit_mock):
         """Verify pipeline exits with invalid filter."""
-        alchemy_mock.return_value = self.alchemist
+        getpass_mock.side_effect = [USER, PWD]
         self.unparsed_args.extend(["-f", "phage.Status 'draft'"])
         run.main(self.unparsed_args)
         exit_mock.assert_called()
 
-    @patch("pdm_utils.pipelines.freeze_db.AlchemyHandler")
-    def test_main_11(self, alchemy_mock):
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
+    def test_main_11(self, getpass_mock):
         """Verify frozen database is created from database
         using quoted filter value."""
-        alchemy_mock.return_value = self.alchemist
+        getpass_mock.side_effect = [USER, PWD]
         stmt = create_update("phage", "Status", "final", "Trixie")
         test_db_utils.execute(stmt)
         self.unparsed_args.extend(["-f", "phage.Status != 'draft'"])
@@ -195,11 +195,11 @@ class TestFreeze(unittest.TestCase):
         count2 = test_db_utils.get_data(COUNT_PHAGE, db=DB2)
         self.assertEqual(count2[0]["count"], 1)
 
-    @patch("pdm_utils.pipelines.freeze_db.AlchemyHandler")
-    def test_main_12(self, alchemy_mock):
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
+    def test_main_12(self, getpass_mock):
         """Verify data is changed when there is data in the database
         and reset = True."""
-        alchemy_mock.return_value = self.alchemist
+        getpass_mock.side_effect = [USER, PWD]
         stmt = create_update("phage", "Status", "final", "Trixie")
         test_db_utils.execute(stmt)
         self.unparsed_args.extend(["-f", "phage.Status != draft", "-r"])
@@ -212,11 +212,11 @@ class TestFreeze(unittest.TestCase):
         with self.subTest():
             self.assertEqual(version[0]["Version"], 0)
 
-    @patch("pdm_utils.pipelines.freeze_db.AlchemyHandler")
-    def test_main_13(self, alchemy_mock):
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
+    def test_main_13(self, getpass_mock):
         """Verify data is changed when there is NO data in the database
         and reset = True."""
-        alchemy_mock.return_value = self.alchemist
+        getpass_mock.side_effect = [USER, PWD]
         self.unparsed_args.extend(["-f", "phage.Status != draft", "-r"])
         run.main(self.unparsed_args)
         count = test_db_utils.get_data(COUNT_PHAGE, db=DB2)

@@ -67,9 +67,9 @@ def main(unparsed_args_list, engine1=None):
     # Parse command line arguments
     args = parse_args(unparsed_args_list)
     if engine1 is None:
-        alchemist = AlchemyHandler(database=args.database)
-        alchemist.connect(pipeline=True)
-        engine1 = alchemist.engine
+        alchemist1 = AlchemyHandler(database=args.database)
+        alchemist1.connect(pipeline=True)
+        engine1 = alchemist1.engine
     target = args.schema_version
     actual = mysqldb.get_schema_version(engine1)
     steps, dir = get_conversion_direction(actual, target)
@@ -90,11 +90,12 @@ def main(unparsed_args_list, engine1=None):
                 result = mysqldb_basic.copy_db(engine1, args.new_database_name)
                 if result == 0:
                     # Create a new connection to the new database.
-                    engine2, msg = mysqldb.get_engine(
-                                        database=args.new_database_name,
-                                        username=engine1.url.username,
-                                        password=engine1.url.password,
-                                        echo=False)
+                    alchemist2 = AlchemyHandler(database=args.new_database_name,
+                                                username=engine1.url.username,
+                                                password=engine1.url.password)
+                    alchemist2.connect(pipeline=True)
+                    engine2 = alchemist2.engine
+
                 else:
                     print("Error: Unable to copy the database for conversion.")
                     convert = False

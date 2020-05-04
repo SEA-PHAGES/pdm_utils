@@ -28,22 +28,22 @@ def main(unparsed_args_list):
 
     # Verify database connection and schema compatibility.
     print("Connecting to the MySQL database...")
-    alchemist = AlchemyHandler(database=ref_database)
-    alchemist.connect(pipeline=True)
-    engine1 = alchemist.engine
+    alchemist1 = AlchemyHandler(database=ref_database)
+    alchemist1.connect(pipeline=True)
+    engine1 = alchemist1.engine
     mysqldb.check_schema_compatibility(engine1, "the freeze pipeline")
 
     # Get SQLAlchemy metadata Table object
     # table_obj.primary_key.columns is a
     # SQLAlchemy ColumnCollection iterable object
     # Set primary key = 'phage.PhageID'
-    alchemist.build_metadata()
-    table = querying.get_table(alchemist.metadata, TARGET_TABLE)
+    alchemist1.build_metadata()
+    table = querying.get_table(alchemist1.metadata, TARGET_TABLE)
     for column in table.primary_key.columns:
         primary_key = column
 
     # Create filter object and then add command line filter strings
-    db_filter = Filter(alchemist=alchemist, key=primary_key)
+    db_filter = Filter(alchemist=alchemist1, key=primary_key)
     db_filter.values = []
 
     # Attempt to add filters and exit if needed.
@@ -58,7 +58,7 @@ def main(unparsed_args_list):
     keep_set = set(db_filter.values)
     delete_stmt = construct_delete_stmt(TARGET_TABLE, primary_key, keep_set)
     count_query = construct_count_query(TARGET_TABLE, primary_key, keep_set)
-    phage_count = alchemist.scalar(count_query)
+    phage_count = alchemist1.scalar(count_query)
 
     # Determine the name of the new database.
     if new_database is None:
@@ -81,10 +81,11 @@ def main(unparsed_args_list):
         result = mysqldb_basic.copy_db(engine1, new_database)
         if result == 0:
             print(f"Deleting genomes...")
-            engine2, msg = mysqldb.get_engine(
-                                username=engine1.url.username,
-                                password=engine1.url.password,
-                                database=new_database, echo=False)
+            alchemist2 = AlchemyHandler(database=new_database,
+                                        username=engine1.url.username,
+                                        password=engine1.url.password)
+            alchemist2.connect(pipeline=True)
+            engine2 = alchemist2.engine
             engine2.execute(delete_stmt)
             if reset:
                 engine2.execute(RESET_VERSION)

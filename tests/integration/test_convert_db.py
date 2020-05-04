@@ -8,7 +8,6 @@ import unittest
 from unittest.mock import patch
 
 from pdm_utils import run
-from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.pipelines import convert_db
 
 # Import helper functions to build mock database
@@ -23,7 +22,7 @@ USER = test_db_utils.USER
 PWD = test_db_utils.PWD
 DB = test_db_utils.DB
 DB2 = "pdm_test_2"
-query = test_db_utils.version_table_query
+QUERY = test_db_utils.version_table_query
 
 # Create the main test directory in which all files will be
 # created and managed. Gets created once for all tests.
@@ -59,10 +58,8 @@ class TestConvert(unittest.TestCase):
 
     def setUp(self):
         test_db_utils.create_filled_test_db()
-        self.version_data = test_db_utils.get_data(query)
+        self.version_data = test_db_utils.get_data(QUERY)
         self.current = self.version_data[0]["SchemaVersion"]
-        self.alchemist = AlchemyHandler(database=DB, username=USER, password=PWD)
-        self.alchemist.build_engine()
         results_path.mkdir()
 
     def tearDown(self):
@@ -75,16 +72,20 @@ class TestConvert(unittest.TestCase):
         if exists:
             test_db_utils.remove_db(db=DB2)
 
-    @patch("pdm_utils.pipelines.convert_db.AlchemyHandler")
-    def test_main_1(self, alchemy_mock):
+
+
+
+    # Can't mock call to AlchemyHandler since that is called twice.
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
+    def test_main_1(self, getpass_mock):
         """Verify step-by-step database conversion round trip is successful and
         generates identical empty schema files."""
-        alchemy_mock.return_value = self.alchemist
 
         # Downgrade one schema version at a time and generate empty schema file.
         # If current = 4, down = [3, 2, 1, 0]
         down_versions = list(reversed(range(0, self.current)))
         for step in down_versions:
+            getpass_mock.side_effect = [USER, PWD]
             unparsed_args = get_unparsed_convert_args(str(step))
             schema_filename = f"down_{unparsed_args[-1]}.sql"
             schema_filepath = Path(results_path, schema_filename)
@@ -95,6 +96,7 @@ class TestConvert(unittest.TestCase):
         # If current = 4, up = [1, 2, 3, 4]
         up_versions = list(range(1, self.current + 1))
         for step in up_versions:
+            getpass_mock.side_effect = [USER, PWD]
             unparsed_args = get_unparsed_convert_args(str(step))
             schema_filename = f"up_{unparsed_args[-1]}.sql"
             schema_filepath = Path(results_path, schema_filename)
@@ -126,12 +128,11 @@ class TestConvert(unittest.TestCase):
             with self.subTest():
                 self.assertEqual(result, 0)
 
-
-    @patch("pdm_utils.pipelines.convert_db.AlchemyHandler")
-    def test_main_2(self, alchemy_mock):
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
+    def test_main_2(self, getpass_mock):
         """Verify non-step-by-step database conversion round trip is successful
         and generates identical empty schema files."""
-        alchemy_mock.return_value = self.alchemist
+        getpass_mock.side_effect = [USER, PWD, USER, PWD]
 
         # Get current schema file.
         schema_filepath1 = Path(results_path, "before.sql")
@@ -149,7 +150,7 @@ class TestConvert(unittest.TestCase):
         # Get data and schema file after round trip.
         schema_filepath2 = Path(results_path, "after.sql")
         test_db_utils.create_schema_file(schema_filepath2)
-        new_version_data = test_db_utils.get_data(query)
+        new_version_data = test_db_utils.get_data(QUERY)
         new_schema_version = new_version_data[0]["SchemaVersion"]
 
         # Compare the two empty schema files representing the same schema version,
@@ -166,11 +167,10 @@ class TestConvert(unittest.TestCase):
         # Test the results.
         self.assertEqual(result, 0)
 
-
-    @patch("pdm_utils.pipelines.convert_db.AlchemyHandler")
-    def test_main_3(self, alchemy_mock):
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
+    def test_main_3(self, getpass_mock):
         """Verify database with new name is created."""
-        alchemy_mock.return_value = self.alchemist
+        getpass_mock.side_effect = [USER, PWD]
 
         # Downgrade one step.
         step = self.current - 1
@@ -178,9 +178,9 @@ class TestConvert(unittest.TestCase):
         run.main(unparsed_args)
 
         # Get data from both databases.
-        data1 = test_db_utils.get_data(query)
+        data1 = test_db_utils.get_data(QUERY)
         v1 = data1[0]["SchemaVersion"]
-        data2 = test_db_utils.get_data(query, db=DB2)
+        data2 = test_db_utils.get_data(QUERY, db=DB2)
         v2 = data2[0]["SchemaVersion"]
 
         # Test
