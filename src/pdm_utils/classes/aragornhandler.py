@@ -78,7 +78,7 @@ class AragornHandler:
         """
         # values:        orient,  start, stop,            peptide tag
         # indices:          0       1     2                    3
-        re_str = "tmRNA\s+(\w+)?\[(\d+),(\d+)\]\s+\d+,\d+\s+([\w*]*)"
+        re_str = "tmRNA\s+(\w+)?\[(\d+),(\d+)\]\s+\d+,\d+\s+([\w|*]*)"
         regex = re.compile(re_str, re.MULTILINE | re.DOTALL)
 
         tmrnas = regex.findall(self.out_str)
