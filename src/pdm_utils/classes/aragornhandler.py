@@ -91,7 +91,7 @@ class AragornHandler:
             self.tmrna_tally += 1
 
             # If no complement character found, forward orientation
-            if tmrna[0] is None:
+            if tmrna[0] == "":
                 orientation = "forward"
             else:
                 orientation = "reverse"
@@ -143,7 +143,7 @@ class AragornHandler:
             amino_acid = trna[0]
 
             # If no complement character found, forward orientation
-            if trna[1] is None:
+            if trna[1] == "":
                 orientation = "forward"
             else:
                 orientation = "reverse"
