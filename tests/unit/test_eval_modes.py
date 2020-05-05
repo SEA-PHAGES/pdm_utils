@@ -10,7 +10,7 @@ class TestRunModes(unittest.TestCase):
         """Verify 'base' eval dictionary is returned."""
         dict = eval_modes.get_eval_flag_dict("base")
         with self.subTest():
-            self.assertEqual(len(dict.keys()), 13)
+            self.assertEqual(len(dict.keys()), 14)
         with self.subTest():
             self.assertTrue(dict["check_locus_tag"])
 
@@ -40,7 +40,7 @@ class TestRunModes(unittest.TestCase):
         """Verify 'custom' eval dictionary is returned."""
         dict = eval_modes.get_eval_flag_dict("custom")
         with self.subTest():
-            self.assertEqual(len(dict.keys()), 13)
+            self.assertEqual(len(dict.keys()), 14)
         with self.subTest():
             self.assertFalse(dict["check_locus_tag"])
 
