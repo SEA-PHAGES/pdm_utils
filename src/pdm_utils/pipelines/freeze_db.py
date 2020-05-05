@@ -58,7 +58,7 @@ def main(unparsed_args_list):
     keep_set = set(db_filter.values)
     delete_stmt = construct_delete_stmt(TARGET_TABLE, primary_key, keep_set)
     count_query = construct_count_query(TARGET_TABLE, primary_key, keep_set)
-    phage_count = alchemist1.scalar(count_query)
+    phage_count = mysqldb_basic.scalar(alchemist1.engine, count_query)
 
     # Determine the name of the new database.
     if new_database is None:
