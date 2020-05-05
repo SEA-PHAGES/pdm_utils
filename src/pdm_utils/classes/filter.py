@@ -7,29 +7,33 @@ from sqlalchemy import Column
 from sqlalchemy import and_
 from sqlalchemy import or_
 from sqlalchemy.engine.base import Engine
+from sqlalchemy.ext.declarative.api import DeclarativeMeta
 from sqlalchemy.sql.elements import Null
 from sqlalchemy.sql.elements import BooleanClauseList
+from sqlalchemy.orm.session import Session
 
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
+from pdm_utils.functions import cartography
 from pdm_utils.functions import parsing
 from pdm_utils.functions import querying as q
 
 class Filter:
     def __init__(self, alchemist=None, key=None):
-        self._engine=None
-        self._graph=None
-        self._session=None
+        self._engine = None
+        self._graph = None
+        self._session = None
+        self._mapper = None
+
         self._connected = False 
 
         if isinstance(alchemist, AlchemyHandler):
             if not alchemist.connected:
                 alchemist.connect(ask_database=True)
 
-            if alchemist.graph == None:
-                alchemist.build_graph()
-                
             self._engine = alchemist.engine
             self._graph = alchemist.graph
+            self._session = alchemist.session
+            self._mapper = alchemist.mapper
 
             self._connected = True
 
@@ -72,6 +76,7 @@ class Filter:
         self._engine = alchemist.engine
         self._graph = alchemist.graph
         self._session = alchemist.session
+        self._mapper = alchemist.mapper
 
         self._connected = True
 
@@ -91,6 +96,7 @@ class Filter:
         self._engine = alchemist.engine
         self._graph = alchemist.graph
         self._session = alchemist.session
+        self._mapper = alchemist.mapper
 
         self._connected = True
 
@@ -103,9 +109,11 @@ class Filter:
             self.connect()
         else: 
             if not isinstance(self._engine, Engine): 
-                raise AttributeError("Filter object is missing valid engine.")
+                raise AttributeError("Filter object is missing valid Engine.")
             if not isinstance(self._graph, Graph):
-                raise AttributeError("Filter object is missing valid graph.")
+                raise AttributeError("Filter object is missing valid Graph.")
+            if not isinstance(self._session, Session):
+                raise AttributeError("Filter object is missing valid Session.")
 
         if not isinstance(self._key, Column):
             raise AttributeError("Filter object is missing valid column key.")
@@ -132,6 +140,11 @@ class Filter:
     def session(self):
         session = self._session
         return session
+
+    @property
+    def mapper(self):
+        mapper = self._mapper
+        return mapper
 
 #-----------------------------------------------------------------------------
 #FILTER VALUE HANDLING
@@ -443,6 +456,34 @@ class Filter:
                                                  return_dict=return_dict)
 
         return results
+
+    def query(self, table_map):
+        """Queries for ORM object instances conditioned on Filter values.
+
+        :param table_map: SQLAlchemy ORM map object.
+        :type table_map: str
+        :type table_map: DeclarativeMeta
+        :returns: List of mapped object instances.
+        :rtype: list
+        """
+        self.check()
+
+        if not self._values:
+            return []
+
+        if isinstance(table_map, str):
+            table_map = cartography.get_map(self._mapper, table_map)
+        elif isinstance(table_map, DeclarativeMeta):
+            pass
+        else:
+            raise TypeError("Table map object must be either "
+                            "type str or DeclarativeMeta.")
+
+        in_clause = self._key.in_(self._values)
+
+        instances = q.query(self._session, self._graph, table_map, 
+                                                        where=in_clause)
+        return instances
 
     def transpose(self, raw_column, return_dict=False, set_values=False):
         """Queries for distinct values from stored values and a MySQL Column.

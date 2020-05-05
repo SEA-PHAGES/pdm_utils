@@ -7,6 +7,8 @@ from unittest.mock import PropertyMock
 from networkx import Graph
 from sqlalchemy import Column
 from sqlalchemy.engine.base import Engine
+from sqlalchemy.ext.declarative.api import DeclarativeMeta
+from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.elements import BinaryExpression
 
 from pdm_utils.classes.filter import Filter
@@ -20,13 +22,15 @@ class TestFilter(unittest.TestCase):
         alchemist = Mock(spec=AlchemyHandler)
         engine = Mock(spec=Engine)
         graph = Mock(spec=Graph)
-        session = Mock()
+        session = Mock(spec=Session)
+        mapper = Mock(spec=DeclarativeMeta)
         key = Mock(spec=Column)
         proxy = Mock()
         
         type(alchemist).engine  = PropertyMock(return_value=engine)
         type(alchemist).graph   = PropertyMock(return_value=graph)
         type(alchemist).session = PropertyMock(return_value=session)
+        type(alchemist).mapper  = PropertyMock(return_value=mapper)
         type(alchemist).connected = PropertyMock(return_value=True)
 
         engine.execute.return_value = proxy
@@ -37,6 +41,7 @@ class TestFilter(unittest.TestCase):
         self.mock_engine = engine
         self.mock_graph = graph
         self.mock_session = session
+        self.mock_mapper = mapper
         self.mock_key = key
 
         self.db_filter = Filter(alchemist=alchemist, key=key) 
@@ -102,6 +107,13 @@ class TestFilter(unittest.TestCase):
         self.db_filter._session = self.mock_session
 
         self.assertEqual(self.db_filter.session, self.mock_session)
+
+    def test_mapper_1(self):
+        """Verify that the mapper property portrays Filter._mapper.
+        """
+        self.db_filter._mapper = self.mock_mapper
+
+        self.assertEqual(self.db_filter.mapper, self.mock_mapper)
 
     def test_values_1(self):
         """Verify that the values property portrays Filter._values.
@@ -354,7 +366,7 @@ class TestFilter(unittest.TestCase):
 
         self.assertTrue(self.db_filter._values_valid)
         self.assertTrue(self.db_filter._values_valid)
-  
+ 
     @patch("pdm_utils.classes.filter.q.first_column")
     @patch("pdm_utils.classes.filter.q.build_select")
     @patch("pdm_utils.classes.filter.Filter.convert_column_input")

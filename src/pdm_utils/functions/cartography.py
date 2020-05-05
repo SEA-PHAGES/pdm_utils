@@ -1,16 +1,29 @@
 import sqlalchemy
-from sqlalchemy import create_engine
-from sqlalchemy import Column, Integer, String, Text, Table
-from sqlalchemy.types import LargeBinary
-from sqlalchemy import MetaData, select, ForeignKey, join
-from sqlalchemy.orm import sessionmaker, mapper, column_property, relationship
-from sqlalchemy.orm import reconstructor
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.sql import func
+from sqlalchemy.orm import mapper
+from sqlalchemy.orm import relationship
+
 from pdm_utils.classes.genome import Genome
 from pdm_utils.classes.cds import Cds
-from Bio.Seq import Seq
-    
+from pdm_utils.functions import parsing
+
+#-----------------------------------------------------------------------------
+#AUTOMAPPER FUNCTIONS
+def get_map(mapper, table):
+    """Get SQLAlchemy ORM map object.
+
+    :param mapper: Connected and prepared SQLAlchemy automap base object.
+    :type mapper: DeclarativeMeta
+    :param table: Case-insensitive table to retrieve a ORM map for.
+    :type table: str
+    :returns: SQLAlchemy mapped object.
+    :rtype: DeclarativeMeta
+    """
+    table = parsing.translate_table(mapper.metadata, table)
+    return mapper.classes[table]
+
+#-----------------------------------------------------------------------------
+#CLASSICAL MAPPING FUNCTIONS
+
 def map_cds(metadata):
     gene_table = metadata.tables["gene"]
 
@@ -57,14 +70,4 @@ def map_genome(metadata):
 
     return map
 
-MAPPINGS = {"genome" : map_genome,
-            "cds"    : map_cds}
-
-MAP_TEMPLATES = MAPPINGS.keys()
-
-def get_map(metadata, template):
-    mapper = MAPPINGS[template]
-    
-    map = mapper(metadata)
-    return map
 
