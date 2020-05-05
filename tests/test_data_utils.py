@@ -398,7 +398,8 @@ def get_alice_tmrna_169_qualifier_dict():
     """Returns data to construct Alice tmRNA 169 flat file feature."""
     dict = OrderedDict(
             [('gene', ['169']),
-             ('locus_tag', ['ALICE_169'])])
+             ('locus_tag', ['ALICE_169']),
+             ('note', ['Peptide tag: ATDTDATVTDAEIEAFFAEEAAALV*'])])
     return dict
 
 def get_alice_tmrna_169():
@@ -418,7 +419,7 @@ def get_alice_trna_170_qualifier_dict():
             [('gene', ['170']),
              ('locus_tag', ['ALICE_170']),
              ('product', ['tRNA-Gln']),
-             ('note', ['tRNA-Gln (ttg)'])])
+             ('note', ['tRNA-Gln(ttg)'])])
     return dict
 
 def get_alice_trna_170():
