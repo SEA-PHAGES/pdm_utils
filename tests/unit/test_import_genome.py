@@ -11,7 +11,7 @@ from unittest.mock import patch
 from pdm_utils.classes import bundle
 from pdm_utils.classes import genome
 from pdm_utils.classes import source
-from pdm_utils.classes import cds
+from pdm_utils.classes import cds, trna, tmrna
 from pdm_utils.classes import genomepair
 from pdm_utils.constants import constants
 from pdm_utils.functions import eval_modes
@@ -1575,9 +1575,12 @@ class TestImportGenome6(unittest.TestCase):
         self.cds1 = cds.Cds()
         self.cds2 = cds.Cds()
 
-        # TODO using a Cds object since tRNA object is not available yet.
-        self.trna1 = cds.Cds()
-        self.trna2 = cds.Cds()
+        # Replaced trna1 and trna2 with TrnaFeatures instead of Cds
+        self.trna1 = trna.TrnaFeature()
+        self.trna2 = trna.TrnaFeature()
+
+        self.tmrna1 = tmrna.TmrnaFeature()
+        self.tmrna2 = tmrna.TmrnaFeature()
 
         self.src1 = source.Source()
         self.src2 = source.Source()
