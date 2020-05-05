@@ -575,6 +575,15 @@ class TestBuildClauses(unittest.TestCase):
         self.whereclauses = [self.whereclause_1,
                              self.whereclause_2,
                              self.whereclause_3]
+
+        self.session_mock = Mock()
+        self.query_mock = Mock()
+        self.select_from_mock = Mock()
+        self.filter_mock = Mock()
+
+        self.session_mock.query.return_value = self.query_mock
+        self.query_mock.select_from_mock.return_value = self.select_from_mock
+        self.select_from_mock.filter_mock.return_value = self.filter_mock
  
     @patch("pdm_utils.functions.querying.parsing.parse_filter")
     def test_build_where_clause_1(self, parse_filter_mock): 
@@ -706,6 +715,40 @@ class TestBuildClauses(unittest.TestCase):
                                             order_by=self.columns,
                                             add_in=None)
 
+    @patch("pdm_utils.functions.querying.build_fromclause")
+    @patch("pdm_utils.functions.querying.extract_columns")
+    def test_query_1(self, extract_columns_mock, build_from_clause_mock):
+        """Verify function strucutre of query().
+        """
+        session_mock = Mock()
+        map_mock = Mock()
+
+        extract_columns_mock.return_value = self.columns
+        build_from_clause_mock.return_value = self.phage
+
+        querying.query(session_mock, self.graph, map_mock)
+
+        extract_columns_mock.assert_any_call(None)  
+        build_from_clause_mock.assert_called_once_with(self.graph, 
+                                                    [map_mock] + self.columns)
+
+    @patch("pdm_utils.functions.querying.build_fromclause")
+    @patch("pdm_utils.functions.querying.extract_columns")
+    def test_query_2(self, extract_columns_mock, build_from_clause_mock):
+        """Verify function strucutre of query().
+        """
+        session_mock = Mock()
+        map_mock = Mock()
+
+        extract_columns_mock.return_value = self.columns
+        build_from_clause_mock.return_value = self.phage
+
+        querying.query(session_mock, self.graph, map_mock, where=self.columns)
+
+        extract_columns_mock.assert_any_call(self.columns)  
+        build_from_clause_mock.assert_called_once_with(self.graph, 
+                                                    [map_mock] + self.columns)
+        
 class TestExecute(unittest.TestCase):
     def setUp(self):
         self.mock_engine = Mock()

@@ -20,11 +20,13 @@ class TestFilter(unittest.TestCase):
         alchemist = Mock(spec=AlchemyHandler)
         engine = Mock(spec=Engine)
         graph = Mock(spec=Graph)
+        session = Mock()
         key = Mock(spec=Column)
         proxy = Mock()
         
-        type(alchemist).engine = PropertyMock(return_value=engine)
-        type(alchemist).graph  = PropertyMock(return_value=graph)
+        type(alchemist).engine  = PropertyMock(return_value=engine)
+        type(alchemist).graph   = PropertyMock(return_value=graph)
+        type(alchemist).session = PropertyMock(return_value=session)
         type(alchemist).connected = PropertyMock(return_value=True)
 
         engine.execute.return_value = proxy
@@ -34,6 +36,7 @@ class TestFilter(unittest.TestCase):
         self.mock_alchemist = alchemist
         self.mock_engine = engine
         self.mock_graph = graph
+        self.mock_session = session
         self.mock_key = key
 
         self.db_filter = Filter(alchemist=alchemist, key=key) 
@@ -86,19 +89,6 @@ class TestFilter(unittest.TestCase):
 
         self.assertEqual(self.db_filter.engine, self.mock_engine)
 
-    def test_engine_2(self):
-        """Verify that the engine property can set Filter._engine.
-        """
-        self.db_filter.engine = self.mock_engine
-
-        self.assertEqual(self.db_filter._engine, self.mock_engine)
-
-    def test_engine_3(self):
-        """Verify that the engine property raises TypeError on invalid input.
-        """
-        with self.assertRaises(TypeError):
-            self.db_filter.engine = Mock()
-
     def test_graph_1(self):
         """Verify that the graph property portrays Filter._graph.
         """
@@ -106,18 +96,12 @@ class TestFilter(unittest.TestCase):
 
         self.assertEqual(self.db_filter.graph, self.mock_graph)
 
-    def test_graph_2(self):
-        """Verify that the graph property can set Filter._graph.
+    def test_session_1(self):
+        """Verify that the session property portrays Filter._session.
         """
-        self.db_filter.graph = self.mock_graph
+        self.db_filter._session = self.mock_session
 
-        self.assertEqual(self.db_filter._graph, self.mock_graph)
-
-    def test_graph_3(self):
-        """Verify that the graph property raises TypeError on invalid input.
-        """
-        with self.assertRaises(TypeError):
-            self.db_filter.graph = Mock()
+        self.assertEqual(self.db_filter.session, self.mock_session)
 
     def test_values_1(self):
         """Verify that the values property portrays Filter._values.
@@ -192,7 +176,6 @@ class TestFilter(unittest.TestCase):
         self.db_filter.connect()
 
         self.mock_alchemist.connect.assert_called()
-        self.mock_alchemist.build_graph.assert_called()
 
     @patch("pdm_utils.classes.filter.isinstance")
     def test_link_1(self, isinstance_mock):
@@ -216,9 +199,7 @@ class TestFilter(unittest.TestCase):
 
         self.db_filter.link(self.mock_alchemist)
 
-
         self.mock_alchemist.connect.assert_called()
-        self.mock_alchemist.build_graph.assert_called()
 
     @patch("pdm_utils.classes.filter.Filter.connect")
     def test_check_1(self, connect_mock):

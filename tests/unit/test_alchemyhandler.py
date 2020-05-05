@@ -24,9 +24,9 @@ class TestAlchemyHandler(unittest.TestCase):
         """Verify AlchemyHandler data objects are initialized as None.
         """
         self.assertEqual(self.alchemist._engine, None)
-        self.assertEqual(self.alchemist.metadata, None)
-        self.assertEqual(self.alchemist.graph, None)
-        self.assertEqual(self.alchemist.session, None)
+        self.assertEqual(self.alchemist._metadata, None)
+        self.assertEqual(self.alchemist._graph, None)
+        self.assertEqual(self.alchemist._session, None)
 
     def test_constructor_3(self):
         """Verify AlchemyHandler data booleans are initialized as False.
@@ -57,6 +57,14 @@ class TestAlchemyHandler(unittest.TestCase):
         self.assertTrue(self.alchemist.has_credentials)
         self.assertFalse(self.alchemist.connected)
 
+    @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.clear")
+    def test_username_3(self, clear_mock):
+        """Verify changing usrename property calls clear().
+        """
+        self.alchemist.username = "Test"
+
+        clear_mock.assert_called()
+
     def test_password_1(self):
         """Verify password property conserves has_credentials and connected.
         """
@@ -72,6 +80,14 @@ class TestAlchemyHandler(unittest.TestCase):
         self.assertTrue(self.alchemist.has_credentials)
         self.assertFalse(self.alchemist.connected)
    
+    @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.clear")
+    def test_password_3(self, clear_mock):
+        """Verify changing password property calls clear().
+        """
+        self.alchemist.password = "Test" 
+
+        clear_mock.assert_called()
+
     def test_engine_1(self):
         """Verify engine property sets connected.
         """
@@ -85,6 +101,76 @@ class TestAlchemyHandler(unittest.TestCase):
         """
         with self.assertRaises(TypeError):
             self.alchemist.engine = "Test"
+ 
+    @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.build_engine")
+    def test_engine_3(self, build_engine_mock):
+        """Verify engine property calls build_engine() selectively.
+        """
+        self.alchemist._engine = "Test"
+        self.alchemist.engine
+
+        build_engine_mock.assert_not_called()
+
+        self.alchemist._engine = None
+        self.alchemist.engine
+
+        build_engine_mock.assert_called()
+
+    @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.build_metadata")
+    def test_metadata_1(self, build_metadata_mock):
+        """Verify metadata property calls build_metadata() selectively.
+        """
+        self.alchemist._metadata = "Test"
+        self.alchemist.metadata
+
+        build_metadata_mock.assert_not_called()
+
+        self.alchemist._metadata = None
+        self.alchemist.metadata
+
+        build_metadata_mock.assert_called() 
+
+    @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.build_graph")
+    def test_graph_1(self, build_graph_mock):
+        """Verify graph property calls build_graph() selectively.
+        """
+        self.alchemist._graph = "Test"
+        self.alchemist.graph
+
+        build_graph_mock.assert_not_called()
+
+        self.alchemist._graph = None
+        self.alchemist.graph
+
+        build_graph_mock.assert_called()
+
+    @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.build_session")
+    def test_session_1(self, build_session_mock):
+        """Verify session property calls build_session() selectively.
+        """
+        self.alchemist._session = "Test"
+        self.alchemist.session
+
+        build_session_mock.assert_not_called()
+
+        self.alchemist._session = None
+        self.alchemist.session
+
+        build_session_mock.assert_called()
+
+    @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.build_mapper")
+    def test_mapper_1(self, build_mapper_mock):
+        """Verify mapper property calls build_mapper() selectively.
+        """
+        self.alchemist._mapper = "Test"
+        self.alchemist.mapper
+
+        build_mapper_mock.assert_not_called()
+
+        self.alchemist._mapper = None
+        self.alchemist.mapper
+
+        build_mapper_mock.assert_called()
 
     @patch("pdm_utils.classes.alchemyhandler.input")
     def test_ask_database_1(self, Input):
@@ -128,21 +214,21 @@ class TestAlchemyHandler(unittest.TestCase):
     def test_validate_database_1(self):
         """Verify function structure of validate_database().
         """
-        MockEngine = Mock()
-        MockProxy = Mock()
+        mock_engine = Mock()
+        mock_proxy = Mock()
 
-        MockEngine.execute.return_value = MockProxy 
-        MockProxy.fetchall.return_value = [("pdm_test_db",), 
+        mock_engine.execute.return_value = mock_proxy 
+        mock_proxy.fetchall.return_value = [("pdm_test_db",), 
                                            ("Actinobacteriophage",)]
 
         self.alchemist.connected = True
         self.alchemist.database = "pdm_test_db"
-        self.alchemist._engine = MockEngine
+        self.alchemist._engine = mock_engine
 
         self.alchemist.validate_database()
 
-        MockEngine.execute.assert_called_with("SHOW DATABASES")
-        MockProxy.fetchall.assert_called()
+        mock_engine.execute.assert_called_once()
+        mock_proxy.fetchall.assert_called()
 
     def test_validate_database_2(self):
         """Verify validate_database() raises IndexError without database.
@@ -155,21 +241,21 @@ class TestAlchemyHandler(unittest.TestCase):
     def test_validate_database_3(self):
         """Verify validate_database() raises ValueError from bad database input.
         """
-        MockEngine = Mock()
-        MockProxy = Mock()
+        mock_engine = Mock()
+        mock_proxy = Mock()
 
-        MockEngine.execute.return_value = MockProxy
-        MockProxy.fetchall.return_value = []
+        mock_engine.execute.return_value = mock_proxy
+        mock_proxy.fetchall.return_value = []
 
         self.alchemist.connected = True
         self.alchemist.database = "test db"
-        self.alchemist._engine = MockEngine
+        self.alchemist._engine = mock_engine
 
         with self.assertRaises(ValueError):
             self.alchemist.validate_database()
 
-        MockEngine.execute.assert_called_with("SHOW DATABASES")
-        MockProxy.fetchall.assert_called()
+        mock_engine.execute.assert_called_once()
+        mock_proxy.fetchall.assert_called()
 
     @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler."
                                                         "ask_credentials")
@@ -225,14 +311,14 @@ class TestAlchemyHandler(unittest.TestCase):
         """
         self.alchemist.has_credentials = True
         self.alchemist.connected = False
-        self.alchemist.metadata = "Test"
-        self.alchemist.graph = "Test"
+        self.alchemist._metadata = "Test"
+        self.alchemist._graph = "Test"
 
         self.alchemist.build_engine()
 
         self.alchemist.connected = True
-        self.assertEqual(self.alchemist.metadata, None)
-        self.assertEqual(self.alchemist.graph, None)
+        self.assertEqual(self.alchemist._metadata, None)
+        self.assertEqual(self.alchemist._graph, None)
 
     @patch("pdm_utils.classes.alchemyhandler.sqlalchemy.create_engine")
     def test_build_engine_5(self, create_engine_mock):
@@ -257,46 +343,46 @@ class TestAlchemyHandler(unittest.TestCase):
                                                         "ask_credentials")
     @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.ask_database")
     @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.build_engine")
-    def test_connect_1(self, BuildEngine, AskDatabase, AskCredentials):
+    def test_connect_1(self, build_engine_mock, ask_database_mock, AskCredentials):
         """Verify connect() returns if build_engine() does not complain.
         """
         self.alchemist.has_credentials = True
         self.alchemist.connected = True
         self.alchemist.connect()
-        BuildEngine.assert_called()
-        AskDatabase.assert_not_called()
+        build_engine_mock.assert_called()
+        ask_database_mock.assert_not_called()
         AskCredentials.assert_not_called()
 
     @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler."
                                                         "ask_credentials")
     @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.ask_database")
     @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.build_engine")
-    def test_connect_2(self, BuildEngine, AskDatabase, AskCredentials):
+    def test_connect_2(self, build_engine_mock, ask_database_mock, AskCredentials):
         """Verify connect() AlchemyHandler properties control function calls.
         """ 
         self.alchemist.connected = True
         self.alchemist.connected_database = True
         self.alchemist.has_credentials = True
         self.alchemist.connect(ask_database=True)
-        BuildEngine.assert_called()
-        AskDatabase.assert_not_called()
+        build_engine_mock.assert_called()
+        ask_database_mock.assert_not_called()
         AskCredentials.assert_not_called()
 
     @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler."
                                                         "ask_credentials")
     @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.ask_database")
     @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.build_engine")
-    def test_connect_3(self, BuildEngine, AskDatabase, AskCredentials):
+    def test_connect_3(self, build_engine_mock, ask_database_mock, AskCredentials):
         """Verify connect() depends on build_engine() to raise ValueError.
         """
         self.alchemist.connected = False
-        BuildEngine.side_effect = OperationalError("", "", "")
+        build_engine_mock.side_effect = OperationalError("", "", "")
         
         with self.assertRaises(ValueError):
             self.alchemist.connect()
 
-        BuildEngine.assert_called()
-        AskDatabase.assert_not_called()
+        build_engine_mock.assert_called()
+        ask_database_mock.assert_not_called()
         AskCredentials.assert_called()
 
     def build_engine_side_effect(self, mock_engine):
@@ -304,54 +390,10 @@ class TestAlchemyHandler(unittest.TestCase):
         """
         self.alchemist._engine = mock_engine
 
-    @patch("pdm_utils.classes.alchemyhandler.querying.execute")
-    @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.build_engine")
-    def test_execute_1(self, build_engine_mock, execute_mock):
-        """Verify function structure of execute().
-        """
-        engine_mock = Mock()
-        build_engine_mock.side_effect = self.build_engine_side_effect(
-                                                                engine_mock)
-
-        self.alchemist.execute("Executable")
-
-        execute_mock.assert_called_with(engine_mock, "Executable", 
-                                                            return_dict=True)
-   
-    @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.build_engine")
-    def test_scalar_1(self, build_engine_mock):
-        """Verify function structure of scalar().
-        """
-        engine_mock = Mock() 
-        proxy_mock  = Mock()
-        
-        engine_mock.execute.return_value = proxy_mock
-        proxy_mock.scalar.return_value = "Scalar"
-
-        build_engine_mock.side_effect = self.build_engine_side_effect(
-                                                               engine_mock)
-       
-        self.alchemist.scalar("Executable")
-
-        engine_mock.execute.assert_called_with("Executable")
-        proxy_mock.scalar.assert_called()
-        build_engine_mock.assert_not_called()
-
-    @patch("pdm_utils.classes.alchemyhandler.querying.first_column")
-    def test_first_column_1(self, first_column_mock):
-        """Verify function structure of first_row().
-        """
-        engine_mock = Mock()
-        self.alchemist._engine = engine_mock
-
-        self.alchemist.first_column("Executable")
-
-        first_column_mock.assert_called_with(engine_mock, "Executable")
-
     @patch("pdm_utils.classes.alchemyhandler.MetaData")
     @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.build_engine")
     @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.ask_database")
-    def test_build_metadata_1(self, AskDatabase, BuildEngine, MetaData):
+    def test_build_metadata_1(self, ask_database_mock, build_engine_mock, metadata_mock):
         """Verify build_metadata() relies on AlchemyHandler properties.
         """
         self.alchemist.has_database = False
@@ -359,14 +401,14 @@ class TestAlchemyHandler(unittest.TestCase):
 
         self.alchemist.build_metadata()
 
-        AskDatabase.assert_called()
-        BuildEngine.assert_called()
-        MetaData.assert_called()
+        ask_database_mock.assert_called()
+        build_engine_mock.assert_called()
+        metadata_mock.assert_called()
 
     @patch("pdm_utils.classes.alchemyhandler.MetaData")
     @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.build_engine")
     @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.ask_database")
-    def test_build_metadata_2(self, AskDatabase, BuildEngine, MetaData):
+    def test_build_metadata_2(self, ask_database_mock, build_engine_mock, metadata_mock):
         """Verify build_metadata() calls ask_database() and build_engine().
         """
         self.alchemist.has_database = True
@@ -374,41 +416,108 @@ class TestAlchemyHandler(unittest.TestCase):
         
         self.alchemist.build_metadata()
 
-        AskDatabase.assert_not_called()
-        BuildEngine.assert_not_called()
-        MetaData.assert_called() 
+        ask_database_mock.assert_not_called()
+        build_engine_mock.assert_not_called()
+        metadata_mock.assert_called() 
  
     @patch("pdm_utils.classes.alchemyhandler.querying.build_graph")
     @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.build_metadata")
-    def test_build_graph_1(self, BuildMetadata, BuildGraph):
-        """Verify get_column() calls querying.build_graph().
+    def test_build_graph_1(self, build_metadata_mock, build_graph_mock):
+        """Verify build_graph() calls querying.build_graph().
         """
-        BuildGraph.return_value = "Graph"
+        build_graph_mock.return_value = "Graph"
 
-        self.alchemist.metadata = "Metadata"
+        self.alchemist._metadata = "Metadata"
 
         self.alchemist.build_graph()
 
-        BuildMetadata.assert_not_called()
-        BuildGraph.assert_called_with("Metadata")
+        build_metadata_mock.assert_not_called()
+        build_graph_mock.assert_called_with("Metadata")
         
-        self.assertEqual(self.alchemist.graph, "Graph")
+        self.assertEqual(self.alchemist._graph, "Graph")
 
     @patch("pdm_utils.classes.alchemyhandler.querying.build_graph")
     @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.build_metadata")
-    def test_build_graph_2(self, BuildMetadata, BuildGraph):
-        """Verify get_column() calls build_metadata().
+    def test_build_graph_2(self, build_metadata_mock, build_graph_mock):
+        """Verify build_graph() calls build_metadata().
         """
-        BuildGraph.return_value = "Graph"
+        build_graph_mock.return_value = "Graph"
 
-        self.alchemist.metadata = None
+        self.alchemist._metadata = None
 
         self.alchemist.build_graph()
 
-        BuildMetadata.assert_called()
-        BuildGraph.assert_called_with(None)
+        build_metadata_mock.assert_called()
+        build_graph_mock.assert_called_with(None)
         
-        self.assertEqual(self.alchemist.graph, "Graph")
- 
+        self.assertEqual(self.alchemist._graph, "Graph")
+
+    @patch("pdm_utils.classes.alchemyhandler.sessionmaker")
+    @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.build_engine")
+    @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.ask_database")
+    def test_build_session_1(self, ask_database_mock, build_engine_mock, 
+                                                      sessionmaker_mock):
+        """Verify build_session() relies on AlchemyHandler properties.
+        """
+        self.alchemist.has_database = False
+        self.alchemist.connected = False
+
+        self.alchemist.build_session()
+
+        ask_database_mock.assert_called()
+        build_engine_mock.assert_called()
+        sessionmaker_mock.assert_called()
+
+    @patch("pdm_utils.classes.alchemyhandler.sessionmaker")
+    @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.build_engine")
+    @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.ask_database")
+    def test_build_session_2(self, ask_database_mock, build_engine_mock, 
+                                                       sessionmaker_mock):
+        """Verify build_session() calls ask_database() and build_engine().
+        """
+        self.alchemist.has_database = True
+        self.alchemist.connected = True
+        
+        self.alchemist.build_session()
+
+        ask_database_mock.assert_not_called()
+        build_engine_mock.assert_not_called()
+        sessionmaker_mock.assert_called() 
+
+    @patch("pdm_utils.classes.alchemyhandler.automap_base")
+    @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.build_metadata")
+    def test_build_graph_1(self, build_metadata_mock, automap_base_mock):
+        """Verify build_mapper() calls automap_base().
+        """
+        base_mock = Mock()
+        automap_base_mock.return_value = base_mock
+
+        self.alchemist._metadata = "Metadata"
+
+        self.alchemist.build_mapper()
+
+        build_metadata_mock.assert_not_called()
+        automap_base_mock.assert_called_with(metadata="Metadata")
+        
+        self.assertEqual(self.alchemist._mapper, base_mock)
+
+    @patch("pdm_utils.classes.alchemyhandler.automap_base")
+    @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.build_metadata")
+    def test_build_graph_2(self, build_metadata_mock, automap_base_mock):
+        """Verify build_mapper() calls build_metadata().
+        """
+        base_mock = Mock()
+        automap_base_mock.return_value = base_mock
+
+        self.alchemist._metadata = None
+
+        self.alchemist.build_mapper()
+
+        build_metadata_mock.assert_called()
+        automap_base_mock.assert_called_with(metadata=None)
+        
+        self.assertEqual(self.alchemist._mapper, base_mock)
+
+
 if __name__ == "__main__":
     unittest.main()

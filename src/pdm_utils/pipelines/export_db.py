@@ -20,6 +20,7 @@ from pdm_utils.classes.filter import Filter
 from pdm_utils.functions import basic
 from pdm_utils.functions import flat_files
 from pdm_utils.functions import mysqldb
+from pdm_utils.functions import mysqldb_basic
 from pdm_utils.functions import parsing
 from pdm_utils.functions import querying
 
@@ -606,7 +607,8 @@ def get_cds_seqrecords(alchemist, values=[], nucleotide=False, verbose=False):
                                                 phage_obj,
                                                 where=\
                                                 phage_id_obj==cds.genome_id)
-            parent_genome_data = alchemist.first(parent_genome_query)
+            parent_genome_data = mysqldb_basic.first(alchemist.engine,
+                                                     parent_genome_query)
             parent_genome = mysqldb.parse_phage_table_data(parent_genome_data)
             genomes_dict.update({cds.genome_id : parent_genome})
 

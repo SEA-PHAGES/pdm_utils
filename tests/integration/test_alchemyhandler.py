@@ -7,6 +7,8 @@ from networkx import Graph
 from sqlalchemy import MetaData
 from sqlalchemy.engine.base import Engine
 from sqlalchemy.exc import OperationalError
+from sqlalchemy.ext.declarative.api import DeclarativeMeta
+from sqlalchemy.orm.session import Session
 
 from pdm_utils.functions import querying
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
@@ -79,7 +81,6 @@ class TestAlchemyHandler(unittest.TestCase):
         self.alchemist.username = user
         self.alchemist.password = pwd
         self.alchemist.database = db
-        self.alchemist.build_graph()
 
     def test_build_metadata_1(self):
         """Verify build_metadata() creates and stores MetaData and Engine.
@@ -88,6 +89,10 @@ class TestAlchemyHandler(unittest.TestCase):
 
         self.assertTrue(isinstance(self.alchemist.metadata, MetaData))
         self.assertTrue(isinstance(self.alchemist.engine, Engine))
+
+        self.assertTrue(self.alchemist._graph is None)
+        self.assertTrue(self.alchemist._session is None)
+        self.assertTrue(self.alchemist._mapper is None)
 
     def test_build_graph_1(self):
         """Verify build_graph() creates and stores, Graph, MetaData, and Engine.
@@ -98,88 +103,32 @@ class TestAlchemyHandler(unittest.TestCase):
         self.assertTrue(isinstance(self.alchemist.metadata, MetaData))
         self.assertTrue(isinstance(self.alchemist.engine, Engine))
 
-    def test_execute_1(self):
-        """Verify execute() returns values in expected data types.
+        self.assertTrue(self.alchemist._session is None)
+        self.assertTrue(self.alchemist._mapper is None)
+
+    def test_build_session_1(self):
+        """Verify build_session() creates and stores Engine and Session
         """
         self.connect_to_pdm_test_db()
 
-        PhageID = querying.get_column(self.alchemist.metadata, "phage.PhageID")
-        query = querying.build_select(self.alchemist.graph, PhageID)
+        self.assertTrue(isinstance(self.alchemist.session, Session))
+        self.assertTrue(isinstance(self.alchemist.engine, Engine))
 
-        results = self.alchemist.execute(query)
+        self.assertTrue(self.alchemist._graph is None)
+        self.assertTrue(self.alchemist._metadata is None)
+        self.assertTrue(self.alchemist._mapper is None)
 
-        self.assertTrue(isinstance(results, list))
-        for result in results:
-            self.assertTrue(isinstance(result, dict))
-
-    def test_execute_2(self):
-        """Verify execute() returns expected values in dictionaries.
+    def test_build_mapper_1(self):
+        """Verify build_mapper() creates and stores, Mapper, MetaData, and Engine.
         """
         self.connect_to_pdm_test_db()
 
-        PhageID = querying.get_column(self.alchemist.metadata, "phage.PhageID")
-        query = querying.build_select(self.alchemist.graph, PhageID)
+        self.assertTrue(isinstance(self.alchemist.mapper, DeclarativeMeta))
+        self.assertTrue(isinstance(self.alchemist.metadata, MetaData))
+        self.assertTrue(isinstance(self.alchemist.engine, Engine))
 
-        results = self.alchemist.execute(query)
-
-        values = []
-        for result in results:
-            with self.subTest(result_dict=result):
-                self.assertTrue("PhageID" in result.keys())
-                values.append(result["PhageID"])
-
-        self.assertTrue("Trixie" in values)
-        self.assertTrue("D29" in values)
-        self.assertTrue("Myrna" in values)
-        self.assertTrue("Alice" in values)
-
-    def test_execute_3(self):
-        """Verify execute() returns expected values in tuples.
-        """
-        self.connect_to_pdm_test_db()
-
-        PhageID = querying.get_column(self.alchemist.metadata, "phage.PhageID")
-        query = querying.build_select(self.alchemist.graph, PhageID)
-
-        results = self.alchemist.execute(query, return_dict=False)
-
-        values = []
-        for result in results:
-            with self.subTest(result_tuple=result):
-                self.assertTrue(len(result) == 1)
-                values.append(result[0])
-
-        self.assertTrue("Trixie" in values)
-        self.assertTrue("D29" in values)
-        self.assertTrue("Myrna" in values)
-        self.assertTrue("Alice" in values)
-
-    def test_scalar_1(self):
-        """Verify scalar() returns expected value.
-        """
-        self.connect_to_pdm_test_db()
-
-        PhageID = querying.get_column(self.alchemist.metadata, "phage.PhageID")
-        query = querying.build_select(self.alchemist.graph, PhageID)
-
-        value = self.alchemist.scalar(query)
-
-        self.assertEqual(value, "Alice")
-
-    def test_first_column_1(self):
-        """Verify first_column() returns expected value.
-        """
-        self.connect_to_pdm_test_db()
-
-        PhageID = querying.get_column(self.alchemist.metadata, "phage.PhageID")
-        query = querying.build_distinct(self.alchemist.graph, PhageID)
-
-        values = self.alchemist.first_column(query)
-
-        self.assertTrue("Trixie" in values)
-        self.assertTrue("D29" in values)
-        self.assertTrue("Myrna" in values)
-        self.assertTrue("Alice" in values)
+        self.assertTrue(self.alchemist._session is None)
+        self.assertTrue(self.alchemist._graph is None)
 
     @classmethod
     def tearDownClass(self):

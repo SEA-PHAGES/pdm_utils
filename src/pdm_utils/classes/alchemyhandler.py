@@ -7,10 +7,11 @@ from sqlalchemy import MetaData
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.engine.base import Engine
 from sqlalchemy.exc import OperationalError
+from sqlalchemy.ext.automap import automap_base
 
 from pdm_utils.functions import cartography
 from pdm_utils.functions import querying
-from pdm_utils.functions import mysqldb
+from pdm_utils.functions import mysqldb_basic
 from pdm_utils.functions import parsing
 
 #-----------------------------------------------------------------------------
@@ -32,9 +33,10 @@ class AlchemyHandler:
         #An understanding of whether the credentials are valid for the engine.
 
         self._engine = None
-        self.metadata = None
-        self.graph = None
-        self.session = None 
+        self._metadata = None
+        self._graph = None
+        self._mapper = None
+        self._session = None 
         self.echo = False
 
         self.connected = False
@@ -107,6 +109,8 @@ class AlchemyHandler:
             self.has_credentials = True
         self.connected = False
 
+        self.clear()
+
     @property
     def password(self):
         """Returns the AlchemyHandler's set password.
@@ -133,6 +137,8 @@ class AlchemyHandler:
             self.has_credentials = True
         self.connected = False
 
+        self.clear()
+        
     @property
     def login_attempts(self):
         """Returns the AlchemyHandler's number of login attempts for login.
@@ -148,8 +154,11 @@ class AlchemyHandler:
         """Returns the AlchemyHandler's stored engine object.
 
         :returns: Returns the AlchemyHandler's stored engine object.
-        :rtype: str
+        :rtype: Engine
         """
+        if self._engine is None:
+            self.build_engine()
+
         engine = self._engine
         return engine
 
@@ -158,25 +167,64 @@ class AlchemyHandler:
         if engine is None:
             self.connected = False
             self._engine = None
+            self.clear()
             return 
 
         if not isinstance(engine, Engine):
             raise TypeError
 
+        self.clear()
         self._engine = engine
+        self.get_mysql_dbs()
         self.connected = True
 
     @property
-    def tables(self):
-        """Returns the tables within the AlchemyHandler's metadata object.
+    def session(self):
+        """Returns the AlchemyHandler's stored session object.
+        """
+        if self._session is None:
+            self.build_session()
+
+        session = self._session
+        return session
+
+    @property
+    def metadata(self):
+        """Returns the AlchemyHandler's stored metadata object.
 
         :returns: Returns the AlchemyHandler's stored engine object.
-        :rtype: list[Table]
+        :rtype: MetaData
         """
-        if not self.metadata:
+        if self._metadata is None:
             self.build_metadata()
-           
-        return list(self.metadata.tables)
+
+        metadata = self._metadata
+        return metadata
+
+    @property
+    def graph(self):
+        """Returns the AlchemyHandler's stored graph object.
+
+        :returns: Returns the AlchemyHandler's stored metadata graph object.
+        :rtype: Graph
+        """
+        if self._graph is None:
+            self.build_graph() 
+
+        graph = self._graph
+        return graph
+
+    @property
+    def mapper(self):
+        """Returns the AlchemyHandler's stored automapper object.
+
+        :returns: Returns the AlchemyHandler's stored mapper object.
+        """
+        if self._mapper is None:
+            self.build_mapper()
+
+        mapper = self._mapper
+        return mapper
 
     @property
     def databases(self):
@@ -241,8 +289,8 @@ class AlchemyHandler:
           
             self.connected = True
 
-            self.metadata = None
-            self.graph = None
+            self._metadata = None
+            self._graph = None
 
             self.get_mysql_dbs()
 
@@ -291,7 +339,7 @@ class AlchemyHandler:
                 raise ValueError(CREDENTIALS_MSG)
             else:
                 print(CREDENTIALS_MSG)
-                exit(1)
+                sys.exit(1)
 
         if ask_database:
             try:
@@ -313,7 +361,7 @@ class AlchemyHandler:
                     raise ValueError(DATABASE_MSG)
                 else:
                     print(DATABASE_MSG)
-                    exit(1)
+                    sys.exit(1)
 
     def construct_engine_string(self, db_type="mysql", driver="pymysql",
                             username="", password="", database=""):
@@ -343,101 +391,29 @@ class AlchemyHandler:
         """
         if not self.connected:
             raise ValueError("AlchemyHandler currently not connected to MySQL.")
+        databases = mysqldb_basic.get_mysql_dbs(self._engine)
+        self._databases = list(databases)
 
-        proxy = self._engine.execute("SHOW DATABASES")  
-        results = proxy.fetchall()
-
-        databases = []
-        for result in results:
-            databases.append(result[0])
-
-        self._databases = databases
-
-#-----------------------------------------------------------------------------
-#EXECUTE METHODS
-#-----------------------------------------------------------------------------
-
-    def execute(self, executable, return_dict=True):
-        """Use SQLAlchemy Engine to execute a MySQL query.
-
-        :param executable: Input a executable MySQL query.
-        :type executable: Select
-        :type executable: str
-        :param return_dict: Toggle whether execute returns dict or tuple.
-        :type return_dict: Boolean
-        :returns: Results from execution of given MySQL query.
-        :rtype: list[dict]
-        :rtype: list[tuple]
+    def clear(self):
+        """Clear properties tied to MySQL credentials/database.
         """
-        if self.engine is None:
-            self.build_engine()
+        self._engine = None
+        self._metadata = None
+        self._graph = None
+        self._mapper = None
+        
+        if not self._session is None:
+            try:
+                self._session.close()
+            except:
+                pass
+        
+        self._session = None
 
-        results = querying.execute(self.engine, executable, 
-                                                    return_dict=return_dict)
-        return results
+        self._databases = []
 
-    #TODO Owen unittest
-    def first(self, executable, return_dict=True):
-        """Use SQLAlchemy Engine to execute a MySQL query for the first row.
-
-        :param executable: Input an executable MySQL query.
-        :type executable: Select
-        :type executable: str
-        :param return_dict: Toggle whether execute returns dict or tuple.
-        :type return_dict: Boolean
-        :returns: Results from execution of given MySQL query.
-        :rtype: list[dict]
-        :rtype: list[tuple]
-        """
-        if self.engine is None:
-            self.build_engine()
-
-        proxy = self.engine.execute(executable)
-
-        first_row = proxy.first()
-    
-        if return_dict:
-            first_row = dict(first_row)
-
-        return first_row
-
-    def first_column(self, executable):
-        """Use SQLAlchemy Engine to execute a MySQL query for the first column."
-
-        :param executable: Input an executeable MySQL query.
-        :type executable: Select
-        :type executable: str
-        :returns: A column for a set of MySQL values.
-        :rtype: list[str]
-        """
-        if self.engine is None:
-            self.build_engine()
-
-        values = querying.first_column(self.engine, executable)
-        return values
-
-    def scalar(self, executable):
-        """Use SQLAlchemy Engine to execute a MySQL query for the first field.
-
-        :param executable: Input an executable MySQL query.
-        :type executable: Select
-        :type executable: str
-        :returns: Results from execution of given MySQL query.
-        :rtype: list[dict]
-        :rtype: list[tuple]
-        """
-        if self.engine is None:
-            self.build_engine()
-
-        proxy = self.engine.execute(executable)
-
-        scalar = proxy.scalar()
-
-        return scalar 
-          
 #-----------------------------------------------------------------------------
 #SQLALCHEMY-RELATED OBJECT GENERATION METHODS
-#-----------------------------------------------------------------------------
 
     def build_metadata(self):
         """Create and store SQLAlchemy MetaData object.
@@ -448,16 +424,60 @@ class AlchemyHandler:
         if not self.connected:
             self.build_engine()
         
-        self.metadata = MetaData(bind=self.engine)
-        self.metadata.reflect()
+        self._metadata = MetaData(bind=self._engine)
+        self._metadata.reflect()
         
-        return True
+    def build_session(self):
+        """Create and store SQLAlchemy Session object.
+        """
+        if not self.has_database:
+            self.ask_database()
+
+        if not self.connected:
+            self.build_engine()
+        
+        if not self._session is None:
+            try:
+                self._session.close()
+            except:
+                pass
+
+        session_maker_obj = sessionmaker(bind=self._engine)
+        self._session = session_maker_obj()
 
     def build_graph(self):
         """Create and store SQLAlchemy MetaData related NetworkX Graph object.
         """
-        if not self.metadata:
+        if self._metadata is None:
             self.build_metadata()
         
-        self.graph = querying.build_graph(self.metadata)
+        self._graph = querying.build_graph(self._metadata)
+
+    def build_mapper(self):
+        """Create and store SQLAlchemy automapper Base object.
+        """
+        if self._metadata is None:
+            self.build_metadata()
+
+        self._mapper = automap_base(metadata=self._metadata)
+        self._mapper.prepare()
+
+    def build_all(self):
+        """Create and store all relevant SQLAlchemy objects.
+        """
+        self.build_session()
+        self.build_graph()
+        self.build_mapper()
+
+#-----------------------------------------------------------------------------
+#SQLALCHEMY QUALITY-OF-LIFE FUNCTIONS
+
+    def get_map(self, table):
+        """Get SQLAlchemy ORM map object.
+        """
+        if self._mapper is None:
+            self.build_mapper() 
+
+        table = parsing.translate_table(self._metadata, table)
+        return self._mapper.classes[table]
 

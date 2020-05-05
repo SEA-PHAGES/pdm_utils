@@ -5,11 +5,13 @@ from decimal import Decimal
 
 from networkx import Graph
 from networkx import shortest_path
+from sqlalchemy import and_
 from sqlalchemy import Column
 from sqlalchemy import join
 from sqlalchemy import MetaData
 from sqlalchemy import select
 from sqlalchemy import Table
+from sqlalchemy.ext.declarative.api import DeclarativeMeta
 from sqlalchemy.sql import distinct
 from sqlalchemy.sql import func
 from sqlalchemy.sql import functions
@@ -354,6 +356,13 @@ def extract_column(column, check=None):
         else:
             raise TypeError(f"BinaryExpression type {type(expression)} "
                             f"of expression {expression} is not supported.")
+    elif isinstance(column, DeclarativeMeta):
+        try:
+            table = column.__table__
+        except:
+            raise ValueError("SQLAlchemy Map-related object is not supported.")
+        finally:
+            column = list(table.primary_key.columns)[0]
     else:
         raise TypeError(f"Input type {type(column)} is not a derivative "
                          "of a SqlAlchemy Column.")
@@ -513,8 +522,7 @@ def append_where_clauses(executable, where_clauses):
         return executable
 
     if isinstance(where_clauses, list):
-        for clause in where_clauses:
-            executable = append_where_clauses(executable, clause)
+        executable = executable.where(and_(*where_clauses))
     else:
         executable = executable.where(where_clauses)
 
@@ -714,4 +722,33 @@ def first_column_value_subqueries(engine, executable, in_column, source_values,
     values = list(OrderedDict.fromkeys(values))
     return values
 
+def query(session, db_graph, table_map, where=None):
+    """Use SQLAlchemy session to retrieve ORM objects from a mapped object.
 
+    :param session: Bound and connected SQLAlchemy Session object.
+    :type session: Session
+    :param table_map: SQLAlchemy ORM map object.
+    :param where: MySQL WHERE clause-related SQLAlchemy object(s).
+    :type where: BinaryExpression
+    :type where: list
+    :param order_by: MySQL ORDER BY clause-related SQLAlchemy object(s).
+    :type order_by: Column
+    :type order_by: list
+    :returns: List of mapped object instances.
+    :rtype: list
+    """
+    where_columns = extract_columns(where)
+
+    total_columns = [table_map] + where_columns
+    from_clause = build_fromclause(db_graph, total_columns)
+
+    query_obj = session.query(table_map).select_from(from_clause)
+
+    if not where is None:
+        if isinstance(where, list):
+            query_obj = query_obj.filter(and_(*where))
+        else:
+            query_obj = query_obj.filter(where)
+
+    instances = query_obj.all()
+    return instances

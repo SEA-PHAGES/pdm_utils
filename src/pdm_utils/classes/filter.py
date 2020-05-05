@@ -18,6 +18,7 @@ class Filter:
     def __init__(self, alchemist=None, key=None):
         self._engine=None
         self._graph=None
+        self._session=None
         self._connected = False 
 
         if isinstance(alchemist, AlchemyHandler):
@@ -68,10 +69,9 @@ class Filter:
         alchemist = AlchemyHandler()
         alchemist.connect(ask_database=True)
 
-        alchemist.build_graph()
-        
         self._engine = alchemist.engine
         self._graph = alchemist.graph
+        self._session = alchemist.session
 
         self._connected = True
 
@@ -88,11 +88,9 @@ class Filter:
         if not alchemist.connected:
             alchemist.connect(ask_database=True)
 
-        if alchemist.graph == None:
-            alchemist.build_graph()
-                
         self._engine = alchemist.engine
         self._graph = alchemist.graph
+        self._session = alchemist.session
 
         self._connected = True
 
@@ -125,26 +123,15 @@ class Filter:
         engine = self._engine
         return engine
 
-    @engine.setter
-    def engine(self, engine):
-        if not isinstance(engine, Engine):
-            raise TypeError
-        
-        self._engine = engine
-        self._connected = False
-
     @property
     def graph(self):
         graph = self._graph
         return graph
 
-    @graph.setter
-    def graph(self, graph):
-        if not isinstance(graph, Graph):
-            raise TypeError
-
-        self._graph = graph
-        self._connected = False
+    @property
+    def session(self):
+        session = self._session
+        return session
 
 #-----------------------------------------------------------------------------
 #FILTER VALUE HANDLING
@@ -571,7 +558,7 @@ class Filter:
                 values[value].update({columns[i].name : value_data})
 
         return values
-      
+  
     def convert_column_input(self, raw_column):
         """Converts a column input, string or Column, to a Column.
 
@@ -629,8 +616,9 @@ class Filter:
         copy._updated = self.updated
         copy._values_valid = self.values_valid
         copy._filters = self.copy_filters()
-        copy._engine = self.engine
-        copy._graph = self.graph
+        copy._engine = self._engine
+        copy._graph = self._graph
+        copy._session = self._session
         copy._key = self.key
         copy._values = self.values
 

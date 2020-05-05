@@ -16,6 +16,8 @@ from sqlalchemy import MetaData
 from sqlalchemy import or_
 from sqlalchemy import select
 from sqlalchemy.exc import InternalError
+from sqlalchemy.ext.automap import automap_base
+from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import func
 from sqlalchemy.sql import functions
 from sqlalchemy.sql.elements import BinaryExpression
@@ -45,8 +47,14 @@ class TestQuerying(unittest.TestCase):
     def setUp(self):
         self.engine = create_engine(test_db_utils.create_engine_string())
 
+        session_maker_obj = sessionmaker(bind=self.engine)
+        self.session = session_maker_obj()
+
         self.metadata = MetaData(bind=self.engine)
         self.metadata.reflect()
+
+        self.mapper = automap_base(metadata=self.metadata)
+        self.mapper.prepare()
 
         self.graph = querying.build_graph(self.metadata)
    
@@ -181,7 +189,6 @@ class TestQuerying(unittest.TestCase):
         column_output = querying.extract_columns(or_clauses)
 
         self.assertEqual(expected_columns, column_output)
-
 
     def test_build_onclause_1(self):
         """Verify build_onclause() returns a BinaryExpression object.
@@ -530,6 +537,39 @@ class TestQuerying(unittest.TestCase):
         self.assertTrue("D29" in results)
         self.assertFalse("Alice" in results)
         self.assertFalse("Myrna" in results) 
+
+    def test_query_1(self):
+        """Verify query() correctly queries for SQLAlchemy ORM instances.
+        """
+        phage_map = self.mapper.classes["phage"] 
+
+        instances = querying.query(self.session, self.graph, phage_map)
+        
+        first_instance = instances[0]
+
+        first_instance.PhageID
+        first_instance.Cluster
+        first_instance.Subcluster
+
+        self.session.close()
+
+    def test_query_2(self):
+        """Verify query() retrieves expected data.
+        """
+        phage_map = self.mapper.classes["phage"] 
+
+        instances = querying.query(self.session, self.graph, phage_map, 
+                                            where=phage_map.Cluster=="A")
+
+        phageids = []
+        for instance in instances:
+            phageids.append(instance.PhageID)
+
+        self.assertTrue("Trixie" in phageids)
+        self.assertTrue("D29" in phageids)
+        self.assertFalse("Myrna" in phageids)
+
+        self.session.close()
 
 if __name__ == "__main__":
     unittest.main()
