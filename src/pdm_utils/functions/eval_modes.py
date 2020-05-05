@@ -15,6 +15,7 @@ EVAL_FLAGS = {
     "check_description_field": "Should CDS descriptions in unexpected fields be reported? ",
     "check_description": "Should unexpected CDS descriptions be reported? ",
     "check_trna": "Should tRNA features be evaluated? ",
+    "check_tmrna": "Should tmRNA features be evaluated? ",
     "check_id_typo": "Should genome ID typos be reported? ",
     "check_host_typo": "Should host typos be reported? ",
     "check_author": "Should unexpected authors be reported? ",
@@ -54,6 +55,7 @@ def get_eval_flag_dict(eval_mode):
     if eval_mode == "draft":
         dict["check_locus_tag"] = False
         dict["check_trna"] = False
+        dict["check_tmrna"] = False
         dict["import_locus_tag"] = False
         dict["check_id_typo"] = False
         dict["check_host_typo"] = False
@@ -64,13 +66,16 @@ def get_eval_flag_dict(eval_mode):
     # Manual annotations.
     elif eval_mode == "final":
         dict["import_locus_tag"] = False
+        dict["check_trna"] = True
+        dict["check_tmrna"] = True
 
     # SEA-PHAGES GenBank records.
     elif eval_mode == "auto":
         dict["check_locus_tag"] = False
         dict["check_description_field"] = False
         dict["check_replace"] = False
-        dict["check_trna"] = False
+        dict["check_trna"] = True
+        dict["check_tmrna"] = True
         dict["check_id_typo"] = False
         dict["check_host_typo"] = False
         dict["check_author"] = False
@@ -87,6 +92,7 @@ def get_eval_flag_dict(eval_mode):
         # genomes.
         dict["check_replace"] = False
         dict["check_trna"] = False
+        dict["check_tmrna"] = False
         dict["check_id_typo"] = False
         dict["check_host_typo"] = False
         dict["check_author"] = False
