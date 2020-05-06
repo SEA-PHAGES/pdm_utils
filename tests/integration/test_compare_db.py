@@ -44,7 +44,7 @@ def get_unparsed_args():
     """Returns list of command line arguments to compare databases."""
     unparsed_args = ["run.py", pipeline, DB,
                       "-o", str(test_folder),
-                      # "-p", #this will retrieve all data from PhagesDB
+                      "-p", #this will retrieve all data from PhagesDB
                       "-g", "-s", "-i", "-d", "-f", "-u"
                     ]
     return unparsed_args
@@ -61,6 +61,26 @@ TRIXIE_ACC = "JN408461"
 ALICE_ACC = "JF704092"
 L5_ACC = "Z18946"
 D29_ACC = "AF022214"
+
+
+def get_pdb_dict():
+    """Mock PhagesDB data dictionary."""
+    dict ={
+        "phage_name": "Trixie",
+        "isolation_host": {"genus": "Mycobacterium"},
+        "genbank_accession": "ABC123",
+        "pcluster": {"cluster": "A"},
+        "psubcluster": {"subcluster": "A2"},
+        "fasta_file": "invalid.fasta"
+    }
+    return dict
+
+def get_pdb_json_data():
+    """Mock PhagesDB json data."""
+    dict = {"results": []}
+    return dict
+
+
 
 class TestCompare(unittest.TestCase):
 
@@ -109,18 +129,62 @@ class TestCompare(unittest.TestCase):
         self.alchemist.build_engine()
 
 
+        self.pdb_data1 = get_pdb_dict()
+        self.pdb_data2 = get_pdb_dict()
+        self.pdb_data3 = get_pdb_dict()
+        self.pdb_data1["phage_name"] = "Trixie"
+        self.pdb_data2["phage_name"] = "L5"
+        self.pdb_data3["phage_name"] = "unmatched"
+
+        json_results = [self.pdb_data1, self.pdb_data2, self.pdb_data3]
+        self.pdb_json_data = get_pdb_json_data()
+        self.pdb_json_data["results"] = json_results
+
+
     def tearDown(self):
         shutil.rmtree(test_folder)
 
 
+    def test_queries_1(self):
+        """Verify hard-coded SQL queries are structured correctly."""
+
+        version_data = test_db_utils.get_data(compare_db.VERSION_QUERY)
+        phage_data = test_db_utils.get_data(compare_db.PHAGE_QUERY)
+        gene_data = test_db_utils.get_data(compare_db.GENE_QUERY)
+
+        ref_phage_data = test_db_utils.get_data(test_db_utils.phage_table_query)
+        ref_gene_data = test_db_utils.get_data(test_db_utils.gene_table_query)
+
+        with self.subTest():
+            self.assertEqual(len(version_data), 1)
+        with self.subTest():
+            self.assertEqual(len(phage_data), len(ref_phage_data))
+        with self.subTest():
+            self.assertEqual(len(gene_data), len(ref_gene_data))
+
+
+    # Calls to PhagesDB need to be mocked, since the pipeline downloads
+    # and parses all sequenced genome data.
+    @patch("pdm_utils.pipelines.compare_db.check_pdb_retrieved")
+    @patch("pdm_utils.pipelines.compare_db.parse_fasta_seq")
+    @patch("pdm_utils.pipelines.compare_db.get_json_data")
     @patch("pdm_utils.pipelines.compare_db.AlchemyHandler")
-    def test_main_1(self, alchemy_mock):
+    def test_main_1(self, alchemy_mock, gjd_mock, pfs_mock, cpr_mock):
         """Verify compare runs successfully."""
         alchemy_mock.return_value = self.alchemist
+        gjd_mock.return_value = self.pdb_json_data
+        pfs_mock.return_value = "ATCG"
         run.main(self.unparsed_args)
         count = count_files(test_folder)
         # input("check")
-        self.assertTrue(count > 0)
+        with self.subTest():
+            self.assertTrue(count > 0)
+        with self.subTest():
+            gjd_mock.assert_called()
+        with self.subTest():
+            pfs_mock.assert_called()
+        with self.subTest():
+            cpr_mock.assert_called()
 
 
 
