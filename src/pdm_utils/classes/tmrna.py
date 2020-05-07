@@ -430,16 +430,24 @@ class TmrnaFeature:
         information between this object and Aragorn.
         :return:
         """
-        ah = AragornHandler(self.id, str(self.seq))
-        ah.write_fasta()
-        ah.run_aragorn(m=True, t=False)  # search (linear) self.seq for tmRNAs
-        ah.read_output()
-        ah.parse_tmrnas()
-        if ah.tmrna_tally == 1:
-            self.aragorn_data = ah.tmrnas[0]
+        if self.id is not None and self.id != "":
+            identifier = self.id
         else:
-            print(f"Aragorn found {ah.tmrna_tally} tRNAs in this region.")
-        self.aragorn_run = True
+            identifier = "aragorn"
+
+        if len(self.seq) > 0:
+            ah = AragornHandler(self.id, str(self.seq))
+            ah.write_fasta()
+            ah.run_aragorn(m=True, t=False)  # search (linear) self.seq for tmRNAs
+            ah.read_output()
+            ah.parse_tmrnas()
+            if ah.tmrna_tally == 1:
+                self.aragorn_data = ah.tmrnas[0]
+            else:
+                print(f"Aragorn found {ah.tmrna_tally} tmRNAs in this region.")
+            self.aragorn_run = True
+        else:
+            print("Cannot run Aragorn on 0-length sequence.")
 
     def parse_peptide_tag(self):
         """
@@ -613,6 +621,60 @@ class TmrnaFeature:
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
+    def check_orientation_correct(self, fmt="fr_short", case=True,
+                                  eval_id=None, success="correct",
+                                  fail="error", eval_def=None):
+        """
+        Check that the orientation agrees with the Aragorn and/or
+        tRNAscan-SE predicted orientation. If Aragorn/tRNAscan-SE
+        report a forward orientation, it means they agree with the
+        annotated orientation. If they report reverse orientation,
+        they think the annotation is backwards.
+        :param fmt: indicates how coordinates should be formatted
+        :type fmt: str
+        :param case: indicates whether orientation data should be cased
+        :type case: bool
+        :param eval_id: unique identifier for the evaluation
+        :type eval_id: str
+        :param success: status if the outcome is successful
+        :type success: str
+        :param fail: status if the outcome is unsuccessful
+        :type fail: str
+        :param eval_def: description of the evaluation
+        :type eval_def: str
+        :return:
+        """
+        # Make sure self.orientation is "F"/"R"
+        orientation = basic.reformat_strand(self.orientation, fmt, case)
+
+        # If Aragorn predicts a tmRNA, get orientation in "F"/"R" format
+        if self.aragorn_data is not None:
+            aragorn_orient = basic.reformat_strand(
+                self.aragorn_data["Orientation"], fmt, case)
+        else:
+            aragorn_orient = None
+
+        result = f"The annotated orientation '{orientation}' "
+
+        # If only Aragorn predicts a tRNA
+        if aragorn_orient is not None:
+            # If Aragorn predicts "F" it agrees with annotated orientation
+            if aragorn_orient == "F":
+                result += "matches the Aragorn prediction."
+                status = success
+            else:
+                result += "is backwards relative to the Aragorn prediction."
+                status = fail
+        # If Aragorn doesn't predict a tmRNA, we presume annotation is wrong.
+        else:
+            result += "is at odds with expectations (NO tmRNA HERE)."
+            status = fail
+
+        definition = f"Check whether the annotated orientation for {self.id}" \
+                     f" matches the Aragorn prediction."
+        definition = basic.join_strings([definition, eval_def])
+        self.set_eval(eval_id, definition, result, status)
+
     # TODO: create base feature class - I think this is exactly the same as
     #  in Cds
     def check_locus_tag_structure(self, check_value=None, only_typo=False,
@@ -695,12 +757,12 @@ class TmrnaFeature:
         except ValueError:
             value = self.gene
 
-        result = f"The gene qualifier is {self.gene}. It"
+        result = f"The gene qualifier is {self.gene}. It "
         if isinstance(value, int):
             result += "contains an integer, as expected."
             status = success
         else:
-            result += "does ont contain an integer, which is not expected."
+            result += "does not contain an integer, which is not expected."
             status = fail
 
         definition = f"Check if the gene qualifier contains an integer for " \
@@ -780,7 +842,7 @@ class TmrnaFeature:
             result += "does not exist, so could not be checked."
             status = "unchecked"
 
-        definition = f"Check that the peptide tag appears to be structured" \
+        definition = f"Check that the peptide tag appears to be structured " \
                      f"correctly and fits the protein alphabet for {self.id}."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
@@ -818,7 +880,7 @@ class TmrnaFeature:
             result += "could not be checked, because Aragorn wasn't run."
             status = "unchecked"
 
-        definition = f"Check that the annotated peptide tag matches the" \
+        definition = f"Check that the annotated peptide tag matches the " \
                      f"Aragorn output for {self.id}."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
