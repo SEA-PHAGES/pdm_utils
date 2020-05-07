@@ -89,7 +89,6 @@ class Genome:
         self.id = ""
         self.name = ""
         self.host_genus = ""
-        self.sequence = "" # TODO string but seq is Seq
         self.length = 0
         self.seq = Seq("", IUPAC.ambiguous_dna)
         self.accession = ""
@@ -101,46 +100,23 @@ class Genome:
         self.annotation_author = "" # 1 (Hatfull), 0 (GenBank)
 
         # GenBank data
-        self.record_name = "" # TODO no equivalent in ORM
-        self.record_id = "" # TODO no equivalent in ORM
         self.description = ""
         self.source = ""
         self.organism = ""
-        self.source_feature_organism = "" # TODO move to source feature
-        self.source_feature_host = "" # TODO move to source feature
-        self.source_feature_lab_host = "" # TODO move to source feature
         self.authors = ""
 
         # Computed data fields
         self.cds_features = []
         self._cds_features_tally = 0
-        self._search_id = "" # No "_Draft" and converted to lowercase
-        self._search_name = "" # No "_Draft" and converted to lowercase
         self._cds_descriptions_tally = 0
         self._cds_functions_tally = 0
         self._cds_products_tally = 0
         self._cds_notes_tally = 0
 
-        # Error checks
-        self._missing_locus_tags_tally = 0 # TODO no equivalent in ORM
-        self._locus_tag_typos_tally = 0 # TODO no equivalent in ORM
-        self._description_field_error_tally = 0 # TODO no equivalent in ORM
-        self._status_accession_error = False # TODO no equivalent in ORM
-        self._status_description_error = False # TODO no equivalent in ORM
-        self._genes_with_errors_tally = 0 # TODO no equivalent in ORM
-        self._nucleotide_errors = False # TODO no equivalent in ORM
-        self._cds_features_with_translation_error_tally = 0 # TODO no equivalent in ORM
-        self._cds_features_boundary_error_tally = 0 # TODO no equivalent in ORM
-
 
     # Define all attribute setters:
     def set_phage_name(self, value):
         self.name = value
-        self._search_name = basic.edit_suffix(self.name, "remove").lower()
-
-    def set_sequence(self, value):
-        self.sequence = value.upper()
-        self.length = len(self.sequence)
 
     def set_accession(self, value):
         if value is None or value.strip() == "":
@@ -153,10 +129,8 @@ class Genome:
         self.cds_features = value # Should be a list
         self._cds_features_tally = len(self.cds_features)
 
-
     def set_phage_id(self, value):
         self.id = value
-        self._search_id = basic.edit_suffix(self.id, "remove").lower()
 
     def set_cluster(self, value):
         if value is None:
@@ -176,91 +150,132 @@ class Genome:
 
 
 
+# Genome attributes
+setattr(Genome, "sequence", "") # TODO string but seq is Seq
+setattr(Genome, "record_name", "")
+setattr(Genome, "record_id", "")
+setattr(Genome, "source_feature_organism", "")
+setattr(Genome, "source_feature_host", "")
+setattr(Genome, "source_feature_lab_host", "")
+setattr(Genome, "_search_id", "") # No "_Draft" and converted to lowercase
+setattr(Genome, "_search_name", "") # No "_Draft" and converted to lowercase
+setattr(Genome, "_missing_locus_tags_tally", 0)
+setattr(Genome, "_locus_tag_typos_tally", 0)
+setattr(Genome, "_description_field_error_tally", 0)
+setattr(Genome, "_status_accession_error", False)
+setattr(Genome, "_status_description_error", False)
+setattr(Genome, "_genes_with_errors_tally", 0)
+setattr(Genome, "_nucleotide_errors", False)
+setattr(Genome, "_cds_features_with_translation_error_tally", 0)
+setattr(Genome, "_cds_features_boundary_error_tally", 0)
 
+
+# Genome setters
+
+def set_search_name(self):
+    self._search_name = basic.edit_suffix(self.name, "remove").lower()
+setattr(Genome, "set_search_name", set_search_name)
+
+def set_sequence(self, value):
+    self.sequence = value.upper()
+    self.length = len(self.sequence)
+setattr(Genome, "set_sequence", set_sequence)
+
+def set_search_id(self):
+    self._search_id = basic.edit_suffix(self.id, "remove").lower()
+setattr(Genome, "set_search_id", set_search_id)
 
 
 # Genome error checks
-    def compute_nucleotide_errors(self, dna_alphabet):
-        nucleotide_set = set(self.sequence)
-        nucleotide_error_set = nucleotide_set - dna_alphabet
-        if len(nucleotide_error_set) > 0:
-            self._nucleotide_errors = True
 
-    def compute_cds_feature_errors(self):
-        for cds_feature in self.cds_features:
-            if cds_feature._amino_acid_errors:
-                self._cds_features_with_translation_error_tally += 1
-            if cds_feature._boundary_error:
-                self._cds_features_boundary_error_tally += 1
+def compute_nucleotide_errors(self, dna_alphabet):
+    nucleotide_set = set(self.sequence)
+    nucleotide_error_set = nucleotide_set - dna_alphabet
+    if len(nucleotide_error_set) > 0:
+        self._nucleotide_errors = True
+setattr(Genome, "compute_nucleotide_errors", compute_nucleotide_errors)
 
-    def check_status_accession(self):
+def compute_cds_feature_errors(self):
+    for cds_feature in self.cds_features:
+        if cds_feature._amino_acid_errors:
+            self._cds_features_with_translation_error_tally += 1
+        if cds_feature._boundary_error:
+            self._cds_features_boundary_error_tally += 1
+setattr(Genome, "compute_cds_feature_errors", compute_cds_feature_errors)
 
-        # Be sure to first set the accession attribute before the
-        # annotation_status attribute, else this will throw an error.
-        # Now that the AnnotationAuthor field contains authorship data, the
-        # 'unknown' annotation annotation_status now reflects
-        # an 'unknown' annotation (in regards to if it was auto-annotated
-        # or manually annotated).
-        # So for the annotation_status-accession error, if the
-        # annotation_status is 'unknown', there is no reason to assume
-        # whether there should be an accession or not. Only for 'final'
-        # (manually annotated) genomes should there be an accession.
-        if self.annotation_status == "final" and self.accession == "":
-            self._status_accession_error = True
+def check_status_accession(self):
 
+    # Be sure to first set the accession attribute before the
+    # annotation_status attribute, else this will throw an error.
+    # Now that the AnnotationAuthor field contains authorship data, the
+    # 'unknown' annotation annotation_status now reflects
+    # an 'unknown' annotation (in regards to if it was auto-annotated
+    # or manually annotated).
+    # So for the annotation_status-accession error, if the
+    # annotation_status is 'unknown', there is no reason to assume
+    # whether there should be an accession or not. Only for 'final'
+    # (manually annotated) genomes should there be an accession.
+    if self.annotation_status == "final" and self.accession == "":
+        self._status_accession_error = True
+setattr(Genome, "check_status_accession", check_status_accession)
 
-    def compute_status_description_error(self):
-        # Iterate through all CDS features, see if they have descriptions,
-        # then compare to the annotation_status.
-        for feature in self.cds_features:
-            if feature.raw_description != "":
-                self._cds_descriptions_tally += 1
-        if self.annotation_status == "draft" and self._cds_descriptions_tally > 0:
-            self._status_description_error = True
-        elif self.annotation_status == "final" and self._cds_descriptions_tally == 0:
-            self._status_description_error = True
+def compute_status_description_error(self):
+    # Iterate through all CDS features, see if they have descriptions,
+    # then compare to the annotation_status.
+    for feature in self.cds_features:
+        if feature.raw_description != "":
+            self._cds_descriptions_tally += 1
+    if self.annotation_status == "draft" and self._cds_descriptions_tally > 0:
+        self._status_description_error = True
+    elif self.annotation_status == "final" and self._cds_descriptions_tally == 0:
+        self._status_description_error = True
+    else:
+        pass
+setattr(Genome, "compute_status_description_error", compute_status_description_error)
+
+#Even though this method iterates through the cds features
+# like the compute_status_description_error does,
+#it has to be kept separate, since you need to wait to run
+# this method after all genome and gene matching is completed.
+def compute_genes_with_errors_tally(self):
+    for feature in self.cds_features:
+        # Need to first compute the number of errors per gene
+        feature.compute_total_cds_errors()
+        if feature._total_errors > 0:
+            self._genes_with_errors_tally += 1
+setattr(Genome, "compute_genes_with_errors_tally", compute_genes_with_errors_tally)
+
+def compute_gbk_cds_feature_errors(self):
+    for cds_feature in self.cds_features:
+
+        # counting descriptions should skip if it is blank
+        # or "hypothetical protein".
+        if cds_feature.product != "":
+            self._cds_products_tally += 1
+
+        if cds_feature.function != "":
+            self._cds_functions_tally += 1
+
+        if cds_feature.note != "":
+            self._cds_notes_tally += 1
+
+        if cds_feature._locus_tag_missing:
+            self._missing_locus_tags_tally += 1
         else:
-            pass
+            pattern4 = re.compile(self._search_name)
+            search_result = pattern4.search(cds_feature.locus_tag.lower())
+
+            if search_result == None:
+                self._locus_tag_typos_tally += 1
+                cds_feature.set_locus_tag_typo() # Sets to True
+
+        if cds_feature._description_field_error:
+            self._description_field_error_tally += 1
+setattr(Genome, "compute_gbk_cds_feature_errors", compute_gbk_cds_feature_errors)
 
 
-    #Even though this method iterates through the cds features
-    # like the compute_status_description_error does,
-    #it has to be kept separate, since you need to wait to run
-    # this method after all genome and gene matching is completed.
-    def compute_genes_with_errors_tally(self):
-        for feature in self.cds_features:
-            # Need to first compute the number of errors per gene
-            feature.compute_total_cds_errors()
-            if feature._total_errors > 0:
-                self._genes_with_errors_tally += 1
 
-    def compute_gbk_cds_feature_errors(self):
-        for cds_feature in self.cds_features:
 
-            # counting descriptions should skip if it is blank
-            # or "hypothetical protein".
-            if cds_feature.product != "":
-                self._cds_products_tally += 1
-
-            if cds_feature.function != "":
-                self._cds_functions_tally += 1
-
-            if cds_feature.note != "":
-                self._cds_notes_tally += 1
-
-            if cds_feature._locus_tag_missing:
-                self._missing_locus_tags_tally += 1
-            else:
-                pattern4 = re.compile(self._search_name)
-                search_result = pattern4.search(cds_feature.locus_tag.lower())
-
-                if search_result == None:
-                    self._locus_tag_typos_tally += 1
-                    cds_feature.set_locus_tag_typo() # Sets to True
-
-            if cds_feature._description_field_error:
-                self._description_field_error_tally += 1
-###above Genome error checks
 
 
 
@@ -286,9 +301,6 @@ class CdsFeature:
         self.description = "" # non-generic gene descriptions
         self.locus_tag = ""
 
-        self._search_genome_id = "" # TODO no equivalent in ORM
-        self._start_end_strand_id = "" # TODO no equivalent in ORM
-        self._end_strand_id = "" # TODO no equivalent in ORM
 
         # GenBank data
         self.gene = ""
@@ -299,15 +311,6 @@ class CdsFeature:
         self.function = ""
         self.note = ""
 
-        # Error checks
-        self._locus_tag_missing = False # TODO no equivalent in ORM
-        self._locus_tag_typo = False # TODO no equivalent in ORM
-        self._description_field_error = False # TODO no equivalent in ORM
-        self._total_errors = 0 # TODO no equivalent in ORM
-        self._amino_acid_errors = False # TODO no equivalent in ORM
-        self._boundary_error = False # TODO no equivalent in ORM
-        self._unmatched_error = False # TODO no equivalent in ORM
-
     # Define all attribute setters:
     def set_strand(self, value):
         self.orientation = basic.reformat_strand(value, "fr_long")
@@ -316,28 +319,8 @@ class CdsFeature:
         self.translation = value.upper()
         self.translation_length = len(self.translation)
 
-
-    def set_start_end_strand_id(self):
-        # Create a tuple of feature location data.
-        # For start and end of feature, it doesn't matter whether
-        # the feature is complex with a translational frameshift or not.
-        # Retrieving the "start" and "end" attributes return the
-        # very beginning and end of the feature,
-        # disregarding the inner "join" coordinates.
-        self._start_end_strand_id = (str(self.start),str(self.stop),self.orientation)
-
-        # Since this id matched genes with different start sites,
-        # the orientation impacts whether the left or right boundary is used
-        if self.orientation == "forward":
-            self._end_strand_id = (str(self.stop),self.orientation)
-        elif self.orientation == "reverse":
-            self._end_strand_id = (str(self.start),self.orientation)
-        else:
-            pass
-
-    def set_phage_id(self, value):
+    def set_genome_id(self, value):
         self.genome_id = value
-        self._search_genome_id = basic.edit_suffix(self.genome_id, "remove").lower()
 
     def set_notes(self, value1, value2):
         self.raw_description = value1
@@ -356,44 +339,97 @@ class CdsFeature:
         self.note = value2
 
 
-    def check_locus_tag(self):
-        if self.locus_tag == "":
-            self._locus_tag_missing = True
 
-    def compute_amino_acid_errors(self, protein_alphabet):
-        amino_acid_set = set(self.translation)
-        amino_acid_error_set = amino_acid_set - protein_alphabet
-        if len(amino_acid_error_set) > 0:
-            self._amino_acid_errors = True
 
-    def compute_boundary_error(self):
-        # Check if start and end coordinates are fuzzy
-        if not (str(self.start).isdigit() and str(self.stop).isdigit()):
-            self._boundary_error = True
 
-    def set_locus_tag_typo(self):
-        self._locus_tag_typo = True
 
-    def compute_description_error(self):
 
-        # If the product description is empty or generic,
-        # and the function or note descriptions are not, there is an error.
-        if (self.product == "" and self.function != "" or self.note != ""):
-            self._description_field_error = True
 
-    def compute_total_cds_errors(self):
-        if self._amino_acid_errors:
-            self._total_errors += 1
-        if self._boundary_error:
-            self._total_errors += 1
-        if self._description_field_error:
-            self._total_errors += 1
-        if self._locus_tag_missing:
-            self._total_errors += 1
-        if self._locus_tag_typo:
-            self._total_errors += 1
-        if self._unmatched_error:
-            self._total_errors += 1
+
+###Cds
+setattr(CdsFeature, "_search_genome_id", "")
+setattr(CdsFeature, "_start_end_strand_id", "")
+setattr(CdsFeature, "_end_strand_id", "")
+setattr(CdsFeature, "_locus_tag_missing", False)
+setattr(CdsFeature, "_locus_tag_typo", False)
+setattr(CdsFeature, "_description_field_error", False)
+setattr(CdsFeature, "_amino_acid_errors", False)
+setattr(CdsFeature, "_boundary_error", False)
+setattr(CdsFeature, "_unmatched_error", False)
+setattr(CdsFeature, "_total_errors", 0)
+
+def set_start_end_strand_id(self):
+    # Create a tuple of feature location data.
+    # For start and end of feature, it doesn't matter whether
+    # the feature is complex with a translational frameshift or not.
+    # Retrieving the "start" and "end" attributes return the
+    # very beginning and end of the feature,
+    # disregarding the inner "join" coordinates.
+    self._start_end_strand_id = (str(self.start),str(self.stop),self.orientation)
+
+    # Since this id matched genes with different start sites,
+    # the orientation impacts whether the left or right boundary is used
+    if self.orientation == "forward":
+        self._end_strand_id = (str(self.stop),self.orientation)
+    elif self.orientation == "reverse":
+        self._end_strand_id = (str(self.start),self.orientation)
+    else:
+        pass
+setattr(CdsFeature, "set_start_end_strand_id", set_start_end_strand_id)
+
+def set_search_genome_id(self):
+    self._search_genome_id = basic.edit_suffix(self.genome_id, "remove").lower()
+setattr(CdsFeature, "set_search_genome_id", set_search_genome_id)
+
+
+def check_locus_tag(self):
+    if self.locus_tag == "":
+        self._locus_tag_missing = True
+setattr(CdsFeature, "check_locus_tag", check_locus_tag)
+
+def compute_amino_acid_errors(self, protein_alphabet):
+    amino_acid_set = set(self.translation)
+    amino_acid_error_set = amino_acid_set - protein_alphabet
+    if len(amino_acid_error_set) > 0:
+        self._amino_acid_errors = True
+setattr(CdsFeature, "compute_amino_acid_errors", compute_amino_acid_errors)
+
+def compute_boundary_error(self):
+    # Check if start and end coordinates are fuzzy
+    if not (str(self.start).isdigit() and str(self.stop).isdigit()):
+        self._boundary_error = True
+setattr(CdsFeature, "compute_boundary_error", compute_boundary_error)
+
+def set_locus_tag_typo(self):
+    self._locus_tag_typo = True
+setattr(CdsFeature, "set_locus_tag_typo", set_locus_tag_typo)
+
+def compute_description_error(self):
+    # If the product description is empty or generic,
+    # and the function or note descriptions are not, there is an error.
+    if (self.product == "" and self.function != "" or self.note != ""):
+        self._description_field_error = True
+setattr(CdsFeature, "compute_description_error", compute_description_error)
+
+def compute_total_cds_errors(self):
+    if self._amino_acid_errors:
+        self._total_errors += 1
+    if self._boundary_error:
+        self._total_errors += 1
+    if self._description_field_error:
+        self._total_errors += 1
+    if self._locus_tag_missing:
+        self._total_errors += 1
+    if self._locus_tag_typo:
+        self._total_errors += 1
+    if self._unmatched_error:
+        self._total_errors += 1
+setattr(CdsFeature, "compute_total_cds_errors", compute_total_cds_errors)
+
+
+
+
+
 
 
 
@@ -1416,6 +1452,7 @@ def create_mysql_gnms(list_of_dicts, valid_status, valid_authors):
             continue
         else:
             gnm = create_mysql_gnm(dict)
+            set_mysql_gnm_attr(gnm)
             gnm_dict[dict["PhageID"]] = gnm
 
             # This keeps track of whether there are duplicate phage
@@ -1453,6 +1490,13 @@ def create_mysql_gnm(dict):
     return gnm
 
 
+def set_mysql_gnm_attr(gnm):
+    """Set compare-specific attributes not in pdm_utils Genome class."""
+    gnm.set_search_id()
+    gnm.set_search_name()
+
+
+
 def save_mysql_gnms(gnm_dict, main_path, new_dir, interactive):
     """Save MySQL genome data to file."""
 
@@ -1475,27 +1519,32 @@ def get_gene_obs_list(list_of_dicts):
           "from the MySQL database...")
     lst = []
     for dict in list_of_dicts:
-        gene = create_mysql_gene(dict)
-        check_mysql_cds(gene)
-        lst.append(gene)
+        cds = create_mysql_cds(dict)
+        set_mysql_cds_attr(cds)
+        check_mysql_cds(cds)
+        lst.append(cds)
     return lst
 
 
-def create_mysql_gene(dict):
+def create_mysql_cds(dict):
     """Create MySQL CDS feature object."""
-    gene = CdsFeature()
-    gene.set_phage_id(dict["PhageID"])
-    gene.id = dict["GeneID"]
-    gene.name = dict["Name"]
-    gene.type = "CDS"
-    gene.start = dict["Start"]
-    gene.stop = dict["Stop"]
-    gene.set_strand(dict["Orientation"])
-    gene.set_translation(dict["Translation"])
+    cds_ftr = CdsFeature()
+    cds_ftr.set_genome_id(dict["PhageID"])
+    cds_ftr.id = dict["GeneID"]
+    cds_ftr.name = dict["Name"]
+    cds_ftr.type = "CDS"
+    cds_ftr.start = dict["Start"]
+    cds_ftr.stop = dict["Stop"]
+    cds_ftr.set_strand(dict["Orientation"])
+    cds_ftr.set_translation(dict["Translation"])
     tup2 = basic.reformat_description(dict["Notes"].decode("utf-8"))
-    gene.set_notes(tup2[0], tup2[1])
-    gene.set_start_end_strand_id()
-    return gene
+    cds_ftr.set_notes(tup2[0], tup2[1])
+    return cds_ftr
+
+def set_mysql_cds_attr(cds_ftr):
+    """Set compare-specific MySQL Cds attributes not in pdm_utils Cds class."""
+    cds_ftr.set_search_genome_id()
+    cds_ftr.set_start_end_strand_id()
 
 
 def check_mysql_cds(cds_ftr):
@@ -1603,6 +1652,7 @@ def create_pdb_gnm(dict):
 
     #Name, Host, Accession
     gnm.set_phage_name(dict["phage_name"])
+    gnm.set_search_name()
     gnm.host_genus = dict["isolation_host"]["genus"]
     gnm.set_accession(dict["genbank_accession"])
 
@@ -1659,6 +1709,7 @@ def process_gbk_data(working_path, creds_file, accessions,
     gnm_dict = {}
     for record in records:
         gnm = create_gbk_gnm(record)
+        set_gbk_gnm_attr(gnm, record)
         gnm_dict[gnm.accession] = gnm
         if save == True:
             save_gbk_genome(gnm, record, output_path, interactive)
@@ -1740,16 +1791,6 @@ def create_gbk_gnm(retrieved_record):
     gnm.type = "genbank"
 
     try:
-        gnm.record_name = retrieved_record.name
-    except:
-        gnm.record_name = ""
-
-    try:
-        gnm.record_id = retrieved_record.id
-    except:
-        gnm.record_id = ""
-
-    try:
         # There may be a list of accessions associated with this file.
         # Discard the version suffix if it is present in the
         # Accession field (it might not be present).
@@ -1797,23 +1838,29 @@ def create_gbk_gnm(retrieved_record):
     gnm.set_sequence(retrieved_record.seq)
 
     # Iterate through all features
-    source_feature_list = []
     gbk_cds_ftrs = []
-
     for feature in retrieved_record.features:
-
-        if feature.type != "CDS":
-            # Retrieve the Source Feature info
-            if feature.type == "source":
-                source_feature_list.append(feature)
-        else:
-            gene_object = create_gbk_gene(feature)
-            check_gbk_cds(gene_object)
+        if feature.type == "CDS":
+            gene_object = create_gbk_cds(feature)
             gbk_cds_ftrs.append(gene_object)
 
-    # Set the following variables after iterating through all features
-    # If there was one and only one source feature present,
-    # parse certain qualifiers.
+    gnm.set_cds_features(gbk_cds_ftrs)
+    return gnm
+
+
+
+def set_gbk_gnm_attr(gnm, retrieved_record):
+    """Set compare-specific attributes not in pdm_utils Genome class."""
+    gnm.set_search_name()
+    gnm.record_name = ""
+    gnm.record_id = ""
+
+    source_feature_list = []
+    for feature in retrieved_record.features:
+        # Retrieve the Source Feature info
+        if feature.type == "source":
+            source_feature_list.append(feature)
+
     if len(source_feature_list) == 1:
         try:
             src_org = str(source_feature_list[0].qualifiers["organism"][0])
@@ -1830,18 +1877,25 @@ def create_gbk_gnm(retrieved_record):
             gnm.source_feature_lab_host = src_lab_host
         except:
             pass
-    gnm.set_cds_features(gbk_cds_ftrs)
-    return gnm
+
+    for cds_ftr in gnm.cds_features:
+        set_gbk_cds_attr(cds_ftr)
+
+
 
 def check_gbk_gnms(gnm_dict):
-    """Check for errors in GenBank genome."""
+    """Check for errors in GenBank genome and CDS features."""
     for id in gnm_dict.keys():
         gnm = gnm_dict[id]
+
+        for cds_ftr in gnm.cds_features:
+            check_gbk_cds(cds_ftr)
         gnm.compute_nucleotide_errors(constants.DNA_ALPHABET)
         gnm.compute_cds_feature_errors()
         gnm.compute_gbk_cds_feature_errors()
 
-def create_gbk_gene(feature):
+
+def create_gbk_cds(feature):
     """Parse data from GenBank CDS feature."""
 
     gene_object = CdsFeature()
@@ -1916,8 +1970,12 @@ def create_gbk_gene(feature):
     except:
         pass
 
-    gene_object.set_start_end_strand_id()
     return gene_object
+
+
+def set_gbk_cds_attr(cds_ftr):
+    """Set compare-specific Cds attributes not in pdm_utils Cds class."""
+    cds_ftr.set_start_end_strand_id()
 
 
 def check_gbk_cds(cds_ftr):
