@@ -1409,3 +1409,42 @@ def choose_most_common(string, values):
 
 
 #
+# TODO nearly identical to make_new_dir, so could probably be consolidated.
+# TODO test
+def make_new_file(output_dir, new_file, ext, attempt=1):
+    """Make a new file.
+
+    Checks to verify the new file name is valid and does not
+    already exist. If it already exists, it attempts to extend
+    the name with an integer suffix.
+
+    :param output_dir:
+        Full path to the directory where the new directory will be created.
+    :type output_dir: Path
+    :param new_file: Name of the new file to be created.
+    :type new_file: Path
+    :param attempt: Number of attempts to create the file.
+    :type attempt: int
+    :returns:
+        If successful, the full path of the created file.
+        If unsuccessful, None.
+    :rtype: Path, None
+    """
+    valid = False
+    count = 0
+    while (not valid and count < attempt):
+        if count > 0:
+            new_file_mod = new_file.stem + "_" + str(count)
+            new_file_mod = Path(new_file_mod)
+        else:
+            new_file_mod = new_file
+
+        new_file_mod = new_file_mod + "." + ext
+        new_path = Path(output_dir, new_file_mod)
+        if new_path.is_file() == False:
+            valid = True
+        count += 1
+    if not valid:
+        return None
+    else:
+        return new_path

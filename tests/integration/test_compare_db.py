@@ -45,7 +45,7 @@ def get_unparsed_args():
     unparsed_args = ["run.py", pipeline, DB,
                       "-o", str(test_folder),
                       "-p", #this will retrieve all data from PhagesDB
-                      "-g", "-s", "-i", "-d", "-f", "-u"
+                      "-g", "-s", "-ia", "-d", "-f", "-u"
                     ]
     return unparsed_args
 
@@ -62,6 +62,7 @@ ALICE_ACC = "JF704092"
 L5_ACC = "Z18946"
 D29_ACC = "AF022214"
 
+FASTA_FILE = ">Trixie\nATCG"
 
 def get_pdb_dict():
     """Mock PhagesDB data dictionary."""
@@ -105,7 +106,7 @@ class TestCompare(unittest.TestCase):
         stmts.append(create_update("phage", "Accession", TRIXIE_ACC, "Trixie"))
         stmts.append(create_update("phage", "Accession", ALICE_ACC, "Alice"))
         stmts.append(create_update("phage", "Accession", L5_ACC, "L5"))
-        stmts.append(create_update("phage", "Accession", D29_ACC, "D29"))
+        stmts.append(create_update("phage", "Accession", TRIXIE_ACC, "D29"))
 
         stmts.append(create_update("phage", "Status", "final", "Trixie"))
         stmts.append(create_update("phage", "Status", "final", "Alice"))
@@ -117,9 +118,6 @@ class TestCompare(unittest.TestCase):
         stmts.append(create_update("phage", "AnnotationAuthor", "1", "L5"))
         stmts.append(create_update("phage", "AnnotationAuthor", "1", "D29"))
 
-        # stmts.append(create_update("phage", "PhageID", "D29_x", "D29"))
-
-
         for stmt in stmts:
             test_db_utils.execute(stmt)
 
@@ -127,7 +125,6 @@ class TestCompare(unittest.TestCase):
 
         self.alchemist = AlchemyHandler(database=DB, username=USER, password=PWD)
         self.alchemist.build_engine()
-
 
         self.pdb_data1 = get_pdb_dict()
         self.pdb_data2 = get_pdb_dict()
@@ -139,7 +136,7 @@ class TestCompare(unittest.TestCase):
         json_results = [self.pdb_data1, self.pdb_data2, self.pdb_data3]
         self.pdb_json_data = get_pdb_json_data()
         self.pdb_json_data["results"] = json_results
-
+        self.pdb_json_results = json_results
 
     def tearDown(self):
         shutil.rmtree(test_folder)
@@ -165,26 +162,90 @@ class TestCompare(unittest.TestCase):
 
     # Calls to PhagesDB need to be mocked, since the pipeline downloads
     # and parses all sequenced genome data.
-    @patch("pdm_utils.pipelines.compare_db.check_pdb_retrieved")
-    @patch("pdm_utils.pipelines.compare_db.parse_fasta_seq")
-    @patch("pdm_utils.pipelines.compare_db.get_json_data")
+    @patch("pdm_utils.functions.phagesdb.retrieve_url_data")
+    @patch("pdm_utils.functions.phagesdb.get_phagesdb_data")
     @patch("pdm_utils.pipelines.compare_db.AlchemyHandler")
-    def test_main_1(self, alchemy_mock, gjd_mock, pfs_mock, cpr_mock):
-        """Verify compare runs successfully."""
+    def test_main_1(self, alchemy_mock, gpd_mock, rud_mock):
+        """Verify compare runs successfully with:
+        MySQL, PhagesDB, and GenBank records saved,
+        a duplicate MySQL accession (for D29 and Trixie),
+        an invalid accession (for L5),
+        a duplicate phage.Name (for Constance and Et2Brutus),
+        a PhagesDB name unmatched to MySQL (for 'unmatched')."""
         alchemy_mock.return_value = self.alchemist
-        gjd_mock.return_value = self.pdb_json_data
-        pfs_mock.return_value = "ATCG"
+        gpd_mock.return_value = self.pdb_json_results
+        rud_mock.return_value = FASTA_FILE
+
+        # Make modifications to cause errors.
+        stmts = []
+        stmts.append(create_update("phage", "Accession", L5_ACC + "1", "L5"))
+        stmts.append(create_update("phage", "Accession", TRIXIE_ACC, "D29"))
+
+        stmts.append(create_update("phage", "Name", "Dupe", "Constance"))
+        stmts.append(create_update("phage", "Name", "Dupe", "Et2Brutus"))
+
+        stmts.append(create_update("phage", "PhageID", "Dupe", "Constance"))
+        stmts.append(create_update("phage", "PhageID", "Dupe_Draft", "Et2Brutus"))
+        for stmt in stmts:
+            test_db_utils.execute(stmt)
+
+
         run.main(self.unparsed_args)
         count = count_files(test_folder)
         # input("check")
         with self.subTest():
             self.assertTrue(count > 0)
         with self.subTest():
-            gjd_mock.assert_called()
+            gpd_mock.assert_called()
         with self.subTest():
-            pfs_mock.assert_called()
+            rud_mock.assert_called()
+
+    # Calls to PhagesDB need to be mocked, since the pipeline downloads
+    # and parses all sequenced genome data.
+    @patch("pdm_utils.pipelines.compare_db.get_phagesdb_data")
+    @patch("pdm_utils.pipelines.compare_db.AlchemyHandler")
+    def test_main_2(self, alchemy_mock, gpd_mock):
+        """Verify duplicate PhagesDB names are identified."""
+        # Clear accessions so that GenBank is not queried. No need for that.
+        stmt = create_update("phage", "Accession", "")
+        test_db_utils.execute(stmt)
+
+        alchemy_mock.return_value = self.alchemist
+        gpd_mock.return_value = ({}, {"L5"}, {"D29"})
+        run.main(self.unparsed_args)
+        count = count_files(test_folder)
+        # input("check")
         with self.subTest():
-            cpr_mock.assert_called()
+            self.assertTrue(count > 0)
+        with self.subTest():
+            gpd_mock.assert_called()
+
+    # Calls to PhagesDB need to be mocked, since the pipeline downloads
+    # and parses all sequenced genome data.
+    @patch("pdm_utils.pipelines.compare_db.get_phagesdb_data")
+    @patch("pdm_utils.pipelines.compare_db.create_mysql_gnms")
+    @patch("pdm_utils.pipelines.compare_db.AlchemyHandler")
+    def test_main_3(self, alchemy_mock, cmg_mock, gpd_mock):
+        """Verify duplicate MySQL names are identified."""
+        # Clear accessions so that GenBank is not queried. No need for that.
+        stmt = create_update("phage", "Accession", "")
+        test_db_utils.execute(stmt)
+
+        alchemy_mock.return_value = self.alchemist
+        cmg_mock.return_value = ({}, set(), {"L5"}, set(), set())
+        gpd_mock.return_value = ({}, set(), set())
+
+        run.main(self.unparsed_args)
+        count = count_files(test_folder)
+        # input("check")
+        with self.subTest():
+            self.assertTrue(count > 0)
+        with self.subTest():
+            cmg_mock.assert_called()
+        with self.subTest():
+            gpd_mock.assert_called()
+
+
 
 
 
