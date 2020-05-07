@@ -535,14 +535,34 @@ def parse_genome_data(seqrecord, filepath=pathlib.Path(),
     if "tRNA" in seqfeature_dict.keys():
         for seqfeature in seqfeature_dict["tRNA"]:
             trna_ftr = parse_trna_seqfeature(seqfeature)
+            trna_ftr.genome_id = gnm.id
+            trna_ftr.genome_length = gnm.length
+            trna_ftr.set_nucleotide_sequence(parent_genome_seq=gnm.seq)
+            trna_ftr.set_nucleotide_length(use_seq=True)
+            trna_ftr.parse_amino_acid()
+            trna_ftr.parse_anticodon()
+            trna_ftr.run_aragorn()
+            trna_ftr.run_trnascanse()
+            if len(trna_ftr.sources) > 0:
+                if "aragorn" in trna_ftr.sources:
+                    structure = trna_ftr.aragorn_data["Structure"]
+                else:
+                    structure = trna_ftr.trnascanse_data["Structure"]
+                trna_ftr.set_secondary_structure(structure)
             trna_list.append(trna_ftr)
 
     # TODO unit test after functions are constructed.
     tmrna_list = []
-    if "tmrna" in seqfeature_dict.keys():
-        for seqfeature in seqfeature_dict["tmrna"]:
-            tmrna = parse_tmrna_seqfeature(seqfeature)
-            tmrna_list.append(tmrna)
+    if "tmRNA" in seqfeature_dict.keys():
+        for seqfeature in seqfeature_dict["tmRNA"]:
+            tmrna_ftr = parse_tmrna_seqfeature(seqfeature)
+            tmrna_ftr.genome_id = gnm.id
+            tmrna_ftr.genome_length = gnm.length
+            tmrna_ftr.set_nucleotide_sequence(parent_genome_seq=gnm.seq)
+            tmrna_ftr.set_nucleotide_length(use_seq=True)
+            tmrna_ftr.parse_peptide_tag()
+            tmrna_ftr.run_aragorn()
+            tmrna_list.append(tmrna_ftr)
 
     gnm.translation_table = translation_table
     gnm.set_cds_features(cds_list)
