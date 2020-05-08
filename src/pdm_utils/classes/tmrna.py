@@ -443,8 +443,8 @@ class TmrnaFeature:
             ah.parse_tmrnas()
             if ah.tmrna_tally == 1:
                 self.aragorn_data = ah.tmrnas[0]
-            else:
-                print(f"Aragorn found {ah.tmrna_tally} tmRNAs in this region.")
+            # else:
+                # print(f"Aragorn found {ah.tmrna_tally} tmRNAs in this region.")
             self.aragorn_run = True
         else:
             print("Cannot run Aragorn on 0-length sequence.")
