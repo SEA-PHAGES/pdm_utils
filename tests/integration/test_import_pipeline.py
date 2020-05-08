@@ -409,9 +409,7 @@ class TestImportGenome1(unittest.TestCase):
             shutil.rmtree(default_results_path)
 
 
-
-
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_1(self, getpass_mock):
         """Test pipeline with:
         valid add ticket for draft genome,
@@ -446,7 +444,7 @@ class TestImportGenome1(unittest.TestCase):
         #     self.assertTrue(log_file_name.exists())
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_2(self, getpass_mock):
         """Test pipeline with:
         valid add ticket for draft genome,
@@ -508,7 +506,7 @@ class TestImportGenome1(unittest.TestCase):
             self.assertEqual(cds193_errors, 0)
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_3(self, getpass_mock):
         """Test pipeline with:
         valid add ticket for draft genome,
@@ -536,7 +534,7 @@ class TestImportGenome1(unittest.TestCase):
             self.assertEqual(len(gene_table_results), 4)
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_4(self, getpass_mock):
         """Test pipeline with:
         valid minimal add ticket for draft genome,
@@ -555,7 +553,7 @@ class TestImportGenome1(unittest.TestCase):
             self.assertEqual(len(gene_table_results), 4)
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_5(self, getpass_mock):
         """Test pipeline with:
         valid add ticket for draft genome,
@@ -579,7 +577,7 @@ class TestImportGenome1(unittest.TestCase):
             self.assertEqual(len(gene_table_results), 0)
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_6(self, getpass_mock):
         """Test pipeline with:
         valid add for draft genome, and genome name in the flat file
@@ -602,7 +600,7 @@ class TestImportGenome1(unittest.TestCase):
         self.assertEqual(len(phage_table_results), 1)
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_7(self, getpass_mock):
         """Test pipeline with:
         valid add ticket with uncommon values (case changes, "none", "")
@@ -627,7 +625,7 @@ class TestImportGenome1(unittest.TestCase):
             self.assertIsNone(phage_table_results[0]["Subcluster"])
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_8(self, getpass_mock):
         """Test pipeline with:
         valid add ticket setting Cluster as Singleton for draft genome,
@@ -646,7 +644,7 @@ class TestImportGenome1(unittest.TestCase):
             self.assertIsNone(phage_table_results[0]["Subcluster"])
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_9(self, getpass_mock):
         """Test pipeline with:
         valid add ticket for draft genome,
@@ -689,7 +687,7 @@ class TestImportGenome1(unittest.TestCase):
 
     @patch("pdm_utils.pipelines.import_genome.process_files_and_tickets")
     @patch("sys.exit")
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_10(self, getpass_mock, sys_exit_mock, pft_mock):
         """Test pipeline with:
         add ticket for draft genome
@@ -714,7 +712,7 @@ class TestImportGenome1(unittest.TestCase):
 
     @patch("pdm_utils.pipelines.import_genome.process_files_and_tickets")
     @patch("sys.exit")
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_11(self, getpass_mock, sys_exit_mock, pft_mock):
         """Test pipeline with:
         add ticket for draft genome
@@ -732,7 +730,7 @@ class TestImportGenome1(unittest.TestCase):
 
     @patch("pdm_utils.pipelines.import_genome.process_files_and_tickets")
     @patch("sys.exit")
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_12(self, getpass_mock, sys_exit_mock, pft_mock):
         """Test pipeline with:
         add ticket for draft genome
@@ -750,7 +748,7 @@ class TestImportGenome1(unittest.TestCase):
 
     @patch("pdm_utils.pipelines.import_genome.process_files_and_tickets")
     @patch("sys.exit")
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_13(self, getpass_mock, sys_exit_mock, pft_mock):
         """Test pipeline with:
         invalid add ticket with host_genus set to retain, even
@@ -770,7 +768,7 @@ class TestImportGenome1(unittest.TestCase):
 
     @patch("pdm_utils.pipelines.import_genome.process_files_and_tickets")
     @patch("sys.exit")
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_14(self, getpass_mock, sys_exit_mock, pft_mock):
         """Test pipeline with:
         invalid add ticket with retrieve_record set to retrieve, even
@@ -788,7 +786,7 @@ class TestImportGenome1(unittest.TestCase):
             self.assertEqual(len(phage_table_results), 0)
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_15(self, getpass_mock):
         """Test pipeline with:
         invalid add ticket with 'host_genus' set to retrieve,
@@ -820,7 +818,7 @@ class TestImportGenome1(unittest.TestCase):
 
     # Run tests that produce bundle check errors.
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_16(self, getpass_mock):
         """Test pipeline with:
         add ticket for draft genome
@@ -839,7 +837,7 @@ class TestImportGenome1(unittest.TestCase):
             self.assertEqual(len(gene_table_results), 0)
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_17(self, getpass_mock):
         """Test pipeline with:
         add ticket for draft genome
@@ -858,7 +856,7 @@ class TestImportGenome1(unittest.TestCase):
 
     # Run tests that produce genome check errors.
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_18(self, getpass_mock):
         """Test pipeline with:
         valid add ticket for draft genome,
@@ -890,7 +888,7 @@ class TestImportGenome1(unittest.TestCase):
 
 
     @patch("pdm_utils.pipelines.import_genome.get_mysql_reference_sets")
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_19(self, getpass_mock, mysql_ref_mock):
         """Identical test as in test_add_18,
         but invalid PhageID after patching in MySQL ref set."""
@@ -913,7 +911,7 @@ class TestImportGenome1(unittest.TestCase):
 
 
     @patch("pdm_utils.pipelines.import_genome.get_mysql_reference_sets")
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_20(self, getpass_mock, mysql_ref_mock):
         """Identical test as in test_add_19,
         but valid PhageID after patching in MySQL ref set."""
@@ -935,7 +933,7 @@ class TestImportGenome1(unittest.TestCase):
             self.assertEqual(len(gene_table_results), 4)
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_21(self, getpass_mock):
         """Test pipeline with:
         valid add ticket for draft genome,
@@ -959,7 +957,7 @@ class TestImportGenome1(unittest.TestCase):
 
 
     @patch("pdm_utils.pipelines.import_genome.get_mysql_reference_sets")
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_22(self, getpass_mock, mysql_ref_mock):
         """Identical test as in test_add_21,
         but invalid sequence after patching in MySQL ref set."""
@@ -982,7 +980,7 @@ class TestImportGenome1(unittest.TestCase):
 
 
     @patch("pdm_utils.pipelines.import_genome.get_mysql_reference_sets")
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_23(self, getpass_mock, mysql_ref_mock):
         """Identical test as in test_add_22,
         but valid sequence after patching in MySQL ref set."""
@@ -1005,7 +1003,7 @@ class TestImportGenome1(unittest.TestCase):
             self.assertEqual(len(gene_table_results), 4)
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_24(self, getpass_mock):
         """Test pipeline with:
         add ticket for draft genome
@@ -1026,7 +1024,7 @@ class TestImportGenome1(unittest.TestCase):
 
     @patch("pdm_utils.pipelines.import_genome.get_mysql_reference_sets")
     @patch("pdm_utils.pipelines.import_genome.get_phagesdb_reference_sets")
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_25(self, getpass_mock, pdb_ref_mock, mysql_ref_mock):
         """Identical test as in test_add_24,
         but invalid cluster and subcluster after patching in PhagesDB ref set."""
@@ -1052,7 +1050,7 @@ class TestImportGenome1(unittest.TestCase):
 
     @patch("pdm_utils.pipelines.import_genome.get_mysql_reference_sets")
     @patch("pdm_utils.pipelines.import_genome.get_phagesdb_reference_sets")
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_26(self, getpass_mock, pdb_ref_mock, mysql_ref_mock):
         """Identical test as in test_add_25,
         but valid cluster and subcluster after patching in PhagesDB ref set."""
@@ -1078,7 +1076,7 @@ class TestImportGenome1(unittest.TestCase):
 
     @patch("pdm_utils.pipelines.import_genome.get_mysql_reference_sets")
     @patch("pdm_utils.pipelines.import_genome.get_phagesdb_reference_sets")
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_27(self, getpass_mock, pdb_ref_mock, mysql_ref_mock):
         """Identical test as in test_add_26,
         but valid cluster and subcluster after patching in MySQL ref set."""
@@ -1102,7 +1100,7 @@ class TestImportGenome1(unittest.TestCase):
             self.assertEqual(len(gene_table_results), 4)
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_28(self, getpass_mock):
         """Test pipeline with:
         add ticket for draft genome
@@ -1117,7 +1115,7 @@ class TestImportGenome1(unittest.TestCase):
         self.assertEqual(len(phage_table_results), 0)
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_29(self, getpass_mock):
         """Test pipeline with:
         add ticket for draft genome
@@ -1134,7 +1132,7 @@ class TestImportGenome1(unittest.TestCase):
 
     @patch("pdm_utils.pipelines.import_genome.get_mysql_reference_sets")
     @patch("pdm_utils.pipelines.import_genome.get_phagesdb_reference_sets")
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_30(self, getpass_mock, pdb_ref_mock, mysql_ref_mock):
         """Identical test as in test_add_29,
         but invalid host genus after patching in PhagesDB ref set."""
@@ -1159,7 +1157,7 @@ class TestImportGenome1(unittest.TestCase):
 
     @patch("pdm_utils.pipelines.import_genome.get_mysql_reference_sets")
     @patch("pdm_utils.pipelines.import_genome.get_phagesdb_reference_sets")
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_31(self, getpass_mock, pdb_ref_mock, mysql_ref_mock):
         """Identical test as in test_add_30,
         but valid host genus after patching in PhagesDB ref set."""
@@ -1184,7 +1182,7 @@ class TestImportGenome1(unittest.TestCase):
 
     @patch("pdm_utils.pipelines.import_genome.get_mysql_reference_sets")
     @patch("pdm_utils.pipelines.import_genome.get_phagesdb_reference_sets")
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_32(self, getpass_mock, pdb_ref_mock, mysql_ref_mock):
         """Identical test as in test_add_31,
         but valid host genus after patching in MySQL ref set."""
@@ -1207,7 +1205,7 @@ class TestImportGenome1(unittest.TestCase):
             self.assertEqual(len(gene_table_results), 4)
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_33(self, getpass_mock):
         """Test pipeline with:
         add ticket for draft genome
@@ -1222,7 +1220,7 @@ class TestImportGenome1(unittest.TestCase):
         self.assertEqual(len(phage_table_results), 0)
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_34(self, getpass_mock):
         """Test pipeline with:
         add ticket for draft genome
@@ -1237,7 +1235,7 @@ class TestImportGenome1(unittest.TestCase):
         self.assertEqual(len(phage_table_results), 0)
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_35(self, getpass_mock):
         """Test pipeline with:
         add ticket for draft genome
@@ -1252,7 +1250,7 @@ class TestImportGenome1(unittest.TestCase):
         self.assertEqual(len(phage_table_results), 0)
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_36(self, getpass_mock):
         """Test pipeline with:
         add ticket for draft genome
@@ -1267,7 +1265,7 @@ class TestImportGenome1(unittest.TestCase):
         self.assertEqual(len(phage_table_results), 0)
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_37(self, getpass_mock):
         """Test pipeline with:
         add ticket for draft genome
@@ -1282,7 +1280,7 @@ class TestImportGenome1(unittest.TestCase):
         self.assertEqual(len(phage_table_results), 0)
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_38(self, getpass_mock):
         """Test pipeline with:
         add ticket for draft genome
@@ -1300,7 +1298,7 @@ class TestImportGenome1(unittest.TestCase):
         self.assertEqual(len(phage_table_results), 0)
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_39(self, getpass_mock):
         """Test pipeline with:
         add ticket for draft genome
@@ -1327,7 +1325,7 @@ class TestImportGenome1(unittest.TestCase):
         self.assertEqual(len(phage_table_results), 0)
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_40(self, getpass_mock):
         """Test pipeline with:
         add ticket for draft genome
@@ -1358,7 +1356,7 @@ class TestImportGenome1(unittest.TestCase):
 
     # Run tests that produce CDS check errors.
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_41(self, getpass_mock):
         """Test pipeline with:
         add ticket for draft genome
@@ -1379,7 +1377,7 @@ class TestImportGenome1(unittest.TestCase):
         self.assertEqual(len(phage_table_results), 0)
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_42(self, getpass_mock):
         """Test pipeline with:
         add ticket for draft genome
@@ -1397,7 +1395,7 @@ class TestImportGenome1(unittest.TestCase):
         self.assertEqual(len(phage_table_results), 0)
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_43(self, getpass_mock):
         """Test pipeline with:
         add ticket for draft genome
@@ -1417,7 +1415,7 @@ class TestImportGenome1(unittest.TestCase):
         self.assertEqual(len(phage_table_results), 0)
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_44(self, getpass_mock):
         """Test pipeline with:
         invalid add ticket with conflicting Cluster and Subcluster data,
@@ -1434,7 +1432,7 @@ class TestImportGenome1(unittest.TestCase):
             self.assertEqual(len(phage_table_results), 0)
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_45(self, getpass_mock):
         """Test pipeline with:
         invalid add ticket with missing host genus data,
@@ -1454,7 +1452,7 @@ class TestImportGenome1(unittest.TestCase):
 
     # Run tests for misc options and parameters.
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_46(self, getpass_mock):
         """Test pipeline with:
         two valid add tickets for draft genomes."""
@@ -1508,7 +1506,7 @@ class TestImportGenome1(unittest.TestCase):
             self.assertTrue(success_l5_path.exists())
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_47(self, getpass_mock):
         """Test pipeline with:
         a valid add ticket for a draft genome,
@@ -1568,7 +1566,7 @@ class TestImportGenome1(unittest.TestCase):
             self.assertTrue(fail_table_path.exists())
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_48(self, getpass_mock):
         """Test pipeline with:
         a valid add ticket for a draft genome,
@@ -1590,7 +1588,7 @@ class TestImportGenome1(unittest.TestCase):
             self.assertEqual(len(gene_table_results), 4)
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_49(self, getpass_mock):
         """Test pipeline with:
         Same test as in test_add_48, but eval_modes are reversed."""
@@ -1611,7 +1609,7 @@ class TestImportGenome1(unittest.TestCase):
 
 
     @patch("pdm_utils.functions.basic.ask_yes_no")
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_50(self, getpass_mock, ask_mock):
         """Test pipeline with:
         a valid add ticket for a draft genome,
@@ -1637,7 +1635,7 @@ class TestImportGenome1(unittest.TestCase):
 
 
     @patch("pdm_utils.functions.basic.ask_yes_no")
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_51(self, getpass_mock, ask_mock):
         """Test pipeline with:
         a valid add ticket for a draft genome,
@@ -1660,7 +1658,7 @@ class TestImportGenome1(unittest.TestCase):
 
 
     @patch("pdm_utils.functions.basic.ask_yes_no")
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_52(self, getpass_mock, ask_mock):
         """Test pipeline with:
         two valid add tickets for draft genomes using custom eval_mode.
@@ -1726,7 +1724,7 @@ class TestImportGenome1(unittest.TestCase):
             self.assertTrue(ask_mock.called)
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_53(self, getpass_mock):
         """Test pipeline with:
         valid add ticket for draft genome,
@@ -1894,7 +1892,7 @@ class TestImportGenome2(unittest.TestCase):
 
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_replacement_1(self, getpass_mock):
         """Test pipeline with:
         valid replace ticket for final genome,
@@ -1971,7 +1969,7 @@ class TestImportGenome2(unittest.TestCase):
             self.assertEqual(cds193_errors, 0)
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_replacement_2(self, getpass_mock):
         """Test pipeline with:
         valid minimal replace ticket for final genome,
@@ -2000,7 +1998,7 @@ class TestImportGenome2(unittest.TestCase):
             self.assertEqual(genome_errors, 0)
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_replacement_3(self, getpass_mock):
         """Test pipeline with:
         valid replace ticket for final genome with 'retrieve' or 'retain' fields,
@@ -2032,7 +2030,7 @@ class TestImportGenome2(unittest.TestCase):
             self.assertEqual(genome_errors, 0)
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_replacement_4(self, getpass_mock):
         """Test pipeline with:
         valid replace ticket for final genome,
@@ -2093,7 +2091,7 @@ class TestImportGenome2(unittest.TestCase):
 
     @patch("pdm_utils.pipelines.import_genome.process_files_and_tickets")
     @patch("sys.exit")
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_replacement_5(self, getpass_mock, sys_exit_mock, pft_mock):
         """Test pipeline with:
         invalid replace ticket for final genome,
@@ -2120,7 +2118,7 @@ class TestImportGenome2(unittest.TestCase):
 
     # Run tests that produce bundle check errors.
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_replacement_6(self, getpass_mock):
         """Test pipeline with:
         valid replace ticket for final genome,
@@ -2144,7 +2142,7 @@ class TestImportGenome2(unittest.TestCase):
             self.assertEqual(len(output_genome_data.keys()), 0)
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_replacement_7(self, getpass_mock):
         """Test pipeline with:
         valid replace ticket for final genome, with some 'retain' fields,
@@ -2172,7 +2170,7 @@ class TestImportGenome2(unittest.TestCase):
 
     # Run tests that produce genome_pair check errors.
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_replacement_8(self, getpass_mock):
         """Test pipeline with:
         valid replace ticket for final genome,
@@ -2209,7 +2207,7 @@ class TestImportGenome2(unittest.TestCase):
             self.assertTrue(fail_table_path.exists())
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_replacement_9(self, getpass_mock):
         """Test pipeline with:
         valid replace ticket for final genome,
@@ -2249,7 +2247,7 @@ class TestImportGenome2(unittest.TestCase):
             self.assertTrue(fail_table_path.exists())
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_replacement_10(self, getpass_mock):
         """Test pipeline with:
         valid replace ticket for final genome,
@@ -2276,7 +2274,7 @@ class TestImportGenome2(unittest.TestCase):
                              self.alice_data_to_insert["DateLastModified"])
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_replacement_11(self, getpass_mock):
         """Test pipeline with:
         valid replace ticket for final genome,
@@ -2306,7 +2304,7 @@ class TestImportGenome2(unittest.TestCase):
                              self.alice_data_to_insert["DateLastModified"])
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_replacement_12(self, getpass_mock):
         """Test pipeline with:
         valid replace ticket for final genome,
@@ -2336,7 +2334,7 @@ class TestImportGenome2(unittest.TestCase):
             self.assertEqual(genome_errors, 0)
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_replacement_13(self, getpass_mock):
         """Test pipeline with:
         valid replace ticket for final genome using 'final' eval mode,
@@ -2367,7 +2365,7 @@ class TestImportGenome2(unittest.TestCase):
             self.assertEqual(genome_errors, 1)
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_replacement_14(self, getpass_mock):
         """Identical to test_replacement_13,
         except using 'auto' eval mode."""
@@ -2396,7 +2394,7 @@ class TestImportGenome2(unittest.TestCase):
             self.assertEqual(genome_errors, 0)
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_replacement_15(self, getpass_mock):
         """Test pipeline with:
         valid replace ticket for final genome,
@@ -2430,7 +2428,7 @@ class TestImportGenome2(unittest.TestCase):
 
     # Run tests that produce genome check errors.
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_replacement_16(self, getpass_mock):
         """Test pipeline with:
         valid replace ticket for final genome,
@@ -2456,7 +2454,7 @@ class TestImportGenome2(unittest.TestCase):
                              self.alice_data_to_insert["DateLastModified"])
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_replacement_17(self, getpass_mock):
         """Test pipeline with:
         valid replace ticket for final genome with 'description_field' = 'function',
@@ -2484,7 +2482,7 @@ class TestImportGenome2(unittest.TestCase):
             self.assertEqual(genome_errors, 0)
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_replacement_18(self, getpass_mock):
         """Test pipeline with:
         valid replace ticket for final genome,
@@ -2504,7 +2502,7 @@ class TestImportGenome2(unittest.TestCase):
             self.assertEqual(len(gene_table_results), 0)
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_replacement_19(self, getpass_mock):
         """Test pipeline with:
         valid replace ticket for final genome,
@@ -2524,7 +2522,7 @@ class TestImportGenome2(unittest.TestCase):
             self.assertEqual(len(gene_table_results), 0)
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_replacement_20(self, getpass_mock):
         """Test pipeline with:
         valid replace ticket for final genome,
@@ -2546,7 +2544,7 @@ class TestImportGenome2(unittest.TestCase):
             self.assertEqual(len(gene_table_results), 0)
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_replacement_21(self, getpass_mock):
         """Test pipeline with:
         valid replace ticket for final genome,
@@ -2571,7 +2569,7 @@ class TestImportGenome2(unittest.TestCase):
 
     # Run tests that produce Source check errors.
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_replacement_22(self, getpass_mock):
         """Test pipeline with:
         valid replace ticket for final genome with
@@ -2592,7 +2590,7 @@ class TestImportGenome2(unittest.TestCase):
             self.assertEqual(len(gene_table_results), 0)
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_replacement_23(self, getpass_mock):
         """Test pipeline with:
         valid replace ticket for final genome with
@@ -2613,7 +2611,7 @@ class TestImportGenome2(unittest.TestCase):
             self.assertEqual(len(gene_table_results), 0)
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_replacement_24(self, getpass_mock):
         """Test pipeline with:
         valid replace ticket for final genome with
@@ -2634,7 +2632,7 @@ class TestImportGenome2(unittest.TestCase):
             self.assertEqual(len(gene_table_results), 0)
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_replacement_25(self, getpass_mock):
         """Test pipeline with:
         valid replace ticket for final genome with
@@ -2659,7 +2657,7 @@ class TestImportGenome2(unittest.TestCase):
 
     # Run tests that produce CDS check errors.
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_replacement_26(self, getpass_mock):
         """Test pipeline with:
         valid replace ticket for final genome with
@@ -2679,7 +2677,7 @@ class TestImportGenome2(unittest.TestCase):
             self.assertEqual(len(gene_table_results), 0)
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_replacement_27(self, getpass_mock):
         """Test pipeline with:
         valid replace ticket for final genome with
@@ -2699,7 +2697,7 @@ class TestImportGenome2(unittest.TestCase):
             self.assertEqual(len(gene_table_results), 0)
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_replacement_28(self, getpass_mock):
         """Test pipeline with:
         valid replace ticket for final genome with
@@ -2725,7 +2723,7 @@ class TestImportGenome2(unittest.TestCase):
 
 
     @patch("pdm_utils.functions.basic.ask_yes_no")
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_replacement_29(self, getpass_mock, ask_mock):
         """Test pipeline with:
         Same test as in test_replacement_28, except
@@ -2752,7 +2750,7 @@ class TestImportGenome2(unittest.TestCase):
 
 
     @patch("pdm_utils.functions.basic.ask_yes_no")
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_replacement_30(self, getpass_mock, ask_mock):
         """Test pipeline with:
         Same test as in test_replacement_28, except
@@ -2786,7 +2784,7 @@ class TestImportGenome2(unittest.TestCase):
 
 
     @patch("pdm_utils.functions.basic.ask_yes_no")
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_replacement_31(self, getpass_mock, ask_mock):
         """Test pipeline with:
         'Final' genome but adding instead of replacing.
@@ -2809,7 +2807,7 @@ class TestImportGenome2(unittest.TestCase):
 
 
     @patch("pdm_utils.functions.basic.ask_yes_no")
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_replacement_32(self, getpass_mock, ask_mock):
         """Test pipeline with:
         Same test as in test_replacement_31, but
@@ -2830,7 +2828,7 @@ class TestImportGenome2(unittest.TestCase):
             self.assertEqual(len(gene_table_results), 4)
 
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_replacement_33(self, getpass_mock):
         """Test pipeline with:
         Same test as in test_replacement_31, but 'eval_mode' = 'misc'."""
@@ -2853,7 +2851,7 @@ class TestImportGenome2(unittest.TestCase):
 
     # Run tests using data that crashes MySQL.
 
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_replacement_34(self, getpass_mock):
         """Test pipeline with:
         CDS descriptions that contains '%', which crashes MySQL.

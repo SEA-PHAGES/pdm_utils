@@ -687,51 +687,52 @@ class TestImportGenome3(unittest.TestCase):
 
 
     @patch("pdm_utils.pipelines.import_genome.data_io")
-    @patch("pdm_utils.functions.mysqldb.connect_to_db")
-    def test_main_1(self, ctd_mock, data_io_mock):
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
+    def test_main_1(self, getpass_mock, data_io_mock):
         """Verify that correct args calls data_io."""
         self.input_folder.mkdir()
         self.output_folder.mkdir()
-        ctd_mock.return_value = self.engine
+        getpass_mock.side_effect = [user, pwd]
+
         import_genome.main(self.args_list)
         self.assertTrue(data_io_mock.called)
 
 
     @patch("pdm_utils.pipelines.import_genome.data_io")
-    @patch("pdm_utils.functions.mysqldb.connect_to_db")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     @patch("sys.exit")
-    def test_main_2(self, sys_exit_mock, ctd_mock, data_io_mock):
+    def test_main_2(self, sys_exit_mock, getpass_mock, data_io_mock):
         """Verify that invalid input folder calls sys exit."""
         self.output_folder.mkdir()
-        ctd_mock.return_value = self.engine
+        getpass_mock.side_effect = [user, pwd]
         import_genome.main(self.args_list)
         self.assertTrue(sys_exit_mock.called)
 
 
     @patch("pdm_utils.pipelines.import_genome.data_io")
-    @patch("pdm_utils.functions.mysqldb.connect_to_db")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     @patch("sys.exit")
-    def test_main_3(self, sys_exit_mock, ctd_mock, data_io_mock):
+    def test_main_3(self, sys_exit_mock, getpass_mock, data_io_mock):
         """Verify that invalid import file calls sys exit."""
         self.input_folder.mkdir()
         self.output_folder.mkdir()
         self.args_list[4] = ""
-        ctd_mock.return_value = self.engine
+        getpass_mock.side_effect = [user, pwd]
         import_genome.main(self.args_list)
         self.assertTrue(sys_exit_mock.called)
 
 
     @patch("pdm_utils.pipelines.import_genome.data_io")
-    @patch("pdm_utils.functions.mysqldb.connect_to_db")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     @patch("pdm_utils.functions.basic.make_new_dir")
     @patch("sys.exit")
-    def test_main_4(self, sys_exit_mock, mnd_mock, ctd_mock, data_io_mock):
+    def test_main_4(self, sys_exit_mock, mnd_mock, getpass_mock, data_io_mock):
         """Verify that invalid output folder calls sys exit."""
         self.input_folder.mkdir()
         # Need to provide filename in a valid directory to create log file
         # since output folder is invalid.
         mnd_mock.return_value = Path(self.input_folder, "temp")
-        ctd_mock.return_value = self.engine
+        getpass_mock.side_effect = [user, pwd]
         import_genome.main(self.args_list)
         self.assertTrue(sys_exit_mock.called)
 
@@ -739,31 +740,32 @@ class TestImportGenome3(unittest.TestCase):
     @patch("pdm_utils.pipelines.import_genome.data_io")
     @patch("pdm_utils.functions.mysqldb.check_schema_compatibility")
     @patch("sys.exit")
-    @patch("getpass.getpass")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_main_5(self, getpass_mock, sys_exit_mock, csc_mock, data_io_mock):
         """Verify that invalid database calls sys exit."""
         self.input_folder.mkdir()
         self.output_folder.mkdir()
-        self.args_list[2] = "Actinobacteriophage_x"
-        # Assumes that mysqldb.get_engine(attempts=5)
-        getpass_mock.side_effect = [user, pwd,
-                                    user, pwd,
-                                    user, pwd,
-                                    user, pwd,
-                                    user, pwd]
+        # Assumes that alchemyhandler.connect(login_attempt=5)
+        # For some reason 6 user and pwd is needed.
+        getpass_mock.side_effect = ["invalid", "invalid",
+                                    "invalid", "invalid",
+                                    "invalid", "invalid"
+                                    "invalid", "invalid"
+                                    "invalid", "invalid",
+                                    "invalid", "invalid"]
         import_genome.main(self.args_list)
         self.assertTrue(sys_exit_mock.called)
 
 
     @patch("pdm_utils.pipelines.import_genome.data_io")
     @patch("sys.exit")
-    @patch("pdm_utils.functions.mysqldb.connect_to_db")
-    def test_main_6(self, ctd_mock, sys_exit_mock, data_io_mock):
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
+    def test_main_6(self, getpass_mock, sys_exit_mock, data_io_mock):
         """Verify that invalid database schema version calls sys exit."""
         test_db_utils.execute("UPDATE version SET SchemaVersion = 0")
         self.input_folder.mkdir()
         self.output_folder.mkdir()
-        ctd_mock.return_value = self.engine
+        getpass_mock.side_effect = [user, pwd]
         import_genome.main(self.args_list)
         self.assertTrue(sys_exit_mock.called)
 

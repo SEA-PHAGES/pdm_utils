@@ -1,7 +1,6 @@
 """Primary pipeline to process and evaluate data to be imported
 into the MySQL database."""
 
-
 import argparse
 import csv
 from datetime import datetime, date
@@ -12,15 +11,17 @@ import shutil
 import sys
 from tabulate import tabulate
 import pdm_utils # to get version number.
+
+from pdm_utils.classes.alchemyhandler import AlchemyHandler
+from pdm_utils.classes import bundle
+from pdm_utils.classes import genomepair
+from pdm_utils.constants import constants, eval_descriptions
 from pdm_utils.functions import basic
 from pdm_utils.functions import tickets
 from pdm_utils.functions import flat_files
 from pdm_utils.functions import phagesdb
 from pdm_utils.functions import mysqldb
 from pdm_utils.functions import mysqldb_basic
-from pdm_utils.classes import bundle
-from pdm_utils.classes import genomepair
-from pdm_utils.constants import constants, eval_descriptions
 from pdm_utils.functions import eval_modes
 
 # Add a logger named after this module. Then add a null handler, which
@@ -88,7 +89,9 @@ def main(unparsed_args_list):
     logger.info("Command line arguments verified.")
 
     # Verify database connection and schema compatibility.
-    engine = mysqldb.connect_to_db(args.database)
+    alchemist = AlchemyHandler(database=args.database)
+    alchemist.connect(login_attempts=5, pipeline=True)
+    engine = alchemist.engine
     logger.info(f"Connected to database: {args.database}.")
     mysqldb.check_schema_compatibility(engine, "the import pipeline")
     logger.info(f"Schema version is compatible.")
