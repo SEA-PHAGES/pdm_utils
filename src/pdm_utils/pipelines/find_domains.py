@@ -16,6 +16,7 @@ from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.constants import constants
 from pdm_utils.functions import basic
 from pdm_utils.functions import mysqldb
+from pdm_utils.functions import mysqldb_basic
 from pdm_utils.functions.basic import expand_path
 from pdm_utils.functions.parallelize import *
 
@@ -290,7 +291,7 @@ def main(argument_list):
 
     # Get gene data that needs to be processed
     # in dict format where key = column name, value = stored value.
-    cdd_genes = mysqldb.query_dict_list(engine, GET_GENES_FOR_CDD)
+    cdd_genes = mysqldb_basic.query_dict_list(engine, GET_GENES_FOR_CDD)
     msg = f"{len(cdd_genes)} genes to search for conserved domains..."
     logger.info(msg)
     print(msg)

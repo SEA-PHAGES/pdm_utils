@@ -13,6 +13,7 @@ from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.functions import basic
 from pdm_utils.functions import ncbi
 from pdm_utils.functions import mysqldb
+from pdm_utils.functions import mysqldb_basic
 from pdm_utils.functions import parsing
 from pdm_utils.functions import querying
 
@@ -108,7 +109,7 @@ def main(unparsed_args_list):
     # Create data sets
     print("Retrieving accessions from the database...")
     query = construct_accession_query(keep_set)
-    list_of_dicts = mysqldb.query_dict_list(engine, query)
+    list_of_dicts = mysqldb_basic.query_dict_list(engine, query)
     id_acc_dict = get_id_acc_dict(list_of_dicts)
     acc_id_dict = get_acc_id_dict(id_acc_dict)
     engine.dispose()

@@ -1399,7 +1399,7 @@ class TestImportGenome6(unittest.TestCase):
 
     @patch("sys.exit")
     @patch("pdm_utils.pipelines.import_genome.process_files_and_tickets")
-    @patch("pdm_utils.functions.mysqldb.get_phage_table_count")
+    @patch("pdm_utils.functions.mysqldb_basic.get_table_count")
     def test_data_io_1(self, get_count_mock, pft_mock, sys_exit_mock):
         """Verify data_io runs correctly when there are no errors."""
         self.genome_folder.mkdir()
@@ -1484,7 +1484,7 @@ class TestImportGenome6(unittest.TestCase):
 
     @patch("sys.exit")
     @patch("pdm_utils.pipelines.import_genome.process_files_and_tickets")
-    @patch("pdm_utils.functions.mysqldb.get_phage_table_count")
+    @patch("pdm_utils.functions.mysqldb_basic.get_table_count")
     def test_data_io_2(self, get_count_mock, pft_mock, sys_exit_mock):
         """Verify data_io is successful with
         success tickets but no success files, and
@@ -1526,7 +1526,7 @@ class TestImportGenome6(unittest.TestCase):
 
     @patch("sys.exit")
     @patch("pdm_utils.pipelines.import_genome.process_files_and_tickets")
-    @patch("pdm_utils.functions.mysqldb.get_phage_table_count")
+    @patch("pdm_utils.functions.mysqldb_basic.get_table_count")
     def test_data_io_3(self, get_count_mock, pft_mock, sys_exit_mock):
         """Verify data_io is successful with
         success files but no success tickets, and
@@ -1565,7 +1565,7 @@ class TestImportGenome6(unittest.TestCase):
 
 
     @patch("pdm_utils.pipelines.import_genome.process_files_and_tickets")
-    @patch("pdm_utils.functions.mysqldb.get_phage_table_count")
+    @patch("pdm_utils.functions.mysqldb_basic.get_table_count")
     @patch("sys.exit")
     def test_data_io_4(self, sys_exit_mock, get_count_mock, pft_mock):
         """Verify data_io is not successful when there
@@ -1586,7 +1586,7 @@ class TestImportGenome6(unittest.TestCase):
 
     @patch("sys.exit")
     @patch("pdm_utils.pipelines.import_genome.process_files_and_tickets")
-    @patch("pdm_utils.functions.mysqldb.get_phage_table_count")
+    @patch("pdm_utils.functions.mysqldb_basic.get_table_count")
     def test_data_io_5(self, get_count_mock, pft_mock, sys_exit_mock):
         """Verify data_io is not successful when there are no tickets to process."""
         self.genome_folder.mkdir()
@@ -1607,7 +1607,7 @@ class TestImportGenome6(unittest.TestCase):
 
     @patch("sys.exit")
     @patch("pdm_utils.pipelines.import_genome.process_files_and_tickets")
-    @patch("pdm_utils.functions.mysqldb.get_phage_table_count")
+    @patch("pdm_utils.functions.mysqldb_basic.get_table_count")
     def test_data_io_6(self, get_count_mock, pft_mock, sys_exit_mock):
         """Verify data_io runs correctly when there are
         successful tickets and genomes, and no failed tickets or genomes."""
@@ -1644,7 +1644,7 @@ class TestImportGenome6(unittest.TestCase):
 
     @patch("sys.exit")
     @patch("pdm_utils.pipelines.import_genome.process_files_and_tickets")
-    @patch("pdm_utils.functions.mysqldb.get_phage_table_count")
+    @patch("pdm_utils.functions.mysqldb_basic.get_table_count")
     def test_data_io_7(self, get_count_mock, pft_mock, sys_exit_mock):
         """Verify data_io runs correctly when there are
         failed tickets and genomes, and no successful tickets or genomes."""

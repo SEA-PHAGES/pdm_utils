@@ -116,33 +116,6 @@ class TestMysqldbFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(len(gene_data), 4)
 
-    def test_get_distinct_data_1(self):
-        """Retrieve a set of all distinct values from PhageID column."""
-        result1 = mysqldb.get_distinct_data(self.engine, "phage", "PhageID")
-        result2 = mysqldb.get_distinct_data(self.engine, "phage", "HostGenus", null="test")
-        result3 = mysqldb.get_distinct_data(self.engine, "phage", "Accession")
-        result4 = mysqldb.get_distinct_data(self.engine, "phage", "Cluster", null="Singleton")
-        result5 = mysqldb.get_distinct_data(self.engine, "phage", "Subcluster", null="none")
-
-        exp_phage_id = {"L5", "Trixie", "D29"}
-        exp_host_genus = {"Mycobacterium", "Gordonia"}
-        exp_accession = {"ABC123", "XYZ456", ""}
-        exp_cluster = {"A", "B", "Singleton"}
-        exp_subcluster = {"A1", "none"}
-
-        with self.subTest():
-            self.assertEqual(result1, exp_phage_id)
-        with self.subTest():
-            self.assertEqual(result2, exp_host_genus)
-        with self.subTest():
-            self.assertEqual(result3, exp_accession)
-        with self.subTest():
-            self.assertEqual(result4, exp_cluster)
-        with self.subTest():
-            self.assertEqual(result5, exp_subcluster)
-
-
-
 
     def test_create_seq_set_1(self):
         """Retrieve a set of all data from Sequence column."""
@@ -151,78 +124,6 @@ class TestMysqldbFunctions1(unittest.TestCase):
             self.assertEqual(len(result), 3)
         with self.subTest():
             self.assertTrue(Seq("ATCG", IUPAC.ambiguous_dna) in result)
-
-
-
-
-    def test_retrieve_data_1(self):
-        """Verify that a dictionary of data is retrieved for a valid PhageID."""
-        result_list = mysqldb.retrieve_data(
-                        self.engine, column="PhageID",
-                        phage_id_list=["L5"], query=self.phage_query)
-        with self.subTest():
-            self.assertEqual(len(result_list[0].keys()), 14)
-        with self.subTest():
-            self.assertEqual(result_list[0]["PhageID"], "L5")
-
-    def test_retrieve_data_2(self):
-        """Verify that an empty list is retrieved
-        for an invalid PhageID."""
-        result_list = mysqldb.retrieve_data(
-                        self.engine, column="PhageID",
-                        phage_id_list=["EagleEye"], query=self.phage_query)
-        self.assertEqual(len(result_list), 0)
-
-    def test_retrieve_data_3(self):
-        """Verify that dictionaries of data are retrieved for a list of two
-        valid PhageIDs."""
-        result_list = mysqldb.retrieve_data(
-                        self.engine, column="PhageID",
-                        phage_id_list=["L5","Trixie"], query=self.phage_query)
-        self.assertEqual(len(result_list), 2)
-
-    def test_retrieve_data_4(self):
-        """Verify that dictionaries of data are retrieved for a list of three
-        valid PhageIDs and one invalid PhageID."""
-        result_list = mysqldb.retrieve_data(
-                        self.engine, column="PhageID",
-                        phage_id_list=["L5","Trixie","EagleEye","D29"],
-                        query=self.phage_query)
-        self.assertEqual(len(result_list), 3)
-
-    def test_retrieve_data_5(self):
-        """Verify that dictionaries of data are retrieved for multiple
-        valid PhageIDs when no list is provided."""
-        result_list = mysqldb.retrieve_data(self.engine, query=self.phage_query)
-        self.assertEqual(len(result_list), 3)
-
-    def test_retrieve_data_6(self):
-        """Verify that a list of CDS data is retrieved for a valid PhageID."""
-        result_list = mysqldb.retrieve_data(
-                        self.engine, column="PhageID",
-                        phage_id_list=["Trixie"], query=self.gene_query)
-        with self.subTest():
-            self.assertEqual(len(result_list), 3)
-        with self.subTest():
-            self.assertEqual(len(result_list[0].keys()), 13)
-        with self.subTest():
-            self.assertEqual(result_list[0]["PhageID"], "Trixie")
-
-    def test_retrieve_data_7(self):
-        """Verify that an empty list of CDS data is retrieved
-        for an invalid PhageID."""
-        result_list = mysqldb.retrieve_data(
-                        self.engine, column="PhageID",
-                        phage_id_list=["L5"], query=self.gene_query)
-        self.assertEqual(len(result_list), 0)
-
-    def test_retrieve_data_8(self):
-        """Verify that a list of all CDS data is retrieved when no
-        PhageID is provided."""
-        result_list = mysqldb.retrieve_data(self.engine, query=self.gene_query)
-        self.assertEqual(len(result_list), 4)
-
-
 
 
     def test_parse_genome_data_1(self):
@@ -412,23 +313,6 @@ class TestMysqldbFunctions2(unittest.TestCase):
             self.assertIsNone(results["Cluster"])
         with self.subTest():
             self.assertEqual(results["Subcluster"], "A2")
-
-
-
-
-    def test_get_phage_table_count_1(self):
-        """Verify the correct number of phages is returned when
-        the database is empty."""
-        count = mysqldb.get_phage_table_count(self.engine)
-        self.assertEqual(count, 0)
-
-    def test_get_phage_table_count_2(self):
-        """Verify the correct number of phages is returned when
-        the database contains one genome."""
-        phage_data = test_data_utils.get_trixie_phage_data()
-        test_db_utils.insert_phage_data(phage_data)
-        count = mysqldb.get_phage_table_count(self.engine)
-        self.assertEqual(count, 1)
 
 
 

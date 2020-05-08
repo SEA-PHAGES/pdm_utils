@@ -8,6 +8,7 @@ import colorsys
 
 from pdm_utils.constants.constants import BLASTCLUST_PATH
 from pdm_utils.functions import mysqldb
+from pdm_utils.functions import mysqldb_basic
 
 def get_program_params(program, args):
     program_params = dict()
@@ -71,7 +72,7 @@ def get_pham_geneids(engine):
     pham_geneids = dict()
 
     geneid_query = "SELECT GeneID, PhamID FROM gene WHERE PhamID IS NOT NULL"
-    geneid_results = mysqldb.query_dict_list(engine, geneid_query)
+    geneid_results = mysqldb_basic.query_dict_list(engine, geneid_query)
 
     print(f"Found {len(geneid_results)} genes in phams...")
 
@@ -96,7 +97,7 @@ def get_pham_colors(engine):
     pham_colors = dict()
 
     color_query = "SELECT PhamID, Color FROM pham"
-    color_results = mysqldb.query_dict_list(engine, color_query)
+    color_results = mysqldb_basic.query_dict_list(engine, color_query)
 
     print(f"Found colors for {len(color_results)} phams...")
 
@@ -118,7 +119,7 @@ def get_new_geneids(engine):
     new_geneids = set()
 
     gene_query = "SELECT GeneID FROM gene WHERE PhamID IS NULL"
-    gene_results = mysqldb.query_dict_list(engine, gene_query)
+    gene_results = mysqldb_basic.query_dict_list(engine, gene_query)
 
     for dictionary in gene_results:
         geneid = dictionary["GeneID"]
@@ -138,7 +139,7 @@ def map_geneids_to_translations(engine):
     gs_to_ts = dict()
 
     query = "SELECT GeneID, Translation FROM gene"
-    results = mysqldb.query_dict_list(engine, query)
+    results = mysqldb_basic.query_dict_list(engine, query)
 
     for dictionary in results:
         geneid = dictionary["GeneID"]
@@ -160,7 +161,7 @@ def map_translations_to_geneids(engine):
     ts_to_gs = dict()
 
     query = "SELECT GeneID, Translation FROM gene"
-    results = mysqldb.query_dict_list(engine, query)
+    results = mysqldb_basic.query_dict_list(engine, query)
 
     for dictionary in results:
         geneid = dictionary["GeneID"]
@@ -578,7 +579,7 @@ def fix_miscolored_phams(engine):
             "= p.PhamID GROUP BY PhamID) AS c WHERE Color = '#FFFFFF' "\
             "AND count > 1"
 
-    results = mysqldb.query_dict_list(engine, query)
+    results = mysqldb_basic.query_dict_list(engine, query)
 
 
     print(f"Found {len(results)} miscolored phams to fix")
@@ -613,7 +614,7 @@ def fix_miscolored_phams(engine):
             "=p.PhamID GROUP BY PhamID) AS c WHERE Color != '#FFFFFF' "\
             "AND count = 1"
 
-    results = mysqldb.query_dict_list(engine, query)
+    results = mysqldb_basic.query_dict_list(engine, query)
     print(f"Found {len(results)} miscolored orphams to fix...")
 
     commands = []

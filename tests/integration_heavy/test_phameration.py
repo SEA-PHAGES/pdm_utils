@@ -11,8 +11,7 @@ from pathlib import Path
 
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.functions.phameration import *
-from pdm_utils.functions import mysqldb
-
+from pdm_utils.functions import mysqldb_basic
 
 # Import helper functions to build mock database
 unittest_file = Path(__file__)
@@ -89,7 +88,7 @@ class TestPhamerationFunctions(unittest.TestCase):
         gs_to_ts = map_geneids_to_translations(self.engine)
 
         command = "SELECT distinct(GeneID) FROM gene"
-        results = mysqldb.query_dict_list(self.engine, command)
+        results = mysqldb_basic.query_dict_list(self.engine, command)
 
         # gs_to_ts should be a dictionary
         with self.subTest():
@@ -103,7 +102,7 @@ class TestPhamerationFunctions(unittest.TestCase):
         ts_to_gs = map_translations_to_geneids(self.engine)
 
         command = "SELECT distinct(Translation) FROM gene"
-        results = mysqldb.query_dict_list(self.engine, command)
+        results = mysqldb_basic.query_dict_list(self.engine, command)
 
 
         # ts_to_gs should be a dictionary

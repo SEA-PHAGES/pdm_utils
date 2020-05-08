@@ -17,6 +17,7 @@ from pdm_utils.functions import tickets
 from pdm_utils.functions import flat_files
 from pdm_utils.functions import phagesdb
 from pdm_utils.functions import mysqldb
+from pdm_utils.functions import mysqldb_basic
 from pdm_utils.classes import bundle
 from pdm_utils.classes import genomepair
 from pdm_utils.constants import constants, eval_descriptions
@@ -266,7 +267,7 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
         folder.mkdir()
     log_folder_paths_dict = {SUCCESS_FOLDER: success_logs_path,
                              FAIL_FOLDER: failed_logs_path}
-    start_count = mysqldb.get_phage_table_count(engine)
+    start_count = mysqldb_basic.get_table_count(engine, "phage")
 
     # Evaluate files and tickets.
     results_tuple = process_files_and_tickets(
@@ -283,7 +284,7 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
     failed_filepath_list = results_tuple[3]
     evaluation_dict = results_tuple[4]
 
-    final_count = mysqldb.get_phage_table_count(engine)
+    final_count = mysqldb_basic.get_table_count(engine, "phage")
 
     # Output data.
     logger.info("Logging successful tickets and files.")
@@ -674,16 +675,16 @@ def get_mysql_reference_sets(engine):
         host genera, accessions, and sequences stored in the MySQL database.
     :rtype: dict
     """
-    phage_ids = mysqldb.get_distinct_data(engine, "phage", "PhageID")
-    accessions = mysqldb.get_distinct_data(engine, "phage", "Accession")
-    clusters = mysqldb.get_distinct_data(engine, "phage", "Cluster",
+    phage_ids = mysqldb_basic.get_distinct(engine, "phage", "PhageID")
+    accessions = mysqldb_basic.get_distinct(engine, "phage", "Accession")
+    clusters = mysqldb_basic.get_distinct(engine, "phage", "Cluster",
                                          null="Singleton")
 
     # Cluster "UNK" may or may not already be present, but it is valid.
     clusters.add("UNK")
-    subclusters = mysqldb.get_distinct_data(engine, "phage", "Subcluster",
+    subclusters = mysqldb_basic.get_distinct(engine, "phage", "Subcluster",
                                             null="none")
-    host_genera = mysqldb.get_distinct_data(engine, "phage", "HostGenus")
+    host_genera = mysqldb_basic.get_distinct(engine, "phage", "HostGenus")
     seqs = mysqldb.create_seq_set(engine)
     dict = {"phage_id_set": phage_ids,
             "accession_set": accessions,

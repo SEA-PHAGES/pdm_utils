@@ -4,8 +4,6 @@ import subprocess
 
 from pdm_utils.functions import basic
 
-
-# TODO remove duplicated function in mysqldb module.
 def drop_db(engine, database):
     """Delete a database.
 
@@ -25,7 +23,6 @@ def drop_db(engine, database):
         return 0
 
 
-# TODO remove duplicated function in mysqldb module.
 def create_db(engine, database):
     """Create a new, empty database.
 
@@ -44,8 +41,6 @@ def create_db(engine, database):
     else:
         return 0
 
-
-# TODO remove duplicated function in mysqldb module.
 def drop_create_db(engine, database):
     """Creates a new, empty database.
 
@@ -68,7 +63,6 @@ def drop_create_db(engine, database):
     return result
 
 
-# TODO remove duplicated function in mysqldb module.
 def install_db(engine, schema_filepath):
     """Install a MySQL file into the indicated database.
 
@@ -96,7 +90,6 @@ def install_db(engine, schema_filepath):
     return result
 
 
-# TODO remove duplicated function in mysqldb module.
 def copy_db(engine, new_database):
     """Copies a database.
 
@@ -168,7 +161,6 @@ def mysql_login_command(username, password, database):
     return cmd_list
 
 
-# TODO remove duplicated function in mysqldb module.
 def get_mysql_dbs(engine):
     """Retrieve database names from MySQL.
 
@@ -182,7 +174,6 @@ def get_mysql_dbs(engine):
     return databases
 
 
-# TODO remove duplicated get_db_tables() function in mysqldb module.
 def get_tables(engine, database):
     """Retrieve tables names from the database.
 
@@ -197,7 +188,6 @@ def get_tables(engine, database):
     return tables
 
 
-# TODO remove duplicated get_table_columns() function in mysqldb module.
 def get_columns(engine, database, table_name):
     """Retrieve columns names from a table.
 
@@ -217,7 +207,6 @@ def get_columns(engine, database, table_name):
     return columns
 
 
-# TODO remove duplicated function in mysqldb module.
 # TODO test.
 def query_set(engine, query):
     """Retrieve set of data from MySQL query.
@@ -233,7 +222,6 @@ def query_set(engine, query):
     set_of_data = basic.get_values_from_tuple_list(result_list)
     return set_of_data
 
-# TODO remove duplicated function in mysqldb module.
 # TODO unittest.
 def query_dict_list(engine, query):
     """Get the results of a MySQL query as a list of dictionaries.
@@ -253,8 +241,6 @@ def query_dict_list(engine, query):
         result_dict_list.append(row_as_dict)
     return result_dict_list
 
-# TODO remove duplicated function in mysqldb module.
-# TODO remove duplicated tests in test_mysqldb module.
 def retrieve_data(engine, column=None, query=None, id_list=None):
     """Retrieve genome data from a MySQL database for a single genome.
 
@@ -290,8 +276,6 @@ def retrieve_data(engine, column=None, query=None, id_list=None):
     return result_dict_list
 
 
-# TODO remove duplicated get_distinct_data() function in mysqldb module.
-# TODO remove duplicated tests in test_mysqldb module.
 def get_distinct(engine, table, column, null=None):
     """Get set of distinct values currently in a MySQL database.
 
@@ -316,8 +300,6 @@ def get_distinct(engine, table, column, null=None):
     return result_set
 
 
-# TODO remove duplicated get_phage_table_count() function in mysqldb module.
-# TODO remove duplicated tests in test_mysqldb module.
 def get_table_count(engine, table):
     """Get the current number of genomes in the database.
 
@@ -331,8 +313,6 @@ def get_table_count(engine, table):
     count = result_list[0][0]
     return count
 
-
-# TODO remove duplicated function get_version_table_data() in mysqldb module.
 def get_first_row_data(engine, table):
     """Retrieves data from the first row of a table.
 
@@ -350,7 +330,6 @@ def get_first_row_data(engine, table):
     return dict
 
 
-# TODO remove duplicated method in AlchemyHandler?
 def first(engine, executable, return_dict=True):
     """Execute a query and get the first row of data.
 
@@ -374,7 +353,6 @@ def first(engine, executable, return_dict=True):
     return first_row
 
 
-# TODO remove duplicated method in AlchemyHandler?
 def scalar(engine, executable):
     """Execute a query and get the first field.
 
@@ -391,8 +369,6 @@ def scalar(engine, executable):
     return scalar
 
 
-# TODO remove duplicated function in mysqldb module.
-# TODO remove duplicated tests in test_mysqldb module.
 def convert_for_sql(value, check_set=set(), single=True):
     """Convert a value for inserting into MySQL.
 

@@ -304,7 +304,7 @@ def execute_export(alchemist, folder_path, folder_name, pipeline,
     """
     if verbose:
         print("Retrieving database version...")
-    db_version = mysqldb.get_version_table_data(alchemist.engine)
+    db_version = mysqldb_basic.get_first_row_data(alchemist.engine, "version")
 
     if pipeline == "csv":
         if verbose:

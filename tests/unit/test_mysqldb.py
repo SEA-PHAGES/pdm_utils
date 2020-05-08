@@ -99,32 +99,6 @@ class TestMysqldbFunctions1(unittest.TestCase):
 
 
 
-    def test_convert_for_sql_1(self):
-        """Verify non-empty value returned is encapsulated with "'"."""
-        value = mysqldb.convert_for_sql("A", check_set={"Singleton"},
-                                        single=True)
-        self.assertEqual(value, "'A'")
-
-    def test_convert_for_sql_2(self):
-        """Verify non-empty value returned is encapsulated with '"'."""
-        value = mysqldb.convert_for_sql("A", check_set={"Singleton"},
-                                        single=False)
-        self.assertEqual(value, '"A"')
-
-    def test_convert_for_sql_3(self):
-        """Verify empty value returned is NULL."""
-        value = mysqldb.convert_for_sql("", check_set={""}, single=True)
-        self.assertEqual(value, "NULL")
-
-    def test_convert_for_sql_4(self):
-        """Verify 'Singleton' value returned is NULL."""
-        value = mysqldb.convert_for_sql("Singleton", check_set={"Singleton"},
-                                        single=True)
-        self.assertEqual(value, "NULL")
-
-
-
-
     def test_parse_gene_table_data_1(self):
         """Verify standard MySQL CDS data is parsed correctly
         from a data dictionary returned from a SQL query."""
