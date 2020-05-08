@@ -47,18 +47,20 @@ GENBANK_OUTPUT = "gbk_records"
 MYSQL_OUTPUT = "mysql_records"
 PHAGESDB_OUTPUT = "phagesdb_records"
 
-FIRST_HEADER = CURRENT_DATE + " Database comparison"
-
 ERROR_FOLDER = "errors"
 RECORD_FOLDER = "records"
 RESULTS_FOLDER = "results"
 
+COMPARE_SETTINGS = "compare_settings.csv"
 DUPLICATE_MYSQL_NAMES = "mysql_name_duplicates.csv"
 DUPLICATE_MYSQL_ACC = "mysql_accession_duplicates.csv"
 DUPLICATE_PDB_NAMES = "phagesdb_name_duplicates.csv"
-FAILED_ACC_RETRIEVE = "genbank_accession_failure.csv"
-UNMATCHED_GENOMES = "mysql_unmatched_genomes.csv"
-SUMMARY_OUTPUT = "summary.csv"
+FAILED_ACC_RETRIEVE = "mysql_genomes_unmatched_to_genbank.csv"
+UNMATCHED_GENOMES = "mysql_genomes_unmatched_to_pdb.csv"
+
+GNM_SUMMARY_OUTPUT = "summary_genome.csv"
+CDS_SUMMARY_OUTPUT = "summary_cds.csv"
+
 GENOME_OUTPUT = "genome.csv"
 GENE_OUTPUT = "cds.csv"
 
@@ -115,9 +117,6 @@ class Genome:
 
 
     # Define all attribute setters:
-    def set_phage_name(self, value):
-        self.name = value
-
     def set_accession(self, value):
         if value is None or value.strip() == "":
             self.accession = ""
@@ -129,9 +128,6 @@ class Genome:
         self.cds_features = value # Should be a list
         self._cds_features_tally = len(self.cds_features)
 
-    def set_phage_id(self, value):
-        self.id = value
-
     def set_cluster(self, value):
         if value is None:
             self.cluster = "Singleton"
@@ -139,12 +135,6 @@ class Genome:
             self.cluster = ""
         else:
             self.cluster = value
-
-    def set_date_last_modified(self, value):
-        if value is None:
-            self.date = ""
-        else:
-            self.date = value
 
 
 
@@ -157,8 +147,6 @@ setattr(Genome, "record_id", "")
 setattr(Genome, "source_feature_organism", "")
 setattr(Genome, "source_feature_host", "")
 setattr(Genome, "source_feature_lab_host", "")
-setattr(Genome, "_search_id", "") # No "_Draft" and converted to lowercase
-setattr(Genome, "_search_name", "") # No "_Draft" and converted to lowercase
 setattr(Genome, "_missing_locus_tags_tally", 0)
 setattr(Genome, "_locus_tag_typos_tally", 0)
 setattr(Genome, "_description_field_error_tally", 0)
@@ -171,20 +159,10 @@ setattr(Genome, "_cds_features_boundary_error_tally", 0)
 
 
 # Genome setters
-
-def set_search_name(self):
-    self._search_name = basic.edit_suffix(self.name, "remove").lower()
-setattr(Genome, "set_search_name", set_search_name)
-
 def set_sequence(self, value):
     self.sequence = value.upper()
     self.length = len(self.sequence)
 setattr(Genome, "set_sequence", set_sequence)
-
-def set_search_id(self):
-    self._search_id = basic.edit_suffix(self.id, "remove").lower()
-setattr(Genome, "set_search_id", set_search_id)
-
 
 # Genome error checks
 
@@ -233,7 +211,7 @@ def compute_status_description_error(self):
         pass
 setattr(Genome, "compute_status_description_error", compute_status_description_error)
 
-#Even though this method iterates through the cds features
+#Even though this method iterates through the CDS features
 # like the compute_status_description_error does,
 #it has to be kept separate, since you need to wait to run
 # this method after all genome and gene matching is completed.
@@ -262,7 +240,10 @@ def compute_gbk_cds_feature_errors(self):
         if cds_feature._locus_tag_missing:
             self._missing_locus_tags_tally += 1
         else:
-            pattern4 = re.compile(self._search_name)
+
+            search_name = basic.edit_suffix(self.name, "remove").lower()
+            pattern4 = re.compile(search_name)
+
             search_result = pattern4.search(cds_feature.locus_tag.lower())
 
             if search_result == None:
@@ -544,18 +525,18 @@ class MatchedGenomes:
 
             # Compare CDS features
 
-            # First find all unique start-end-orientation cds identifiers
+            # First find all unique start-end-orientation CDS identifiers
             # for MySQL and GenBank genomes.
             m_start_end_strand_id_set = set()
 
             # All end_strand ids that are not unique
             m_start_end_strand_duplicate_id_set = set()
 
-            for cds in m_cds_lst:
-                if cds._start_end_strand_id not in m_start_end_strand_id_set:
-                    m_start_end_strand_id_set.add(cds._start_end_strand_id)
+            for cds_ftr in m_cds_lst:
+                if cds_ftr._start_end_strand_id not in m_start_end_strand_id_set:
+                    m_start_end_strand_id_set.add(cds_ftr._start_end_strand_id)
                 else:
-                    m_start_end_strand_duplicate_id_set.add(cds._start_end_strand_id)
+                    m_start_end_strand_duplicate_id_set.add(cds_ftr._start_end_strand_id)
             # Remove the duplicate end_strand ids from the main id_set
             m_start_end_strand_id_set = m_start_end_strand_id_set - m_start_end_strand_duplicate_id_set
 
@@ -565,12 +546,12 @@ class MatchedGenomes:
 
             # All end_strand ids that are not unique
             g_start_end_strand_duplicate_id_set = set()
-            for cds in g_cds_list:
-                if cds._start_end_strand_id not in g_start_end_strand_id_set:
-                    g_start_end_strand_id_set.add(cds._start_end_strand_id)
+            for cds_ftr in g_cds_list:
+                if cds_ftr._start_end_strand_id not in g_start_end_strand_id_set:
+                    g_start_end_strand_id_set.add(cds_ftr._start_end_strand_id)
 
                 else:
-                    g_start_end_strand_duplicate_id_set.add(cds._start_end_strand_id)
+                    g_start_end_strand_duplicate_id_set.add(cds_ftr._start_end_strand_id)
             # Remove the duplicate end_strand ids from the main id_set
             g_start_end_strand_id_set = g_start_end_strand_id_set - g_start_end_strand_duplicate_id_set
 
@@ -586,12 +567,12 @@ class MatchedGenomes:
 
             # All end_strand ids that are not unique
             m_end_strand_duplicate_id_set = set()
-            for cds in m_cds_lst:
-                if cds._start_end_strand_id in m_unmatched_start_end_strand_id_set:
-                    if cds._end_strand_id not in m_end_strand_id_set:
-                        m_end_strand_id_set.add(cds._end_strand_id)
+            for cds_ftr in m_cds_lst:
+                if cds_ftr._start_end_strand_id in m_unmatched_start_end_strand_id_set:
+                    if cds_ftr._end_strand_id not in m_end_strand_id_set:
+                        m_end_strand_id_set.add(cds_ftr._end_strand_id)
                     else:
-                        m_end_strand_duplicate_id_set.add(cds._end_strand_id)
+                        m_end_strand_duplicate_id_set.add(cds_ftr._end_strand_id)
 
             # Remove the duplicate end_strand ids from the main id_set
             m_end_strand_id_set = m_end_strand_id_set - m_end_strand_duplicate_id_set
@@ -601,12 +582,12 @@ class MatchedGenomes:
 
             # All end_strand ids that are not unique
             g_end_strand_duplicate_id_set = set()
-            for cds in g_cds_list:
-                if cds._start_end_strand_id in g_unmatched_start_end_strand_id_set:
-                    if cds._end_strand_id not in g_end_strand_id_set:
-                        g_end_strand_id_set.add(cds._end_strand_id)
+            for cds_ftr in g_cds_list:
+                if cds_ftr._start_end_strand_id in g_unmatched_start_end_strand_id_set:
+                    if cds_ftr._end_strand_id not in g_end_strand_id_set:
+                        g_end_strand_id_set.add(cds_ftr._end_strand_id)
                     else:
-                        g_end_strand_duplicate_id_set.add(cds._end_strand_id)
+                        g_end_strand_duplicate_id_set.add(cds_ftr._end_strand_id)
 
             # Remove the duplicate end_strand ids from the main id_set
             g_end_strand_id_set = g_end_strand_id_set - g_end_strand_duplicate_id_set
@@ -616,33 +597,33 @@ class MatchedGenomes:
             imperfect_matched_cds_id_set = m_end_strand_id_set & g_end_strand_id_set
 
 
-            # Now go back through all cds features and assign
+            # Now go back through all CDS features and assign
             # to the appropriate dictionary or list.
             m_perfect_matched_cds_dict = {}
             m_imperfect_matched_cds_dict = {}
             m_unmatched_cds_list = []
 
 
-            for cds in m_cds_lst:
-                if cds._start_end_strand_id in perfect_matched_cds_id_set:
-                    m_perfect_matched_cds_dict[cds._start_end_strand_id] = cds
-                elif cds._end_strand_id in imperfect_matched_cds_id_set:
-                    m_imperfect_matched_cds_dict[cds._end_strand_id] = cds
+            for cds_ftr in m_cds_lst:
+                if cds_ftr._start_end_strand_id in perfect_matched_cds_id_set:
+                    m_perfect_matched_cds_dict[cds_ftr._start_end_strand_id] = cds_ftr
+                elif cds_ftr._end_strand_id in imperfect_matched_cds_id_set:
+                    m_imperfect_matched_cds_dict[cds_ftr._end_strand_id] = cds_ftr
                 else:
-                    m_unmatched_cds_list.append(cds)
+                    m_unmatched_cds_list.append(cds_ftr)
 
 
             g_perfect_matched_cds_dict = {}
             g_imperfect_matched_cds_dict = {}
             g_unmatched_cds_list = []
 
-            for cds in g_cds_list:
-                if cds._start_end_strand_id in perfect_matched_cds_id_set:
-                    g_perfect_matched_cds_dict[cds._start_end_strand_id] = cds
-                elif cds._end_strand_id in imperfect_matched_cds_id_set:
-                    g_imperfect_matched_cds_dict[cds._end_strand_id] = cds
+            for cds_ftr in g_cds_list:
+                if cds_ftr._start_end_strand_id in perfect_matched_cds_id_set:
+                    g_perfect_matched_cds_dict[cds_ftr._start_end_strand_id] = cds_ftr
+                elif cds_ftr._end_strand_id in imperfect_matched_cds_id_set:
+                    g_imperfect_matched_cds_dict[cds_ftr._end_strand_id] = cds_ftr
                 else:
-                    g_unmatched_cds_list.append(cds)
+                    g_unmatched_cds_list.append(cds_ftr)
 
 
             # Create MatchedCdsFeatures objects
@@ -685,20 +666,20 @@ class MatchedGenomes:
 
             # Compute unmatched error and gene total errors for
             # all unmatched features.
-            for cds in m_unmatched_cds_list:
-                cds._unmatched_error = True
-                cds.compute_total_cds_errors()
-                if cds._total_errors > 0:
+            for cds_ftr in m_unmatched_cds_list:
+                cds_ftr._unmatched_error = True
+                cds_ftr.compute_total_cds_errors()
+                if cds_ftr._total_errors > 0:
                     self._total_number_genes_with_errors += 1
 
-            for cds in g_unmatched_cds_list:
-                cds._unmatched_error = True
-                cds.compute_total_cds_errors()
-                if cds._total_errors > 0:
+            for cds_ftr in g_unmatched_cds_list:
+                cds_ftr._unmatched_error = True
+                cds_ftr.compute_total_cds_errors()
+                if cds_ftr._total_errors > 0:
                     self._total_number_genes_with_errors += 1
 
 
-            # Set unmatched cds lists
+            # Set unmatched CDS lists
             self._m_ftrs_unmatched_in_g = m_unmatched_cds_list
             self._g_ftrs_unmatched_in_m = g_unmatched_cds_list
 
@@ -713,7 +694,7 @@ class MatchedGenomes:
         # assign all MySQL genes to Unmatched.
         else:
 
-            # Set unmatched cds lists, but do NOT count them in unmatched tally.
+            # Set unmatched CDS lists, but do NOT count them in unmatched tally.
             # Unmatched tally should reflect unmatched genes if there is
             # actually a matching GenBank genome.
             self._m_ftrs_unmatched_in_g = m_cds_lst
@@ -1103,14 +1084,6 @@ class DatabaseSummary:
 
 
 
-
-
-
-
-def database_header(database, version):
-    header = f"{database}_v{version}"
-    return header
-
 def output_to_file(data_list, folder, filename):
     """Output list data to file."""
     file_path = pathlib.Path(folder, filename)
@@ -1119,22 +1092,12 @@ def output_to_file(data_list, folder, filename):
         for element in data_list:
             writer.writerow(element)
 
-def prepare_unmatched_output(unmatched_pdb, unmatched_gbk):
-    """Prepare list of unmatched data to be saved to file."""
+def prepare_unmatched_to_gbk_output(gnms):
+    """Prepare list of MySQL unmatched to GenBank data to be saved to file."""
     l = []
-    if len(unmatched_pdb) > 0:
-        l.append(["The following MySQL genomes were not matched to PhagesDB:"])
-        l.append(["PhageID", "PhageName", "Author", "Status"])
-        for gnm in unmatched_pdb:
-            l.append([gnm.id,
-                      gnm.name,
-                      gnm.annotation_author,
-                      gnm.annotation_status])
-    if len(unmatched_gbk) > 0:
-        l.append([""])
-        l.append(["The following MySQL genomes were not matched to GenBank:"])
+    if len(gnms) > 0:
         l.append(["PhageID", "PhageName", "Author", "Status", "Accession"])
-        for gnm in unmatched_gbk:
+        for gnm in gnms:
             l.append([gnm.id,
                       gnm.name,
                       gnm.annotation_author,
@@ -1142,6 +1105,17 @@ def prepare_unmatched_output(unmatched_pdb, unmatched_gbk):
                       gnm.accession])
     return l
 
+def prepare_unmatched_to_pdb_output(gnms):
+    """Prepare list of MySQL unmatched to PhagesDB data to be saved to file."""
+    l = []
+    if len(gnms) > 0:
+        l.append(["PhageID", "PhageName", "Author", "Status"])
+        for gnm in gnms:
+            l.append([gnm.id,
+                      gnm.name,
+                      gnm.annotation_author,
+                      gnm.annotation_status])
+    return l
 
 def save_seqrecord(seqrecord, output_path, file_prefix, ext, seqrecord_ext, interactive):
     """Save record to file."""
@@ -1277,7 +1251,6 @@ def main(unparsed_args_list):
     error_path.mkdir()
     records_path.mkdir()
 
-
     # Verify database connection and schema compatibility.
     print("Connecting to the MySQL database...")
     alchemist = AlchemyHandler(database=database)
@@ -1285,74 +1258,50 @@ def main(unparsed_args_list):
     engine = alchemist.engine
     mysqldb.check_schema_compatibility(engine, "the compare pipeline")
 
-    # Determine which database should be compared in addition to
-    # MySQL: PhagesDB, GenBank.
+    # Gather sets of settings to determine which types of comparison to do.
     valid_dbs = get_dbs(args.phagesdb, args.genbank)
-    selected_dbs = "Databases compared to MySQL: " + ", ".join(valid_dbs)
-
-    # Determine which type of genomes should be checked based on
-    # who annotated the genome: Hatfull or Gbk authors
     valid_authors = get_authors(args.internal_authors, args.external_authors)
-    author_str = []
-    for i in valid_authors:
-        author_str.append(str(i))
-    selected_authors =  ("Genomes with following AnnotationAuthor "
-                         "will be compared: " + ", ".join(author_str))
-
-    # Determine which types of genomes should be checked based on
-    # the annotation_status of the annotations: draft, final, unknown
-    # ncbi_credentials_file
     valid_status = get_status(args.draft, args.final, args.unknown)
-    selected_status = ("Genomes with following Annotation Status will "
-                       "be compared: " + ", ".join(valid_status))
 
-    # Get data from the MySQL database.
-    version = str(mysqldb_basic.scalar(engine, VERSION_QUERY))
-
-    file_header_list = [[FIRST_HEADER], [database_header(database, version)],
-                        [selected_status], [selected_authors], [selected_dbs]]
-
+    # Record the summary of settings for the comparison.
+    record_compare_settings(working_path, database, engine, valid_status,
+                            valid_authors, valid_dbs)
 
     pmd_tup = process_mysql_data(working_path, engine, valid_status,
-                                 valid_authors, interactive, file_header_list,
-                                 save_records)
+                                 valid_authors, interactive, save_records)
     mysql_genome_dict = pmd_tup[0]
     mysql_accessions = pmd_tup[1]
     mysql_acc_duplicates = pmd_tup[2]
 
+    set_mysql_gnm_attr(mysql_genome_dict)
+
     #Now retrieve all PhagesDB data
     if "phagesdb" in valid_dbs:
-        ppd_tup = process_phagesdb_data(working_path, interactive,
-                                        file_header_list, save_records)
+        ppd_tup = process_phagesdb_data(working_path, interactive, save_records)
         pdb_genome_dict = ppd_tup[0]
-        pdb_search_name_duplicate_set = ppd_tup[1]
+        pdb_name_duplicates = ppd_tup[1]
 
     else:
         pdb_genome_dict = {}
-        pdb_search_name_duplicate_set = set()
-
+        pdb_name_duplicates = set()
 
     #Retrieve and parse GenBank records if selected by user
     if "genbank" in valid_dbs:
         gbk_genome_dict = process_gbk_data(working_path, ncbi_credentials_file,
-                                mysql_accessions, interactive,
-                                file_header_list, save_records)
+                                mysql_accessions, interactive, save_records)
     else:
         gbk_genome_dict = {} #Key = accession; #Value = genome data
 
     # Now that all GenBank and PhagesDB data is retrieved,
     # match up to MySQL genome data.
-    match_tup = match_all_genomes(mysql_genome_dict, pdb_genome_dict, gbk_genome_dict,
-                      pdb_search_name_duplicate_set, mysql_acc_duplicates)
+    match_tup = match_all_genomes(mysql_genome_dict, pdb_genome_dict,
+                      gbk_genome_dict, pdb_name_duplicates,
+                      mysql_acc_duplicates)
     matched_genomes_list = match_tup[0]
 
     #Output unmatched data to file
-    unmatched_rows = prepare_unmatched_output(match_tup[1], match_tup[2])
-    unmatched_output = [[FIRST_HEADER], [database_header(database, version)],
-                        [selected_dbs], [selected_status], [selected_authors]]
-    unmatched_output.extend(unmatched_rows)
-    output_to_file(unmatched_output, pathlib.Path(working_path, ERROR_FOLDER),
-                   FAILED_ACC_RETRIEVE)
+    record_unmatched_pdb_data(match_tup[1], working_path)
+    record_unmatched_gbk_data(match_tup[2], working_path)
 
     # Run checks on each genome and all matched data.
     check_mysql_gnms(mysql_genome_dict)
@@ -1360,14 +1309,9 @@ def main(unparsed_args_list):
     check_gbk_gnms(gbk_genome_dict)
     check_matched_gnms(matched_genomes_list)
 
-    #Now that all individual matched_genome_objects have all computed attributes,
-    #compute database summary
-    summary_object = DatabaseSummary(matched_genomes_list)
-    summary_object.compute_summary()
-
-    #Now output results
-    output_all_data(working_path, database, version, selected_authors,
-                    selected_status, selected_dbs, summary_object)
+    # Now that all individual matched_genome_objects have all
+    # computed attributes, compute database summary.
+    summarize_data(matched_genomes_list, working_path)
 
     end_time = time.strftime("%x %X")
     print(f"Start time: {start_time}")
@@ -1376,8 +1320,34 @@ def main(unparsed_args_list):
     return
 
 
+def record_compare_settings(working_path, database, engine, valid_status,
+                            valid_authors, valid_dbs):
+    """Save user-selected settings."""
+
+    # Get data from the MySQL database.
+    version = str(mysqldb_basic.scalar(engine, VERSION_QUERY))
+
+    # Format setting strings
+    lst = [
+        ["Comparison date:", CURRENT_DATE],
+        ["MySQL database:", database],
+        ["MySQL database version:", version],
+        selected_authors_lst(valid_authors),
+        ["Databases compared to MySQL:", ", ".join(valid_dbs)],
+        ["Genomes with the following Annotation Status will be compared:",
+             ", ".join(valid_status)]
+         ]
+
+    output_to_file(lst, pathlib.Path(working_path), COMPARE_SETTINGS)
+
+def selected_authors_lst(lst1):
+    lst1 = [str(i) for i in list(lst1)]
+    lst2 =  ["Genomes with the following AnnotationAuthor will be compared:",
+             ", ".join(lst1)]
+    return lst2
+
 def process_mysql_data(working_path, engine, valid_status, valid_authors,
-                       interactive, file_header_list, save):
+                       interactive, save):
     """Retrieve and process MySQL data."""
 
     gnm_data_dict = mysqldb_basic.query_dict_list(engine, PHAGE_QUERY)
@@ -1390,8 +1360,9 @@ def process_mysql_data(working_path, engine, valid_status, valid_authors,
     accession_dupes = tup[4]
 
     if save == True:
-        save_mysql_gnms(gnm_dict, pathlib.Path(working_path, RECORD_FOLDER),
-                        MYSQL_OUTPUT, interactive)
+        print("Saving MySQL genomes to file...")
+        save_gnms_to_fasta(gnm_dict, pathlib.Path(working_path, RECORD_FOLDER),
+                           MYSQL_OUTPUT, interactive)
 
     # PhagesDB relies on the phageName, and not the phageID.
     # But the MySQL database does not require phageName values to be unique.
@@ -1401,10 +1372,7 @@ def process_mysql_data(working_path, engine, valid_status, valid_authors,
     if len(name_duplicates) > 0:
         print("Warning: There are duplicate phage names in the MySQL database.")
         print("Some MySQL genomes will not be able to be matched to PhagesDB.")
-        lst1 = [i for i in file_header_list]
-        lst1.append(["Duplicate MySQL phage names:"])
-        name_dupes = [[i] for i in list(name_duplicates)]
-        lst1.extend(name_dupes)
+        lst1 = [[i] for i in list(name_duplicates)]
         output_to_file(lst1, pathlib.Path(working_path, ERROR_FOLDER),
                        DUPLICATE_MYSQL_NAMES)
         if interactive:
@@ -1417,10 +1385,7 @@ def process_mysql_data(working_path, engine, valid_status, valid_authors,
         print("Warning: There are duplicate accessions in the MySQL database.")
         print("Some MySQL genomes will not be able to be "
               "matched to GenBank records.")
-        lst2 = [i for i in file_header_list]
-        lst2.append(["Duplicate MySQL accessions:"])
-        acc_lst = [[i] for i in list(accession_dupes)]
-        lst2.extend(acc_lst)
+        lst2 = [[i] for i in list(accession_dupes)]
         output_to_file(lst2, pathlib.Path(working_path, ERROR_FOLDER),
                        DUPLICATE_MYSQL_ACC)
         if interactive:
@@ -1452,15 +1417,14 @@ def create_mysql_gnms(list_of_dicts, valid_status, valid_authors):
             continue
         else:
             gnm = create_mysql_gnm(dict)
-            set_mysql_gnm_attr(gnm)
             gnm_dict[dict["PhageID"]] = gnm
 
             # This keeps track of whether there are duplicate phage
             # names that will be used to match up to PhagesDB data.
-            if gnm._search_name in names:
-                duplicate_names.add(gnm._search_name)
+            if gnm.id in names:
+                duplicate_names.add(gnm.id)
             else:
-                names.add(gnm._search_name)
+                names.add(gnm.id)
 
             # This keeps track of whether there are duplicate
             # accession numbers that will be used to match up to GenBank data.
@@ -1477,39 +1441,38 @@ def create_mysql_gnm(dict):
     """Create genome object from MySQL data."""
     gnm = Genome()
     gnm.type = "mysql"
-    gnm.set_phage_id(dict["PhageID"])
-    gnm.set_phage_name(dict["Name"])
+    gnm.id = dict["PhageID"]
+    gnm.name = dict["Name"]
     gnm.host_genus = dict["HostGenus"]
     gnm.set_sequence(dict["Sequence"].decode("utf-8"))
     gnm.set_accession(dict["Accession"])
     gnm.annotation_status = dict["Status"]
     gnm.set_cluster(dict["Cluster"])
     gnm.retrieve_record = dict["RetrieveRecord"]
-    gnm.set_date_last_modified(dict["DateLastModified"])
+    gnm.date = dict["DateLastModified"]
     gnm.annotation_author = dict["AnnotationAuthor"]
     return gnm
 
 
-def set_mysql_gnm_attr(gnm):
+def set_mysql_gnm_attr(gnm_dict):
     """Set compare-specific attributes not in pdm_utils Genome class."""
-    gnm.set_search_id()
-    gnm.set_search_name()
+    for key in gnm_dict.keys():
+        gnm = gnm_dict[key]
+        for cds_ftr in gnm.cds_features:
+            set_mysql_cds_attr(cds_ftr)
 
 
 
-def save_mysql_gnms(gnm_dict, main_path, new_dir, interactive):
-    """Save MySQL genome data to file."""
+def save_gnms_to_fasta(gnm_dict, main_path, new_dir, interactive):
+    """Save genome data to fasta file."""
 
     output_path = pathlib.Path(main_path, new_dir)
     output_path.mkdir()
 
     for key in gnm_dict.keys():
         gnm = gnm_dict[key]
-        name = gnm._search_name
-        fasta = SeqRecord(Seq(gnm.sequence), id=name, description="")
-        save_seqrecord(fasta, output_path, name, "fasta", "fasta", interactive)
-
-
+        fasta = SeqRecord(Seq(gnm.sequence), id=gnm.id, description="")
+        save_seqrecord(fasta, output_path, gnm.id, "fasta", "fasta", interactive)
 
 
 def get_gene_obs_list(list_of_dicts):
@@ -1519,10 +1482,8 @@ def get_gene_obs_list(list_of_dicts):
           "from the MySQL database...")
     lst = []
     for dict in list_of_dicts:
-        cds = create_mysql_cds(dict)
-        set_mysql_cds_attr(cds)
-        check_mysql_cds(cds)
-        lst.append(cds)
+        cds_ftr = create_mysql_cds(dict)
+        lst.append(cds_ftr)
     return lst
 
 
@@ -1568,13 +1529,17 @@ def check_mysql_gnms(gnm_dict):
     """Check for errors in MySQL matched genome and CDS features."""
     for id in gnm_dict.keys():
         gnm = gnm_dict[id]
+
+        for cds_ftr in gnm.cds_features:
+            check_mysql_cds(cds_ftr)
+
         gnm.check_status_accession()
         gnm.compute_nucleotide_errors(constants.DNA_ALPHABET)
         gnm.compute_cds_feature_errors()
         gnm.compute_status_description_error()
 
 
-def process_phagesdb_data(working_path, interactive, file_header_list, save):
+def process_phagesdb_data(working_path, interactive, save):
     """Retrieve data from PhagesDB and process results."""
 
     gbd_tup = get_phagesdb_data(interactive)
@@ -1583,8 +1548,9 @@ def process_phagesdb_data(working_path, interactive, file_header_list, save):
     name_dupes = gbd_tup[2]
 
     if save == True:
-        save_phagesdb_genomes(gnm_dict, pathlib.Path(working_path, RECORD_FOLDER),
-                              PHAGESDB_OUTPUT, interactive)
+        print("Saving PhagesDB genomes to file...")
+        save_gnms_to_fasta(gnm_dict, pathlib.Path(working_path, RECORD_FOLDER),
+                           PHAGESDB_OUTPUT, interactive)
 
     # PhagesDB phage names should be unique, but just make sure after
     # they are converted to a search name.
@@ -1593,10 +1559,7 @@ def process_phagesdb_data(working_path, interactive, file_header_list, save):
         print("Warning: There are duplicate phage search names in PhagesDB.")
         print("Some PhagesDB genomes will not be able to be "
               "matched to genomes in MySQL.")
-        lst = [i for i in file_header_list]
-        lst.append(["Duplicate PhagesDB phage names:"])
-        name_dupes_list = [[i] for i in list(name_dupes)]
-        lst.extend(name_dupes_list)
+        lst = [[i] for i in list(name_dupes)]
         output_to_file(lst, pathlib.Path(working_path, ERROR_FOLDER),
                        DUPLICATE_PDB_NAMES)
         if interactive:
@@ -1616,32 +1579,18 @@ def get_phagesdb_data(interactive):
     if len(data_list) > 0:
         for i in range(len(data_list)):
             gnm = create_pdb_gnm(data_list[i])
-            pdb_search_name = gnm._search_name
-            if pdb_search_name in names:
-                dupe_names.add(pdb_search_name)
+            pdb_id = gnm.id
+            if pdb_id in names:
+                dupe_names.add(pdb_id)
             else:
-                names.add(pdb_search_name)
-                gnm_dict[pdb_search_name] = gnm
+                names.add(pdb_id)
+                gnm_dict[pdb_id] = gnm
     else:
         print("Error retrieving PhagesDB data.")
         if interactive:
             input('Press ENTER to proceed')
     return gnm_dict, names, dupe_names
 
-
-
-def save_phagesdb_genomes(gnm_dict, main_path, new_dir, interactive):
-    """Save PhagesDB genomes."""
-
-    output_path = pathlib.Path(main_path, new_dir)
-    output_path.mkdir()
-
-    for key in gnm_dict.keys():
-        gnm = gnm_dict[key]
-        name = gnm._search_name
-        seq = gnm.sequence
-        fasta = SeqRecord(Seq(seq), id=name, description="")
-        save_seqrecord(fasta, output_path, name, "fasta", "fasta", interactive)
 
 
 def create_pdb_gnm(dict):
@@ -1651,8 +1600,8 @@ def create_pdb_gnm(dict):
     gnm.type = "phagesdb"
 
     #Name, Host, Accession
-    gnm.set_phage_name(dict["phage_name"])
-    gnm.set_search_name()
+    gnm.id = dict["phage_name"]
+    gnm.name = dict["phage_name"]
     gnm.host_genus = dict["isolation_host"]["genus"]
     gnm.set_accession(dict["genbank_accession"])
 
@@ -1688,8 +1637,7 @@ def check_pdb_gnms(gnm_dict):
             gnm.compute_nucleotide_errors(constants.DNA_ALPHABET)
 
 
-def process_gbk_data(working_path, creds_file, accessions,
-                     interactive, file_header_list, save):
+def process_gbk_data(working_path, creds_file, accessions, interactive, save):
     """Retrieve and process GenBank data."""
 
     if save == True:
@@ -1700,10 +1648,7 @@ def process_gbk_data(working_path, creds_file, accessions,
     records, retrieval_errors = get_genbank_data(creds, accessions)
 
     #Report the accessions that could not be retrieved.
-    lst = [i for i in file_header_list]
-    lst.append(["Accessions unable to be retrieved from GenBank:"])
-    lst.extend(retrieval_errors)
-    output_to_file(lst, pathlib.Path(working_path, ERROR_FOLDER),
+    output_to_file(retrieval_errors, pathlib.Path(working_path, ERROR_FOLDER),
                    FAILED_ACC_RETRIEVE)
 
     gnm_dict = {}
@@ -1815,11 +1760,12 @@ def create_gbk_gnm(retrieved_record):
         gnm.organism = organism
 
         # Only truncate organism name for the 'phage name' field
-        if organism.split(" ")[-1] == "Unclassified.":
-            gnm.set_phage_name(organism.split(" ")[-2])
+        if organism.split(" ")[-1].lower() == "unclassified.":
+            gnm.name = organism.split(" ")[-2]
+            gnm.id = organism.split(" ")[-2]
         else:
-            gnm.set_phage_name(organism.split(" ")[-1])
-
+            gnm.name = organism.split(" ")[-1]
+            gnm.id = organism.split(" ")[-1]
     except:
         gnm.organism = ""
 
@@ -1851,7 +1797,6 @@ def create_gbk_gnm(retrieved_record):
 
 def set_gbk_gnm_attr(gnm, retrieved_record):
     """Set compare-specific attributes not in pdm_utils Genome class."""
-    gnm.set_search_name()
     gnm.record_name = ""
     gnm.record_id = ""
 
@@ -1987,17 +1932,11 @@ def check_gbk_cds(cds_ftr):
 
 
 
-def save_gbk_genome(genome_object, record, output_path, interactive):
+def save_gbk_genome(gnm, record, output_path, interactive):
     """Save GenBank record to file."""
-
-    name_prefix = genome_object.organism.lower()
-    if name_prefix.split(" ")[-1] == "unclassified.":
-        name_prefix = name_prefix.split(" ")[-2]
-    else:
-        name_prefix = name_prefix.split(" ")[-1]
-
-    file_prefix = name_prefix + "__" + genome_object.accession
+    file_prefix = gnm.id + "__" + gnm.accession
     save_seqrecord(record, output_path, file_prefix, "gb", "genbank", interactive)
+
 
 
 def match_all_genomes(mysql_gnms, pdb_gnms, gbk_gnms, pdb_name_duplicates,
@@ -2021,20 +1960,11 @@ def match_all_genomes(mysql_gnms, pdb_gnms, gbk_gnms, pdb_name_duplicates,
         # Match up PhagesDB genome
         # First try to match up the phageID, and if that doesn't work,
         # try to match up the phageName
-        if mysql_gnm._search_id in pdb_gnms.keys():
-            pdb_genome = pdb_gnms[mysql_gnm._search_id]
+        if mysql_gnm.id in pdb_gnms.keys():
+            pdb_genome = pdb_gnms[mysql_gnm.id]
             # Make sure the pdb_genome doesn't have a search name
             # that was duplicated
-            if pdb_genome._search_name in pdb_name_duplicates:
-                pdb_genome = ""
-
-        elif mysql_gnm._search_name in pdb_gnms.keys() and not \
-            mysql_gnm._search_name in mysql_name_duplicates:
-
-            pdb_genome = pdb_gnms[mysql_gnm._search_name]
-            # Make sure the pdb_genome doesn't have a search name
-            # that was duplicated.
-            if pdb_genome._search_name in pdb_name_duplicates:
+            if pdb_genome.id in pdb_name_duplicates:
                 pdb_genome = ""
 
         else:
@@ -2063,7 +1993,17 @@ def match_all_genomes(mysql_gnms, pdb_gnms, gbk_gnms, pdb_name_duplicates,
 
     return matched_gnms, mysql_unmatched_to_pdb_gnms, mysql_unmatched_to_gbk_gnms
 
+def record_unmatched_gbk_data(gnms, working_path):
+    """Save unmatched MySQL data not matched to GenBank."""
+    lst1 = prepare_unmatched_to_gbk_output(gnms)
+    output_to_file(lst1, pathlib.Path(working_path, ERROR_FOLDER),
+                   FAILED_ACC_RETRIEVE)
 
+def record_unmatched_pdb_data(gnms, working_path):
+    """Save unmatched MySQL data not matched to PhagesDB."""
+    lst2 = prepare_unmatched_to_pdb_output(gnms)
+    output_to_file(lst2, pathlib.Path(working_path, ERROR_FOLDER),
+                   UNMATCHED_GENOMES)
 
 def check_matched_gnms(matched_gnms):
     """Compare all matched data."""
@@ -2080,30 +2020,36 @@ def check_matched_gnms(matched_gnms):
         count += 1
 
 
-def output_all_data(output_path, database, version, selected_authors,
-                    selected_status, selected_dbs, summary_object):
+
+
+
+def summarize_data(matched_genomes_list, working_path):
+    """Create summary of data and save."""
+    summary_object = DatabaseSummary(matched_genomes_list)
+    summary_object.compute_summary()
+    output_all_data(working_path, summary_object)
+
+
+
+def output_all_data(output_path, summary_object):
     """Output all analysis results."""
     print("Outputting results to file...")
 
-    gene_file_path = pathlib.Path(output_path, RESULTS_FOLDER, GENE_OUTPUT)
-    gene_report_fh = gene_file_path.open("w")
-    gene_report_writer = csv.writer(gene_report_fh)
-    gene_report_writer.writerow([FIRST_HEADER])
-    gene_report_writer.writerow([database_header(database, version)])
-    gene_report_writer.writerow([selected_authors])
-    gene_report_writer.writerow([selected_status])
-    gene_report_writer.writerow([selected_dbs])
+    cds_file_path = pathlib.Path(output_path, RESULTS_FOLDER, GENE_OUTPUT)
+    cds_fh = cds_file_path.open("w")
+    cds_writer = csv.writer(cds_fh)
+    cds_headers = create_gene_headers()
+    cds_writer.writerow(cds_headers)
 
-    gene_headers = create_gene_headers()
-    gene_report_writer.writerow(gene_headers)
+    #Create genome summary output file
+    lst1 = create_genome_summary_data(summary_object)
+    output_to_file(lst1, pathlib.Path(output_path, RESULTS_FOLDER),
+                   GNM_SUMMARY_OUTPUT)
 
-
-    #Create database summary output file
-    summary_output = [[FIRST_HEADER], [database_header(database, version)],
-                      [selected_dbs], [selected_status], [selected_authors]]
-    summary_output.extend(create_summary_data(summary_object))
-    output_to_file(summary_output, pathlib.Path(output_path, RESULTS_FOLDER),
-                   SUMMARY_OUTPUT)
+    #Create CDS summary output file
+    lst3 = create_cds_summary_data(summary_object)
+    output_to_file(lst3, pathlib.Path(output_path, RESULTS_FOLDER),
+                   CDS_SUMMARY_OUTPUT)
 
     # Now iterate through matched objects.
     # All MySQL genomes are stored in a MatchedGenomes object,
@@ -2122,15 +2068,13 @@ def output_all_data(output_path, database, version, selected_authors,
         all_ftrs = get_all_features(matched_genomes)
         for mixed_ftr in all_ftrs:
             ftr_data = create_feature_data(m_gnm, mixed_ftr)
-            gene_report_writer.writerow(ftr_data)
+            cds_writer.writerow(ftr_data)
 
-    genome_output_list = [[FIRST_HEADER], [database_header(database, version)],
-                          [selected_dbs], [selected_status], [selected_authors],
-                          create_genome_headers()]
-    genome_output_list.extend(genomes_data)
-    output_to_file(genome_output_list, pathlib.Path(output_path, RESULTS_FOLDER),
+    lst2 = [create_genome_headers()]
+    lst2.extend(genomes_data)
+    output_to_file(lst2, pathlib.Path(output_path, RESULTS_FOLDER),
                    GENOME_OUTPUT)
-    gene_report_fh.close()
+    cds_fh.close()
     return
 
 
@@ -2155,13 +2099,13 @@ def create_gene_headers():
     """Create list of column headers."""
     headers = [
         # Gene summary
-        "mysql_search_name",
+        "mysql_phage_name",
         "total_errors",
 
         # MySQL
         # General gene data
         "mysql_phage_id",
-        "mysql_search_id",
+        "mysql_phage_id",
         "mysql_type_id",
         "mysql_gene_id",
         "mysql_gene_name",
@@ -2215,8 +2159,8 @@ def create_genome_headers():
         # MySQL
         # General genome data
         "mysql_phage_name",
-        "mysql_search_id",
-        "mysql_search_name",
+        "mysql_phage_id",
+        "mysql_phage_name",
         "mysql_status",
         "mysql_cluster",
         "mysql_host",
@@ -2238,7 +2182,7 @@ def create_genome_headers():
         # PhagesDB
         # General genome data
         "pdb_phage_name",
-        "pdb_search_name",
+        "pdb_phage_name",
         "pdb_cluster",
         "pdb_subcluster",
         "pdb_host",
@@ -2251,7 +2195,7 @@ def create_genome_headers():
         # GenBank
         # General genome data
         "gbk_phage_name",
-        "gbk_search_name",
+        "gbk_phage_name",
         "gbk_record_id",
         "gbk_record_name",
         "gbk_record_accession",
@@ -2313,12 +2257,9 @@ def create_genome_headers():
     return headers
 
 
-def create_summary_fields():
-    """Create summary row ids."""
-    fields = [
-        "",
-        "Genome summary:",
-
+def create_genome_summary_fields():
+    """Create genome summary row ids."""
+    lst = [
         # Column header
         "Database comparison metric",
 
@@ -2374,12 +2315,14 @@ def create_summary_fields():
 
         # PhagesDB-GenBank checks
         "pdb_gbk_sequence_mismatch_tally",
-        "pdb_gbk_sequence_length_mismatch_tally",
+        "pdb_gbk_sequence_length_mismatch_tally"
+        ]
+    return lst
 
-        # Separate all checks that tally all genes
-        "",
-        "Gene summary:",
 
+def create_cds_summary_fields():
+    """Create CDS summary row ids."""
+    lst = [
         # Column header
         "Database comparison metric",
 
@@ -2403,109 +2346,110 @@ def create_summary_fields():
         "mysql_gbk_unmatched_mysql_features_tally",
         "mysql_gbk_unmatched_gbk_features_tally"
         ]
-
-    return fields
-
-
-def create_summary_data(summary_object):
-    """Create summary of all results."""
-    lst1 = []
-    lst1.append("")
-    lst1.append("")
-    lst1.append("tally") # Column header
-
-    # First output database summary data
-    lst1.append(summary_object._m_total_gnms_analyzed)
-    lst1.append(summary_object._m_gnms_unmatched_to_p_tally)
-    lst1.append(summary_object._m_gnms_unmatched_to_g_tally)
-    lst1.append(summary_object._total_genomes_with_errors)
-
-    # MySQL data
-    # General genome data
-    lst1.append(summary_object._m_g_update_flag_tally)
-
-    # Genome data checks
-    lst1.append(summary_object._m_gnms_with_nucleotide_errors_tally)
-    lst1.append(summary_object._m_gnms_with_translation_errors_tally)
-    lst1.append(summary_object._m_gnms_with_boundary_errors_tally)
-    lst1.append(summary_object._m_gnms_with_status_accession_error_tally)
-    lst1.append(summary_object._m_gnms_with_status_description_error_tally)
-
-    # PhagesDB data
-    # Genome data checks
-    lst1.append(summary_object._p_gnms_with_nucleotide_errors_tally)
-
-    # GenBank data
-    # Genome data checks
-    lst1.append(summary_object._g_gnms_with_description_field_errors_tally)
-    lst1.append(summary_object._g_gnms_with_nucleotide_errors_tally)
-    lst1.append(summary_object._g_gnms_with_translation_errors_tally)
-    lst1.append(summary_object._g_gnms_with_boundary_errors_tally)
-    lst1.append(summary_object._g_gnms_with_missing_locus_tags_tally)
-    lst1.append(summary_object._g_gnms_with_locus_tag_typos_tally)
+    return lst
 
 
-    # MySQL-PhagesDB checks
-    lst1.append(summary_object._m_p_seq_mismatch_tally)
-    lst1.append(summary_object._m_p_seq_length_mismatch_tally)
-    lst1.append(summary_object._m_p_cluster_mismatch_tally)
-    lst1.append(summary_object._m_p_accession_mismatch_tally)
-    lst1.append(summary_object._m_p_host_mismatch_tally)
+def create_genome_summary_data(summary_object):
+    """Create summary of all genome results."""
 
-    # MySQL-GenBank checks
-    lst1.append(summary_object._m_g_seq_mismatch_tally)
-    lst1.append(summary_object._m_g_seq_length_mismatch_tally)
-    lst1.append(summary_object._m_g_header_phage_mismatch_tally)
-    lst1.append(summary_object._m_g_header_host_mismatch_tally)
-    lst1.append(summary_object._m_g_gnms_with_author_errors_tally)
-    lst1.append(summary_object._m_g_gnms_with_imperfectly_matched_ftrs_tally)
-    lst1.append(summary_object._m_g_gnms_with_unmatched_m_ftrs_tally)
-    lst1.append(summary_object._m_g_gnms_with_unmatched_g_ftrs_tally)
-    lst1.append(summary_object._m_g_gnms_with_different_descriptions_tally)
-    lst1.append(summary_object._m_g_gnms_with_different_translations_tally)
+    lst1 = [
+        # Column header
+        "tally",
 
-    # PhagesDB-GenBank checks
-    lst1.append(summary_object._p_g_seq_mismatch_tally)
-    lst1.append(summary_object._p_g_seq_length_mismatch_tally)
+        # First output database summary data
+        summary_object._m_total_gnms_analyzed,
+        summary_object._m_gnms_unmatched_to_p_tally,
+        summary_object._m_gnms_unmatched_to_g_tally,
+        summary_object._total_genomes_with_errors,
 
+        # MySQL data
+        # General genome data
+        summary_object._m_g_update_flag_tally,
 
-    # Gene summaries
-    lst1.append("")
-    lst1.append("")
-    lst1.append("tally") # Column header
+        # Genome data checks
+        summary_object._m_gnms_with_nucleotide_errors_tally,
+        summary_object._m_gnms_with_translation_errors_tally,
+        summary_object._m_gnms_with_boundary_errors_tally,
+        summary_object._m_gnms_with_status_accession_error_tally,
+        summary_object._m_gnms_with_status_description_error_tally,
 
-    # MySQL feature
-    # Gene data checks
-    lst1.append(summary_object._m_translation_errors_tally)
-    lst1.append(summary_object._m_boundary_errors_tally)
+        # PhagesDB data
+        # Genome data checks
+        summary_object._p_gnms_with_nucleotide_errors_tally,
 
-    # GenBank feature
-    # Gene data checks
-    lst1.append(summary_object._g_translation_errors_tally)
-    lst1.append(summary_object._g_boundary_errors_tally)
-    lst1.append(summary_object._g_missing_locus_tags_tally)
-    lst1.append(summary_object._g_locus_tag_typos_tally)
-    lst1.append(summary_object._g_description_field_errors_tally)
-
-    # MySQL-GenBank checks
-    lst1.append(summary_object._m_g_different_descriptions_tally)
-    lst1.append(summary_object._m_g_different_start_sites_tally)
-    lst1.append(summary_object._m_g_different_translation_tally)
-    lst1.append(summary_object._m_g_unmatched_m_ftrs_tally)
-    lst1.append(summary_object._m_g_unmatched_g_ftrs_tally)
-
-    fields = create_summary_fields()
-    lst2 = []
-    if len(fields) == len(lst1):
-        for i in range(len(fields)):
-            lst2.append([fields[i],lst1[i]])
-    else:
-        lst2.append([("Different number of database summary metrics "
-                      "than database summary data fields.")])
-        lst2.append(["Unable to output database summary."])
-    return lst2
+        # GenBank data
+        # Genome data checks
+        summary_object._g_gnms_with_description_field_errors_tally,
+        summary_object._g_gnms_with_nucleotide_errors_tally,
+        summary_object._g_gnms_with_translation_errors_tally,
+        summary_object._g_gnms_with_boundary_errors_tally,
+        summary_object._g_gnms_with_missing_locus_tags_tally,
+        summary_object._g_gnms_with_locus_tag_typos_tally,
 
 
+        # MySQL-PhagesDB checks
+        summary_object._m_p_seq_mismatch_tally,
+        summary_object._m_p_seq_length_mismatch_tally,
+        summary_object._m_p_cluster_mismatch_tally,
+        summary_object._m_p_accession_mismatch_tally,
+        summary_object._m_p_host_mismatch_tally,
+
+        # MySQL-GenBank checks
+        summary_object._m_g_seq_mismatch_tally,
+        summary_object._m_g_seq_length_mismatch_tally,
+        summary_object._m_g_header_phage_mismatch_tally,
+        summary_object._m_g_header_host_mismatch_tally,
+        summary_object._m_g_gnms_with_author_errors_tally,
+        summary_object._m_g_gnms_with_imperfectly_matched_ftrs_tally,
+        summary_object._m_g_gnms_with_unmatched_m_ftrs_tally,
+        summary_object._m_g_gnms_with_unmatched_g_ftrs_tally,
+        summary_object._m_g_gnms_with_different_descriptions_tally,
+        summary_object._m_g_gnms_with_different_translations_tally,
+
+        # PhagesDB-GenBank checks
+        summary_object._p_g_seq_mismatch_tally,
+        summary_object._p_g_seq_length_mismatch_tally
+        ]
+
+    lst2 = create_genome_summary_fields()
+    lst3 = []
+    for i in range(len(lst2)):
+        lst3.append([lst2[i],lst1[i]])
+    return lst3
+
+
+def create_cds_summary_data(summary_object):
+    """Create summary of all CDS results."""
+    lst1 = [
+        # Column header
+        "tally",
+
+        # MySQL feature
+        # Gene data checks
+        summary_object._m_translation_errors_tally,
+        summary_object._m_boundary_errors_tally,
+
+        # GenBank feature
+        # Gene data checks
+        summary_object._g_translation_errors_tally,
+        summary_object._g_boundary_errors_tally,
+        summary_object._g_missing_locus_tags_tally,
+        summary_object._g_locus_tag_typos_tally,
+        summary_object._g_description_field_errors_tally,
+
+        # MySQL-GenBank checks
+        summary_object._m_g_different_descriptions_tally,
+        summary_object._m_g_different_start_sites_tally,
+        summary_object._m_g_different_translation_tally,
+        summary_object._m_g_unmatched_m_ftrs_tally,
+        summary_object._m_g_unmatched_g_ftrs_tally
+        ]
+
+    lst2 = create_cds_summary_fields()
+    lst3 = []
+    for i in range(len(lst2)):
+        lst3.append([lst2[i],lst1[i]])
+    return lst3
 
 
 def create_feature_data(mysql_genome, mixed_ftr):
@@ -2516,7 +2460,7 @@ def create_feature_data(mysql_genome, mixed_ftr):
     # Gene summaries
     # Add MySQL genome search name to each gene row regardless of
     # the type of CDS data (matched or unmatched).
-    lst.append(mysql_genome._search_name) # matched MySQL search name
+    lst.append(mysql_genome.id) # matched MySQL search name
     lst.append(mixed_ftr._total_errors) # total # of errors for this gene
 
     if isinstance(mixed_ftr,MatchedCdsFeatures):
@@ -2586,7 +2530,7 @@ def create_feature_data(mysql_genome, mixed_ftr):
     # MySQL-GenBank checks
     if isinstance(mixed_ftr,MatchedCdsFeatures):
 
-        # If this is a matched cds feature, both MySQL and
+        # If this is a matched CDS feature, both MySQL and
         # GenBank features should have identical unmatched_error value.
         lst.append(mixed_ftr._m_feature._unmatched_error)
 
@@ -2616,8 +2560,8 @@ def create_genome_data(matched_genomes):
     # MySQL data
     # General genome data
     lst.append(mysql_gnm.name)
-    lst.append(mysql_gnm._search_id)
-    lst.append(mysql_gnm._search_name)
+    lst.append(mysql_gnm.id)
+    lst.append(mysql_gnm.name)
     lst.append(mysql_gnm.annotation_status)
     lst.append(mysql_gnm.cluster)
     lst.append(mysql_gnm.host_genus)
@@ -2643,7 +2587,7 @@ def create_genome_data(matched_genomes):
 
         # General genome data
         lst.append(pdb_genome.name)
-        lst.append(pdb_genome._search_name)
+        lst.append(pdb_genome.name)
         lst.append(pdb_genome.cluster)
         lst.append(pdb_genome.subcluster)
         lst.append(pdb_genome.host_genus)
@@ -2662,7 +2606,7 @@ def create_genome_data(matched_genomes):
 
         # General genome data
         lst.append(gbk_gnm.name)
-        lst.append(gbk_gnm._search_name)
+        lst.append(gbk_gnm.name)
         lst.append(gbk_gnm.record_id)
         lst.append(gbk_gnm.record_name)
         lst.append(gbk_gnm.accession)
