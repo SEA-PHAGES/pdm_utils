@@ -150,6 +150,8 @@ EVAL_DESCRIPTIONS = {
     "TRNA_014": ("The tRNA feature is expected to be ~75bp long (60-100bp allowed)."),
     "TRNA_015": ("The tRNA feature is expected to end in CCA, CC, or C."),
     "TRNA_016": ("The tRNA feature is expected to have a correct orientation."),
+    "TRNA_017": ("The tRNA feature is expected to be found by at least one tRNA prediction tool."),
+    "TRNA_018": ("The tRNA feature is expected to have coordinates that match Aragorn or tRNAscan-SE."),
 
     # tmRNA feature
     "TMRNA_001": ("The tmRNA feature is expected to have an integer start coordinate > 0."),
