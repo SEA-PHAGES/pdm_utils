@@ -34,11 +34,11 @@ PRODUCT_REGEX = re.compile("tRNA-(\w+)")
 
 # Extracts amino acid and anticodon from note field for Aragorn-determinate
 # or tRNAscan-SE- determinate or indeterminate tRNAs
-NOTE_STANDARD_REGEX = re.compile("tRNA-(\w+) ?\((\w+)\)")
+NOTE_STANDARD_REGEX = re.compile("tRNA-(\w+)\s?\((\w+)\)")
 
 # Extracts amino acid possibilities and anticodon from note field for
 # Aragorn-indeterminate tRNAs
-NOTE_SPECIAL_REGEX = re.compile("tRNA-\?\((\w+)\|(\w+)\) ?\((\w+)\)")
+NOTE_SPECIAL_REGEX = re.compile("tRNA-\?\((\w+)\|(\w+)\)\s?\((\w+)\)")
 
 
 class TrnaFeature:
@@ -486,8 +486,8 @@ class TrnaFeature:
             if ah.trna_tally == 1:
                 self.aragorn_data = ah.trnas[0]
                 self.sources.add("aragorn")
-            else:
-                print(f"Aragorn found {ah.trna_tally} tRNAs in this region.")
+            # else:
+                # print(f"Aragorn found {ah.trna_tally} tRNAs in this region.")
         else:
             print("Cannot run Aragorn on 0-length sequence.")
 
@@ -511,8 +511,8 @@ class TrnaFeature:
             if th.trna_tally == 1:
                 self.trnascanse_data = th.trnas[0]
                 self.sources.add("trnascan")
-            else:
-                print(f"tRNAscan-SE found {th.trna_tally} tRNAs in this region.")
+            # else:
+                # print(f"tRNAscan-SE found {th.trna_tally} tRNAs in this region.")
         else:
             print("Cannot run tRNAscan-SE on 0-length sequence.")
 
@@ -579,7 +579,7 @@ class TrnaFeature:
         # If the regex fails to parse an anticodon using either regex, it
         # will be left as "nnn"
 
-    def set_secondary_structure(self, value):
+    def set_structure(self, value):
         """
         Set the secondary structure string so downstream users can
         easily display the predicted fold of this tRNA.
@@ -717,6 +717,59 @@ class TrnaFeature:
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
+    def check_sources(self, eval_id=None, success="correct", fail="error",
+                      eval_def=None):
+        """
+        Check that this tRNA's DNA sequence can successfully turn up
+        a tRNA when run through Aragorn and tRNAscan-SE.
+        :param eval_id: unique identifier for the evaluation
+        :type eval_id: str
+        :param success: status if the outcome is successful
+        :type success: str
+        :param fail: status if the outcome is unsuccessful
+        :type fail: str
+        :param eval_def: description of the evaluation
+        :type eval_def: str
+        :return:
+        """
+        self.run_aragorn()
+        self.run_trnascanse()
+
+        result = f"This tRNA gene's DNA sequence "
+
+        if self.sources == set():
+            # Neither program found a tRNA in this region
+            self.use = None
+            result += "does not appear to correspond to a tRNA."
+            status = fail
+        elif self.sources == {"aragorn"}:
+            # Aragorn found a tRNA in this region but tRNAscan-SE did not
+            self.use = "aragorn"
+            result += "corresponds to a tRNA in Aragorn."
+            status = success
+        elif self.sources == {"trnascan"}:
+            # tRNAscan-SE found a tRNA in this region but Aragorn did not
+            self.use = "trnascan"
+            result += "corresponds to a tRNA in tRNAscan-SE."
+            status = success
+        elif self.sources == {"aragorn", "trnascan"}:
+            # Both programs found a tRNA in this region
+            self.use = "both"
+            result += "corresponds to a tRNA in both Aragorn and tRNAscan-SE."
+            status = success
+        else:
+            # Something unexpected happened...
+            self.use = None
+            result += "gave rise to something unexpected."
+            status = fail
+            print(f"Invalid tRNA validation source in ({self.sources}).")
+
+        definition = f"Check that there is bioinformatic support for the " \
+                     f"existence of {self.id}."
+        definition = basic.join_strings([definition, eval_def])
+        self.set_eval(eval_id, definition, result, status)
+
+
     # TODO: create base feature class - this version avoids overloading
     #  built-in format()
     def check_orientation(self, fmt="fr_short", case=True, eval_id=None,
@@ -774,66 +827,54 @@ class TrnaFeature:
         :type eval_def: str
         :return:
         """
-        # Make sure self.orientation is "F"/"R"
         orientation = basic.reformat_strand(self.orientation, fmt, case)
-
-        # If Aragorn predicts a tRNA, get orientation in "F"/"R" format
-        if self.aragorn_data is not None:
-            aragorn_orient = basic.reformat_strand(
-                self.aragorn_data["Orientation"], fmt, case)
-        else:
-            aragorn_orient = None
-
-        # If tRNAscan-SE predicts a tRNA, get orientation in "F"/"R" format
-        if self.trnascanse_data is not None:
-            trnascanse_orient = basic.reformat_strand(
-                self.trnascanse_data["Orientation"], fmt, case)
-        else:
-            trnascanse_orient = None
-
         result = f"The annotated orientation '{orientation}' "
 
-        # If Aragorn and tRNAscan-SE both predict a tRNA
-        if aragorn_orient is not None and trnascanse_orient is not None:
-            # If Aragorn and tRNAscan-SE predict "F", they agree with the
-            # annotated orientation
-            if aragorn_orient == trnascanse_orient == "F":
-                result += "matches the Aragorn and tRNAscan-SE predictions."
+        if self.use == "both":
+            a_orient = basic.reformat_strand(
+                self.aragorn_data["Orientation"], fmt, case)
+            t_orient = basic.reformat_strand(
+                self.trnascanse_data["Orientation"], fmt, case)
+            if a_orient == t_orient == "F":
+                result += "matches Aragorn and tRNAscan-SE predictions."
                 status = success
-            # If Aragorn and tRNAscan-SE predict "R", they disagree with
-            # the annotated orientation
-            elif aragorn_orient == trnascanse_orient == "R":
+            elif a_orient == t_orient == "R":
                 result += "is backwards relative to Aragorn and tRNAscan-SE " \
                           "predictions."
                 status = fail
-            # If Aragorn orientation != tRNAscan-SE orientation, we can't
-            # sensibly determine whether the annotated orientation is right.
-            # I don't think I've ever seen this, but presumably it could happen
             else:
-                result += "can't be evaluated for correctness because " \
-                          "Aragorn and tRNAscan-SE disagree with each other."
+                result += "cannot be sensibly checked, as Aragorn and " \
+                          "tRNAscan-SE disagree."
                 status = "unchecked"
-        # If only Aragorn predicts a tRNA
-        elif aragorn_orient is not None:
-            # If Aragorn predicts "F" it agrees with annotated orientation
-            if aragorn_orient == "F":
+        elif self.use == "aragorn":
+            a_orient = basic.reformat_strand(
+                self.aragorn_data["Orientation"], fmt, case)
+            if a_orient == "F":
                 result += "matches the Aragorn prediction."
                 status = success
-            else:
-                result += "is backwards relative to the Aragorn prediction."
+            elif a_orient == "R":
+                result += "is backwards relative to Aragorn prediction."
                 status = fail
-        # If only tRNAscan-SE predicts a tRNA
-        elif trnascanse_orient is not None:
-            # If tRNAscan-SE predicts "F" it agrees with annotated orientation
-            if trnascanse_orient == "F":
+            else:
+                result += "cannot be sensibly checked, as Aragorn did" \
+                          "something unexpected"
+                status = "unchecked"
+        elif self.use == "trnascan":
+            t_orient = basic.reformat_strand(
+                self.trnascanse_data["Orientation"], fmt, case)
+            if t_orient == "F":
                 result += "matches the tRNAscan-SE prediction."
                 status = success
-            else:
-                result += "is backwards relative to tRNAscan-SE's prediction."
+            elif t_orient == "R":
+                result += "is backwards relative to tRNAscan-SE prediction."
                 status = fail
+            else:
+                result += "cannot be sensibly checked, as tRNAscan-SE did" \
+                          "something unexpected"
+                status = "unchecked"
         # If neither predict a tRNA, we presume the annotation is wrong.
         else:
-            result += "is at odds with expectations (no tRNA here)."
+            result += "is at odds with expectations (no tRNA)."
             status = fail
 
         definition = f"Check whether the annotated orientation for {self.id}" \
@@ -886,122 +927,83 @@ class TrnaFeature:
         :type eval_def: str
         :return:
         """
-        # Check whether Aragorn and/or tRNAscan-SE found this tRNA - convert
-        # amino acid predictions to values allowed in the database.
-        if self.aragorn_data is not None:
-            # If Aragorn found this tRNA, take its prediction
-            aragorn_aa = self.aragorn_data["AminoAcid"]
-            if aragorn_aa not in MYSQL_AMINO_ACIDS:
-                # If Aragorn isotype not in the allowed values
-                if aragorn_aa in SPECIAL_AMINO_ACIDS:
-                    # If Aragorn isotype in special, convert to allowed
-                    aragorn_aa = SPECIAL_AMINO_ACIDS[aragorn_aa]
-                else:
-                    # Else, e.g. indeterminate, use "OTHER"
-                    aragorn_aa = "OTHER"
-        else:
-            # Else Aragorn didn't find this tRNA, use None
-            aragorn_aa = None
-
-        if self.trnascanse_data is not None:
-            # If tRNAscan-SE found this tRNA, take its prediction
-            trnascanse_aa = self.trnascanse_data["AminoAcid"]
-            if trnascanse_aa not in MYSQL_AMINO_ACIDS:
-                # If tRNAscan-SE isotype not in allowed values
-                if trnascanse_aa in SPECIAL_AMINO_ACIDS:
-                    # If tRNAscan-SE isotype in special, convert to allowed
-                    trnascanse_aa = SPECIAL_AMINO_ACIDS[trnascanse_aa]
-                else:
-                    # Else, use "OTHER"
-                    trnascanse_aa = "OTHER"
-        else:
-            # Else tRNAscan-SE didn't find this tRNA, use None
-            trnascanse_aa = None
-
         result = f"The annotated isotype ({self.amino_acid}) "
 
-        # If neither program predicts a tRNA here, the annotated tRNA is
-        # seemingly not real
-        if aragorn_aa is None and trnascanse_aa is None:
-            self.use = None
+        # If both programs found a tRNA here
+        if self.use == "both":
+            # All Aragorn isotypes are valid in our database
+            a_isotype = self.aragorn_data["AminoAcid"]
+            # Some tRNAscan-SE isotypes need to be converted to allowed value
+            t_isotype = self.trnascanse_data["AminoAcid"]
+            if t_isotype not in MYSQL_AMINO_ACIDS:
+                if t_isotype in SPECIAL_AMINO_ACIDS:
+                    t_isotype = SPECIAL_AMINO_ACIDS[t_isotype]
+                else:
+                    t_isotype = "OTHER"
+            # if Aragorn and tRNAscan-SE are the same
+            if a_isotype == t_isotype == self.amino_acid:
+                result += f"is consistent with Aragorn ({a_isotype}) and " \
+                          f"tRNAscan-SE ({t_isotype})."
+                status = success
+            # if Aragorn is Met and tRNAscan-se is consistent
+            elif a_isotype == "Met" and t_isotype in ("Met", "fMet", "Ile2"):
+                if self.amino_acid in (a_isotype, t_isotype):
+                    result += f"is consistent with Aragorn ({a_isotype}) " \
+                              f"and tRNAscan-SE ({t_isotype})."
+                    status = success
+                else:
+                    result += f"is inconsistent with Aragorn ({a_isotype}) " \
+                              f"and tRNAscan-SE ({t_isotype})."
+                    status = fail
+            # if tRNAscan-SE is Sup and Aragorn is consistent
+            elif a_isotype in ("Pyl", "Stop") and t_isotype == "Sup":
+                if self.amino_acid in (a_isotype, t_isotype):
+                    result += f"is consistent with Aragorn ({a_isotype}) " \
+                              f"and tRNAscan-SE ({t_isotype})."
+                    status = success
+                else:
+                    result += f"is inconsistent with Aragorn ({a_isotype}) " \
+                              f"and tRNAscan-SE ({t_isotype})."
+                    status = fail
+            else:
+                result += f"cannot be sensibly checked because Aragorn " \
+                          f"({a_isotype}) prediction differs from " \
+                          f"tRNAscan-SE ({t_isotype})."
+                status = "unchecked"
+        # If only Aragorn found a tRNA here
+        elif self.use == "aragorn":
+            a_isotype = self.aragorn_data["AminoAcid"]
+            t_isotype = "no tRNA"
+            if a_isotype == self.amino_acid:
+                result += f"is consistent with Aragorn ({a_isotype}) and " \
+                          f"tRNAscan-SE ({t_isotype})."
+                status = success
+            else:
+                result += f"is inconsistent with Aragorn ({a_isotype}) " \
+                          f"and tRNAscan-SE ({t_isotype})."
+                status = fail
+        # If only tRNAscan-SE found a tRNA here
+        elif self.use == "trnascan":
+            a_isotype = "no tRNA"
+            t_isotype = self.trnascanse_data["AminoAcid"]
+            if t_isotype not in MYSQL_AMINO_ACIDS:
+                if t_isotype in SPECIAL_AMINO_ACIDS:
+                    t_isotype = SPECIAL_AMINO_ACIDS[t_isotype]
+                else:
+                    t_isotype = "OTHER"
+            if t_isotype == self.amino_acid:
+                result += f"is consistent with Aragorn ({a_isotype}) and " \
+                          f"tRNAscan-SE ({t_isotype})."
+                status = success
+            else:
+                result += f"is inconsistent with Aragorn ({a_isotype}) " \
+                          f"and tRNAscan-SE ({t_isotype})."
+                status = fail
+        # If neither program found a tRNA here
+        else:
             result += "is inconsistent with Aragorn (no tRNA) and " \
                       "tRNAscan-SE (no tRNA)."
             status = fail
-
-        # Else if only Aragorn predicts a tRNA, use its data
-        elif aragorn_aa is not None and trnascanse_aa is None:
-            expect = aragorn_aa
-            self.use = "aragorn"
-            if self.amino_acid == expect:
-                result += f"is consistent with Aragorn ({expect}) and " \
-                          f"tRNAscan-SE (no tRNA)."
-                status = success
-            else:
-                result += f"is inconsistent with Aragorn ({expect}) and " \
-                          f"tRNAscan-SE (no tRNA)."
-                status = fail
-
-        # Else if only tRNAscan-SE predicts a tRNA, use its data
-        elif aragorn_aa is None and trnascanse_aa is not None:
-            expect = trnascanse_aa
-            self.use = "trnascanse"
-            if self.amino_acid == expect:
-                result += f"is consistent with Aragorn (no tRNA) and " \
-                          f"tRNAscan-SE ({expect})."
-                status = success
-            else:
-                result += f"is inconsistent with Aragorn (no tRNA) and " \
-                          f"tRNAscan-SE ({expect})."
-                status = fail
-
-        # Else, both programs must predict the tRNA, and we need to do some
-        # work to figure out which program sets expectations.
-        else:
-            # Most commonly, the two predictions will match - use Aragorn
-            if aragorn_aa == trnascanse_aa:
-                expect = aragorn_aa
-                self.use = "aragorn"
-                if self.amino_acid == expect:
-                    result += f"is consistent with Aragorn ({expect}) " \
-                              f"and tRNAscan-SE ({trnascanse_aa})."
-                    status = success
-                else:
-                    result += f"is inconsistent with Aragorn ({expect}) " \
-                              f"and tRNAscan-SE ({trnascanse_aa})."
-                    status = fail
-            # If they don't match, and tRNAscan-SE is a suppressor, use
-            # Aragorn because it will be more specific (e.g. Pyl)
-            elif trnascanse_aa == "Sup":
-                expect = aragorn_aa
-                self.use = "aragorn"
-                if self.amino_acid == expect:
-                    result += f"is consistent with Aragorn ({expect}) and " \
-                              f"tRNAscan-SE (Sup)."
-                    status = success
-                else:
-                    result += f"is inconsistent with Aragorn ({expect}) and " \
-                              f"tRNAscan-SE (Sup)."
-                    status = fail
-            # If they don't match, and Aragorn is a Met, use tRNAscan-SE
-            # because it will be more specific (CM-based: Ile2, fMet, Met)
-            elif aragorn_aa == "Met":
-                expect = trnascanse_aa
-                self.use = "trnascanse"
-                if self.amino_acid == expect:
-                    result += f"is consistent with Aragorn (Met) and " \
-                              f"tRNAscan-SE ({expect})."
-                    status = success
-                else:
-                    result += f"is inconsistent with Aragorn (Met) and " \
-                              f"tRNAscan-SE ({expect})."
-                    status = fail
-            # Else they don't match, so we have no basis to set the expectation
-            else:
-                self.use = None
-                result += f"cannot be sensibly checked because Aragorn " \
-                          f"({aragorn_aa}) prediction differs from " \
-                          f"tRNAscan-SE ({trnascanse_aa})."
-                status = "unchecked"
 
         definition = f"Check that the annotated amino acid is consistent " \
                      f"with the prediction(s) made by Aragorn and/or " \
@@ -1067,34 +1069,53 @@ class TrnaFeature:
         :type eval_def: str
         :return:
         """
-        if self.aragorn_data is not None:
-            aragorn_anticodon = self.aragorn_data["Anticodon"]
-        else:
-            aragorn_anticodon = None
-        if self.trnascanse_data is not None:
-            trnascanse_anticodon = self.trnascanse_data["Anticodon"]
-        else:
-            trnascanse_anticodon = None
+        result = f"The anticodon '{self.anticodon}' "
 
-        result = f"The anticodon '{self.anticodon}' is "
-        if self.use == "aragorn":
-            if self.anticodon == aragorn_anticodon:
-                result += "consistent with the Aragorn prediction."
+        # If both programs found a tRNA here
+        if self.use == "both":
+            a_anti = self.aragorn_data["Anticodon"]
+            t_anti = self.trnascanse_data["Anticodon"]
+            if a_anti == t_anti == self.anticodon:
+                result += f"is consistent with Aragorn ({a_anti}) and " \
+                          f"tRNAscan-SE ({t_anti})."
+                status = success
+            elif a_anti == t_anti != self.anticodon:
+                result += f"is inconsistent with Aragorn ({a_anti}) and " \
+                          f"tRNAscan-SE ({t_anti})."
+                status = fail
+            else:
+                result += f"cannot be sensibly checked because Aragorn " \
+                          f"({a_anti}) prediction differs from tRNAscan-SE " \
+                          f"({t_anti})."
+                status = "unchecked"
+        # If only Aragorn found a tRNA here
+        elif self.use == "aragorn":
+            a_anti = self.aragorn_data["Anticodon"]
+            t_anti = "no tRNA"
+            if a_anti == self.anticodon:
+                result += f"is consistent with Aragorn ({a_anti}) and " \
+                          f"tRNAscan-SE ({t_anti})."
                 status = success
             else:
-                result += f"inconsistent with the Aragorn prediction (" \
-                          f"{aragorn_anticodon})."
+                result += f"is inconsistent with Aragorn ({a_anti}) and " \
+                          f"tRNAscan-SE ({t_anti})."
                 status = fail
-        elif self.use == "trnascanse":
-            if self.anticodon == trnascanse_anticodon:
-                result += "consistent with the tRNAscan-SE preidction."
+        # If only tRNAscan-SE found a tRNA here
+        elif self.use == "trnascan":
+            a_anti = "no tRNA"
+            t_anti = self.trnascanse_data["Anticodon"]
+            if t_anti == self.anticodon:
+                result += f"is consistent with Aragorn ({a_anti}) and " \
+                          f"tRNAscan-SE ({t_anti})."
                 status = success
             else:
-                result += f"inconsistent with the tRNAscan-SE prediction (" \
-                          f"{trnascanse_anticodon})."
+                result += f"is inconsistent with Aragorn ({a_anti}) and " \
+                          f"tRNAscan-SE ({t_anti})."
                 status = fail
+        # If neither program found a tRNA here
         else:
-            result += "at odds with Aragorn and tRNAscan-SE (NO tRNA HERE)."
+            result += "is inconsistent with Aragorn (no tRNA) and " \
+                      "tRNAscan-SE (no tRNA)."
             status = fail
 
         definition = f"Check that the annotated anticodon agrees with the " \
@@ -1232,7 +1253,7 @@ class TrnaFeature:
         """
         Checks that the tRNA is in the expected range of lengths. The
         average tRNA gene is 70-90bp in length, but it is not uncommon
-        to identify high-scoring tRNAs in the 60-100bp range.
+        to identify well-scoring tRNAs in the 60-100bp range.
         :param eval_id: unique identifier for the evaluation
         :type eval_id: str
         :param success: status if the outcome is successful
@@ -1256,6 +1277,64 @@ class TrnaFeature:
 
         definition = f"Check if the tRNA length is in the expected range " \
                      f"for {self.id}."
+        definition = basic.join_strings([definition, eval_def])
+        self.set_eval(eval_id, definition, result, status)
+
+    def check_coordinates(self, eval_id=None, success="correct", fail="error",
+                          eval_def=None):
+        """
+
+        :param eval_id: unique identifier for the evaluation
+        :type eval_id: str
+        :param success: status if the outcome is successful
+        :type success: str
+        :param fail: status if the outcome is unsuccessful
+        :type fail: str
+        :param eval_def: description of the evaluation
+        :type eval_def: str
+        :return:
+        """
+        result = f"The tRNA coordinates ({self.start}, {self.stop}) "
+
+        # We'll use Aragorn by default when available
+        if self.use == "both" or self.use == "aragorn":
+            a_start = self.aragorn_data["Start"]
+            a_stop = self.aragorn_data["Stop"]
+            if a_start == 0 and a_stop == self.length:
+                self.structure = self.aragorn_data["Structure"]
+                result += "appear to be correct."
+                status = success
+            else:
+                start_offset = a_start
+                stop_offset = self.length - a_stop
+                self.structure = "." * start_offset + self.aragorn_data["Structure"][:stop_offset]
+                result += f"differ from the Aragorn prediction (" \
+                          f"{self.start + start_offset + 1}, " \
+                          f"{self.stop - stop_offset})."
+                status = fail
+        # Use tRNAscan-SE if that's all we've got
+        elif self.use == "trnascan":
+            t_start = self.trnascanse_data["Start"]
+            t_stop = self.trnascanse_data["Stop"]
+            if t_start == 0 and t_stop == self.length:
+                self.structure = self.trnascanse_data["Structure"]
+                result += "appear to be correct."
+                status = success
+            else:
+                start_offset = t_start
+                stop_offset = self.length - t_stop
+                self.structure = "." * start_offset + self.trnascanse_data["Structure"][:stop_offset]
+                result += f"differ from the tRNAscan-SE prediction (" \
+                          f"{self.start + start_offset + 1}, " \
+                          f"{self.stop - stop_offset})."
+                status = fail
+        else:
+            result += f"should be investigated - neither Aragorn nor " \
+                      f"tRNAscan-SE identify a tRNA in this position."
+            status = fail
+
+        definition = f"Check if the tRNA coordinates appear to match the " \
+                     f"Aragorn or tRNAscan-SE prediction(s) for {self.id}."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
