@@ -1811,15 +1811,27 @@ def check_trna(trna_ftr, eval_flags):
     # if check_trna flag is set, we should run Aragorn and tRNAscan-SE to
     # validate the correctness of the annotation
     if eval_flags["check_trna"]:
+        # 1. check_sources
+        trna_ftr.check_sources(
+            eval_id="TRNA_017", fail="warning", eval_def=EDD["TRNA_017"])
+        # 2. check_amino_acid_correct
         trna_ftr.check_amino_acid_correct(
-            eval_id="TRNA_011", eval_def=EDD["TRNA_011"])
+            eval_id="TRNA_011", fail="warning", eval_def=EDD["TRNA_011"])
+        # 3. check_anticodon_correct
         trna_ftr.check_anticodon_correct(
-            eval_id="TRNA_013", eval_def=EDD["TRNA_013"])
-        trna_ftr.check_length(eval_id="TRNA_014", eval_def=EDD["TRNA_014"])
+            eval_id="TRNA_013", fail="warning", eval_def=EDD["TRNA_013"])
+        # 4. check_length
+        trna_ftr.check_length(
+            eval_id="TRNA_014", fail="warning", eval_def=EDD["TRNA_014"])
+        # 5. check_coordinates
+        trna_ftr.check_coordinates(
+            eval_id="TRNA_018", fail="warning", eval_def=EDD["TRNA_018"])
+        # 6. check_orientation_correct
+        trna_ftr.check_orientation_correct(
+            eval_id="TRNA_016", fail="warning", eval_def=EDD["TRNA_016"])
+        # 7. check_terminal_nucleotides
         trna_ftr.check_terminal_nucleotides(
             eval_id="TRNA_015", fail="warning", eval_def=EDD["TRNA_015"])
-        trna_ftr.check_orientation_correct(
-            eval_id="TRNA_016", eval_def=EDD["TRNA_016"])
 
 
 def check_tmrna(tmrna_ftr, eval_flags):
@@ -1862,13 +1874,14 @@ def check_tmrna(tmrna_ftr, eval_flags):
         tmrna_ftr.check_compatible_gene_and_locus_tag(
             eval_id="TMRNA_009", fail="warning", eval_def=EDD["TMRNA_009"])
 
+    tmrna_ftr.check_peptide_tag_valid(
+        eval_id="TMRNA_010", eval_def=EDD["TMRNA_010"])
+
     if eval_flags["check_tmrna"]:
-        tmrna_ftr.check_peptide_tag_valid(
-            eval_id="TMRNA_010", eval_def=EDD["TMRNA_010"])
         tmrna_ftr.check_peptide_tag_correct(
-            eval_id="TMRNA_011", eval_def=EDD["TMRNA_011"])
+            eval_id="TMRNA_011", fail="warning", eval_def=EDD["TMRNA_011"])
         tmrna_ftr.check_orientation_correct(
-            eval_id="TMRNA_012", eval_def=EDD["TMRNA_012"])
+            eval_id="TMRNA_012", fail="warning", eval_def=EDD["TMRNA_012"])
 
 
 def import_into_db(bndl, engine=None, gnm_key="", prod_run=False):

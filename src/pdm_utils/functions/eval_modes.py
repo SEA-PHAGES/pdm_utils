@@ -66,16 +66,12 @@ def get_eval_flag_dict(eval_mode):
     # Manual annotations.
     elif eval_mode == "final":
         dict["import_locus_tag"] = False
-        dict["check_trna"] = True
-        dict["check_tmrna"] = True
 
     # SEA-PHAGES GenBank records.
     elif eval_mode == "auto":
         dict["check_locus_tag"] = False
         dict["check_description_field"] = False
         dict["check_replace"] = False
-        dict["check_trna"] = True
-        dict["check_tmrna"] = True
         dict["check_id_typo"] = False
         dict["check_host_typo"] = False
         dict["check_author"] = False

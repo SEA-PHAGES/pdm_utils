@@ -541,14 +541,6 @@ def parse_genome_data(seqrecord, filepath=pathlib.Path(),
             trna_ftr.set_nucleotide_length(use_seq=True)
             trna_ftr.parse_amino_acid()
             trna_ftr.parse_anticodon()
-            trna_ftr.run_aragorn()
-            trna_ftr.run_trnascanse()
-            if len(trna_ftr.sources) > 0:
-                if "aragorn" in trna_ftr.sources:
-                    structure = trna_ftr.aragorn_data["Structure"]
-                else:
-                    structure = trna_ftr.trnascanse_data["Structure"]
-                trna_ftr.set_secondary_structure(structure)
             trna_list.append(trna_ftr)
 
     # TODO unit test after functions are constructed.
