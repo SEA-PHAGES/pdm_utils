@@ -104,7 +104,7 @@ class TRNAscanSEHandler:
             trna_data["Start"] = start
             trna_data["Stop"] = stop
             trna_data["AminoAcid"] = amino_acid
-            trna_data["Anticodon"] = anticodon.upper()
+            trna_data["Anticodon"] = anticodon.lower()
             trna_data["Sequence"] = sequence
             trna_data["Structure"] = structure
 

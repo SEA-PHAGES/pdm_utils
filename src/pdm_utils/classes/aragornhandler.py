@@ -78,7 +78,7 @@ class AragornHandler:
         """
         # values:        orient,  start, stop,            peptide tag
         # indices:          0       1     2                    3
-        re_str = "tmRNA\s+(\w+)?\[(\d+),(\d+)\]\s+\d+,\d+\s+([\w*]*)"
+        re_str = "tmRNA\s+(\w+)?\[(\d+),(\d+)\]\s+\d+,\d+\s+([\w|*]*)"
         regex = re.compile(re_str, re.MULTILINE | re.DOTALL)
 
         tmrnas = regex.findall(self.out_str)
@@ -91,7 +91,7 @@ class AragornHandler:
             self.tmrna_tally += 1
 
             # If no complement character found, forward orientation
-            if tmrna[0] is None:
+            if tmrna[0] == "":
                 orientation = "forward"
             else:
                 orientation = "reverse"
@@ -143,7 +143,7 @@ class AragornHandler:
             amino_acid = trna[0]
 
             # If no complement character found, forward orientation
-            if trna[1] is None:
+            if trna[1] == "":
                 orientation = "forward"
             else:
                 orientation = "reverse"
@@ -168,7 +168,7 @@ class AragornHandler:
             trna_data["Start"] = start
             trna_data["Stop"] = stop
             trna_data["AminoAcid"] = amino_acid
-            trna_data["Anticodon"] = anticodon.upper()
+            trna_data["Anticodon"] = anticodon.lower()
             trna_data["Sequence"] = sequence
             trna_data["Structure"] = structure
 
@@ -220,7 +220,7 @@ class AragornHandler:
             trna_data["Start"] = start
             trna_data["Stop"] = stop
             trna_data["AminoAcid"] = amino_acid
-            trna_data["Anticodon"] = anticodon.upper()
+            trna_data["Anticodon"] = anticodon.lower()
             trna_data["Sequence"] = sequence
             trna_data["Structure"] = structure
 

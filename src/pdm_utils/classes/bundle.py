@@ -211,11 +211,15 @@ class Bundle:
                     if evl.status == "error":
                         self._errors += 1
 
-            # TODO need to implement this once this class is implemented.
-            # for trna_ftr in gnm.trna_features:
-            #     for evl in trna_ftr.evaluations:
-            #         if evl.status == "error":
-            #             self._errors += 1
+            for trna_ftr in gnm.trna_features:
+                for evl in trna_ftr.evaluations:
+                    if evl.status == "error":
+                        self._errors += 1
+
+            for tmrna_ftr in gnm.tmrna_features:
+                for evl in tmrna_ftr.evaluations:
+                    if evl.status == "error":
+                        self._errors += 1
 
         for key in self.genome_pair_dict.keys():
             genome_pair = self.genome_pair_dict[key]
@@ -256,9 +260,15 @@ class Bundle:
                 cds_key = "cds_" + cds_ftr.id
                 if len(cds_ftr.evaluations) > 0:
                     eval_dict[cds_key] = cds_ftr.evaluations
+            for trna_ftr in gnm.trna_features:
+                trna_key = "trna_" + trna_ftr.id
+                if len(trna_ftr.evaluations) > 0:
+                    eval_dict[trna_key] = trna_ftr.evaluations
 
-            # TODO get evaluations for trna and tmrna features
-
+            for tmrna_ftr in gnm.tmrna_features:
+                tmrna_key = "tmrna_" + tmrna_ftr.id
+                if len(tmrna_ftr.evaluations) > 0:
+                    eval_dict[tmrna_key] = tmrna_ftr.evaluations
 
         for key in self.genome_pair_dict.keys():
             genome_pair = self.genome_pair_dict[key]

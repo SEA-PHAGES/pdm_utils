@@ -26,7 +26,6 @@ pfx5 = "The new and old genomes are expected to have"
 pfx6 = "The bundled data is expected to contain"
 
 EVAL_DESCRIPTIONS = {
-
     # Target genome to import
     "GNM_001": (f"{pfx1} cannot have a PhageID {sfx1} or is ''"),
     "GNM_002": (f"{pfx1} cannot have a Name {sfx1} or is ''."),
@@ -81,8 +80,6 @@ EVAL_DESCRIPTIONS = {
     "BNDL_006": (f"{pfx6} paired genome data from a file and from a MySQL database."),
     "BNDL_007": (f"MySQL statements generated from the bundled data are expected to be successfully executed in a MySQL database."),
 
-
-
     # Import ticket
     "TKT_001": ("The import ticket is expected to have a unique TicketID."),
     "TKT_002": ("The import ticket is expected to have a unique PhageID."),
@@ -119,7 +116,6 @@ EVAL_DESCRIPTIONS = {
     "CDS_013": ("The CDS feature is expected to have an integer stop coordinate > 0."),
     "CDS_014": ("The CDS feature is expected to be composed of 1 or more parts."),
 
-
     # Paired genomes
     "GP_001": (f"{pfx5} the same PhageID."),
     "GP_002": (f"{pfx5} the same Nucleotide Sequence."),
@@ -137,10 +133,37 @@ EVAL_DESCRIPTIONS = {
     "GP_014": (f"{pfx5} the same Annotation Status."),
     "GP_015": (f"{pfx5} the same Accession."),
 
+    # tRNA feature
+    "TRNA_001": ("The tRNA feature is expected to have an integer start coordinate > 0."),
+    "TRNA_002": ("The tRNA feature is expected to have an integer stop coordinate > 0."),
+    "TRNA_003": ("The tRNA feature is expected to be composed of just 1 part."),
+    "TRNA_004": ("The tRNA feature's orientation is expected to be either F or R."),
+    "TRNA_005": ("The tRNA feature is expected to have a Locus Tag qualifier."),
+    "TRNA_006": ("The tRNA feature is not expected to have any PhageID typos in the Locus Tag qualifier."),
+    "TRNA_007": ("The tRNA feature is expected to have a Gene qualifier."),
+    "TRNA_008": ("The tRNA feature's Gene qualifier is expected to be an integer."),
+    "TRNA_009": ("The tRNA feature is expected to have the same integer in the Gene and Locus Tag qualifiers."),
+    "TRNA_010": ("The tRNA feature is expected to have a valid isotype (amino acid) prediction."),
+    "TRNA_011": ("The tRNA feature is expected to have a correct isotype (amino acid) prediction."),
+    "TRNA_012": ("The tRNA feature is expected to have a valid anticodon prediction."),
+    "TRNA_013": ("The tRNA feature is expected to have a correct anticodon prediction."),
+    "TRNA_014": ("The tRNA feature is expected to be ~75bp long (60-100bp allowed)."),
+    "TRNA_015": ("The tRNA feature is expected to end in CCA, CC, or C."),
+    "TRNA_016": ("The tRNA feature is expected to have a correct orientation."),
+    "TRNA_017": ("The tRNA feature is expected to be found by at least one tRNA prediction tool."),
+    "TRNA_018": ("The tRNA feature is expected to have coordinates that match Aragorn or tRNAscan-SE."),
 
-    # TODO add Trna feature
-
-    # TODO add Tmrna feature
-
-
+    # tmRNA feature
+    "TMRNA_001": ("The tmRNA feature is expected to have an integer start coordinate > 0."),
+    "TMRNA_002": ("The tmRNA feature is expected to have an integer stop coordinate > 0."),
+    "TMRNA_003": ("The tmRNA feature is expected to be composed of just 1 part."),
+    "TMRNA_004": ("The tmRNA feature's orientation is expected to be either F or R."),
+    "TMRNA_005": ("The tmRNA feature is expected to have a Locus Tag qualifier."),
+    "TMRNA_006": ("The tmRNA feature is not expected to have any PhageID typos in the Locus Tag qualifier."),
+    "TMRNA_007": ("The tmRNA feature is expected to have a Gene qualifier."),
+    "TMRNA_008": ("The tmRNA feature's Gene qualifier is expected to be an integer."),
+    "TMRNA_009": ("The tmRNA feature is expected to have the same integer in the Gene and Locus Tag qualifiers."),
+    "TMRNA_010": ("The tmRNA feature is expected to have a peptide tag prediction."),
+    "TMRNA_011": ("The tmRNA feature is expected to have a correct peptide tag prediction."),
+    "TMRNA_012": ("The tmRNA feature is expected to have a correct orientation."),
 }

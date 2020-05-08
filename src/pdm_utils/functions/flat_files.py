@@ -8,12 +8,11 @@ from Bio import Alphabet
 from Bio.Alphabet import IUPAC
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
-from pdm_utils.classes import genome, cds, trna, source
+from pdm_utils.classes import genome, cds, trna, tmrna, source
 from pdm_utils.functions import basic
 from pdm_utils.constants import constants
 from datetime import datetime
 from pdm_utils.classes import genomepair
-
 
 
 def retrieve_genome_data(filepath):
@@ -193,6 +192,107 @@ def parse_cds_seqfeature(seqfeature):
 
     cds_ftr.set_name()
     return cds_ftr
+
+
+# TODO: Christian unit test
+def parse_trna_seqfeature(seqfeature):
+    """
+    Parse data from a Biopython tRNA SeqFeature object into a
+    TrnaFeature object.
+    :param seqfeature: Biopython SeqFeature
+    :type seqfeature: SeqFeature
+    :returns: a pdm_utils TrnaFeature object
+    :rtype: TrnaFeature
+    """
+    trna_ftr = trna.TrnaFeature()
+    trna_ftr.seqfeature = seqfeature
+
+    try:
+        locus_tag = seqfeature.qualifiers["locus_tag"][0]
+    except (KeyError, IndexError):
+        locus_tag = ""
+    finally:
+        trna_ftr.set_locus_tag(locus_tag, delimiter=None)
+
+    trna_ftr.set_orientation(seqfeature.strand, "fr_short", True)
+    trna_ftr.start, trna_ftr.stop, trna_ftr.parts = parse_coordinates(seqfeature)
+
+    # Coordinate format for GenBank flat file features parsed by Biopython
+    # are 0-based half open intervals.
+    trna_ftr.coordinate_format = "0_half_open"
+
+    trna_ftr.set_nucleotide_length(use_seq=True)
+
+    try:
+        product = seqfeature.qualifiers["product"][0]
+    except (KeyError, IndexError):
+        product = ""
+    finally:
+        trna_ftr.product = product
+
+    try:
+        note = seqfeature.qualifiers["note"][0]
+    except (KeyError, IndexError):
+        note = ""
+    finally:
+        trna_ftr.note = note
+
+    try:
+        gene = seqfeature.qualifiers["gene"][0]
+    except (KeyError, IndexError):
+        gene = ""
+    finally:
+        trna_ftr.gene = gene
+
+    trna_ftr.set_name()
+    return trna_ftr
+
+
+# TODO: Christian unit test
+def parse_tmrna_seqfeature(seqfeature):
+    """
+    Parses data from a BioPython tmRNA SeqFeature object into a
+    TmrnaFeature object.
+    :param seqfeature: BioPython SeqFeature
+    :type seqfeature: SeqFeature
+    :return: pdm_utils TmrnaFeature object
+    :rtype: TmrnaFeature
+    """
+    tmrna_ftr = tmrna.TmrnaFeature()
+    tmrna_ftr.seqfeature = seqfeature
+
+    try:
+        locus_tag = seqfeature.qualifiers["locus_tag"][0]
+    except (KeyError, IndexError):
+        locus_tag = ""
+    finally:
+        tmrna_ftr.set_locus_tag(locus_tag, delimiter=None)
+
+    tmrna_ftr.set_orientation(seqfeature.strand, "fr_short", True)
+    tmrna_ftr.start, tmrna_ftr.stop, tmrna_ftr.parts = parse_coordinates(seqfeature)
+
+    # Coordinate format for GenBank flat file features parsed by Biopython
+    # are 0-based half open intervals.
+    tmrna_ftr.coordinate_format = "0_half_open"
+
+    tmrna_ftr.set_nucleotide_length(use_seq=True)
+
+    try:
+        note = seqfeature.qualifiers["note"][0]
+    except (KeyError, IndexError):
+        note = ""
+    finally:
+        tmrna_ftr.note = note
+
+    try:
+        gene = seqfeature.qualifiers["gene"][0]
+    except (KeyError, IndexError):
+        gene = ""
+    finally:
+        tmrna_ftr.gene = gene
+
+    tmrna_ftr.set_name()
+    return tmrna_ftr
 
 
 def parse_source_seqfeature(seqfeature):
@@ -435,27 +535,40 @@ def parse_genome_data(seqrecord, filepath=pathlib.Path(),
     if "tRNA" in seqfeature_dict.keys():
         for seqfeature in seqfeature_dict["tRNA"]:
             trna_ftr = parse_trna_seqfeature(seqfeature)
+            trna_ftr.genome_id = gnm.id
+            trna_ftr.genome_length = gnm.length
+            trna_ftr.set_nucleotide_sequence(parent_genome_seq=gnm.seq)
+            trna_ftr.set_nucleotide_length(use_seq=True)
+            trna_ftr.parse_amino_acid()
+            trna_ftr.parse_anticodon()
             trna_list.append(trna_ftr)
 
     # TODO unit test after functions are constructed.
     tmrna_list = []
-    if "tmrna" in seqfeature_dict.keys():
-        for seqfeature in seqfeature_dict["tmrna"]:
-            tmrna = parse_tmrna_seqfeature(seqfeature)
-            tmrna_list.append(tmrna)
+    if "tmRNA" in seqfeature_dict.keys():
+        for seqfeature in seqfeature_dict["tmRNA"]:
+            tmrna_ftr = parse_tmrna_seqfeature(seqfeature)
+            tmrna_ftr.genome_id = gnm.id
+            tmrna_ftr.genome_length = gnm.length
+            tmrna_ftr.set_nucleotide_sequence(parent_genome_seq=gnm.seq)
+            tmrna_ftr.set_nucleotide_length(use_seq=True)
+            tmrna_ftr.parse_peptide_tag()
+            tmrna_ftr.run_aragorn()
+            tmrna_list.append(tmrna_ftr)
 
     gnm.translation_table = translation_table
     gnm.set_cds_features(cds_list)
     gnm.set_source_features(source_list)
     gnm.set_trna_features(trna_list)
-    # gnm.set_tmrna_features(tmrna_list)
+    gnm.set_tmrna_features(tmrna_list)
 
     # The Cds.id is constructed from the Genome.id and the Cds order.
     gnm.set_feature_ids(use_type=True, use_cds=True)
     gnm.set_feature_ids(use_type=True, use_source=True)
 
     # TODO set tRNA feature ids.
-    #gnm.set_feature_ids(use_type=True, use_trna=True)
+    gnm.set_feature_ids(use_type=True, use_trna=True)
+    gnm.set_feature_ids(use_type=True, use_tmrna=True)
     return gnm
 
 
@@ -594,24 +707,6 @@ def get_seqrecord_annotations_comments(phage_genome):
 
     return (cluster_comment, auto_generated_comment,\
             annotation_status_comment, retrieval_value)
-
-
-# TODO need to implement. Christian is developing tRNA object.
-# TODO unit test.
-def parse_trna_seqfeature(seqfeature):
-    """Parses a Biopython tRNA SeqFeature and returns a pdm_utils Trna object.
-    """
-    trna_ftr = ""
-    return trna_ftr
-
-
-# TODO need to implement. Christian is developing tRNA object.
-# TODO unit test.
-def parse_tmrna_seqfeature(seqfeature):
-    """Parses a Biopython tRNA SeqFeature and returns a pdm_utils Tmrna object.
-    """
-    tmrna = ""
-    return tmrna
 
 
 def create_fasta_seqrecord(header, sequence_string):

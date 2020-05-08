@@ -13,6 +13,12 @@ from pdm_utils.classes.aragornhandler import AragornHandler
 from pdm_utils.classes.trnascansehandler import TRNAscanSEHandler
 from pdm_utils.functions import basic
 
+# Amino acids that we allow in the database
+MYSQL_AMINO_ACIDS = {"Ala", "Arg", "Asn", "Asp", "Cys", "fMet", "Gln", "Glu",
+                     "Gly", "His", "Ile", "Ile2", "Leu", "Lys", "Met", "Phe",
+                     "Pro", "Pyl", "SeC", "Ser", "Stop", "Thr", "Trp", "Tyr",
+                     "Val", "OTHER"}
+
 # Amino acids that Genbank allows in the product field
 GENBANK_AMINO_ACIDS = {"Ala", "Arg", "Asn", "Asp", "Cys", "Gln", "Glu", "Gly",
                        "His", "Ile", "Leu", "Lys", "Met", "Phe", "Pro", "Ser",
@@ -28,11 +34,11 @@ PRODUCT_REGEX = re.compile("tRNA-(\w+)")
 
 # Extracts amino acid and anticodon from note field for Aragorn-determinate
 # or tRNAscan-SE- determinate or indeterminate tRNAs
-NOTE_STANDARD_REGEX = re.compile("tRNA-(\w+)\((\w+)\)")
+NOTE_STANDARD_REGEX = re.compile("tRNA-(\w+)\s?\((\w+)\)")
 
 # Extracts amino acid possibilities and anticodon from note field for
 # Aragorn-indeterminate tRNAs
-NOTE_SPECIAL_REGEX = re.compile("tRNA-\?\((\w+)\|(\w+)\)\((\w+)\)")
+NOTE_SPECIAL_REGEX = re.compile("tRNA-\?\((\w+)\|(\w+)\)\s?\((\w+)\)")
 
 
 class TrnaFeature:
@@ -59,15 +65,6 @@ class TrnaFeature:
         self.anticodon = "nnn"  # Which anticodon is at bottom of the C-loop?
         self.structure = ""     # What is the predicted secondary structure?
 
-        # Aragorn data
-        self.aragorn_data = None
-
-        # tRNAscan-SE data
-        self.trnascanse_data = None
-
-        # Which program(s) support the annotation?
-        self.sources = list()
-
         # Genbank-formatted flat files should also have these attributes:
         self.seqfeature = None  # BioPython SeqFeature object for this tRNA
         self.locus_tag = ""     # Gene ID comprised of PhageID and Gene name
@@ -75,12 +72,24 @@ class TrnaFeature:
         self._gene_num = ""
         self.parts = 0          # How many regions does the tRNA have
         self.gene = ""          # Gene number parsed from feature
-        self.raw_product = ""       # Raw product field
-        self.raw_note = ""          # Raw note field
+        self.product = ""       # Raw product field
+        self.note = ""          # Raw note field
+
+        # Aragorn data
+        self.aragorn_data = None
+
+        # tRNAscan-SE data
+        self.trnascanse_data = None
+
+        # Which program(s) support the annotation?
+        self.sources = set()
+
+        # Which program to check for valid anticodon?
+        self.use = None
 
         # Useful for processing data from various sources:
         self.evaluations = list()
-        self.type = "tRNA"
+        self.type = ""
         self._start_stop_orient_id = tuple()
         self._end_orient_id = tuple()
         self._start_end_id = tuple()
@@ -132,7 +141,7 @@ class TrnaFeature:
                 else:
                     # If the check_value was found anywhere else in locus tag,
                     # value is probably found in the next index
-                    parsed_value = parts[-1]        # TODO: why is this not parts[i+1]?
+                    parsed_value = parts[-1]
                 # No need to keep searching if we found a match
                 break
 
@@ -157,16 +166,14 @@ class TrnaFeature:
 
     # TODO: create base feature class
     def set_name(self, value=None):
-        """Set the feature name.
-
-        Ideally, the name of the CDS will be an integer. This information
-        can be stored in multiple fields in the GenBank-formatted flat file.
-        The name is derived from one of several qualifiers.
-
-        :param value:
-            Indicates a value that should be used to directly set
-            the name regardless of the 'gene' and '_locus_tag_num'
-            attributes.
+        """
+        Set the feature name. Ideally, the name of the CDS will be an
+        integer. This information can be stored in multiple fields in
+        the GenBank-formatted flat file. The name is derived from one
+        of several qualifiers.
+        :param value: Indicates a value that should be used to
+        directly set the name regardless of the 'gene' and
+        '_locus_tag_num' attributes.
         :type value: str
         """
         # The CDS feature number may be stored in several places in the
@@ -187,8 +194,7 @@ class TrnaFeature:
         #    and may or may not have an integer.
         if value is None:
             name = ""
-            list1 = ["_locus_tag_num", "_gene_num", "_product_num",
-                     "_note_num", "_function_num"]
+            list1 = ["_locus_tag_num", "_gene_num"]
 
             # First see if any num attributes have a float.
             x = 0
@@ -212,22 +218,64 @@ class TrnaFeature:
                     y += 1
         self.name = value
 
-    # TODO: create base feature class - use this version of the method unless
-    #  Travis objects, because it's documented more cleanly and avoids using
-    #  keyword 'format'.
-    def set_orientation(self, value, fmt, case=False):
+    # TODO: create base feature class
+    def set_gene(self, value, delimiter=None, prefix_set=None):
         """
-        Set the orientation based on the indicated format.
-        :param value: orientation value
-        :type value: int or str
-        :param fmt: how orientation should be formatted
-        :type fmt: str
-        :param case: whether to capitalize the first letter of
-        orientation
-        :type case: bool
-        :return:
+        Set the gene attribute.
+        :param value: Gene data to parse. Also passed to set_num().
+        :type value: str
+        :param delimiter: Passed to set_num().
+        :type delimiter: str
+        :param prefix_set: Passed to set_num().
+        :type prefix_set: set
         """
-        self.orientation = basic.reformat_strand(value, fmt, case)
+        value = value.strip()
+        self.gene = value
+        self._gene_num = value
+        self.set_num("_gene_num", value,
+                     delimiter=delimiter, prefix_set=prefix_set)
+
+    # TODO: create base feature class
+    def set_num(self, attr, description, delimiter=None, prefix_set=None):
+        """
+        Set a number attribute from a description.
+        :param attr: Attribute to set the number.
+        :type attr: str
+        :param description: Description data from which to parse the number.
+        :type description: str
+        :param delimiter: Value used to split the description data.
+        :type delimiter: str
+        :param prefix_set: Valid possible delimiters in the description.
+        :type prefix_set: set
+        """
+        # Used to set product_num, function_num, note_num, gene_num
+        # Sometimes feature number is stored within the description
+        # (e.g. 'gp10; terminase' or 'terminase; gp10')
+        # List of delimiters found in description fields
+        # ";" is probably the most common.
+        delimiters = [";", ","]
+        if delimiter is None:
+            delimiter = basic.choose_most_common(description, delimiters)
+        if prefix_set is None:
+            prefix_set = {"gp", "orf", ""}
+
+        # Iterate through the list of strings, and select the first
+        # string that looks like a gene number.
+        split_value = description.split(delimiter)
+        num = ""
+        x = 0
+        while (num == "" and x < len(split_value)):
+            string = split_value[x]
+            string = string.strip()
+            left, right = basic.split_string(string)
+            # Possible returns:
+            # 1. left is alpha and right is number or float (gp10 = gp, 10),
+            # 2. string is alpha (terminase = terminase, ""),
+            # 3. string is number (10 = "", 10).
+            if left.lower() in prefix_set:
+                num = right
+            x += 1
+        setattr(self, attr, num)
 
     # TODO: create base feature class - use this version of the method unless
     #  Travis objects, because it's more Pythonic.
@@ -249,7 +297,24 @@ class TrnaFeature:
             # Unexpected orientation
             begin = end = -1
 
-        return begin, end                       # tuple format is implicit
+        return begin, end
+
+    # TODO: create base feature class - use this version of the method unless
+    #  Travis objects, because it's documented more cleanly and avoids using
+    #  keyword 'format'.
+    def set_orientation(self, value, fmt, case=False):
+        """
+        Set the orientation based on the indicated format.
+        :param value: orientation value
+        :type value: int or str
+        :param fmt: how orientation should be formatted
+        :type fmt: str
+        :param case: whether to capitalize the first letter of
+        orientation
+        :type case: bool
+        :return:
+        """
+        self.orientation = basic.reformat_strand(value, fmt, case)
 
     # TODO: create base feature class
     def set_location_id(self):
@@ -291,146 +356,28 @@ class TrnaFeature:
                 self.start, self.stop, self.coordinate_format, fmt)
             self.coordinate_format = fmt
 
-    def set_product(self, value):
+    # TODO: create base feature class - fully equivalent to version in Cds,
+    #  but documented differently.
+    def set_nucleotide_length(self, use_seq=False):
         """
-        Set the `raw_product` attribute.
-        :param value: raw value from the product qualifier
-        :type value: str
+        Set the nucleotide length of this gene feature.
+        :param use_seq: whether to use the Seq feature to calculate
+        nucleotide length of this feature
+        :type use_seq: bool
         :return:
         """
-        if isinstance(value, str):
-            self.raw_product = value
+        if use_seq:
+            self.length = len(self.seq)
         else:
-            raise ValueError(f"Invalid type '{type(value)}' for product.")
-
-    def set_note(self, value):
-        """
-        Set the `note` attribute.
-        :param value: raw value from the note qualifier
-        :type value: str
-        :return:
-        """
-        if isinstance(value, str):
-            self.raw_note = value
-        else:
-            raise ValueError(f"Invalid type '{type(value)}' for note.")
-
-    def set_amino_acid(self, value=None):
-        """
-        Attempts to parse the `amino_acid` attribute from the `raw_product`
-        and `note` attributes.
-        :param value: override default behavior and set amino acid
-        :type value: str
-        :return:
-        """
-        # If we were given a value, use it.
-        if value is not None:
-            self.amino_acid = value
-
-        else:
-            results = PRODUCT_REGEX.findall(self.raw_product)
-            # If we got a single item (e.g. the amino acid)
-            if len(results) == 1:
-                # Begin using it as the amino acid
-                amino_acid = results[0]
-                # If amino acid we got is "OTHER", we need to check the note
-                # field for a more specific amino acid
-                if amino_acid == "OTHER":
-                    results = NOTE_STANDARD_REGEX.findall(self.raw_note)
-                    # If we got two items (e.g. the amino acid and anticodon)
-                    # and the amino acid is in our allowed special amino acids
-                    if len(results) == 2 and results[0] in SPECIAL_AMINO_ACIDS:
-                        # Use the re-formatted special amino acid
-                        amino_acid = SPECIAL_AMINO_ACIDS[results[0]]
-                    # Else, we will leave amino acid as "OTHER"
-                # Else, we have nothing else to do but set the attribute
-                self.amino_acid = amino_acid
-            # Else, the product is not formatted properly and will fail checks
-
-    def set_anticodon(self, value=None):
-        """
-        Set the `anticodon` attribute.
-        :param value: what to use as the anticodon
-        :type value: str
-        :return:
-        """
-        # If we were given a value, convert to upper case and use it.
-        if value is not None:
-            self.anticodon = value.upper()
-
-        else:
-            results = NOTE_STANDARD_REGEX.findall(self.raw_note)
-            # If we got two items (e.g. the amino acid and anticodon)
-            if len(results) == 2:
-                self.anticodon = results[-1].upper()
+            if self.coordinate_format == "0_half_open":
+                # Python coordinate format
+                self.length = self.stop - self.start
+            elif self.coordinate_format == "1_closed":
+                # Genbank coordinate format
+                self.length = self.stop - self.start + 1
             else:
-                results = NOTE_SPECIAL_REGEX.findall(self.raw_note)
-                # If we got three items (e.g. the two amino acid choices and
-                # part of anticodon)
-                if len(results) == 3:
-                    self.anticodon = results[-1].upper()
-
-    def set_structure(self, value):
-        """
-        Set the `structure` attribute.
-        :param value: what to use as the structure
-        :type value: str
-        :raise: ValueError
-        :return:
-        """
-        if isinstance(value, str):
-            self.structure = value
-        else:
-            raise ValueError(f"Invalid type '{type(value)}' for structure.")
-
-    # TODO: create base feature class - fully equivalent to the version in Cds,
-    #  but better documented.
-    def set_seqfeature(self):
-        """
-        Create a SeqFeature object with which to populate the
-        `seqfeature` attribute.
-        :return:
-        """
-        # SeqFeature coordinates are 0-based half-open
-        start, stop = basic.reformat_coordinates(
-            self.start, self.stop, self.coordinate_format, "0_half_open")
-
-        # SeqFeature orientation is (-1, 1) instead of ("R", "F")
-        strand = basic.reformat_strand(self.orientation, "numeric")
-
-        # Standard genes will have start < stop
-        if self.start <= self.stop:
-            self.seqfeature = SeqFeature(FeatureLocation(start, stop),
-                                         strand=strand, type=self.type)
-        # Wrap-around genes will have stop < start
-        else:
-            self.seqfeature = SeqFeature(CompoundLocation(
-                [FeatureLocation(start, self.genome_length),
-                 FeatureLocation(0, stop)]), strand=strand, type=self.type)
-        # Add feature qualifiers
-        self.seqfeature.qualifiers = self.get_qualifiers()
-
-    def get_qualifiers(self):
-        """
-        Helper function that uses tRNA data to populate the qualifiers
-        attribute of `seqfeature`.
-        :return: qualifiers OrderedDict()
-        """
-        qualifiers = OrderedDict()
-        qualifiers["gene"] = [self.name]
-        if self.locus_tag != "":
-            qualifiers["locus_tag"] = [self.locus_tag]
-        if self.amino_acid != "":
-            if self.amino_acid in SPECIAL_AMINO_ACIDS:
-                amino_acid = SPECIAL_AMINO_ACIDS[self.amino_acid]
-            else:
-                amino_acid = self.amino_acid
-            qualifiers["product"] = [f"tRNA-{amino_acid}"]
-            if self.anticodon != "":
-                qualifiers["note"] = [f"tRNA-{self.amino_acid}"
-                                      f"({self.anticodon})"]
-
-        return qualifiers
+                # Unknown coordinate format
+                self.length = -1
 
     # TODO: create base feature class - use this version of the method unless
     #  Travis objects, because the logic is slightly better and it raises an
@@ -470,28 +417,177 @@ class TrnaFeature:
         else:
             pass
 
-    # TODO: create base feature class - fully equivalent to version in Cds,
-    #  but documented differently.
-    def set_nucleotide_length(self, use_seq=False):
+    # TODO: create base feature class - fully equivalent to the version in Cds,
+    #  but better documented.
+    def set_seqfeature(self):
         """
-        Set the nucleotide length of this gene feature.
-        :param use_seq: whether to use the Seq feature to calculate
-        nucleotide length of this feature
-        :type use_seq: bool
+        Create a SeqFeature object with which to populate the
+        `seqfeature` attribute.
         :return:
         """
-        if use_seq:
-            self.length = len(self.seq)
+        # SeqFeature coordinates are 0-based half-open
+        start, stop = basic.reformat_coordinates(
+            self.start, self.stop, self.coordinate_format, "0_half_open")
+
+        # SeqFeature orientation is (-1, 1) instead of ("R", "F")
+        strand = basic.reformat_strand(self.orientation, "numeric")
+
+        # Standard genes will have start < stop
+        if self.start <= self.stop:
+            self.seqfeature = SeqFeature(FeatureLocation(start, stop),
+                                         strand=strand, type=self.type)
+        # Wrap-around genes will have stop < start
         else:
-            if self.coordinate_format == "0_half_open":
-                # Python coordinate format
-                self.length = self.stop - self.start
-            elif self.coordinate_format == "1_closed":
-                # Genbank coordinate format
-                self.length = self.stop - self.start + 1
-            else:
-                # Unknown coordinate format
-                self.length = -1
+            self.seqfeature = SeqFeature(CompoundLocation(
+                [FeatureLocation(start, self.genome_length),
+                 FeatureLocation(0, stop)]), strand=strand, type=self.type)
+        # Add feature qualifiers
+        self.seqfeature.qualifiers = self.get_qualifiers()
+
+    def get_qualifiers(self):
+        """
+        Helper function that uses tRNA data to populate the qualifiers
+        attribute of `seqfeature`.
+        :return: qualifiers OrderedDict()
+        """
+        qualifiers = OrderedDict()
+        qualifiers["gene"] = [self.name]
+        if self.locus_tag != "":
+            qualifiers["locus_tag"] = [self.locus_tag]
+
+        if self.amino_acid not in GENBANK_AMINO_ACIDS:
+            amino_acid = "OTHER"
+        else:
+            amino_acid = self.amino_acid
+
+        qualifiers["product"] = [f"tRNA-{amino_acid}"]
+        qualifiers["note"] = [f"tRNA-{self.amino_acid}"
+                              f"({self.anticodon})"]
+
+        return qualifiers
+
+    def run_aragorn(self):
+        """
+        Uses an AragornHandler object to negotiate the flow of
+        information between this object and Aragorn.
+        :return:
+        """
+        if self.id is not None and self.id != "":
+            identifier = self.id
+        else:
+            identifier = "aragorn"
+
+        if len(self.seq) > 0:
+            ah = AragornHandler(identifier, str(self.seq))
+            ah.write_fasta()
+            ah.run_aragorn()            # search (linear) self.seq for tRNAs
+            ah.read_output()
+            ah.parse_trnas()
+            if ah.trna_tally == 1:
+                self.aragorn_data = ah.trnas[0]
+                self.sources.add("aragorn")
+            # else:
+                # print(f"Aragorn found {ah.trna_tally} tRNAs in this region.")
+        else:
+            print("Cannot run Aragorn on 0-length sequence.")
+
+    def run_trnascanse(self):
+        """
+        Uses a TRNAscanSEHandler object to negotiate the flow of
+        information between this object and tRNAscan-SE.
+        :return:
+        """
+        if self.id is not None and self.id != "":
+            identifier = self.id
+        else:
+            identifier = "trnascanse"
+
+        if len(self.seq) > 0:
+            th = TRNAscanSEHandler(identifier, str(self.seq))
+            th.write_fasta()
+            th.run_trnascanse()
+            th.read_output()
+            th.parse_trnas()
+            if th.trna_tally == 1:
+                self.trnascanse_data = th.trnas[0]
+                self.sources.add("trnascan")
+            # else:
+                # print(f"tRNAscan-SE found {th.trna_tally} tRNAs in this region.")
+        else:
+            print("Cannot run tRNAscan-SE on 0-length sequence.")
+
+    def set_amino_acid(self, value):
+        """
+        Sets the `amino_acid` attribute using the indicated value.
+        :param value: the Amino acid to be used
+        :type value: str
+        :raise: ValueError
+        :return:
+        """
+        self.amino_acid = value
+
+    def parse_amino_acid(self):
+        """
+        Attempts to parse the `amino_acid` attribute from the `product`
+        and `note` attributes.
+        :return:
+        """
+        results = PRODUCT_REGEX.findall(self.product)
+        # If we got a single item (e.g. the amino acid)
+        if len(results) == 1:
+            # Begin using it as the amino acid
+            amino_acid = results[0]
+            # If amino acid we got is "OTHER", we need to check the note
+            # field for a more specific amino acid
+            if amino_acid == "OTHER":
+                results = NOTE_STANDARD_REGEX.findall(self.note)
+                # If we got two items (e.g. the amino acid and anticodon)
+                # and the amino acid is in our allowed special amino acids
+                if len(results) == 2 and results[0] in SPECIAL_AMINO_ACIDS:
+                    # Use the re-formatted special amino acid
+                    amino_acid = SPECIAL_AMINO_ACIDS[results[0]]
+                # Else, we will leave amino acid as "OTHER"
+            # Else, there is nothing else to do but set the attribute
+            self.amino_acid = amino_acid
+        # Else, the product is not formatted properly and will fail checks
+
+    def set_anticodon(self, value):
+        """
+        Sets the `anticodon` attribute using the indicated value.
+        :param value: the anticodon to use for this tRNA
+        :type value: str
+        :return:
+        """
+        self.anticodon = value.lower()
+
+    def parse_anticodon(self):
+        """
+        Attempts to parse the `anticodon` attribute from the `note`
+        attribute.
+        :return:
+        """
+        results = NOTE_STANDARD_REGEX.findall(self.note)
+        # If we got two items (e.g. the amino acid and anticodon)
+        if len(results) == 1:
+            self.anticodon = results[0][-1].lower()
+        else:
+            results = NOTE_SPECIAL_REGEX.findall(self.note)
+            # If we got three items (e.g. the two amino acid choices and
+            # part of anticodon)
+            if len(results) == 1:
+                self.anticodon = results[0][-1].lower()
+        # If the regex fails to parse an anticodon using either regex, it
+        # will be left as "nnn"
+
+    def set_structure(self, value):
+        """
+        Set the secondary structure string so downstream users can
+        easily display the predicted fold of this tRNA.
+        :param value: the string to use as the secondary structure
+        :type value: str
+        :return:
+        """
+        self.structure = value
 
     # Evaluations
     # TODO: create base feature class - fully equivalent to version in Cds,
@@ -621,6 +717,59 @@ class TrnaFeature:
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
+    def check_sources(self, eval_id=None, success="correct", fail="error",
+                      eval_def=None):
+        """
+        Check that this tRNA's DNA sequence can successfully turn up
+        a tRNA when run through Aragorn and tRNAscan-SE.
+        :param eval_id: unique identifier for the evaluation
+        :type eval_id: str
+        :param success: status if the outcome is successful
+        :type success: str
+        :param fail: status if the outcome is unsuccessful
+        :type fail: str
+        :param eval_def: description of the evaluation
+        :type eval_def: str
+        :return:
+        """
+        self.run_aragorn()
+        self.run_trnascanse()
+
+        result = f"This tRNA gene's DNA sequence "
+
+        if self.sources == set():
+            # Neither program found a tRNA in this region
+            self.use = None
+            result += "does not appear to correspond to a tRNA."
+            status = fail
+        elif self.sources == {"aragorn"}:
+            # Aragorn found a tRNA in this region but tRNAscan-SE did not
+            self.use = "aragorn"
+            result += "corresponds to a tRNA in Aragorn."
+            status = success
+        elif self.sources == {"trnascan"}:
+            # tRNAscan-SE found a tRNA in this region but Aragorn did not
+            self.use = "trnascan"
+            result += "corresponds to a tRNA in tRNAscan-SE."
+            status = success
+        elif self.sources == {"aragorn", "trnascan"}:
+            # Both programs found a tRNA in this region
+            self.use = "both"
+            result += "corresponds to a tRNA in both Aragorn and tRNAscan-SE."
+            status = success
+        else:
+            # Something unexpected happened...
+            self.use = None
+            result += "gave rise to something unexpected."
+            status = fail
+            print(f"Invalid tRNA validation source in ({self.sources}).")
+
+        definition = f"Check that there is bioinformatic support for the " \
+                     f"existence of {self.id}."
+        definition = basic.join_strings([definition, eval_def])
+        self.set_eval(eval_id, definition, result, status)
+
+
     # TODO: create base feature class - this version avoids overloading
     #  built-in format()
     def check_orientation(self, fmt="fr_short", case=True, eval_id=None,
@@ -652,6 +801,325 @@ class TrnaFeature:
             status = fail
 
         definition = f"Check if the orientation is set correctly for {self.id}."
+        definition = basic.join_strings([definition, eval_def])
+        self.set_eval(eval_id, definition, result, status)
+
+    def check_orientation_correct(self, fmt="fr_short", case=True,
+                                  eval_id=None, success="correct",
+                                  fail="error", eval_def=None):
+        """
+        Check that the orientation agrees with the Aragorn and/or
+        tRNAscan-SE predicted orientation. If Aragorn/tRNAscan-SE
+        report a forward orientation, it means they agree with the
+        annotated orientation. If they report reverse orientation,
+        they think the annotation is backwards.
+        :param fmt: indicates how coordinates should be formatted
+        :type fmt: str
+        :param case: indicates whether orientation data should be cased
+        :type case: bool
+        :param eval_id: unique identifier for the evaluation
+        :type eval_id: str
+        :param success: status if the outcome is successful
+        :type success: str
+        :param fail: status if the outcome is unsuccessful
+        :type fail: str
+        :param eval_def: description of the evaluation
+        :type eval_def: str
+        :return:
+        """
+        orientation = basic.reformat_strand(self.orientation, fmt, case)
+        result = f"The annotated orientation '{orientation}' "
+
+        if self.use == "both":
+            a_orient = basic.reformat_strand(
+                self.aragorn_data["Orientation"], fmt, case)
+            t_orient = basic.reformat_strand(
+                self.trnascanse_data["Orientation"], fmt, case)
+            if a_orient == t_orient == "F":
+                result += "matches Aragorn and tRNAscan-SE predictions."
+                status = success
+            elif a_orient == t_orient == "R":
+                result += "is backwards relative to Aragorn and tRNAscan-SE " \
+                          "predictions."
+                status = fail
+            else:
+                result += "cannot be sensibly checked, as Aragorn and " \
+                          "tRNAscan-SE disagree."
+                status = "unchecked"
+        elif self.use == "aragorn":
+            a_orient = basic.reformat_strand(
+                self.aragorn_data["Orientation"], fmt, case)
+            if a_orient == "F":
+                result += "matches the Aragorn prediction."
+                status = success
+            elif a_orient == "R":
+                result += "is backwards relative to Aragorn prediction."
+                status = fail
+            else:
+                result += "cannot be sensibly checked, as Aragorn did" \
+                          "something unexpected"
+                status = "unchecked"
+        elif self.use == "trnascan":
+            t_orient = basic.reformat_strand(
+                self.trnascanse_data["Orientation"], fmt, case)
+            if t_orient == "F":
+                result += "matches the tRNAscan-SE prediction."
+                status = success
+            elif t_orient == "R":
+                result += "is backwards relative to tRNAscan-SE prediction."
+                status = fail
+            else:
+                result += "cannot be sensibly checked, as tRNAscan-SE did" \
+                          "something unexpected"
+                status = "unchecked"
+        # If neither predict a tRNA, we presume the annotation is wrong.
+        else:
+            result += "is at odds with expectations (no tRNA)."
+            status = fail
+
+        definition = f"Check whether the annotated orientation for {self.id}" \
+                     f" matches the Aragorn/tRNAscan-SE prediction(s)."
+        definition = basic.join_strings([definition, eval_def])
+        self.set_eval(eval_id, definition, result, status)
+
+    def check_amino_acid_valid(self, eval_id=None, success="correct",
+                               fail="error", eval_def=None):
+        """
+        Checks that the amino acid that has been annotated for this
+        tRNA is in the set of amino acids that we have opted to allow
+        in the MySQL database.
+        :param eval_id: unique identifier for the evaluation
+        :type eval_id: str
+        :param success: status if the outcome is successful
+        :type success: str
+        :param fail: status if the outcome is unsuccessful
+        :type fail: str
+        :param eval_def: description of the evaluation
+        :type eval_def: str
+        :return:
+        """
+        result = f"The annotated amino acid '{self.amino_acid}' is "
+
+        if self.amino_acid in MYSQL_AMINO_ACIDS:
+            result += "valid."
+            status = success
+        else:
+            result += "invalid."
+            status = fail
+
+        definition = f"Check that the annotated amino acid is in the allowed" \
+                     f"set for {self.id}."
+        definition = basic.join_strings([definition, eval_def])
+        self.set_eval(eval_id, definition, result, status)
+
+    def check_amino_acid_correct(self, eval_id=None, success="correct",
+                                 fail="error", eval_def=None):
+        """
+        Checks that the amino acid that has been annotated for this
+        tRNA agrees with the Aragorn and/or tRNAscan-SE prediction(s).
+        :param eval_id: unique identifier for the evaluation
+        :type eval_id: str
+        :param success: status if the outcome is successful
+        :type success: str
+        :param fail: status if the outcome is unsuccessful
+        :type fail: str
+        :param eval_def: description of the evaluation
+        :type eval_def: str
+        :return:
+        """
+        result = f"The annotated isotype ({self.amino_acid}) "
+
+        # If both programs found a tRNA here
+        if self.use == "both":
+            # All Aragorn isotypes are valid in our database
+            a_isotype = self.aragorn_data["AminoAcid"]
+            # Some tRNAscan-SE isotypes need to be converted to allowed value
+            t_isotype = self.trnascanse_data["AminoAcid"]
+            if t_isotype not in MYSQL_AMINO_ACIDS:
+                if t_isotype in SPECIAL_AMINO_ACIDS:
+                    t_isotype = SPECIAL_AMINO_ACIDS[t_isotype]
+                else:
+                    t_isotype = "OTHER"
+            # if Aragorn and tRNAscan-SE are the same
+            if a_isotype == t_isotype == self.amino_acid:
+                result += f"is consistent with Aragorn ({a_isotype}) and " \
+                          f"tRNAscan-SE ({t_isotype})."
+                status = success
+            # if Aragorn is Met and tRNAscan-se is consistent
+            elif a_isotype == "Met" and t_isotype in ("Met", "fMet", "Ile2"):
+                if self.amino_acid in (a_isotype, t_isotype):
+                    result += f"is consistent with Aragorn ({a_isotype}) " \
+                              f"and tRNAscan-SE ({t_isotype})."
+                    status = success
+                else:
+                    result += f"is inconsistent with Aragorn ({a_isotype}) " \
+                              f"and tRNAscan-SE ({t_isotype})."
+                    status = fail
+            # if tRNAscan-SE is Sup and Aragorn is consistent
+            elif a_isotype in ("Pyl", "Stop") and t_isotype == "Sup":
+                if self.amino_acid in (a_isotype, t_isotype):
+                    result += f"is consistent with Aragorn ({a_isotype}) " \
+                              f"and tRNAscan-SE ({t_isotype})."
+                    status = success
+                else:
+                    result += f"is inconsistent with Aragorn ({a_isotype}) " \
+                              f"and tRNAscan-SE ({t_isotype})."
+                    status = fail
+            else:
+                result += f"cannot be sensibly checked because Aragorn " \
+                          f"({a_isotype}) prediction differs from " \
+                          f"tRNAscan-SE ({t_isotype})."
+                status = "unchecked"
+        # If only Aragorn found a tRNA here
+        elif self.use == "aragorn":
+            a_isotype = self.aragorn_data["AminoAcid"]
+            t_isotype = "no tRNA"
+            if a_isotype == self.amino_acid:
+                result += f"is consistent with Aragorn ({a_isotype}) and " \
+                          f"tRNAscan-SE ({t_isotype})."
+                status = success
+            else:
+                result += f"is inconsistent with Aragorn ({a_isotype}) " \
+                          f"and tRNAscan-SE ({t_isotype})."
+                status = fail
+        # If only tRNAscan-SE found a tRNA here
+        elif self.use == "trnascan":
+            a_isotype = "no tRNA"
+            t_isotype = self.trnascanse_data["AminoAcid"]
+            if t_isotype not in MYSQL_AMINO_ACIDS:
+                if t_isotype in SPECIAL_AMINO_ACIDS:
+                    t_isotype = SPECIAL_AMINO_ACIDS[t_isotype]
+                else:
+                    t_isotype = "OTHER"
+            if t_isotype == self.amino_acid:
+                result += f"is consistent with Aragorn ({a_isotype}) and " \
+                          f"tRNAscan-SE ({t_isotype})."
+                status = success
+            else:
+                result += f"is inconsistent with Aragorn ({a_isotype}) " \
+                          f"and tRNAscan-SE ({t_isotype})."
+                status = fail
+        # If neither program found a tRNA here
+        else:
+            result += "is inconsistent with Aragorn (no tRNA) and " \
+                      "tRNAscan-SE (no tRNA)."
+            status = fail
+
+        definition = f"Check that the annotated amino acid is consistent " \
+                     f"with the prediction(s) made by Aragorn and/or " \
+                     f"tRNAscan-SE for {self.id}."
+        definition = basic.join_strings([definition, eval_def])
+        self.set_eval(eval_id, definition, result, status)
+
+    def check_anticodon_valid(self, eval_id=None, success="correct",
+                              fail="error", eval_def=None):
+        """
+        Checks that the anticodon conforms to the expected length
+        (2-4) and alphabet ("a", "c", "g", "t") or is "nnn".
+        :param eval_id: unique identifier for the evaluation
+        :type eval_id: str
+        :param success: status if the outcome is successful
+        :type success: str
+        :param fail: status if the outcome is unsuccessful
+        :type fail: str
+        :param eval_def: description of the evaluation
+        :type eval_def: str
+        :return:
+        """
+        result = f"The anticodon '{self.anticodon}' is "
+        expect = ["a", "c", "g", "t"]
+        valid = [letter in expect for letter in self.anticodon]
+        if len(self.anticodon) == 3:
+            if sum(valid) == 3:
+                result += "valid."
+                status = success
+            elif self.anticodon == "nnn":
+                result += "valid."
+                status = success
+            else:
+                result += "invalid."
+                status = fail
+        elif len(self.anticodon) in [2, 4]:
+            if sum(valid) == len(self.anticodon):
+                result += "valid."
+                status = success
+            else:
+                result += "invalid."
+                status = fail
+        else:
+            result += "invalid."
+            status = fail
+
+        definition = f"Check that the anticodon is valid for {self.id}."
+        definition = basic.join_strings([definition, eval_def])
+        self.set_eval(eval_id, definition, result, status)
+
+    def check_anticodon_correct(self, eval_id=None, success="correct",
+                              fail="error", eval_def=None):
+        """
+        Checks that the annotated anticodon agrees with the prediction
+        by Aragorn or tRNAscan-SE.
+        :param eval_id: unique identifier for the evaluation
+        :type eval_id: str
+        :param success: status if the outcome is successful
+        :type success: str
+        :param fail: status if the outcome is unsuccessful
+        :type fail: str
+        :param eval_def: description of the evaluation
+        :type eval_def: str
+        :return:
+        """
+        result = f"The anticodon '{self.anticodon}' "
+
+        # If both programs found a tRNA here
+        if self.use == "both":
+            a_anti = self.aragorn_data["Anticodon"]
+            t_anti = self.trnascanse_data["Anticodon"]
+            if a_anti == t_anti == self.anticodon:
+                result += f"is consistent with Aragorn ({a_anti}) and " \
+                          f"tRNAscan-SE ({t_anti})."
+                status = success
+            elif a_anti == t_anti != self.anticodon:
+                result += f"is inconsistent with Aragorn ({a_anti}) and " \
+                          f"tRNAscan-SE ({t_anti})."
+                status = fail
+            else:
+                result += f"cannot be sensibly checked because Aragorn " \
+                          f"({a_anti}) prediction differs from tRNAscan-SE " \
+                          f"({t_anti})."
+                status = "unchecked"
+        # If only Aragorn found a tRNA here
+        elif self.use == "aragorn":
+            a_anti = self.aragorn_data["Anticodon"]
+            t_anti = "no tRNA"
+            if a_anti == self.anticodon:
+                result += f"is consistent with Aragorn ({a_anti}) and " \
+                          f"tRNAscan-SE ({t_anti})."
+                status = success
+            else:
+                result += f"is inconsistent with Aragorn ({a_anti}) and " \
+                          f"tRNAscan-SE ({t_anti})."
+                status = fail
+        # If only tRNAscan-SE found a tRNA here
+        elif self.use == "trnascan":
+            a_anti = "no tRNA"
+            t_anti = self.trnascanse_data["Anticodon"]
+            if t_anti == self.anticodon:
+                result += f"is consistent with Aragorn ({a_anti}) and " \
+                          f"tRNAscan-SE ({t_anti})."
+                status = success
+            else:
+                result += f"is inconsistent with Aragorn ({a_anti}) and " \
+                          f"tRNAscan-SE ({t_anti})."
+                status = fail
+        # If neither program found a tRNA here
+        else:
+            result += "is inconsistent with Aragorn (no tRNA) and " \
+                      "tRNAscan-SE (no tRNA)."
+            status = fail
+
+        definition = f"Check that the annotated anticodon agrees with the " \
+                     f"Aragorn or tRNAscan-SE anticodon for {self.id}."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
@@ -785,7 +1253,7 @@ class TrnaFeature:
         """
         Checks that the tRNA is in the expected range of lengths. The
         average tRNA gene is 70-90bp in length, but it is not uncommon
-        to identify high-scoring tRNAs in the 60-100bp range.
+        to identify well-scoring tRNAs in the 60-100bp range.
         :param eval_id: unique identifier for the evaluation
         :type eval_id: str
         :param success: status if the outcome is successful
@@ -812,10 +1280,10 @@ class TrnaFeature:
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
-    def check_terminal_nucleotides(self, eval_id=None, success="correct",
-                                   fail="error", eval_def=None):
+    def check_coordinates(self, eval_id=None, success="correct", fail="error",
+                          eval_def=None):
         """
-        Checks that the tRNA ends with "CCA" or "C" or "A".
+
         :param eval_id: unique identifier for the evaluation
         :type eval_id: str
         :param success: status if the outcome is successful
@@ -826,17 +1294,84 @@ class TrnaFeature:
         :type eval_def: str
         :return:
         """
-        result = f"The tRNA ends with '...{self.seq[-3:]}'. "
-        # tRNAs must end in "CCA" to function - some are this way naturally.
-        # The others must end in "C" or "A"
-        # Canonical end for tRNAs that don't need RNAse T is "CCA"
+        result = f"The tRNA coordinates ({self.start}, {self.stop}) "
 
-        if self.seq[-3:] == "CCA" or self.seq[-1] in ["C", "A"]:
-            result += " This is expected."
-            status = success
+        # We'll use Aragorn by default when available
+        if self.use == "both" or self.use == "aragorn":
+            a_start = self.aragorn_data["Start"]
+            a_stop = self.aragorn_data["Stop"]
+            if a_start == 0 and a_stop == self.length:
+                self.structure = self.aragorn_data["Structure"]
+                result += "appear to be correct."
+                status = success
+            else:
+                start_offset = a_start
+                stop_offset = self.length - a_stop
+                self.structure = "." * start_offset + self.aragorn_data["Structure"][:stop_offset]
+                result += f"differ from the Aragorn prediction (" \
+                          f"{self.start + start_offset + 1}, " \
+                          f"{self.stop - stop_offset})."
+                status = fail
+        # Use tRNAscan-SE if that's all we've got
+        elif self.use == "trnascan":
+            t_start = self.trnascanse_data["Start"]
+            t_stop = self.trnascanse_data["Stop"]
+            if t_start == 0 and t_stop == self.length:
+                self.structure = self.trnascanse_data["Structure"]
+                result += "appear to be correct."
+                status = success
+            else:
+                start_offset = t_start
+                stop_offset = self.length - t_stop
+                self.structure = "." * start_offset + self.trnascanse_data["Structure"][:stop_offset]
+                result += f"differ from the tRNAscan-SE prediction (" \
+                          f"{self.start + start_offset + 1}, " \
+                          f"{self.stop - stop_offset})."
+                status = fail
         else:
-            result += " This is not expected."
+            result += f"should be investigated - neither Aragorn nor " \
+                      f"tRNAscan-SE identify a tRNA in this position."
             status = fail
+
+        definition = f"Check if the tRNA coordinates appear to match the " \
+                     f"Aragorn or tRNAscan-SE prediction(s) for {self.id}."
+        definition = basic.join_strings([definition, eval_def])
+        self.set_eval(eval_id, definition, result, status)
+
+    def check_terminal_nucleotides(self, eval_id=None, success="correct",
+                                   fail="error", eval_def=None):
+        """
+        Checks that the tRNA ends with "CCA" or "CC" or "C".
+        :param eval_id: unique identifier for the evaluation
+        :type eval_id: str
+        :param success: status if the outcome is successful
+        :type success: str
+        :param fail: status if the outcome is unsuccessful
+        :type fail: str
+        :param eval_def: description of the evaluation
+        :type eval_def: str
+        :return:
+        """
+        if len(self.seq) > 4:
+            result = f"The tRNA ends with '...{self.seq[-4:]}'. "
+            # tRNAs must end in "NCCA" to function - some are this way naturally.
+            # The others must end in "NCC" or "NC" or N
+            if self.seq[-3:] == "CCA":
+                result += "This is expected."
+                status = success
+            elif self.seq[-2:] == "CC":
+                result += "This is expected."
+                status = success
+            elif self.seq[-1:] == "C":
+                result += "This is expected."
+                status = success
+            else:
+                result += " This is not expected."
+                status = fail
+        else:
+            result = f"Cannot check terminal nucleotides on a sequence of " \
+                     f"length {len(self.seq)}."
+            status = "unchecked"
 
         definition = f"Check that the correct terminal nucleotide(s) are " \
                      f"present for {self.id}."
@@ -865,12 +1400,12 @@ class TrnaFeature:
         :return:
         """
         result = f"The tRNA product is "
-        if self.raw_product != "":
-            result += f"present ('{self.raw_product}'). "
+        if self.product != "":
+            result += f"present ('{self.product}'). "
 
             # This regex will ignore the (nnn) anticodon if it's there; it
             # parses the amino acid prediction and makes sure it's valid.
-            results = PRODUCT_REGEX.findall(self.raw_product)
+            results = PRODUCT_REGEX.findall(self.product)
 
             # If the product field is formatted correctly, there should only
             # be a single result from the regex search
@@ -894,32 +1429,6 @@ class TrnaFeature:
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
-    def check_parts(self, eval_id=None, success="correct", fail="error",
-                    eval_def=None):
-        """
-        Makes sure only one region exists for this tRNA.
-        :param eval_id: unique identifier for the evaluation
-        :type eval_id: str
-        :param success: status if the outcome is successful
-        :type success: str
-        :param fail: status if the outcome is unsuccessful
-        :type fail: str
-        :param eval_def: description of the evaluation
-        :type eval_def: str
-        :return:
-        """
-        result = f"The tRNA has '{self.parts}' parts. This is "
-        if self.parts == 1:
-            result += "expected."
-            status = success
-        else:
-            result += "unexpected."
-            status = fail
-
-        definition = f"Make sure there is only one region for {self.id}."
-        definition = basic.join_strings([definition, eval_def])
-        self.set_eval(eval_id, definition, result, status)
-
     def check_note_structure(self, eval_id=None, success="correct",
                              fail="error", eval_def=None):
         """
@@ -940,11 +1449,11 @@ class TrnaFeature:
         :return:
         """
         result = f"The tRNA note is "
-        if self.raw_note != "":
-            result += f"present ('{self.raw_note}'). "
+        if self.note != "":
+            result += f"present ('{self.note}'). "
 
-            results1 = NOTE_STANDARD_REGEX.findall(self.raw_note)
-            results2 = NOTE_SPECIAL_REGEX.findall(self.raw_note)
+            results1 = NOTE_STANDARD_REGEX.findall(self.note)
+            results2 = NOTE_SPECIAL_REGEX.findall(self.note)
 
             if results1 is not None and len(results1) == 2:
                 result += f"Note is formatted properly."
@@ -964,99 +1473,3 @@ class TrnaFeature:
                      f"{self.id}."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
-
-    def check_amino_acid_valid(self, eval_id=None, success="correct",
-                               fail="error", eval_def=None):
-        """
-        Checks that the amino acid is either in the Genbank-allowed
-        set, or the set of special amino acids that SEA-PHAGES can use.
-        :return:
-        """
-        result = f"The amino acid '{self.amino_acid}' is "
-        if self.amino_acid in GENBANK_AMINO_ACIDS:
-            result += "valid."
-            status = success
-        elif self.amino_acid in SPECIAL_AMINO_ACIDS:
-            result += "valid."
-            status = success
-        else:
-            result += "invalid."
-            status = fail
-
-        definition = f"Check that the amino acid is valid for {self.id}."
-        definition = basic.join_strings([definition, eval_def])
-        self.set_eval(eval_id, definition, result, status)
-
-    def check_anticodon_valid(self, eval_id=None, success="correct",
-                              fail="error", eval_def=None):
-        """
-        Checks that the anticodon conforms to the expected length
-        (2-4) and alphabet ("A", "C", "G", "T", "N").
-        :return:
-        """
-        result = f"The anticodon '{self.anticodon}' is "
-        expect = ["A", "C", "G", "T"]
-        valid = [letter in expect for letter in self.anticodon]
-        if len(self.anticodon) == 3:
-            if sum(valid) == 3:
-                result += "valid."
-                status = success
-            elif self.anticodon == "NNN":
-                result += "valid."
-                status = success
-            else:
-                result += "invalid."
-                status = fail
-        elif len(self.anticodon) == 2:
-            if sum(valid) == 2:
-                result += "valid."
-                status = success
-            else:
-                result += "invalid."
-                status = fail
-        elif len(self.anticodon) == 4:
-            if sum(valid) == 4:
-                result += "valid."
-                status = success
-            else:
-                result += "invalid."
-                status = fail
-        else:
-            result += "invalid."
-            status = fail
-
-        definition = f"Check that the anticodon is valid for {self.id}."
-        definition = basic.join_strings([definition, eval_def])
-        self.set_eval(eval_id, definition, result, status)
-
-    def run_aragorn(self):
-        """
-        Runs Aragorn locally using this tRNA's DNA sequence as the
-        input sequence.
-        :return:
-        """
-        ah = AragornHandler(self.id, str(self.seq))
-        ah.write_fasta()
-        ah.run_aragorn()        # default params are set for single-trna search
-        ah.read_output()
-        ah.parse_trnas()
-        if ah.trna_tally == 1:
-            self.aragorn_data = ah.trnas[0]
-        else:
-            print(f"Aragorn found {ah.trna_tally} tRNA(s) for {self.id}")
-
-    def run_trnascanse(self):
-        """
-        Runs tRNAscan-SE locally using this tRNA's DNA sequence as the
-        input sequence.
-        :return:
-        """
-        th = TRNAscanSEHandler(self.id, str(self.seq))
-        th.write_fasta()
-        th.run_trnascanse()     # default params find low-scoring tRNAs here
-        th.read_output()
-        th.parse_trnas()
-        if th.trna_tally == 1:
-            self.trnascanse_data = th.trnas[0]
-        else:
-            print(f"tRNAscanSE found {th.trna_tally} tRNA(s) for {self.id}")

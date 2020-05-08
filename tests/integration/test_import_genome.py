@@ -424,6 +424,7 @@ class TestImportGenome1(unittest.TestCase):
         tkt_gnm = bndl.genome_dict["ticket"]
         bndl_tkt = bndl.ticket
         cds1 = ff_gnm.cds_features[0]
+        trna1 = ff_gnm.trna_features[0]
         source1 = ff_gnm.source_features[0]
         # TODO test id conversion in tRNA and tmRNA features once implemented.
         with self.subTest():
@@ -438,6 +439,10 @@ class TestImportGenome1(unittest.TestCase):
             self.assertTrue(cds1.id.startswith("new_id"))
         with self.subTest():
             self.assertTrue(cds1.genome_id.startswith("new_id"))
+        with self.subTest():
+            self.assertTrue(trna1.id.startswith("new_id"))
+        with self.subTest():
+            self.assertTrue(trna1.genome_id.startswith("new_id"))
         with self.subTest():
             self.assertTrue(source1.id.startswith("new_id"))
         with self.subTest():
@@ -1718,8 +1723,6 @@ class TestImportGenome7(unittest.TestCase):
         self.cds4.start = 7
         self.cds4.stop = 8
         self.cds4.orientation = "R"
-
-
 
         self.src1 = source.Source()
         self.src2 = source.Source()

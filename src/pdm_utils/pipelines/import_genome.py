@@ -800,10 +800,14 @@ def prepare_bundle(filepath=pathlib.Path(), ticket_dict={}, engine=None,
             ff_gnm.set_feature_ids(use_type=True, use_cds=True)
             ff_gnm.set_feature_ids(use_type=True, use_source=True)
             # TODO set tRNA and tmRNA feature ids.
+            ff_gnm.set_feature_ids(use_type=True, use_trna=True)
+            ff_gnm.set_feature_ids(use_type=True, use_tmrna=True)
 
             ff_gnm.set_feature_genome_ids("cds")
             ff_gnm.set_feature_genome_ids("source")
             # TODO set tRNA and tmRNA feature genome_ids.
+            ff_gnm.set_feature_genome_ids("trna")
+            ff_gnm.set_feature_genome_ids("tmrna")
 
         bndl.genome_dict[ff_gnm.type] = ff_gnm
 
@@ -935,16 +939,14 @@ def run_checks(bndl, accession_set=set(), phage_id_set=set(),
                           description_field=tkt.description_field)
 
             for x in range(len(gnm.trna_features)):
-                # TODO make sure this tRNA is implemented correctly.
                 check_trna(gnm.trna_features[x], eval_flags)
+
+            for x in range(len(gnm.tmrna_features)):
+                check_tmrna(gnm.tmrna_features[x], eval_flags)
 
             for x in range(len(gnm.source_features)):
                 check_source(gnm.source_features[x], eval_flags,
                              host_genus=gnm.host_genus)
-
-            # TODO implement tmrna
-            # for x in range(len(gnm.tmrna_features)):
-            #     check_tmrna(gnm.tmrna_features[x], eval_flags)
 
         if retain_ref in bndl.genome_dict.keys():
             gnm2 = bndl.genome_dict[retain_ref]
@@ -983,21 +985,20 @@ def review_bundled_objects(bndl, interactive=False):
 
             # CDS feature check.
             review_object_list(gnm.cds_features, "CDS feature",
-                          ["id", "start", "stop", "orientation"],
-                          interactive=interactive)
+                               ["id", "start", "stop", "orientation"],
+                               interactive=interactive)
 
             # Source feature check.
             review_object_list(gnm.source_features, "Source feature",
-                          ["id"], interactive=interactive)
+                               ["id"], interactive=interactive)
 
-            # # TODO implement trna features
-            # review_object_list(gnm.trna_features, "tRNA feature",
-            #               ["id", "start", "stop", "orientation"],
-            #               interactive=interactive)
-            # # TODO implement tmrna features.
-            # review_object_list(gnm.tmrna_features, "tmRNA feature",
-            #               ["id", "start", "stop", "orientation"],
-            #               interactive=interactive)
+            review_object_list(gnm.trna_features, "tRNA feature",
+                               ["id", "start", "stop", "orientation"],
+                               interactive=interactive)
+
+            review_object_list(gnm.tmrna_features, "tmRNA feature",
+                               ["id", "start", "stop", "orientation"],
+                               interactive=interactive)
 
     else:
         log_and_print("No genomes to review.", False)
@@ -1477,7 +1478,7 @@ def check_genome(gnm, tkt_type, eval_flags, phage_id_set=set(),
 
     if eval_flags["check_coords"]:
         # TODO set trna=True and tmrna=True after they are implemented.
-        gnm.check_feature_coordinates(cds_ftr=True, trna_ftr=False, tmrna_ftr=False,
+        gnm.check_feature_coordinates(cds_ftr=True, trna_ftr=True, tmrna_ftr=True,
                                       strand=False, eval_id="GNM_030",
                                       eval_def=EDD["GNM_030"], fail="warning")
 
@@ -1760,17 +1761,127 @@ def compare_genomes(genome_pair, eval_flags):
                                           eval_def=EDD["GP_015"])
 
 
-
-
-# TODO implement.
 # TODO unit test.
-def check_trna(trna_obj, eval_flags):
-    """Check a TrnaFeature object for errors."""
+def check_trna(trna_ftr, eval_flags):
+    """Check a TrnaFeature object for errors.
 
+    :param trna_ftr: A pdm_utils TrnaFeature object.
+    :type trna_ftr: TrnaFeature
+    :param eval_flags: Dictionary of boolean evaluation flags.
+    :type eval_flags: dicts
+    """
+    logger.info(f"Checking tRNA feature: {trna_ftr.id}.")
+
+    # Start can be 0 since coordinate_format = 0_half_open
+    trna_ftr.check_magnitude("start", ">", -1, eval_id="TRNA_001",
+                             eval_def=EDD["TRNA_001"])
+    trna_ftr.check_magnitude("stop", ">", 0, eval_id="TRNA_002",
+                             eval_def=EDD["TRNA_002"])
+    trna_ftr.check_magnitude("parts", "=", 1, eval_id="TRNA_003",
+                             eval_def=EDD["TRNA_003"])
+    trna_ftr.check_orientation(eval_id="TRNA_004", eval_def=EDD["TRNA_004"])
+
+    if eval_flags["check_locus_tag"]:
+        trna_ftr.check_attribute(
+            "locus_tag", {""}, expect=False, eval_id="TRNA_005",
+            fail="warning", eval_def=EDD["TRNA_005"])
+
+        # TODO this check could be improved to take into account the prefix.
+        trna_ftr.check_locus_tag_structure(
+            check_value=None, only_typo=True, case=True, eval_id="TRNA_006",
+            fail="warning", eval_def=EDD["TRNA_006"])
+
+    if eval_flags["check_gene"]:
+        trna_ftr.check_attribute(
+            "gene", {""}, expect=False, eval_id="TRNA_007", fail="warning",
+            eval_def=EDD["TRNA_007"])
+        trna_ftr.check_gene_structure(
+            eval_id="TRNA_008", fail="warning", eval_def=EDD["TRNA_008"])
+
+    if eval_flags["check_locus_tag"] and eval_flags["check_gene"]:
+        trna_ftr.check_compatible_gene_and_locus_tag(
+            eval_id="TRNA_009", fail="warning", eval_def=EDD["TRNA_009"])
+
+    # All tRNAs should be checked for a valid isotype and anticodon
+    trna_ftr.check_amino_acid_valid(
+        eval_id="TRNA_010", eval_def=EDD["TRNA_010"])
+    trna_ftr.check_anticodon_valid(
+        eval_id="TRNA_012", eval_def=EDD["TRNA_012"])
+
+    # if check_trna flag is set, we should run Aragorn and tRNAscan-SE to
+    # validate the correctness of the annotation
     if eval_flags["check_trna"]:
-        pass
-    else:
-        pass
+        # 1. check_sources
+        trna_ftr.check_sources(
+            eval_id="TRNA_017", fail="warning", eval_def=EDD["TRNA_017"])
+        # 2. check_amino_acid_correct
+        trna_ftr.check_amino_acid_correct(
+            eval_id="TRNA_011", fail="warning", eval_def=EDD["TRNA_011"])
+        # 3. check_anticodon_correct
+        trna_ftr.check_anticodon_correct(
+            eval_id="TRNA_013", fail="warning", eval_def=EDD["TRNA_013"])
+        # 4. check_length
+        trna_ftr.check_length(
+            eval_id="TRNA_014", fail="warning", eval_def=EDD["TRNA_014"])
+        # 5. check_coordinates
+        trna_ftr.check_coordinates(
+            eval_id="TRNA_018", fail="warning", eval_def=EDD["TRNA_018"])
+        # 6. check_orientation_correct
+        trna_ftr.check_orientation_correct(
+            eval_id="TRNA_016", fail="warning", eval_def=EDD["TRNA_016"])
+        # 7. check_terminal_nucleotides
+        trna_ftr.check_terminal_nucleotides(
+            eval_id="TRNA_015", fail="warning", eval_def=EDD["TRNA_015"])
+
+
+def check_tmrna(tmrna_ftr, eval_flags):
+    """Check a TmrnaFeature object for errors.
+
+    :param tmrna_ftr: A pdm_utils Cds object.
+    :type tmrna_ftr: TmrnaFeature
+    :param eval_flags: Dictionary of boolean evaluation flags.
+    :type eval_flags: dicts
+    """
+    logger.info(f"Checking tRNA feature: {tmrna_ftr.id}.")
+
+    # Start can be 0 since coordinate_format = 0_half_open
+    tmrna_ftr.check_magnitude("start", ">", -1, eval_id="TMRNA_001",
+                              eval_def=EDD["TMRNA_001"])
+    tmrna_ftr.check_magnitude("stop", ">", 0, eval_id="TMRNA_002",
+                              eval_def=EDD["TMRNA_002"])
+    tmrna_ftr.check_magnitude("parts", "=", 1, eval_id="TMRNA_003",
+                              eval_def=EDD["TMRNA_003"])
+    tmrna_ftr.check_orientation(eval_id="TMRNA_004", eval_def=EDD["TMRNA_004"])
+
+    if eval_flags["check_locus_tag"]:
+        tmrna_ftr.check_attribute(
+            "locus_tag", {""}, expect=False, eval_id="TMRNA_005",
+            fail="warning", eval_def=EDD["TMRNA_005"])
+
+        # TODO this check could be improved to take into account the prefix.
+        tmrna_ftr.check_locus_tag_structure(
+            check_value=None, only_typo=True, case=True, eval_id="TMRNA_006",
+            fail="warning", eval_def=EDD["TMRNA_006"])
+
+    if eval_flags["check_gene"]:
+        tmrna_ftr.check_attribute(
+            "gene", {""}, expect=False, eval_id="TMRNA_007", fail="warning",
+            eval_def=EDD["TMRNA_007"])
+        tmrna_ftr.check_gene_structure(
+            eval_id="TMRNA_008", fail="warning", eval_def=EDD["TMRNA_008"])
+
+    if eval_flags["check_locus_tag"] and eval_flags["check_gene"]:
+        tmrna_ftr.check_compatible_gene_and_locus_tag(
+            eval_id="TMRNA_009", fail="warning", eval_def=EDD["TMRNA_009"])
+
+    tmrna_ftr.check_peptide_tag_valid(
+        eval_id="TMRNA_010", eval_def=EDD["TMRNA_010"])
+
+    if eval_flags["check_tmrna"]:
+        tmrna_ftr.check_peptide_tag_correct(
+            eval_id="TMRNA_011", fail="warning", eval_def=EDD["TMRNA_011"])
+        tmrna_ftr.check_orientation_correct(
+            eval_id="TMRNA_012", fail="warning", eval_def=EDD["TMRNA_012"])
 
 
 def import_into_db(bndl, engine=None, gnm_key="", prod_run=False):

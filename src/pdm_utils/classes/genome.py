@@ -7,7 +7,7 @@ from Bio.Alphabet import IUPAC
 from Bio.Seq import Seq
 from Bio.SeqUtils import GC
 
-from pdm_utils.classes import eval, cds, trna, source
+from pdm_utils.classes import eval, cds, trna, tmrna, source
 from pdm_utils.constants import constants
 from pdm_utils.functions import basic
 
@@ -65,10 +65,17 @@ class Genome:
         self._cds_duplicate_start_end_ids = set() # TODO still in development.
         self._cds_unique_end_orient_ids = set() # TODO still in development.
         self._cds_duplicate_end_orient_ids = set() # TODO still in development.
+
         self.trna_features = []
         self._trna_features_tally = 0
+        self._trna_start_end_ids = []
+        self._trna_end_orient_ids = []
+
         self.tmrna_features = []
         self._tmrna_features_tally = 0
+        self._tmrna_start_end_ids = []
+        self._tmrna_end_orient_ids = []
+
         self.source_features = []
         self._source_features_tally = 0
 
@@ -226,7 +233,6 @@ class Genome:
             value = value.split(".")[0]
         self.accession = basic.convert_empty(value, format)
 
-
     def set_cds_features(self, value):
         """Set and tally the CDS features.
 
@@ -235,7 +241,6 @@ class Genome:
         """
         self.cds_features = value # Should be a list.
         self._cds_features_tally = len(self.cds_features)
-
 
     def set_cds_id_list(self):
         """Creates lists of CDS feature identifiers.
@@ -252,16 +257,22 @@ class Genome:
         self._cds_start_end_ids = start_end_id_list
         self._cds_end_orient_ids = end_orient_id_list
 
-
     def set_trna_features(self, value):
         """Set and tally the tRNA features.
 
         :param value: list of Trna objects.
         :type value: list
         """
-        self.trna_features = value # Should be a list
+        self.trna_features = value      # Should be a list
         self._trna_features_tally = len(self.trna_features)
 
+    def set_tmrna_features(self, value):
+        """Set and tally the tmRNA features.
+        :param value: list of TmrnaFeature objects.
+        :type value: list
+        """
+        self.tmrna_features = value     # Should be a list
+        self._tmrna_features_tally = len(self.tmrna_features)
 
     def set_source_features(self, value):
         """Set and tally the source features.
@@ -424,10 +435,11 @@ class Genome:
             list_to_sort.extend(self.cds_features)
         if use_source:
             list_to_sort.extend(self.source_features)
+        # TODO: unit test after trna features are implemented.
         if use_trna:
             list_to_sort.extend(self.trna_features)
 
-        # TODO unit test after tmrna_features are implemented.
+        # TODO unit test after tmrna features are implemented.
         if use_tmrna:
             list_to_sort.extend(self.tmrna_features)
 
@@ -439,12 +451,13 @@ class Genome:
                     delimiter = "_CDS_"
                 elif isinstance(sorted_list[index], source.Source):
                     delimiter = "_SRC_"
+                # TODO unit test after trna features are implemented
                 elif isinstance(sorted_list[index], trna.TrnaFeature):
                     delimiter = "_TRNA_"
 
                 # TODO unit test after tmRNA class implemented.
-                # elif isinstance(sorted_list[index], tmrna.Tmrna):
-                #     delimiter = "_TMRNA_"
+                elif isinstance(sorted_list[index], tmrna.TmrnaFeature):
+                    delimiter = "_TMRNA_"
                 else:
                     delimiter = "_"
             else:
@@ -461,17 +474,15 @@ class Genome:
             x += 1
 
         # TODO implement for tRNA and tmRNA feature lists.
-        # y = 0
-        # while y < len(self.trna_features):
-        #     self.trna_features[y].locus_tag = ""
-        #     y += 1
-        #
-        # z = 0
-        # while z < len(self.tmrna_features):
-        #     self.tmrna_features[z].locus_tag = ""
-        #     z += 1
+        y = 0
+        while y < len(self.trna_features):
+            self.trna_features[y].locus_tag = ""
+            y += 1
 
-
+        z = 0
+        while z < len(self.tmrna_features):
+            self.tmrna_features[z].locus_tag = ""
+            z += 1
 
     # TODO unittest
     def set_feature_genome_ids(self, feature_type, value=None):
@@ -491,10 +502,10 @@ class Genome:
         elif feature_type.lower() == "source":
             feature_list = self.source_features
         # TODO implement.
-        # elif feature_type.lower() == "trna":
-        #     feature_list = self.trna_features
-        # elif feature_type.lower() == "tmrna":
-        #     feature_list = self.source_features
+        elif feature_type.lower() == "trna":
+            feature_list = self.trna_features
+        elif feature_type.lower() == "tmrna":
+            feature_list = self.tmrna_features
         else:
             feature_list = []
 
