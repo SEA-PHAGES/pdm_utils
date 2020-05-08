@@ -10,6 +10,7 @@ from sqlalchemy.sql.elements import BinaryExpression
 
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.classes.filter import Filter
+from pdm_utils.functions import cartography
 from pdm_utils.functions import querying
 
 # Import helper functions to build mock database
@@ -39,7 +40,6 @@ class TestFilter(unittest.TestCase):
         alchemist.password=pwd
         alchemist.database=db
         alchemist.connect()
-        alchemist.build_graph()
         self.alchemist = alchemist
 
         self.db_filter = Filter(alchemist=self.alchemist)
@@ -55,6 +55,9 @@ class TestFilter(unittest.TestCase):
         self.PhamID = self.gene.c.PhamID
         self.TrnaID = self.trna.c.TrnaID
         self.Product = self.trna.c.Product
+
+    def tearDown(self):
+        self.alchemist.clear()
 
     def test_and__1(self):
         """Verify that and_() creates a dictionary key as expected.
@@ -227,6 +230,43 @@ class TestFilter(unittest.TestCase):
 
         self.assertEqual(len(values), 1)
         self.assertEqual(values, ["A"])
+
+    def test_query_1(self):
+        """Verify that query() creates instances as expected.
+        """ 
+        self.db_filter.key = "phage.PhageID"
+        self.db_filter.values = ["Trixie", "D29"]
+        self.db_filter.refresh()
+
+        instances = self.db_filter.query("phage")
+
+        instance_ids = []
+        for instance in instances:
+            instance_ids.append(instance.PhageID)
+
+        self.assertTrue("Trixie" in instance_ids)
+        self.assertTrue("D29" in instance_ids)
+        self.assertFalse("Myrna" in instance_ids)
+
+    def test_query_2(self):
+        """Verify that query() creates instances as expected.
+        """
+        self.db_filter.key = "phage.PhageID"
+        self.db_filter.values = ["Trixie", "D29"]
+        self.db_filter.refresh()
+
+        instances = self.db_filter.query("gene")
+
+        instance_ids = set()
+
+        for instance in instances:
+            instance_ids.add(instance.phage.PhageID)
+
+        instance_ids = list(instance_ids)
+
+        self.assertTrue("Trixie" in instance_ids)
+        self.assertTrue("D29" in instance_ids)
+        self.assertFalse("Myrna" in instance_ids)
 
     def test_transpose_1(self):
         """Verify that transpose() utilizes Filter values as expected.
