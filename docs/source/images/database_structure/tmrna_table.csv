@@ -1,0 +1,1 @@
+Field,Data Type,Data origin (GenBank field or pipeline)GeneID,varchar(35),importPhageID,varchar(25),importStart,mediumint(9),LOCATIONStop,mediumint(9),LOCATIONLength,mediumint(9),importName,varchar(50),MULTIPLE FIELDSOrientation,"enum('F','R')",STRANDNote,blob,NOTELocusTag,varchar(35),LOCUS_TAGPeptideTag,varchar(50),
