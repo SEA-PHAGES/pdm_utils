@@ -20,7 +20,7 @@ CREATE TABLE `domain` (
   `Name` varchar(25) DEFAULT NULL,
   PRIMARY KEY (`ID`),
   UNIQUE KEY `hit_id` (`HitID`)
-) ENGINE=InnoDB AUTO_INCREMENT=2202795 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=3015221 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `gene`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -61,7 +61,7 @@ CREATE TABLE `gene_domain` (
   KEY `hit_id` (`HitID`),
   CONSTRAINT `gene_domain_ibfk_1` FOREIGN KEY (`GeneID`) REFERENCES `gene` (`GeneID`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `gene_domain_ibfk_2` FOREIGN KEY (`HitID`) REFERENCES `domain` (`HitID`)
-) ENGINE=InnoDB AUTO_INCREMENT=1413975 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=412018 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `phage`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -97,46 +97,41 @@ DROP TABLE IF EXISTS `tmrna`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `tmrna` (
+  `GeneID` varchar(35) NOT NULL,
   `PhageID` varchar(25) NOT NULL,
-  `TmrnaID` varchar(35) NOT NULL,
-  `LocusTag` varchar(35) DEFAULT NULL,
   `Start` mediumint(9) NOT NULL,
   `Stop` mediumint(9) NOT NULL,
+  `Length` mediumint(9) NOT NULL,
+  `Name` varchar(50) NOT NULL,
   `Orientation` enum('F','R') NOT NULL,
   `Note` blob,
+  `LocusTag` varchar(35) DEFAULT NULL,
   `PeptideTag` varchar(50) DEFAULT NULL,
-  PRIMARY KEY (`TmrnaID`)
+  PRIMARY KEY (`GeneID`),
+  KEY `PhageID` (`PhageID`),
+  CONSTRAINT `tmrna_ibfk_1` FOREIGN KEY (`PhageID`) REFERENCES `phage` (`PhageID`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `trna`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `trna` (
+  `GeneID` varchar(35) NOT NULL,
   `PhageID` varchar(25) NOT NULL,
-  `TrnaID` varchar(35) NOT NULL,
-  `LocusTag` varchar(35) DEFAULT NULL,
   `Start` mediumint(9) NOT NULL,
   `Stop` mediumint(9) NOT NULL,
   `Length` mediumint(9) NOT NULL,
+  `Name` varchar(50) NOT NULL,
   `Orientation` enum('F','R') NOT NULL,
-  `Sequence` varchar(100) NOT NULL,
-  `Product` blob,
   `Note` blob,
-  `AminoAcid` enum('Ala','Arg','Asn','Asp','Cys','Gln','Glu','Gly','His','Ile','Leu','Lys','Met','Phe','Pro','Ser','Thr','Trp','Tyr','Val','Undet','OTHER') NOT NULL,
+  `LocusTag` varchar(35) DEFAULT NULL,
+  `AminoAcid` enum('Ala','Arg','Asn','Asp','Cys','fMet','Gln','Glu','Gly','His','Ile','Ile2','Leu','Lys','Met','Phe','Pro','Pyl','SeC','Ser','Thr','Trp','Tyr','Val','Stop','OTHER') NOT NULL,
   `Anticodon` varchar(4) NOT NULL,
-  `InfernalScore` decimal(4,2) DEFAULT NULL,
-  PRIMARY KEY (`TrnaID`),
+  `Structure` blob,
+  `Source` enum('aragorn','trnascan','both') DEFAULT NULL,
+  PRIMARY KEY (`GeneID`),
   KEY `PhageID` (`PhageID`),
-  CONSTRAINT `trna_ibfk_1` FOREIGN KEY (`PhageID`) REFERENCES `phage` (`PhageID`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-DROP TABLE IF EXISTS `trna_structures`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `trna_structures` (
-  `Sequence` varchar(100) NOT NULL,
-  `Structure` varchar(300) NOT NULL,
-  PRIMARY KEY (`Sequence`)
+  CONSTRAINT `trna_ibfk_1` FOREIGN KEY (`PhageID`) REFERENCES `phage` (`PhageID`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `version`;

@@ -116,15 +116,15 @@ class TestParsing(unittest.TestCase):
     def test_translate_column_3(self):
         """Verify translate_column() returns case-sensitive column names.
         """
-        column = parsing.translate_column(self.metadata, "tRNA.tRNAid")
+        column = parsing.translate_column(self.metadata, "tRNA.geneid")
 
-        self.assertEqual(column, "TrnaID")
+        self.assertEqual(column, "GeneID")
 
     def test_translate_column_4(self):
         """Verify translate_column() raises ValueError from invalid column name.
         """
         with self.assertRaises(ValueError):
-            parsing.translate_column(self.metadata, "phage.not_column") 
+            parsing.translate_column(self.metadata, "phage.not_column")
 
 if __name__ == "__main__":
     unittest.main()

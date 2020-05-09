@@ -67,8 +67,8 @@ class TestQuerying(unittest.TestCase):
         self.Subcluster = self.phage.c.Subcluster
         self.GeneID = self.gene.c.GeneID
         self.PhamID = self.gene.c.PhamID
-        self.TrnaID = self.trna.c.TrnaID
-        self.Product = self.trna.c.Product
+        self.TrnaID = self.trna.c.GeneID
+        self.AminoAcid = self.trna.c.AminoAcid
 
     def test_get_table_1(self):
         """Verify get_table() retrieves correct Table.
@@ -235,7 +235,7 @@ class TestQuerying(unittest.TestCase):
     def test_get_table_list_2(self):
         """Verify get_table_list() accepts Column input.
         """
-        table_list = querying.get_table_list(self.Product)
+        table_list = querying.get_table_list(self.AminoAcid)
 
         self.assertEqual(table_list[0], self.trna)
 

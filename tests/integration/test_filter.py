@@ -51,10 +51,6 @@ class TestFilter(unittest.TestCase):
         self.PhageID = self.phage.c.PhageID
         self.Cluster = self.phage.c.Cluster
         self.Subcluster = self.phage.c.Subcluster
-        self.GeneID = self.gene.c.GeneID
-        self.PhamID = self.gene.c.PhamID
-        self.TrnaID = self.trna.c.TrnaID
-        self.Product = self.trna.c.Product
 
     def tearDown(self):
         self.alchemist.clear()
@@ -103,7 +99,7 @@ class TestFilter(unittest.TestCase):
         self.db_filter.and_("phage.PhageID=D29")
 
         self.db_filter.remove("phage.PhageID=Myrna")
-        
+
         or_block = self.db_filter.filters[0]
         where_clauses = or_block["phage.PhageID=D29"]
 
@@ -121,11 +117,11 @@ class TestFilter(unittest.TestCase):
         """Verify that add() creates multiple keys as expected.
         """
         self.db_filter.add("phage.PhageID=Myrna AND phage.PhageID = Trixie")
-        
+
         or_block = self.db_filter.filters[0]
-        
+
         self.assertTrue(len(or_block) == 2)
-        
+
         self.assertTrue("phage.PhageID=Myrna" in or_block.keys())
         self.assertTrue("phage.PhageID=Trixie" in or_block.keys())
 
@@ -133,15 +129,15 @@ class TestFilter(unittest.TestCase):
         """Verify that add() creates multiple or blocks as expected.
         """
         self.db_filter.add("phage.PhageID=Myrna OR phage.PhageID = Trixie")
-       
+
         self.assertTrue(len(self.db_filter.filters) == 2)
 
         first_or_block = self.db_filter.filters[0]
         second_or_block = self.db_filter.filters[1]
-         
+
         self.assertTrue("phage.PhageID=Myrna" in first_or_block.keys())
         self.assertFalse("phage.PhageID=Trixie" in first_or_block.keys())
-        
+
         self.assertFalse("phage.PhageID=Myrna" in second_or_block.keys())
         self.assertTrue("phage.PhageID=Trixie" in second_or_block.keys())
 
@@ -233,7 +229,7 @@ class TestFilter(unittest.TestCase):
 
     def test_query_1(self):
         """Verify that query() creates instances as expected.
-        """ 
+        """
         self.db_filter.key = "phage.PhageID"
         self.db_filter.values = ["Trixie", "D29"]
         self.db_filter.refresh()
@@ -450,7 +446,7 @@ class TestFilter(unittest.TestCase):
 
         self.assertTrue("Myrna" in group_results["C"])
         self.assertTrue("D29" in group_results["A"])
-        self.assertTrue("Trixie" in group_results["A"]) 
+        self.assertTrue("Trixie" in group_results["A"])
 
 if __name__ == "__main__":
     unittest.main()

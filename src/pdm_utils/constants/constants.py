@@ -7,7 +7,7 @@ from datetime import datetime, date
 from pathlib import Path
 
 # pdm_utils is compatibile with this schema version.
-CODE_SCHEMA_VERSION = 8
+CODE_SCHEMA_VERSION = 9
 
 CURRENT_DATE = date.today().strftime("%Y%m%d")
 

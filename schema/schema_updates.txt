@@ -53,4 +53,4 @@
 # Schema version: 9
 # Implemented by: Travis Mavrich
 # Removal of trna_structures table and substantial structural changes to trna and tmrna tables.
-# Not yet implemented.
+# Implemented 20200508 in database version = 354.

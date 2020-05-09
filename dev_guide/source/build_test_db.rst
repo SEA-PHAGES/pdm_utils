@@ -21,7 +21,11 @@ Some integration tests require a pre-defined, non-empty test database, called 't
 
         mysql -u root -p pdm_test_db < Actinobacteriophage.sql
 
-5.  Log into mysql and run the following commands::
+5. Convert the database to the correct schema, if needed::
+
+        python3 -m pdm_utils convert pdm_test_db
+
+6.  Log into mysql and run the following commands::
 
         USE pdm_test_db;
         DELETE FROM phage WHERE PhageID NOT IN ('Alice', 'Atlantean', 'Myrna', 'MichelleMyBell', 'BaxterFox', 'Octobien14', 'Aubergine', 'Lucky3', 'Constance', 'Mufasa8', 'Yvonnetastic', 'Et2Brutus', 'D29', 'L5', 'Trixie', 'Sparky');
@@ -30,11 +34,11 @@ Some integration tests require a pre-defined, non-empty test database, called 't
         COMMIT;
         EXIT;
 
-6.  Dump the new database::
+7.  Dump the new database::
 
         mysqldump -u root -p --skip-comments pdm_test_db > test_db.sql
 
-7.  Copy test_db.sql to the test directory::
+8.  Copy test_db.sql to the test directory::
 
         cp ./test_db.sql <path to repo>/pdm_utils/tests/test_files
 

@@ -41,7 +41,15 @@ Any changes made to the structure (schema) of the database (in the form of schem
 
     7. Incorporate the upgrade and downgrade statements into the ``pdm_utils`` schema_conversions module so that they can be implemented using the Python package.
 
-    8. In the convert module, edit the CURRENT_VERSION and MAX_VERSION variables accordingly.
+    8. In the convert module, edit the MAX_VERSION variable accordingly.
+
+
+
+    8. In the convert module, edit the CURRENT_VERSION variable accordingly (this can only be done in sync with upgrading the production database).
+    8. In the constants module, edit the CODE_SCHEMA_VERSION variable accordingly (this can only be done in sync with upgrading the test database files).
+
+
+
 
     9. Use the convert module to upgrade the primary production database to the new schema version. This will convert the schema and update version.SchemaVersion.
 
@@ -83,3 +91,7 @@ Any changes made to the structure (schema) of the database (in the form of schem
 
         2. Rename the file to 'test_schema_<schema_version>.sql'
         3. Remove the test schema file of the prior version.
+        4. Create a new filled test database using the new schema.
+
+    16. Update the package version and upload new package to PyPI.
+    17. Update online user guide.
