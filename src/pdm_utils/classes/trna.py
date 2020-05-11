@@ -908,7 +908,7 @@ class TrnaFeature:
             status = fail
 
         definition = f"Check that the annotated amino acid is in the allowed" \
-                     f"set for {self.id}."
+                     f" set for {self.id}."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
