@@ -401,6 +401,69 @@ def create_gene_table_insert(cds_ftr):
     return statement
 
 
+def create_trna_table_insert(trna_ftr):
+    """
+    Create a MySQL trna table INSERT statement.
+    :param trna_ftr: a pdm_utils TrnaFeature object
+    :type trna_ftr: TrnaFeature
+    :returns: a MySQL statement to INSERT a new row in the 'trna' table
+    with all of trna_ftr's relevant data
+    :rtype: str
+    """
+    # Any values that could be none should be run through mysqldb_basic's
+    # convert_for_sql method so that the statement is does not cause errors
+    # when evaluated
+    geneid, phageid = trna_ftr.id, trna_ftr.genome_id
+    name = trna_ftr.name
+    locus_tag = mysqldb_basic.convert_for_sql(
+        trna_ftr.locus_tag, check_set={""}, single=False)
+    start, stop, length = trna_ftr.start, trna_ftr.stop, trna_ftr.length
+    orientation = trna_ftr.orientation
+    note = mysqldb_basic.convert_for_sql(
+        trna_ftr.note, check_set={""}, single=False)
+    amino_acid, anticodon = trna_ftr.amino_acid, trna_ftr.anticodon
+    structure = mysqldb_basic.convert_for_sql(
+        trna_ftr.structure, check_set={""}, single=False)
+    source = mysqldb_basic.convert_for_sql(
+        trna_ftr.use, check_set={None}, single=False)
+
+    statement = f"""INSERT INTO trna (GeneID, PhageID, Start, Stop, Length, 
+                    Name, Orientation, Note, LocusTag, AminoAcid, Anticodon, 
+                    Structure, Source) VALUES ("{geneid}", "{phageid}", 
+                    {start}, {stop}, {length}, "{name}", "{orientation}", 
+                    {note}, {locus_tag}, "{amino_acid}", "{anticodon}", 
+                    {structure}, {source})"""
+
+    print(statement)
+    return statement
+
+
+def create_tmrna_table_insert(tmrna_ftr):
+    """
+
+    :param tmrna_ftr:
+    :return:
+    """
+    geneid, phageid = tmrna_ftr.id, tmrna_ftr.genome_id
+    name = tmrna_ftr.name
+    locus_tag = mysqldb_basic.convert_for_sql(
+        tmrna_ftr.locus_tag, check_set={""}, single=False)
+    start, stop, length = tmrna_ftr.start, tmrna_ftr.stop, tmrna_ftr.length
+    orientation = tmrna_ftr.orientation
+    note = mysqldb_basic.convert_for_sql(
+        tmrna_ftr.note, check_set={""}, single=False)
+    peptide_tag = mysqldb_basic.convert_for_sql(
+        tmrna_ftr.peptide_tag, check_set={""}, single=False)
+
+    statement = f"""INSERT INTO tmrna (GeneID, PhageID, Start, Stop, Length, 
+                    Name, Orientation, Note, LocusTag, PeptideTag) VALUES (
+                    "{geneid}", "{phageid}", {start}, {stop}, {length}, 
+                    "{name}", "{orientation}", {note}, {locus_tag}, 
+                    {peptide_tag})"""
+    print(statement)
+    return statement
+
+
 def create_phage_table_insert(gnm):
     """Create a MySQL phage table INSERT statement.
 
@@ -459,6 +522,12 @@ def create_genome_statements(gnm, tkt_type=""):
     for cds_ftr in gnm.cds_features:
         statement3 = create_gene_table_insert(cds_ftr)
         sql_statements.append(statement3)
+    for trna_ftr in gnm.trna_features:
+        statement4 = create_trna_table_insert(trna_ftr)
+        sql_statements.append(statement4)
+    for tmrna_ftr in gnm.tmrna_features:
+        statement5 = create_tmrna_table_insert(tmrna_ftr)
+        sql_statements.append(statement5)
 
     # TODO add steps to insert tRNA and tmRNA data.
 
