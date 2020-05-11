@@ -1,11 +1,14 @@
-import unittest
 from pathlib import Path
-from unittest import Mock
-from unittest import patch
-from unittest import PropertyMock
+import shutil
+import sys 
+import unittest
+from unittest.mock import Mock
+from unittest.mock import patch
+from unittest.mock import PropertyMock
 
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.classes.filter import Filter
+from pdm_utils.functions import basic
 from pdm_utils.pipelines import resubmit
 from pdm_utils.pipelines.review import PF_HEADER
 
@@ -21,14 +24,21 @@ PWD = test_db_utils.PWD
 DB = test_db_utils.DB
 TEST_DIR = "/tmp/pdm_utils_tests_resubmit"
 
-TEST_DATA = [{"Pham" : ,"#Members" : ,"Clusters" : "#Functions" : , 
-              "Functional Calls" : ,"Final Call" : },
-             {"Pham" : ,"#Members" : ,"Clusters" : "#Functions" : , 
-              "Functional Calls" : ,"Final Call" : },
-             {"Pham" : ,"#Members" : ,"Clusters" : "#Functions" : , 
-              "Functional Calls" : ,"Final Call" : },
-             {"Pham" : ,"#Members" : ,"Clusters" : "#Functions" : , 
-              "Functional Calls" : ,"Final Call" : }]
+TEST_DATA = [{"Pham" : 40481,"#Members" : 4,"Clusters" : "A", "#Functions" : 3,
+              "Functional Calls" : "Hypothetical Protein;terminase;Terminase", 
+              "Final Call" : "terminase"},
+             {"Pham" : 25050,"#Members" : 4,"Clusters" : "A;N;None",
+              "#Functions" : 2, 
+              "Functional Calls" : "Hypothetical Protein;minor tail protein",
+              "Final Call" : "Hypothetical Protein"},
+             {"Pham" : 40880,"#Members" : 4,"Clusters" : "A;N","#Functions" : 3, 
+              "Functional Calls" : "Hypothetical Protein;Holin;holin",
+              "Final Call" : "holin"},
+             {"Pham" : 39529,"#Members" : 5,"Clusters" : "A;None", 
+              "#Functions" : 5, 
+              "Functional Calls" : ("Hypothetical Protein;endonuclease;"
+                                    "Endo VII;EndoVII;endonuclease VII"),
+              "Final Call" : "endonuclease VII"}]
 
 
 class TestGenbankResubmit(unittest.TestCase):
@@ -43,7 +53,7 @@ class TestGenbankResubmit(unittest.TestCase):
         self.test_dir.mkdir()
         self.resubmit_form = self.test_dir.joinpath("resubmit_form.txt")
 
-        basic.export_data_dicts(TEST_DATA, self.resubmit_form, PF_HEADERS, 
+        basic.export_data_dict(TEST_DATA, self.resubmit_form, PF_HEADER, 
                                                         include_headers=True)
 
     @classmethod
@@ -56,24 +66,22 @@ class TestGenbankResubmit(unittest.TestCase):
         self.alchemist.username = USER
         self.alchemist.password = PWD
         self.alchemist.database = DB
-        self.alchemist.connect(ask_database=True, login_attemptes=0)
+        self.alchemist.connect(ask_database=True, login_attempts=0)
 
-        self.export_test_dir = self.test_dir.joinpath("export_test_dir")
+        self.resubmit_test_dir = self.test_dir.joinpath("resubmit_test_dir")
 
     def tearDown(self):
-        if self.export_test_dir.is_dir():
-            shutil.rmtree(str(self.export_test_dir))
+        if self.resubmit_test_dir.is_dir():
+            shutil.rmtree(str(self.resubmit_test_dir))
 
     def test_execute_resubmit_1(self):
         """Verify execute_resubmit creates new directory as expected.
         """
+        resubmit.execute_resubmit(self.alchemist, TEST_DATA, self.test_dir,
+                                    self.resubmit_test_dir.name)
+
+        self.assertTrue(self.resubmit_test_dir.is_dir())
        
-def write_test_resubmit_form(export_path, file_path):
-    data_dicts = [{}] 
-
     
-
-    
-
 if __name__ == "__main__":
     unittest.main()
