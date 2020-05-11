@@ -416,8 +416,15 @@ def format_pg_data(row_dict, gene):
     """
     row_dict["Gene"] = gene
     row_dict["Phage"] = row_dict.pop("PhageID")[0]
-    row_dict["Gene#"] = row_dict.pop("Name")
-    row_dict["Functional Call"] = row_dict.pop("Notes")
+    row_dict["Gene#"] = row_dict.pop("Name")[0]
+    row_dict["Cluster"] = row_dict["Cluster"][0]
+    row_dict["Translation"] = row_dict["Translation"][0]
+
+    note = row_dict.pop("Notes")[0]
+    if not note is None:
+        note = note.decode("utf-8")
+
+    row_dict["Functional Call"] = note
 
 def get_pf_data_columns(alchemist):
     """Gets labelled columns for pham function data retrieval.
