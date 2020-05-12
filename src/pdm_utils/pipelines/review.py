@@ -421,7 +421,9 @@ def format_pg_data(row_dict, gene):
     row_dict["Translation"] = row_dict["Translation"][0]
 
     note = row_dict.pop("Notes")[0]
-    if not note is None:
+    if note is None or note == "".encode("utf-8"):
+        note = "Hypothetical Protein"
+    else:
         note = note.decode("utf-8")
 
     row_dict["Functional Call"] = note
