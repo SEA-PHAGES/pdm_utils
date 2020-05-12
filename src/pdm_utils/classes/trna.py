@@ -1298,40 +1298,61 @@ class TrnaFeature:
 
         # We'll use Aragorn by default when available
         if self.use == "both" or self.use == "aragorn":
-            a_start = self.aragorn_data["Start"]
-            a_stop = self.aragorn_data["Stop"]
-            if a_start == 0 and a_stop == self.length:
-                self.structure = self.aragorn_data["Structure"]
-                result += "appear to be correct."
-                status = success
-            else:
-                start_offset = a_start
-                stop_offset = self.length - a_stop
-                self.structure = "." * start_offset + self.aragorn_data["Structure"][:stop_offset]
-                result += f"differ from the Aragorn prediction (" \
-                          f"{self.start + start_offset + 1}, " \
-                          f"{self.stop - stop_offset})."
-                status = fail
+            start_offset = self.aragorn_data["Start"]
+            aragorn_stop = self.aragorn_data["Stop"]
+            stop_offset = self.length - aragorn_stop
+            structure = self.aragorn_data["Structure"]
         # Use tRNAscan-SE if that's all we've got
         elif self.use == "trnascan":
-            t_start = self.trnascanse_data["Start"]
-            t_stop = self.trnascanse_data["Stop"]
-            if t_start == 0 and t_stop == self.length:
-                self.structure = self.trnascanse_data["Structure"]
-                result += "appear to be correct."
-                status = success
-            else:
-                start_offset = t_start
-                stop_offset = self.length - t_stop
-                self.structure = "." * start_offset + self.trnascanse_data["Structure"][:stop_offset]
-                result += f"differ from the tRNAscan-SE prediction (" \
-                          f"{self.start + start_offset + 1}, " \
-                          f"{self.stop - stop_offset})."
-                status = fail
+            start_offset = self.trnascanse_data["Start"]
+            trnascanse_stop = self.trnascanse_data["Stop"]
+            stop_offset = self.length - trnascanse_stop
+            structure = self.trnascanse_data["Structure"]
         else:
+            start_offset = -99999     # arbitrary number that will never happen
+            stop_offset = -99999      # arbitrary number that will never happen
+            structure = ""
+
+        # Now check the offsets and adjust the structure as appropriate
+        if start_offset == stop_offset == 0:
+            result += "appear to be correct."
+            status = success
+        elif start_offset == stop_offset == -99999:
             result += f"should be investigated - neither Aragorn nor " \
                       f"tRNAscan-SE identify a tRNA in this position."
             status = fail
+        else:
+            result += "appear to be incorrect. Left coordinate "
+            status = fail
+
+            if start_offset == 0:
+                result += "looks correct. "
+            # Else we need to modify the structure to accommodate extra or
+            # missing bases
+            elif start_offset < 0:
+                # tRNA is annotated shorter than Aragorn says it should be
+                structure = structure[abs(start_offset):]
+                result += f"should be moved left by {abs(start_offset)} " \
+                          f"base(s). "
+            else:
+                # tRNA is annotated longer than Aragorn thinks it should be
+                structure = ("." * start_offset) + structure
+                result += f"should be moved right by {start_offset} base(s). "
+
+            result += "Right coordinate "
+            if stop_offset == 0:
+                result += "looks correct."
+            elif stop_offset < 0:
+                # tRNA is annotated shorter than Aragorn says it should be
+                structure = structure[:self.length]
+                result += f"should be moved right by {abs(stop_offset)} " \
+                          f"base(s)."
+            else:
+                # tRNA is annotated longer than Aragorn thinks it should be
+                structure = structure + ("." * stop_offset)
+                result += f"should be moved left by {stop_offset} base(s)."
+
+        self.structure = structure
 
         definition = f"Check if the tRNA coordinates appear to match the " \
                      f"Aragorn or tRNAscan-SE prediction(s) for {self.id}."
