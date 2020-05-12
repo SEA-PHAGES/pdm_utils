@@ -1,4 +1,5 @@
 import argparse
+import os
 import sys
 import time
 from pathlib import Path
@@ -200,8 +201,17 @@ def execute_resubmit(alchemist, revisions_data_dicts, folder_path, folder_name,
                 format_resubmit_data(result, data_dict["Final Call"]) 
                 export_dicts.append(result)
 
+        if not export_dicts:
+            if verbose:
+                print("'{mapped_path.name}' data selected for resubmision "
+                      "matches selected call; no resubmision exported...")
+
+            mapped_path.rmdir()
+            continue
+
         export_dicts = sorted(export_dicts, 
                               key=lambda export_dict: export_dict["Phage"])
+
 
         if verbose:
             print(f"Writing {CSV_NAME} in {mapped_path.name}...")
