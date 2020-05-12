@@ -78,7 +78,7 @@ class AragornHandler:
         """
         # values:        orient,  start, stop,            peptide tag
         # indices:          0       1     2                    3
-        re_str = "tmRNA\s+(\w+)?\[(\d+),(\d+)\]\s+\d+,\d+\s+([\w|*]*)"
+        re_str = "tmRNA\s+(\w+)?\[(-?\d+),(\d+)\]\s+\d+,\d+\s+([\w|*]*)"
         regex = re.compile(re_str, re.MULTILINE | re.DOTALL)
 
         tmrnas = regex.findall(self.out_str)
@@ -125,8 +125,8 @@ class AragornHandler:
         """
         # values:       aa., orient, start, stop,          anticodon,
         # indices:       0      1      2     3                 4
-        re_str = "tRNA-(\w+)\s+(c)?\[(\d+),(\d+)\]\s+\d+\s+\((\w+)\)" \
-                 "\s+(\w+)\s+([( )dAtv.]*)"
+        re_str = "tRNA-(\w+)\s+(c)?\[(-?\d+),(\d+)\]\s+\d+\s+\((\w+)\)\s+" \
+                 "([.]*?\w+)\s+([( )dAtv.]*)"
         # values:   sequence,  structure
         # indices:     5           6
         regex = re.compile(re_str, re.MULTILINE | re.DOTALL)
@@ -148,10 +148,16 @@ class AragornHandler:
             else:
                 orientation = "reverse"
 
+            # If start coordinate is negative, add 1 because Aragorn indexing
+            # goes from -1 to 1 (skips 0)
+            start, stop = int(trna[2]), int(trna[3])
+            if start < 0:
+                start += 1
+
             # Coordinates need to be converted from 1-based closed to
             # 0-based half open
             start, stop = basic.reformat_coordinates(
-                int(trna[2]), int(trna[3]), "1_closed", "0_half_open")
+                start, stop, "1_closed", "0_half_open")
 
             anticodon = trna[4]
             sequence = trna[5]
@@ -160,7 +166,7 @@ class AragornHandler:
             # Convert structure to true dot-bracket notation
             for char in [" ", "d", "A", "t", "v"]:
                 structure = structure.replace(char, ".")
-            # Pad structure with periods to ensure full coverage of sequence
+
             while len(structure) < len(sequence):
                 structure += "."
 
@@ -182,10 +188,10 @@ class AragornHandler:
         """
         # values: possible amino acids., orient, start, stop,
         # indices:          0      1        2      3     4
-        re_str = "tRNA-?\((\w+)\|(\w+)\)\s+(c)?\[(\d+),(\d+)\]\s+\d+\s+" \
-                 "\((\w+)\)\s+(\w+)\s+([( )dAtv.]*)"
-        # values: anticodon, sequence, structure
-        # indices:    5         6          7
+        re_str = "tRNA-?\((\w+)\|(\w+)\)\s+(c)?\[(-?\d+),(\d+)\]\s+\d+\s+" \
+                 "\((\w+)\)\s+([.]*?\w+)\s+([( )dAtv.]*)"
+        # values: anticodon,   sequence, structure
+        # indices:    5           6          7
         regex = re.compile(re_str, re.MULTILINE | re.DOTALL)
 
         trnas = regex.findall(self.out_str)
@@ -205,16 +211,27 @@ class AragornHandler:
             else:
                 orientation = "reverse"
 
+            # If start coordinate is negative, add 1 because Aragorn indexing
+            # goes from -1 to 1 (skips 0)
+            start, stop = int(trna[2]), int(trna[3])
+            if start < 0:
+                start += 1
+
             # Coordinates need to be converted from 1-based closed to
             # 0-based half open
             start, stop = basic.reformat_coordinates(
-                int(trna[3]), int(trna[4]), "1_closed", "0_half_open")
+                start, stop, "1_closed", "0_half_open")
 
             anticodon = trna[5]
             sequence = trna[6]
             structure = trna[7]
+
+            # Convert structure to true dot-bracket notation
             for char in [" ", "d", "A", "t", "v"]:
                 structure = structure.replace(char, ".")
+
+            while len(structure) < len(sequence):
+                structure += "."
 
             trna_data["Orientation"] = orientation
             trna_data["Start"] = start
