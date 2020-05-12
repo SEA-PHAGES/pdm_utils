@@ -369,8 +369,8 @@ class TestFilter(unittest.TestCase):
  
     @patch("pdm_utils.classes.filter.q.first_column")
     @patch("pdm_utils.classes.filter.q.build_select")
-    @patch("pdm_utils.classes.filter.Filter.convert_column_input")
-    def test_sort_1(self, convert_column_input_mock, build_select_mock,
+    @patch("pdm_utils.classes.filter.Filter.get_column")
+    def test_sort_1(self, get_column_mock, build_select_mock,
                                                      first_column_mock):
         """Verify function structure of sort().
         """
@@ -381,7 +381,7 @@ class TestFilter(unittest.TestCase):
         self.db_filter.sort("column")
 
     
-        convert_column_input_mock.assert_called()
+        get_column_mock.assert_called()
         build_select_mock.assert_called()
         first_column_mock.assert_called()
 
