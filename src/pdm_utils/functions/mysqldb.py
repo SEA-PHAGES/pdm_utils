@@ -434,7 +434,6 @@ def create_trna_table_insert(trna_ftr):
                     {note}, {locus_tag}, "{amino_acid}", "{anticodon}", 
                     {structure}, {source})"""
 
-    print(statement)
     return statement
 
 
@@ -460,7 +459,7 @@ def create_tmrna_table_insert(tmrna_ftr):
                     "{geneid}", "{phageid}", {start}, {stop}, {length}, 
                     "{name}", "{orientation}", {note}, {locus_tag}, 
                     {peptide_tag})"""
-    print(statement)
+
     return statement
 
 
