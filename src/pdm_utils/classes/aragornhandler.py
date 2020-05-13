@@ -188,7 +188,7 @@ class AragornHandler:
         """
         # values: possible amino acids., orient, start, stop,
         # indices:          0      1        2      3     4
-        re_str = "tRNA-?\((\w+)\|(\w+)\)\s+(c)?\[(-?\d+),(\d+)\]\s+\d+\s+" \
+        re_str = "tRNA-\?\((\w+)\|(\w+)\)\s+(c)?\[(-?\d+),(\d+)\]\s+\d+\s+" \
                  "\((\w+)\)\s+([.]*?\w+)\s+([( )dAtv.]*)"
         # values: anticodon,   sequence, structure
         # indices:    5           6          7
@@ -213,7 +213,7 @@ class AragornHandler:
 
             # If start coordinate is negative, add 1 because Aragorn indexing
             # goes from -1 to 1 (skips 0)
-            start, stop = int(trna[2]), int(trna[3])
+            start, stop = int(trna[3]), int(trna[4])
             if start < 0:
                 start += 1
 
