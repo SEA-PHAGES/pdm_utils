@@ -72,6 +72,8 @@ def get_eval_flag_dict(eval_mode):
         dict["check_locus_tag"] = False
         dict["check_description_field"] = False
         dict["check_replace"] = False
+        dict["check_trna"] = False
+        dict["check_tmrna"] = False
         dict["check_id_typo"] = False
         dict["check_host_typo"] = False
         dict["check_author"] = False
