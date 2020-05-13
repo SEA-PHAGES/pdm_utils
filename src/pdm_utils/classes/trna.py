@@ -931,8 +931,10 @@ class TrnaFeature:
 
         # If both programs found a tRNA here
         if self.use == "both":
-            # All Aragorn isotypes are valid in our database
+            # All Aragorn isotypes are valid in our database except undet
             a_isotype = self.aragorn_data["AminoAcid"]
+            if "|" in a_isotype:
+                a_isotype = "OTHER"
             # Some tRNAscan-SE isotypes need to be converted to allowed value
             t_isotype = self.trnascanse_data["AminoAcid"]
             if t_isotype not in MYSQL_AMINO_ACIDS:
@@ -973,6 +975,8 @@ class TrnaFeature:
         # If only Aragorn found a tRNA here
         elif self.use == "aragorn":
             a_isotype = self.aragorn_data["AminoAcid"]
+            if "|" in a_isotype:
+                a_isotype = "OTHER"
             t_isotype = "no tRNA"
             if a_isotype == self.amino_acid:
                 result += f"is consistent with Aragorn ({a_isotype}) and " \
@@ -1312,6 +1316,14 @@ class TrnaFeature:
             start_offset = -99999     # arbitrary number that will never happen
             stop_offset = -99999      # arbitrary number that will never happen
             structure = ""
+
+        # If tRNA is not forward-oriented, the start/stop offsets are reversed
+        # because we put the real tRNA DNA sequence as the input, NOT the top
+        # strand DNA sequence
+        orientation = basic.reformat_strand(
+            self.orientation, format="fr_short", case=True)
+        if orientation == "R":
+            start_offset, stop_offset = stop_offset, start_offset
 
         # Now check the offsets and adjust the structure as appropriate
         if start_offset == stop_offset == 0:
