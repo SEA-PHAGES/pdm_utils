@@ -259,9 +259,10 @@ def execute_review(alchemist, folder_path, folder_name,
                      verbose=verbose)
 
         if pg_report:
-            execute_pg_export(db_filter, mapped_path, verbose=verbose)
+            execute_pg_export(alchemist, db_filter, mapped_path, 
+                                                    verbose=verbose)
                
-def execute_pg_export(db_filter, export_path, verbose=False):
+def execute_pg_export(alchemist, db_filter, export_path, verbose=False):
     """Executes export of gene data for a reviewed pham.
 
     :param alchemist: A connected and fully built AlchemyHandler object.
@@ -277,7 +278,8 @@ def execute_pg_export(db_filter, export_path, verbose=False):
     :param verbose: A boolean value to toggle progress print statements.
     :type verbose: bool
     """
-    pg_path = folder_path.joinpath("GeneReports")
+    pg_path = export_path.joinpath("GeneReports")
+    pg_path.mkdir()
 
     for pham in db_filter.values:
         db_filter.values = [pham]
@@ -326,7 +328,8 @@ def write_report(data, export_path, header, csv_name="PhamReport",
 
     """
     if not export_path.is_dir():
-        raise ValueError("Passed in path is not a directory.")
+        print("Passed in path is not a directory.")
+        sys.exit(1)
 
     file_path = export_path.joinpath(f"{csv_name}.csv")
     if verbose:
@@ -357,7 +360,7 @@ def get_pf_data(alchemist, db_filter, verbose=False):
 
     return pf_data
 
-def get_pg_data(alchemist, db_filter, verbose=False):  
+def get_pg_data(alchemist, db_filter, pham, verbose=False):  
     if verbose:
         print("Retrieving genes in pham {pham}...")
     db_filter.transpose("gene.GeneID", set_values=True) 
@@ -372,7 +375,7 @@ def get_pg_data(alchemist, db_filter, verbose=False):
 
         row_dict = row_dicts[gene]
 
-        format_pg_data(row_dict)
+        format_pg_data(row_dict, gene)
         pg_data.append(row_dict)
 
     db_filter.key = "gene.PhamID"
@@ -413,8 +416,17 @@ def format_pg_data(row_dict, gene):
     """
     row_dict["Gene"] = gene
     row_dict["Phage"] = row_dict.pop("PhageID")[0]
-    row_dict["Gene#"] = row_dict.pop("Name")
-    row_dict["Functional Call"] = row_dict.pop("Notes")
+    row_dict["Gene#"] = row_dict.pop("Name")[0]
+    row_dict["Cluster"] = row_dict["Cluster"][0]
+    row_dict["Translation"] = row_dict["Translation"][0]
+
+    note = row_dict.pop("Notes")[0]
+    if note is None or note == "".encode("utf-8"):
+        note = "Hypothetical Protein"
+    else:
+        note = note.decode("utf-8")
+
+    row_dict["Functional Call"] = note
 
 def get_pf_data_columns(alchemist):
     """Gets labelled columns for pham function data retrieval.
@@ -429,7 +441,7 @@ def get_pf_data_columns(alchemist):
 
     return pf_columns
 
-def get_pg_data_columns(self):
+def get_pg_data_columns(alchemist):
     """Gets labelled columns for pham gene data retrieval.
 
     :returns: List of labelled columns for gene data retrieval.
