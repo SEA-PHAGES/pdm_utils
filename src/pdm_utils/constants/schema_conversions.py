@@ -357,6 +357,14 @@ CONVERSION_STEPS = {
             }
         },
 
+    "upgrade_9_to_10": {
+        statements: [
+            """ALTER TABLE `gene` MODIFY COLUMN `Translation` blob DEFAULT NULL;""",
+            """UPDATE `version` SET `SchemaVersion` = 10;"""
+            ],
+        step_summary_dict: {}
+        },
+
     # Downgrade steps
     "downgrade_1_to_0": {
         statements: [
@@ -676,6 +684,17 @@ CONVERSION_STEPS = {
                 "tmrna.Name",
                 "tmrna.Length"
                 ]
+            }
+        },
+
+    "downgrade_10_to_9": {
+        statements: [
+            """UPDATE `gene` SET `Translation` = NULL WHERE LENGTH(`Translation`) > 5000;""",
+            """ALTER TABLE `gene` MODIFY COLUMN `Translation` varchar(5000) DEFAULT NULL;""",
+            """UPDATE `version` SET `SchemaVersion` = 9;"""
+            ],
+        step_summary_dict: {
+            lost_data: ["gene.Translation"]
             }
         }
     }

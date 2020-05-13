@@ -1,14 +1,47 @@
 # Below is a history of changes associated with each database schema
 # (relative to the prior schema).
 
-# Schema version: 0
-# Implemented by: Steven Cresawn
-# The empty schema does not contain CASCADE settings.
 
-# Schema version: 1
-# Implemented by: Charles Bowman
-# Example database: Actinobacteriophage_789
-# Added CASCADE settings and version table.
+# Schema version: 10
+# Implemented by: Travis Mavrich
+# Convert gene.Translation datatype.
+# Not implemented yet.
+
+# Schema version: 9
+# Implemented by: Travis Mavrich
+# Removal of trna_structures table and substantial structural changes to trna and tmrna tables.
+# Implemented 20200508 in database version = 354.
+
+# Schema version: 8
+# Implemented by: Travis Mavrich
+# Small modification: gene.PhamID foreign key constraint was redefined. This was needed to be able to remove data from pham.PhamID even though gene.PhamID is a foreign key.
+# Implemented 20200120 in database version = 336.
+
+# Schema version: 7
+# Implemented by: Travis Mavrich
+# Several columns renamed. The pham table was dropped. The pham_color table was renamed to pham.
+# Implemented 20200115 in database version = 335.
+
+# Schema version: 6
+# Implemented by: Travis Mavrich
+# Column nomenclature standardized.
+# Implemented 20191115 in database version = 323.
+
+# Schema version: 5
+# Implemented by: Travis Mavrich
+# Several unused tables and columns were removed.
+# Implemented 20191002 in database version = 311.
+
+# Schema version: 4
+# Implemented by: Christian Gauthier
+# Added tables related to tRNA and tmRNA features.
+# These improvements were implemented ~20190726 over several versions instead of in a
+# single step.
+
+# Schema version: 3
+# Implemented by: Travis Mavrich
+# Added/removed several columns in multiple tables.
+# These improvements were implemented ~20180620 over versions 165-166.
 
 # Schema version: 2
 # Implemented by: Travis Mavrich
@@ -17,40 +50,11 @@
 # These improvements were implemented over several versions instead of in a
 # single step.
 
-# Schema version: 3
-# Implemented by: Travis Mavrich
-# Added/removed several columns in multiple tables.
-# These improvements were implemented ~20180620 over versions 165-166.
+# Schema version: 1
+# Implemented by: Charles Bowman
+# Example database: Actinobacteriophage_789
+# Added CASCADE settings and version table.
 
-# Schema version: 4
-# Implemented by: Christian Gauthier
-# Added tables related to tRNA and tmRNA features.
-# These improvements were implemented ~20190726 over several versions instead of in a
-# single step.
-
-# Schema version: 5
-# Implemented by: Travis Mavrich
-# Several unused tables and columns were removed.
-# Implemented 20191002 in database version = 311.
-
-# Schema version: 6
-# Implemented by: Travis Mavrich
-# Column nomenclature standardized.
-# Implemented 20191115 in database version = 323.
-
-# Schema version: 7
-# Implemented by: Travis Mavrich
-# Several columns renamed. The pham table was dropped. The pham_color table was renamed to pham.
-# Implemented 20200115 in database version = 335.
-
-
-# Schema version: 8
-# Implemented by: Travis Mavrich
-# Small modification: gene.PhamID foreign key constraint was redefined. This was needed to be able to remove data from pham.PhamID even though gene.PhamID is a foreign key.
-# Implemented 20200120 in database version = 336.
-
-
-# Schema version: 9
-# Implemented by: Travis Mavrich
-# Removal of trna_structures table and substantial structural changes to trna and tmrna tables.
-# Implemented 20200508 in database version = 354.
+# Schema version: 0
+# Implemented by: Steven Cresawn
+# The empty schema does not contain CASCADE settings.

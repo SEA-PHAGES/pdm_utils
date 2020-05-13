@@ -7,7 +7,7 @@ from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.functions import mysqldb, mysqldb_basic
 from pdm_utils.constants import schema_conversions
 
-MAX_VERSION = 9
+MAX_VERSION = 10
 CURRENT_VERSION = 9
 VERSIONS = list(range(0, MAX_VERSION + 1))
 CHOICES = set(VERSIONS)
