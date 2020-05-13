@@ -274,17 +274,14 @@ class TestAlchemyHandler(unittest.TestCase):
                                                         "ask_credentials")
     @patch("pdm_utils.classes.alchemyhandler.sqlalchemy.create_engine")
     def test_build_engine_2(self, create_engine_mock, ask_credentials_mock):
-        """Verify build_engine() calls create_engine() with engine string.
+        """Verify build_engine() raises attribute error without credentials.
         """
         self.alchemist.username = "user"
         self.alchemist.password = "pass"
         self.alchemist.has_credentials = False
 
-        self.alchemist.build_engine()
-
-        ask_credentials_mock.assert_called()
-        login_string = "mysql+pymysql://user:pass@localhost/"
-        create_engine_mock.assert_called_with(login_string, echo=False)
+        with self.assertRaises(AttributeError):
+            self.alchemist.build_engine()
    
     @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.validate_database")
     @patch("pdm_utils.classes.alchemyhandler.sqlalchemy.create_engine")

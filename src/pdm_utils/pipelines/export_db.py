@@ -688,7 +688,7 @@ def build_groups_map(db_filter, export_path, conditionals_map, groups=[],
             print(f"Grouping by {current_group}...")
 
     try:
-        group_column = db_filter.convert_column_input(current_group)
+        group_column = db_filter.get_column(current_group)
     except:
         print(f"Group '{current_group}' is not a valid group.")
         sys.exit(1)

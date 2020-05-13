@@ -267,7 +267,10 @@ def convert_to_encoded(values):
 
     converted_values = []
     for value in values:
-        converted_values.append(value.encode("utf-8"))
+        if value is None:
+            converted_values.append(value)
+        else:
+            converted_values.append(value.encode("utf-8"))
 
     return converted_values
 
@@ -284,7 +287,10 @@ def convert_to_decoded(values):
 
     converted_values = []
     for value in values:
-        converted_values.append(value.decode("utf-8"))
+        if value is None:
+            converted_values.append(value)
+        else:
+            converted_values.append(value.decode("utf-8"))
 
     return converted_values
 
