@@ -1,4 +1,5 @@
 import argparse
+import os
 import sys
 import time
 from pathlib import Path
@@ -152,7 +153,7 @@ def execute_resubmit(alchemist, revisions_data_dicts, folder_path, folder_name,
             print("Please check your syntax for the conditional string:\n"
                  f"{filters}")
     
-    resubmit_columns = db_filter.convert_column_inputs(RESUBMIT_COLUMNS)
+    resubmit_columns = db_filter.get_columns(RESUBMIT_COLUMNS)
     
     phams = []
     for data_dict in revisions_data_dicts:
@@ -182,21 +183,35 @@ def execute_resubmit(alchemist, revisions_data_dicts, folder_path, folder_name,
                 print(f"...Retrieving data for pham {data_dict['Pham']}...")
 
             conditionals = conditionals_map[mapped_path]
+
+            final_call = data_dict["Final Call"]
+            if final_call == "Hypothetical Protein":
+                final_call = ""
             conditionals.append(querying.build_where_clause(alchemist.graph,
-                                    f"gene.Notes!={data_dict['Final Call']}"))
+                                    f"gene.Notes!={final_call}"))
+
             query = querying.build_select(alchemist.graph, resubmit_columns, 
                                                            where=conditionals)
 
             results = querying.execute(alchemist.engine, query, 
-                                                        in_column=db_filter.key,
-                                                        values=[data_dict["Pham"]])
+                                                    in_column=db_filter.key,
+                                                    values=[data_dict["Pham"]])
 
             for result in results:
                 format_resubmit_data(result, data_dict["Final Call"]) 
                 export_dicts.append(result)
 
+        if not export_dicts:
+            if verbose:
+                print("'{mapped_path.name}' data selected for resubmision "
+                      "matches selected call; no resubmision exported...")
+
+            mapped_path.rmdir()
+            continue
+
         export_dicts = sorted(export_dicts, 
                               key=lambda export_dict: export_dict["Phage"])
+
 
         if verbose:
             print(f"Writing {CSV_NAME} in {mapped_path.name}...")

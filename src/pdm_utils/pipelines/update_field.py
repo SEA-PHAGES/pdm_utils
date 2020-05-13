@@ -4,9 +4,15 @@ import csv
 import pathlib
 import sys
 
+from sqlalchemy import update
+
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.classes.randomfieldupdatehandler import RandomFieldUpdateHandler
-from pdm_utils.functions import basic, mysqldb
+from pdm_utils.functions import basic
+from pdm_utils.functions import cartography
+from pdm_utils.functions import mysqldb
+from pdm_utils.functions import mysqldb_basic
+from pdm_utils.functions import querying
 
 
 # TODO unittest.
@@ -43,16 +49,8 @@ def main(unparsed_args):
         failed = 0
 
         for dict in list_of_update_tickets:
-            conn = engine.connect()
-            # Pass the raw db_api connection
-            handler = RandomFieldUpdateHandler(conn.connection)
-            handler.table = dict["table"]        # Which table will be updated?
-            handler.field = dict["field"]       # Which field will be updated?
-            handler.value = dict["value"]       # What value will be put in that field?
-            handler.key_name = dict["key_name"]   # How will we know which row is the right one?
-            handler.key_value = dict["key_value"]  # How will we know which row is the right one?
-            handler.validate_ticket()   # Make sure all handler attributes are valid
-            status = handler.execute_ticket()    # Do what was requested
+            status = update_field(alchemist, dict)
+
             if status == 1:
                 processed += 1
                 succeeded += 1
@@ -67,8 +65,57 @@ def main(unparsed_args):
         if failed > 0:
             print(f"{failed} / {processed} tickets failed to be handled.")
 
+def update_field(alchemist, update_ticket):
+    """Attempts to update a field using information from an update_ticket.
 
+    :param alchemist: A connected and fully build AlchemyHandler object.
+    :type alchemist: AlchemyHandler
+    :param update_ticket: Dictionary with instructions to update a field.
+    :type update_ticket: dict
+    """
+    try:
+        table_map = alchemist.mapper.classes[update_ticket["table"]]
+    except:
+        print(f"\nInvalid table '{update_ticket['table']}'")
+        return 0
 
+    table_obj = table_map.__table__
+
+    try:
+        field = table_obj.c[update_ticket["field"]]
+    except:
+        print(f"\nInvalid replacement field '{update_ticket['field']}' "
+              f"for table '{table_obj.name}'")
+        return 0
+
+    try:
+        key_field = table_obj.c[update_ticket["key_name"]]
+    except:
+        print(f"\nInvalid selection key '{update_ticket['key_name']}' "
+              f"for table '{table_obj.name}'")
+        return 0
+ 
+    primary_keys = list(table_obj.primary_key.columns)
+    if key_field not in primary_keys:
+        print(f"\nInvalid selection key '{update_ticket['key_name']}' "
+              f"for table '{table_obj.name}'") 
+        return 0
+    
+    key_value_clause = (key_field == update_ticket["key_value"])
+
+    key_value_query = querying.build_count(alchemist.graph, key_field, where=key_value_clause)
+    key_value_count = mysqldb_basic.scalar(alchemist.engine, key_value_query)
+
+    if key_value_count != 1:
+        print(f"\nInvalid selection value '{update_field['key_value']}' "
+              f"for key '{key_field.name}' in table '{table_obj.name}'")
+        return 0 
+   
+    statement = update(table_obj).where(key_value_clause).values(
+                                    {field.name : update_ticket["value"]})
+    alchemist.engine.execute(statement)
+    return 1
+    
 # TODO unittest.
 def parse_args(unparsed_args_list):
     """Verify the correct arguments are selected for getting updates."""

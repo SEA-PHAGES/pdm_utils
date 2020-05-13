@@ -8,14 +8,20 @@ from sqlalchemy import and_
 from sqlalchemy import or_
 from sqlalchemy.engine.base import Engine
 from sqlalchemy.ext.declarative.api import DeclarativeMeta
-from sqlalchemy.sql.elements import Null
 from sqlalchemy.sql.elements import BooleanClauseList
+from sqlalchemy.sql.elements import Label
 from sqlalchemy.orm.session import Session
 
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.functions import cartography
 from pdm_utils.functions import parsing
 from pdm_utils.functions import querying as q
+
+#-----------------------------------------------------------------------------
+#GLOBAL VARIABLES
+
+COLUMN_TYPES = [Column, Label]
+
 
 class Filter:
     def __init__(self, alchemist=None, key=None):
@@ -190,7 +196,7 @@ class Filter:
         """
         self.check()
 
-        columns = self.convert_column_inputs(raw_columns)
+        columns = self.get_columns(raw_columns)
         
         query = q.build_select(self._graph, self._key, order_by=columns)
 
@@ -216,6 +222,7 @@ class Filter:
             raise TypeError("Filter object values must be of type list.")
         self._values = values
         self._values_valid = False
+        self._updated = False
 
     @property
     def key(self):
@@ -349,9 +356,9 @@ class Filter:
         if len(and_conditionals) > 1 :
             conditionals = or_(*and_conditionals)
         elif len(and_conditionals) == 1:
-            conditionals = and_conditionals[0]
+            conditionals = and_conditionals
         else:
-            conditionals = None
+            conditionals = []
 
         return conditionals
 
@@ -388,7 +395,8 @@ class Filter:
 #-----------------------------------------------------------------------------
 #FILTER QUERYING
 
-    def build_values(self, where=None, column=None, limit=8000):
+    def build_values(self, where=None, column=None, raw_bytes=False, 
+                                                    limit=8000):
         """Queries for values from stored WHERE clauses and Filter key.
         
         :param where: MySQL WHERE clause_related SQLAlchemy object(s).
@@ -410,7 +418,7 @@ class Filter:
         if column is None:
             column_obj = self._key
         else:
-            column_obj = self.convert_column_input(column)
+            column_obj = self.get_column(column)
  
         if not where is None:
             if isinstance(where, list) or isinstance(where, BooleanClauseList):
@@ -427,8 +435,9 @@ class Filter:
                                                     values=self._values,
                                                     limit=limit) 
 
-        if self._key.type.python_type == bytes:
-            parsing.convert_from_encoded(values)
+        if not raw_bytes:
+            if self._key.type.python_type == bytes:
+                parsing.convert_from_encoded(values)
 
         return values
 
@@ -448,7 +457,7 @@ class Filter:
         """
         self.check()
 
-        columns = self.convert_column_inputs(raw_columns)
+        columns = self.get_columns(raw_columns)
 
         query = q.build_select(self._graph, columns, add_in=self._key)
         results = q.execute(self._engine, query, in_column=self._key, 
@@ -485,7 +494,9 @@ class Filter:
                                                         where=in_clause)
         return instances
 
-    def transpose(self, raw_column, return_dict=False, set_values=False):
+    def transpose(self, raw_column, return_dict=False, set_values=False,
+                                                       raw_bytes=False,
+                                                       filter=False):
         """Queries for distinct values from stored values and a MySQL Column.
 
         :param raw_column: SQLAlchemy Column object or object name.
@@ -507,11 +518,16 @@ class Filter:
             else:
                 return [] 
 
-        column = self.convert_column_input(raw_column)
+        column = self.get_column(raw_column)
         name = column.name
-   
-        values = self.build_values(column=column)
-        
+ 
+        where_clauses = None
+        if filter:
+            where_clauses = self.build_where_clauses()    
+
+        values = self.build_values(column=column, where=where_clauses,
+                                                  raw_bytes=raw_bytes)
+
         if set_values:
             self._key = column
             self._values = values
@@ -522,7 +538,7 @@ class Filter:
 
         return values
 
-    def mass_transpose(self, raw_columns):
+    def mass_transpose(self, raw_columns, raw_bytes=False, filter=False):
         """Queries for sets of distinct values, using self.transpose()
 
         :param columns: SQLAlchemy Column object(s)
@@ -541,12 +557,14 @@ class Filter:
         
         values={}
         for column in raw_columns:
-            column_values = self.transpose(column, return_dict=True)
+            column_values = self.transpose(column, return_dict=True,
+                                           raw_bytes=raw_bytes,
+                                           filter=filter)
             values.update(column_values)
 
         return values
 
-    def group(self, raw_column): 
+    def group(self, raw_column, raw_bytes=False, filter=False): 
         """Queries and separates Filter object's values based on a Column.
 
         :param raw_column: SQLAlchemy Column object or object name.
@@ -555,19 +573,23 @@ class Filter:
         """
         self.check()
 
-        column = self.convert_column_input(raw_column)
+        column = self.get_column(raw_column)
 
         groups = self.transpose(column)
-        
+       
+        where_clauses = []
+        if filter:
+            where_clauses = self.build_where_clauses()
+
         group_results = {}
         for group in groups:
-            where_clause = (column == group) 
-            values = self.build_values(where=[where_clause])
+            group_clauses = where_clauses + [(column == group)]
+            values = self.build_values(where=group_clauses, raw_bytes=raw_bytes)
             group_results.update({group : values})
 
         return group_results
 
-    def retrieve(self, raw_columns):
+    def retrieve(self, raw_columns, raw_bytes=False, filter=False):
         """Queries for distinct data for each value in the Filter object.
 
         :param columns: SQLAlchemy Column object(s)
@@ -583,24 +605,32 @@ class Filter:
         if not self._values:
             return {}
 
-        columns = self.convert_column_inputs(raw_columns)        
- 
+        columns = self.get_columns(raw_columns)        
+
+        where_clauses = []
+        if filter:
+            where_clauses = self.build_where_clauses()
+
         values = {}
         for value in self._values:
-            where_clause = (self._key == value)
+            value_clauses = where_clauses + [(self._key == value)]
             values.update({value : {}}) 
 
             #For each column for each value, add the respective data to a dict.
             for i in range(len(columns)):
                 query = q.build_distinct(self._graph, columns[i], 
-                                                        where=where_clause)
+                                                        where=value_clauses)
                 value_data = q.first_column(self._engine, query)
+
+                if not raw_bytes:
+                    if columns[i].type.python_type == bytes:
+                        value_data = parsing.convert_to_decoded(value_data)
 
                 values[value].update({columns[i].name : value_data})
 
         return values
   
-    def convert_column_input(self, raw_column):
+    def get_column(self, raw_column):
         """Converts a column input, string or Column, to a Column.
 
         :param raw_column: SQLAlchemy Column object or object name.
@@ -611,7 +641,7 @@ class Filter:
 
         if isinstance(raw_column, str):
             column = q.get_column(self.graph.graph["metadata"], raw_column)
-        elif isinstance(raw_column, Column):
+        elif type(raw_column) in COLUMN_TYPES:
             column = raw_column
         else:
             raise TypeError("Column must be either a string or a Column object")
@@ -620,7 +650,7 @@ class Filter:
 
         return column
     
-    def convert_column_inputs(self, raw_columns):
+    def get_columns(self, raw_columns):
         """Converts a column input list, string or Column, to a list of Columns.
 
         :param raw_column: SQLAlchemy Column object or object name.
@@ -634,7 +664,7 @@ class Filter:
 
         columns = []
         for raw_column in raw_columns:
-            columns.append(self.convert_column_input(raw_column)) 
+            columns.append(self.get_column(raw_column)) 
 
         return columns
 

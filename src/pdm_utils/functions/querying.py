@@ -26,7 +26,8 @@ from pdm_utils.functions import parsing
 #GLOBAL VARIABLES
 #-----------------------------------------------------------------------------
 
-COLUMN_TYPES = [Column, functions.count, BinaryExpression, UnaryExpression]
+COLUMN_TYPES = [Column, Table, functions.count, BinaryExpression, 
+                UnaryExpression, Label, DeclarativeMeta]
 
 #-----------------------------------------------------------------------------
 #SQLALCHEMY OBJECT RETRIEVAL

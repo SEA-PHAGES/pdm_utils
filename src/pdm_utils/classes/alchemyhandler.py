@@ -279,7 +279,8 @@ class AlchemyHandler:
         """
         if not self.connected:
             if not self.has_credentials:
-                self.ask_credentials()
+                raise AttributeError("AlchemyHandler missing credentials.\n"
+                                     "Cannot connect to MySQL.")
 
             login_string = self.construct_engine_string(
                                             username=self._username,

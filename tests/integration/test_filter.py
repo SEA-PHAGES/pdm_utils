@@ -7,6 +7,7 @@ from unittest.mock import Mock, patch
 from networkx import Graph
 from sqlalchemy.engine.base import Engine
 from sqlalchemy.sql.elements import BinaryExpression
+from sqlalchemy.sql.elements import BooleanClauseList
 
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.classes.filter import Filter
@@ -142,33 +143,33 @@ class TestFilter(unittest.TestCase):
         self.assertTrue("phage.PhageID=Trixie" in second_or_block.keys())
 
 
-    def test_convert_column_input_1(self):
-        """Verify that convert_column_input() converts string column input.
+    def test_get_column_1(self):
+        """Verify that get_column() converts string column input.
         """
         self.db_filter.key = self.Cluster
 
-        column = self.db_filter.convert_column_input("phage.PhageID")
+        column = self.db_filter.get_column("phage.PhageID")
 
         self.assertEqual(column, self.PhageID)
 
-    def test_convert_column_input_2(self):
-        """Verify that convert_column_input() conserves Column input.
+    def test_get_column_2(self):
+        """Verify that get_column() conserves Column input.
         """
         self.db_filter.key = self.Cluster
 
-        column = self.db_filter.convert_column_input(self.PhageID)
+        column = self.db_filter.get_column(self.PhageID)
 
         self.assertEqual(column, self.PhageID)
 
-    def test_convert_column_input_3(self):
-        """Verify that convert_column_input() raises TypeError.
-        convert_column_input() should raise TypeError when column input is
+    def test_get_column_3(self):
+        """Verify that get_column() raises TypeError.
+        get_column() should raise TypeError when column input is
         neither a string or a Column.
         """
         self.db_filter.key = self.Cluster
 
         with self.assertRaises(TypeError):
-            self.db_filter.convert_column_input(None)
+            self.db_filter.get_column(None)
 
     def test_build_where_clauses_1(self):
         """Verify that build_where_clauses() forms list of expected length.
@@ -178,7 +179,7 @@ class TestFilter(unittest.TestCase):
 
         queries = self.db_filter.build_where_clauses()
 
-        self.assertEqual(len(queries), 2)
+        self.assertEqual(len(queries[0]), 2)
 
     def test_build_where_clauses_2(self):
         """Verify that build_where_clauses() forms list of BinaryExpressions.
@@ -189,7 +190,7 @@ class TestFilter(unittest.TestCase):
         queries = self.db_filter.build_where_clauses()
 
         for query in queries:
-            self.assertTrue(isinstance(query, BinaryExpression))
+            self.assertTrue(isinstance(query, BooleanClauseList))
 
     def test_build_values_1(self):
         """Verify that build_values() does not exclude values as expected.
@@ -301,6 +302,18 @@ class TestFilter(unittest.TestCase):
         self.assertEqual(self.db_filter.key, self.Cluster)
         self.assertEqual(self.db_filter.values, ["C"])
 
+    def test_transpose_4(self):
+        """Verify that transpose() filter parameter functions as expected.
+        """
+        self.db_filter.values = ["Myrna", "D29"]
+        self.db_filter.key = self.PhageID
+
+        self.db_filter.add("gene.GeneID = Myrna_CDS_28")
+        values = self.db_filter.transpose("gene.GeneID", filter=True)
+
+        self.assertEqual(len(values), 1)
+        self.assertEqual(values[0], "Myrna_CDS_28")
+
     def test_mass_transpose_1(self):
         """Verify that mass_tranpose() returns DISTINCT values as expected.
         """
@@ -375,7 +388,7 @@ class TestFilter(unittest.TestCase):
         self.assertEqual(c_data["Cluster"], ["C"])
         self.assertFalse("Trixie" in c_data["PhageID"])
         self.assertTrue("Myrna" in c_data["PhageID"])
-
+    
     def test_refresh_1(self):
         """Verify that refresh() eliminates invalid data.
         """
@@ -408,6 +421,20 @@ class TestFilter(unittest.TestCase):
         self.assertTrue("Myrna" in self.db_filter.values)
         self.assertTrue("D29" in self.db_filter.values)
         self.assertEqual(self.db_filter.values[0], "D29")
+
+    def test_sort_2(self):
+        """Verify that sort() orders values with multiple sort columns.
+        """
+        self.db_filter.key = self.PhageID
+        self.db_filter.values = ["Myrna", "D29", "Alice"]
+        self.db_filter.sort([self.Cluster, self.PhageID])
+
+        self.assertTrue("Myrna" in self.db_filter.values)
+        self.assertTrue("D29" in self.db_filter.values)
+        self.assertTrue("Alice" in self.db_filter.values)
+        
+        self.assertEqual(self.db_filter.values[0], "D29")
+        self.assertEqual(self.db_filter.values[1], "Alice")
 
     def test_group_1(self):
         """Verify that group() creates separate groups as expected.
