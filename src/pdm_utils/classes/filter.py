@@ -624,7 +624,7 @@ class Filter:
 
                 if not raw_bytes:
                     if columns[i].type.python_type == bytes:
-                        value_data = value_data.convert_to_decoded(value_data)
+                        value_data = parsing.convert_to_decoded(value_data)
 
                 values[value].update({columns[i].name : value_data})
 

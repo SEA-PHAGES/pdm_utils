@@ -294,7 +294,7 @@ def review_phams(db_filter, verbose=False):
     """Finds and stores phams with discrepant function calls in a Filter.
 
     """
-    notes = db_filter.convert_column_input("gene.Notes")
+    notes = db_filter.get_column("gene.Notes")
     
     if verbose:
         print("Reviewing phams...")
@@ -398,10 +398,8 @@ def format_pf_data(row_dict, pham):
 
     notes = row_dict.pop("Notes")
     for index in range(len(notes)):
-        if notes[index] is None or notes[index] == "".encode("utf-8"): 
+        if notes[index] is None or notes[index] == "": 
             notes[index] = "Hypothetical Protein"
-        else:
-            notes[index] = notes[index].decode("utf-8")
 
     row_dict["Functional Calls"] = ";".join(notes)
     row_dict["Final Call"] = ""
@@ -423,8 +421,6 @@ def format_pg_data(row_dict, gene):
     note = row_dict.pop("Notes")[0]
     if note is None or note == "".encode("utf-8"):
         note = "Hypothetical Protein"
-    else:
-        note = note.decode("utf-8")
 
     row_dict["Functional Call"] = note
 

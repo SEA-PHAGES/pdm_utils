@@ -153,7 +153,7 @@ def execute_resubmit(alchemist, revisions_data_dicts, folder_path, folder_name,
             print("Please check your syntax for the conditional string:\n"
                  f"{filters}")
     
-    resubmit_columns = db_filter.convert_column_inputs(RESUBMIT_COLUMNS)
+    resubmit_columns = db_filter.get_columns(RESUBMIT_COLUMNS)
     
     phams = []
     for data_dict in revisions_data_dicts:
