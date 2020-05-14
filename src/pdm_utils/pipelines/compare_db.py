@@ -29,6 +29,9 @@ from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
 
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
+from pdm_utils.classes import cdspair
+from pdm_utils.classes import dbcomparesummary
+from pdm_utils.classes import genometriad
 from pdm_utils.constants import constants
 from pdm_utils.functions import basic
 from pdm_utils.functions import mysqldb
@@ -71,6 +74,16 @@ GENE_QUERY = ("SELECT PhageID, GeneID, Name, Start, Stop, Orientation, "
               "Translation, Notes from gene")
 VERSION_QUERY = "SELECT Version FROM version"
 
+
+
+GNM_MYSQL = "mysql"
+GNM_PDB = "phagesdb"
+GNM_GBK = "genbank"
+
+CDS_MYSQL = "cds_mysql"
+CDS_GBK = "cds_genbank"
+
+CDSPAIR_MYSQL_GBK = "mysql_genbank"
 
 # Define classes
 
@@ -137,131 +150,7 @@ class Genome:
             self.cluster = value
 
 
-
-
-
-# Genome attributes
-setattr(Genome, "sequence", "") # TODO string but seq is Seq
-setattr(Genome, "record_name", "")
-setattr(Genome, "record_id", "")
-setattr(Genome, "source_feature_organism", "")
-setattr(Genome, "source_feature_host", "")
-setattr(Genome, "source_feature_lab_host", "")
-setattr(Genome, "_missing_locus_tags_tally", 0)
-setattr(Genome, "_locus_tag_typos_tally", 0)
-setattr(Genome, "_description_field_error_tally", 0)
-setattr(Genome, "_status_accession_error", False)
-setattr(Genome, "_status_description_error", False)
-setattr(Genome, "_genes_with_errors_tally", 0)
-setattr(Genome, "_nucleotide_errors", False)
-setattr(Genome, "_cds_features_with_translation_error_tally", 0)
-setattr(Genome, "_cds_features_boundary_error_tally", 0)
-
-
-# Genome setters
-def set_sequence(self, value):
-    self.sequence = value.upper()
-    self.length = len(self.sequence)
-setattr(Genome, "set_sequence", set_sequence)
-
-# Genome error checks
-
-def compute_nucleotide_errors(self, dna_alphabet):
-    nucleotide_set = set(self.sequence)
-    nucleotide_error_set = nucleotide_set - dna_alphabet
-    if len(nucleotide_error_set) > 0:
-        self._nucleotide_errors = True
-setattr(Genome, "compute_nucleotide_errors", compute_nucleotide_errors)
-
-def compute_cds_feature_errors(self):
-    for cds_feature in self.cds_features:
-        if cds_feature._amino_acid_errors:
-            self._cds_features_with_translation_error_tally += 1
-        if cds_feature._boundary_error:
-            self._cds_features_boundary_error_tally += 1
-setattr(Genome, "compute_cds_feature_errors", compute_cds_feature_errors)
-
-def check_status_accession(self):
-
-    # Be sure to first set the accession attribute before the
-    # annotation_status attribute, else this will throw an error.
-    # Now that the AnnotationAuthor field contains authorship data, the
-    # 'unknown' annotation annotation_status now reflects
-    # an 'unknown' annotation (in regards to if it was auto-annotated
-    # or manually annotated).
-    # So for the annotation_status-accession error, if the
-    # annotation_status is 'unknown', there is no reason to assume
-    # whether there should be an accession or not. Only for 'final'
-    # (manually annotated) genomes should there be an accession.
-    if self.annotation_status == "final" and self.accession == "":
-        self._status_accession_error = True
-setattr(Genome, "check_status_accession", check_status_accession)
-
-def compute_status_description_error(self):
-    # Iterate through all CDS features, see if they have descriptions,
-    # then compare to the annotation_status.
-    for feature in self.cds_features:
-        if feature.raw_description != "":
-            self._cds_descriptions_tally += 1
-    if self.annotation_status == "draft" and self._cds_descriptions_tally > 0:
-        self._status_description_error = True
-    elif self.annotation_status == "final" and self._cds_descriptions_tally == 0:
-        self._status_description_error = True
-    else:
-        pass
-setattr(Genome, "compute_status_description_error", compute_status_description_error)
-
-#Even though this method iterates through the CDS features
-# like the compute_status_description_error does,
-#it has to be kept separate, since you need to wait to run
-# this method after all genome and gene matching is completed.
-def compute_genes_with_errors_tally(self):
-    for feature in self.cds_features:
-        # Need to first compute the number of errors per gene
-        feature.compute_total_cds_errors()
-        if feature._total_errors > 0:
-            self._genes_with_errors_tally += 1
-setattr(Genome, "compute_genes_with_errors_tally", compute_genes_with_errors_tally)
-
-def compute_gbk_cds_feature_errors(self):
-    for cds_feature in self.cds_features:
-
-        # counting descriptions should skip if it is blank
-        # or "hypothetical protein".
-        if cds_feature.product != "":
-            self._cds_products_tally += 1
-
-        if cds_feature.function != "":
-            self._cds_functions_tally += 1
-
-        if cds_feature.note != "":
-            self._cds_notes_tally += 1
-
-        if cds_feature._locus_tag_missing:
-            self._missing_locus_tags_tally += 1
-        else:
-
-            search_name = basic.edit_suffix(self.name, "remove").lower()
-            pattern4 = re.compile(search_name)
-
-            search_result = pattern4.search(cds_feature.locus_tag.lower())
-
-            if search_result == None:
-                self._locus_tag_typos_tally += 1
-                cds_feature.set_locus_tag_typo() # Sets to True
-
-        if cds_feature._description_field_error:
-            self._description_field_error_tally += 1
-setattr(Genome, "compute_gbk_cds_feature_errors", compute_gbk_cds_feature_errors)
-
-
-
-
-
-
-
-
-class CdsFeature:
+class Cds:
 
     # Initialize all attributes:
     def __init__(self):
@@ -293,51 +182,170 @@ class CdsFeature:
         self.note = ""
 
     # Define all attribute setters:
-    def set_strand(self, value):
-        self.orientation = basic.reformat_strand(value, "fr_long")
+    def set_orientation(self, value, format, case=False):
+        self.orientation = basic.reformat_strand(value, format, case)
 
     def set_translation(self, value):
         self.translation = value.upper()
         self.translation_length = len(self.translation)
 
-    def set_genome_id(self, value):
-        self.genome_id = value
-
-    def set_notes(self, value1, value2):
-        self.raw_description = value1
-        self.description = value2
-
-    def set_product_description(self, value1, value2):
-        self.raw_product = value1
-        self.product = value2
-
-    def set_function_description(self, value1, value2):
-        self.raw_function = value1
-        self.function = value2
-
-    def set_note_description(self, value1, value2):
-        self.raw_note = value1
-        self.note = value2
+    def set_description_field(self, attr, description,
+                              delimiter=None, prefix_set=None):
+        raw_attr = "raw_" + attr  # e.g. self.raw_product
+        num_attr = "_" + attr + "_num"  # e.g. self._product_num
+        raw, processed = basic.reformat_description(description)
+        setattr(self, attr, processed)
+        setattr(self, raw_attr, raw)
 
 
 
 
 
 
+###Genome
+def modify_genome_class(GenomeClass):
+    """Add new attributes and methods to Genome class."""
 
+    # New attributes
+    setattr(GenomeClass, "sequence", "") # TODO string but seq is Seq
+    setattr(GenomeClass, "record_name", "")
+    setattr(GenomeClass, "record_id", "")
+    setattr(GenomeClass, "source_feature_organism", "")
+    setattr(GenomeClass, "source_feature_host", "")
+    setattr(GenomeClass, "source_feature_lab_host", "")
+    setattr(GenomeClass, "_missing_locus_tags_tally", 0)
+    setattr(GenomeClass, "_locus_tag_typos_tally", 0)
+    setattr(GenomeClass, "_description_field_error_tally", 0)
+    setattr(GenomeClass, "_status_accession_error", False)
+    setattr(GenomeClass, "_status_description_error", False)
+    setattr(GenomeClass, "_genes_with_errors_tally", 0)
+    setattr(GenomeClass, "_nucleotide_errors", False)
+    setattr(GenomeClass, "_cds_features_with_translation_error_tally", 0)
+    setattr(GenomeClass, "_cds_features_boundary_error_tally", 0)
+
+    # New methods
+    setattr(GenomeClass, "set_sequence", set_sequence)
+    setattr(GenomeClass, "compute_nucleotide_errors", compute_nucleotide_errors)
+    setattr(GenomeClass, "compute_cds_feature_errors", compute_cds_feature_errors)
+    setattr(GenomeClass, "check_status_accession", check_status_accession)
+    setattr(GenomeClass, "compute_status_description_error", compute_status_description_error)
+    setattr(GenomeClass, "compute_genes_with_errors_tally", compute_genes_with_errors_tally)
+    setattr(GenomeClass, "compute_gbk_cds_feature_errors", compute_gbk_cds_feature_errors)
+
+
+# Genome setters
+def set_sequence(self, value):
+    self.sequence = value.upper()
+    self.length = len(self.sequence)
+
+# Genome error checks
+def compute_nucleotide_errors(self, dna_alphabet):
+    nucleotide_set = set(self.sequence)
+    nucleotide_error_set = nucleotide_set - dna_alphabet
+    if len(nucleotide_error_set) > 0:
+        self._nucleotide_errors = True
+
+def compute_cds_feature_errors(self):
+    for cds_feature in self.cds_features:
+        if cds_feature._amino_acid_errors:
+            self._cds_features_with_translation_error_tally += 1
+        if cds_feature._boundary_error:
+            self._cds_features_boundary_error_tally += 1
+
+def check_status_accession(self):
+
+    # Be sure to first set the accession attribute before the
+    # annotation_status attribute, else this will throw an error.
+    # Now that the AnnotationAuthor field contains authorship data, the
+    # 'unknown' annotation annotation_status now reflects
+    # an 'unknown' annotation (in regards to if it was auto-annotated
+    # or manually annotated).
+    # So for the annotation_status-accession error, if the
+    # annotation_status is 'unknown', there is no reason to assume
+    # whether there should be an accession or not. Only for 'final'
+    # (manually annotated) genomes should there be an accession.
+    if self.annotation_status == "final" and self.accession == "":
+        self._status_accession_error = True
+
+def compute_status_description_error(self):
+    # Iterate through all CDS features, see if they have descriptions,
+    # then compare to the annotation_status.
+    for feature in self.cds_features:
+        if feature.raw_description != "":
+            self._cds_descriptions_tally += 1
+    if self.annotation_status == "draft" and self._cds_descriptions_tally > 0:
+        self._status_description_error = True
+    elif self.annotation_status == "final" and self._cds_descriptions_tally == 0:
+        self._status_description_error = True
+    else:
+        pass
+
+#Even though this method iterates through the CDS features
+# like the compute_status_description_error does,
+#it has to be kept separate, since you need to wait to run
+# this method after all genome and gene matching is completed.
+def compute_genes_with_errors_tally(self):
+    for feature in self.cds_features:
+        # Need to first compute the number of errors per gene
+        feature.compute_total_cds_errors()
+        if feature._total_errors > 0:
+            self._genes_with_errors_tally += 1
+
+def compute_gbk_cds_feature_errors(self):
+    for cds_feature in self.cds_features:
+
+        # counting descriptions should skip if it is blank
+        # or "hypothetical protein".
+        if cds_feature.product != "":
+            self._cds_products_tally += 1
+
+        if cds_feature.function != "":
+            self._cds_functions_tally += 1
+
+        if cds_feature.note != "":
+            self._cds_notes_tally += 1
+
+        if cds_feature._locus_tag_missing:
+            self._missing_locus_tags_tally += 1
+        else:
+
+            search_name = basic.edit_suffix(self.name, "remove").lower()
+            pattern4 = re.compile(search_name)
+
+            search_result = pattern4.search(cds_feature.locus_tag.lower())
+
+            if search_result == None:
+                self._locus_tag_typos_tally += 1
+                cds_feature.set_locus_tag_typo() # Sets to True
+
+        if cds_feature._description_field_error:
+            self._description_field_error_tally += 1
 
 
 ###Cds
-setattr(CdsFeature, "_search_genome_id", "")
-setattr(CdsFeature, "_start_end_strand_id", "")
-setattr(CdsFeature, "_end_strand_id", "")
-setattr(CdsFeature, "_locus_tag_missing", False)
-setattr(CdsFeature, "_locus_tag_typo", False)
-setattr(CdsFeature, "_description_field_error", False)
-setattr(CdsFeature, "_amino_acid_errors", False)
-setattr(CdsFeature, "_boundary_error", False)
-setattr(CdsFeature, "_unmatched_error", False)
-setattr(CdsFeature, "_total_errors", 0)
+def modify_cds_class(CdsClass):
+    """Add new attributes and methods to Cds class."""
+
+    setattr(CdsClass, "_search_genome_id", "")
+    setattr(CdsClass, "_start_end_strand_id", "")
+    setattr(CdsClass, "_end_strand_id", "")
+    setattr(CdsClass, "_locus_tag_missing", False)
+    setattr(CdsClass, "_locus_tag_typo", False)
+    setattr(CdsClass, "_description_field_error", False)
+    setattr(CdsClass, "_amino_acid_errors", False)
+    setattr(CdsClass, "_boundary_error", False)
+    setattr(CdsClass, "_unmatched_error", False)
+    setattr(CdsClass, "_total_errors", 0)
+
+    # New methods
+    setattr(CdsClass, "set_start_end_strand_id", set_start_end_strand_id)
+    setattr(CdsClass, "set_search_genome_id", set_search_genome_id)
+    setattr(CdsClass, "check_locus_tag", check_locus_tag)
+    setattr(CdsClass, "compute_amino_acid_errors", compute_amino_acid_errors)
+    setattr(CdsClass, "compute_boundary_error", compute_boundary_error)
+    setattr(CdsClass, "set_locus_tag_typo", set_locus_tag_typo)
+    setattr(CdsClass, "compute_description_error", compute_description_error)
+    setattr(CdsClass, "compute_total_cds_errors", compute_total_cds_errors)
 
 def set_start_end_strand_id(self):
     # Create a tuple of feature location data.
@@ -356,41 +364,34 @@ def set_start_end_strand_id(self):
         self._end_strand_id = (str(self.start),self.orientation)
     else:
         pass
-setattr(CdsFeature, "set_start_end_strand_id", set_start_end_strand_id)
 
 def set_search_genome_id(self):
     self._search_genome_id = basic.edit_suffix(self.genome_id, "remove").lower()
-setattr(CdsFeature, "set_search_genome_id", set_search_genome_id)
 
 
 def check_locus_tag(self):
     if self.locus_tag == "":
         self._locus_tag_missing = True
-setattr(CdsFeature, "check_locus_tag", check_locus_tag)
 
 def compute_amino_acid_errors(self, protein_alphabet):
     amino_acid_set = set(self.translation)
     amino_acid_error_set = amino_acid_set - protein_alphabet
     if len(amino_acid_error_set) > 0:
         self._amino_acid_errors = True
-setattr(CdsFeature, "compute_amino_acid_errors", compute_amino_acid_errors)
 
 def compute_boundary_error(self):
     # Check if start and end coordinates are fuzzy
     if not (str(self.start).isdigit() and str(self.stop).isdigit()):
         self._boundary_error = True
-setattr(CdsFeature, "compute_boundary_error", compute_boundary_error)
 
 def set_locus_tag_typo(self):
     self._locus_tag_typo = True
-setattr(CdsFeature, "set_locus_tag_typo", set_locus_tag_typo)
 
 def compute_description_error(self):
     # If the product description is empty or generic,
     # and the function or note descriptions are not, there is an error.
     if (self.product == "" and self.function != "" or self.note != ""):
         self._description_field_error = True
-setattr(CdsFeature, "compute_description_error", compute_description_error)
 
 def compute_total_cds_errors(self):
     if self._amino_acid_errors:
@@ -405,679 +406,10 @@ def compute_total_cds_errors(self):
         self._total_errors += 1
     if self._unmatched_error:
         self._total_errors += 1
-setattr(CdsFeature, "compute_total_cds_errors", compute_total_cds_errors)
 
 
 
 
-
-
-
-
-
-class MatchedGenomes:
-
-    # Initialize all attributes:
-    def __init__(self):
-
-        # Initialize all non-calculated attributes:
-        self.m_genome = ""
-        self.p_genome = ""
-        self.g_genome = ""
-
-        # MySQL and GenBank matched data comparison results
-        self._m_g_seq_mismatch = False
-        self._m_g_seq_length_mismatch = False
-        self._g_header_fields_name_mismatch = False
-        self._g_host_mismatch = False
-
-        # List of MatchedCdsFeature objects
-        self._m_g_perfect_matched_ftrs = []
-        self._m_g_imperfect_matched_ftrs = []
-
-        # List of CdsFeature objects
-        self._m_ftrs_unmatched_in_g = []
-        self._g_ftrs_unmatched_in_m = []
-
-        self._m_g_perfect_matched_ftrs_tally = 0
-        self._m_g_imperfect_matched_ftrs_tally = 0
-        self._m_ftrs_unmatched_in_g_tally = 0
-        self._g_ftrs_unmatched_in_m_tally = 0
-        self._m_g_different_descriptions_tally = 0
-        self._m_g_different_translations_tally = 0
-        self._m_g_author_error = False
-
-        # MySQL and PhagesDB matched data comparison results
-        self._m_p_seq_mismatch = False
-        self._m_p_seq_length_mismatch = False
-        self._m_p_host_mismatch = False
-        self._m_p_accession_mismatch = False
-        self._m_p_cluster_mismatch = False
-
-
-        # PhagesDB and GenBank matched data comparison results
-        self._p_g_seq_mismatch = False
-        self._p_g_seq_length_mismatch = False
-
-        # Total errors summary
-        self._contains_errors = False
-        self._total_number_genes_with_errors = 0
-
-
-    # Define all attribute setters:
-
-    def compare_mysql_gbk_genomes(self):
-
-        # verify that there is a MySQL and GenBank genome in
-        # the matched genome object.
-        m_gnm = self.m_genome
-        g_gnm = self.g_genome
-        m_cds_lst = m_gnm.cds_features
-
-        if isinstance(m_gnm, Genome) and isinstance(g_gnm, Genome):
-
-            if m_gnm.sequence != g_gnm.sequence:
-                self._m_g_seq_mismatch = True
-            if m_gnm.length != g_gnm.length:
-                self._m_g_seq_length_mismatch = True
-
-            # Compare phage names
-            pattern1 = re.compile("^" + m_gnm.name + "$")
-            pattern2 = re.compile("^" + m_gnm.name)
-
-            if (basic.find_expression(pattern2,g_gnm.description.split(" ")) == 0 or
-                    basic.find_expression(pattern1,g_gnm.source.split(" ")) == 0 or
-                    basic.find_expression(pattern1,g_gnm.organism.split(" ")) == 0 or
-                    basic.find_expression(pattern1,g_gnm.source_feature_organism.split(" ")) == 0):
-
-                self._g_header_fields_name_mismatch = True
-
-            # Compare host_genus data
-            search_host = m_gnm.host_genus
-            if search_host == "Mycobacterium":
-                search_host = search_host[:-3]
-            pattern3 = re.compile("^" + search_host)
-
-            if ((basic.find_expression(pattern3,g_gnm.description.split(" ")) == 0 or
-                    basic.find_expression(pattern3,g_gnm.source.split(" ")) == 0 or
-                    basic.find_expression(pattern3,g_gnm.organism.split(" ")) == 0 or
-                    basic.find_expression(pattern3,g_gnm.source_feature_organism.split(" ")) == 0) or
-                    (g_gnm.source_feature_host != "" and basic.find_expression(pattern3,g_gnm.source_feature_host.split(" ")) == 0) or
-                    (g_gnm.source_feature_lab_host != "" and basic.find_expression(pattern3,g_gnm.source_feature_lab_host.split(" ")) == 0)):
-
-                self._g_host_mismatch = True
-
-            # Check author list for errors
-            # For genomes with AnnotationAuthor = 1 (Hatfull), Graham is expected
-            # to be an author.
-            # For genomes with AnnotationAuthor = 0 (non-Hatfull/GenBank), Graham
-            # is NOT expected to be an author.
-            pattern5 = re.compile("hatfull")
-            search_result = pattern5.search(g_gnm.authors.lower())
-            if m_gnm.annotation_author == 1 and search_result == None:
-                self._m_g_author_error = True
-            elif m_gnm.annotation_author == 0 and search_result != None:
-                self._m_g_author_error = True
-            else:
-                # Any other combination of MySQL and GenBank author can be skipped
-                pass
-
-
-            # Compare CDS features
-
-            # First find all unique start-end-orientation CDS identifiers
-            # for MySQL and GenBank genomes.
-            m_start_end_strand_id_set = set()
-
-            # All end_strand ids that are not unique
-            m_start_end_strand_duplicate_id_set = set()
-
-            for cds_ftr in m_cds_lst:
-                if cds_ftr._start_end_strand_id not in m_start_end_strand_id_set:
-                    m_start_end_strand_id_set.add(cds_ftr._start_end_strand_id)
-                else:
-                    m_start_end_strand_duplicate_id_set.add(cds_ftr._start_end_strand_id)
-            # Remove the duplicate end_strand ids from the main id_set
-            m_start_end_strand_id_set = m_start_end_strand_id_set - m_start_end_strand_duplicate_id_set
-
-
-            g_cds_list = g_gnm.cds_features
-            g_start_end_strand_id_set = set()
-
-            # All end_strand ids that are not unique
-            g_start_end_strand_duplicate_id_set = set()
-            for cds_ftr in g_cds_list:
-                if cds_ftr._start_end_strand_id not in g_start_end_strand_id_set:
-                    g_start_end_strand_id_set.add(cds_ftr._start_end_strand_id)
-
-                else:
-                    g_start_end_strand_duplicate_id_set.add(cds_ftr._start_end_strand_id)
-            # Remove the duplicate end_strand ids from the main id_set
-            g_start_end_strand_id_set = g_start_end_strand_id_set - g_start_end_strand_duplicate_id_set
-
-            # Create the perfect matched and unmatched sets
-            m_unmatched_start_end_strand_id_set = m_start_end_strand_id_set - g_start_end_strand_id_set
-            g_unmatched_start_end_strand_id_set = g_start_end_strand_id_set - m_start_end_strand_id_set
-            perfect_matched_cds_id_set = m_start_end_strand_id_set & g_start_end_strand_id_set
-
-
-            # From the unmatched sets, created second round of end-orientation id sets
-            # MySQL end_strand data
-            m_end_strand_id_set = set()
-
-            # All end_strand ids that are not unique
-            m_end_strand_duplicate_id_set = set()
-            for cds_ftr in m_cds_lst:
-                if cds_ftr._start_end_strand_id in m_unmatched_start_end_strand_id_set:
-                    if cds_ftr._end_strand_id not in m_end_strand_id_set:
-                        m_end_strand_id_set.add(cds_ftr._end_strand_id)
-                    else:
-                        m_end_strand_duplicate_id_set.add(cds_ftr._end_strand_id)
-
-            # Remove the duplicate end_strand ids from the main id_set
-            m_end_strand_id_set = m_end_strand_id_set - m_end_strand_duplicate_id_set
-
-
-            g_end_strand_id_set = set()
-
-            # All end_strand ids that are not unique
-            g_end_strand_duplicate_id_set = set()
-            for cds_ftr in g_cds_list:
-                if cds_ftr._start_end_strand_id in g_unmatched_start_end_strand_id_set:
-                    if cds_ftr._end_strand_id not in g_end_strand_id_set:
-                        g_end_strand_id_set.add(cds_ftr._end_strand_id)
-                    else:
-                        g_end_strand_duplicate_id_set.add(cds_ftr._end_strand_id)
-
-            # Remove the duplicate end_strand ids from the main id_set
-            g_end_strand_id_set = g_end_strand_id_set - g_end_strand_duplicate_id_set
-
-
-            # Create the imperfect matched set
-            imperfect_matched_cds_id_set = m_end_strand_id_set & g_end_strand_id_set
-
-
-            # Now go back through all CDS features and assign
-            # to the appropriate dictionary or list.
-            m_perfect_matched_cds_dict = {}
-            m_imperfect_matched_cds_dict = {}
-            m_unmatched_cds_list = []
-
-
-            for cds_ftr in m_cds_lst:
-                if cds_ftr._start_end_strand_id in perfect_matched_cds_id_set:
-                    m_perfect_matched_cds_dict[cds_ftr._start_end_strand_id] = cds_ftr
-                elif cds_ftr._end_strand_id in imperfect_matched_cds_id_set:
-                    m_imperfect_matched_cds_dict[cds_ftr._end_strand_id] = cds_ftr
-                else:
-                    m_unmatched_cds_list.append(cds_ftr)
-
-
-            g_perfect_matched_cds_dict = {}
-            g_imperfect_matched_cds_dict = {}
-            g_unmatched_cds_list = []
-
-            for cds_ftr in g_cds_list:
-                if cds_ftr._start_end_strand_id in perfect_matched_cds_id_set:
-                    g_perfect_matched_cds_dict[cds_ftr._start_end_strand_id] = cds_ftr
-                elif cds_ftr._end_strand_id in imperfect_matched_cds_id_set:
-                    g_imperfect_matched_cds_dict[cds_ftr._end_strand_id] = cds_ftr
-                else:
-                    g_unmatched_cds_list.append(cds_ftr)
-
-
-            # Create MatchedCdsFeatures objects
-            # Compute matched gene errors and tallies
-            # Perfectly matched features
-            for start_end_strand_tup in perfect_matched_cds_id_set:
-
-                matched_cds_object = MatchedCdsFeatures()
-                matched_cds_object._m_feature = m_perfect_matched_cds_dict[start_end_strand_tup]
-                matched_cds_object._g_feature = g_perfect_matched_cds_dict[start_end_strand_tup]
-                matched_cds_object.compare_mysql_gbk_cds_ftrs()
-
-                if matched_cds_object._total_errors > 0:
-                    self._total_number_genes_with_errors += 1
-
-
-
-                if matched_cds_object._m_g_different_translations:
-                    self._m_g_different_translations_tally += 1
-                if matched_cds_object._m_g_different_descriptions:
-                    self._m_g_different_descriptions_tally += 1
-                self._m_g_perfect_matched_ftrs.append(matched_cds_object)
-
-
-            # Imperfectly matched features
-            for end_strand_tup in imperfect_matched_cds_id_set:
-
-                matched_cds_object = MatchedCdsFeatures()
-                matched_cds_object._m_feature = m_imperfect_matched_cds_dict[end_strand_tup]
-                matched_cds_object._g_feature = g_imperfect_matched_cds_dict[end_strand_tup]
-                matched_cds_object.compare_mysql_gbk_cds_ftrs()
-
-                if matched_cds_object._total_errors > 0:
-                    self._total_number_genes_with_errors += 1
-
-                if matched_cds_object._m_g_different_descriptions:
-                    self._m_g_different_descriptions_tally += 1
-                self._m_g_imperfect_matched_ftrs.append(matched_cds_object)
-
-
-            # Compute unmatched error and gene total errors for
-            # all unmatched features.
-            for cds_ftr in m_unmatched_cds_list:
-                cds_ftr._unmatched_error = True
-                cds_ftr.compute_total_cds_errors()
-                if cds_ftr._total_errors > 0:
-                    self._total_number_genes_with_errors += 1
-
-            for cds_ftr in g_unmatched_cds_list:
-                cds_ftr._unmatched_error = True
-                cds_ftr.compute_total_cds_errors()
-                if cds_ftr._total_errors > 0:
-                    self._total_number_genes_with_errors += 1
-
-
-            # Set unmatched CDS lists
-            self._m_ftrs_unmatched_in_g = m_unmatched_cds_list
-            self._g_ftrs_unmatched_in_m = g_unmatched_cds_list
-
-            # Now compute the number of features in each category
-            self._m_g_perfect_matched_ftrs_tally = len(self._m_g_perfect_matched_ftrs)
-            self._m_g_imperfect_matched_ftrs_tally = len(self._m_g_imperfect_matched_ftrs)
-            self._m_ftrs_unmatched_in_g_tally = len(self._m_ftrs_unmatched_in_g)
-            self._g_ftrs_unmatched_in_m_tally = len(self._g_ftrs_unmatched_in_m)
-
-
-        # If there is no matching GenBank genome,
-        # assign all MySQL genes to Unmatched.
-        else:
-
-            # Set unmatched CDS lists, but do NOT count them in unmatched tally.
-            # Unmatched tally should reflect unmatched genes if there is
-            # actually a matching GenBank genome.
-            self._m_ftrs_unmatched_in_g = m_cds_lst
-
-            # Now that all errors have been computed for each gene,
-            # compute how many genes have errors
-            # If there is no matching GenBank genome,
-            # gene error tallies are only computed for the MySQL genome.
-            m_gnm.compute_genes_with_errors_tally()
-            self._total_number_genes_with_errors = m_gnm._genes_with_errors_tally
-
-
-    def compare_mysql_phagesdb_genomes(self):
-
-        # verify that there is a MySQL and PhagesDB genome
-        # in the matched genome object.
-        m_gnm = self.m_genome
-        p_gnm = self.p_genome
-
-        if isinstance(m_gnm, Genome) and isinstance(p_gnm, Genome):
-
-            if m_gnm.sequence != p_gnm.sequence:
-                self._m_p_seq_mismatch = True
-            if m_gnm.length != p_gnm.length:
-                self._m_p_seq_length_mismatch = True
-            if m_gnm.accession != p_gnm.accession:
-                self._m_p_accession_mismatch = True
-            if m_gnm.host_genus != p_gnm.host_genus:
-                self._m_p_host_mismatch = True
-            if m_gnm.cluster != p_gnm.cluster:
-                self._m_p_cluster_mismatch = True
-
-
-    def compare_phagesdb_gbk_genomes(self):
-
-        # verify that there is a PhagesDB and GenBank genome
-        # in the matched genome object.
-        p_gnm = self.p_genome
-        g_gnm = self.g_genome
-
-        if isinstance(p_gnm, Genome) and isinstance(g_gnm, Genome):
-            if p_gnm.sequence != g_gnm.sequence:
-                self._p_g_seq_mismatch = True
-            if p_gnm.length != g_gnm.length:
-                self._p_g_seq_length_mismatch = True
-
-
-
-    def compute_total_genome_errors(self):
-        m_gnm = self.m_genome
-        g_gnm = self.g_genome
-        p_gnm = self.p_genome
-
-        if self._total_number_genes_with_errors > 0:
-            self._contains_errors = True
-
-        # MySQL genome
-        if m_gnm._nucleotide_errors:
-            self._contains_errors = True
-        if m_gnm._status_description_error:
-            self._contains_errors = True
-        if m_gnm._status_accession_error:
-            self._contains_errors = True
-
-        # GenBank genome
-        if isinstance(g_gnm, Genome):
-            if g_gnm._nucleotide_errors:
-                self._contains_errors = True
-
-        # PhagesDB genome
-        if isinstance(p_gnm, Genome):
-            if p_gnm._nucleotide_errors:
-                self._contains_errors = True
-
-        # MySQL-GenBank
-        if self._m_g_seq_mismatch:
-            self._contains_errors = True
-        if self._m_g_seq_length_mismatch:
-            self._contains_errors = True
-        if self._g_header_fields_name_mismatch:
-            self._contains_errors = True
-        if self._g_host_mismatch:
-            self._contains_errors = True
-        if self._m_g_imperfect_matched_ftrs_tally > 0:
-            self._contains_errors = True
-        if self._m_ftrs_unmatched_in_g_tally > 0:
-            self._contains_errors = True
-        if self._g_ftrs_unmatched_in_m_tally > 0:
-            self._contains_errors = True
-        if self._m_g_different_descriptions_tally > 0:
-            self._contains_errors = True
-        if self._m_g_different_translations_tally > 0:
-            self._contains_errors = True
-        if self._m_g_author_error:
-            self._contains_errors = True
-
-        # MySQL-PhagesDB
-        if self._m_p_seq_mismatch:
-            self._contains_errors = True
-        if self._m_p_seq_length_mismatch:
-            self._contains_errors = True
-        if self._m_p_host_mismatch:
-            self._contains_errors = True
-        if self._m_p_accession_mismatch:
-            self._contains_errors = True
-        if self._m_p_cluster_mismatch:
-            self._contains_errors = True
-
-        # PhagesDB-GenBank
-        if self._p_g_seq_mismatch:
-            self._contains_errors = True
-        if self._p_g_seq_length_mismatch:
-            self._contains_errors = True
-
-
-
-class MatchedCdsFeatures:
-
-    # Initialize all attributes:
-    def __init__(self):
-
-
-        # Initialize all non-calculated attributes:
-        self._m_feature = ""
-        self._g_feature = ""
-
-        # Matched data comparison results
-        self._m_g_different_translations = False
-        self._m_g_different_start_sites = False
-        self._m_g_different_descriptions = False
-
-        # Total errors summary
-        self._total_errors = 0
-
-
-    # Define all attribute setters:
-
-    def compare_mysql_gbk_cds_ftrs(self):
-
-        if self._m_feature.orientation == "forward":
-            if str(self._m_feature.start) != str(self._g_feature.start):
-                self._m_g_different_start_sites = True
-        elif self._m_feature.orientation == "reverse":
-            if str(self._m_feature.stop) != str(self._g_feature.stop):
-                self._m_g_different_start_sites = True
-        else:
-            pass
-
-
-        product_description_set = set()
-        product_description_set.add(self._m_feature.description)
-        product_description_set.add(self._g_feature.product)
-
-
-        if len(product_description_set) != 1:
-            self._m_g_different_descriptions = True
-
-        if self._m_feature.translation != self._g_feature.translation:
-            self._m_g_different_translations = True
-
-
-
-        # Compute total errors
-        # First add all matched feature errors
-        if self._m_g_different_translations:
-            self._total_errors += 1
-
-        if self._m_g_different_start_sites:
-            self._total_errors += 1
-
-        if self._m_g_different_descriptions:
-            self._total_errors += 1
-
-        # Now add all errors from each individual feature
-        # You first compute errors for each individual feature.
-        # This step is performed here instead of in the mainline code
-        # because you need to wait for the feature matching step
-        # after the genome matching step.
-        self._m_feature.compute_total_cds_errors()
-        self._g_feature.compute_total_cds_errors()
-        self._total_errors += self._m_feature._total_errors
-        self._total_errors += self._g_feature._total_errors
-
-
-
-class DatabaseSummary:
-
-    # Initialize all attributes:
-    def __init__(self,matched_genomes_list):
-
-        # Initialize all non-calculated attributes:
-        self._matched_genomes_list = matched_genomes_list
-
-        # Initialize all calculated attributes:
-
-        # MySQL data
-        # General genome data
-        self._m_g_update_flag_tally = 0
-
-        # Genome data checks
-        self._m_gnms_with_nucleotide_errors_tally = 0
-        self._m_gnms_with_translation_errors_tally = 0
-        self._m_gnms_with_boundary_errors_tally = 0
-        self._m_gnms_with_status_accession_error_tally = 0
-        self._m_gnms_with_status_description_error_tally = 0
-
-        # PhagesDB data
-        # Genome data checks
-        self._p_gnms_with_nucleotide_errors_tally = 0
-
-        # GenBank data
-        # Genome data checks
-        self._g_gnms_with_nucleotide_errors_tally = 0
-        self._g_gnms_with_translation_errors_tally = 0
-        self._g_gnms_with_boundary_errors_tally = 0
-        self._g_gnms_with_missing_locus_tags_tally = 0
-        self._g_gnms_with_locus_tag_typos_tally = 0
-        self._g_gnms_with_description_field_errors_tally = 0
-
-        # MySQL-PhagesDB checks
-        self._m_p_seq_mismatch_tally = 0
-        self._m_p_seq_length_mismatch_tally = 0
-        self._m_p_cluster_mismatch_tally = 0
-        self._m_p_accession_mismatch_tally = 0
-        self._m_p_host_mismatch_tally = 0
-
-        # MySQL-GenBank checks
-        self._m_g_seq_mismatch_tally = 0
-        self._m_g_seq_length_mismatch_tally = 0
-        self._m_g_header_phage_mismatch_tally = 0
-        self._m_g_header_host_mismatch_tally = 0
-        self._m_g_gnms_with_imperfectly_matched_ftrs_tally = 0
-        self._m_g_gnms_with_unmatched_m_ftrs_tally = 0
-        self._m_g_gnms_with_unmatched_g_ftrs_tally = 0
-        self._m_g_gnms_with_different_descriptions_tally = 0
-        self._m_g_gnms_with_different_translations_tally = 0
-        self._m_g_gnms_with_author_errors_tally = 0
-
-        # PhagesDB-GenBank checks
-        self._p_g_seq_mismatch_tally = 0
-        self._p_g_seq_length_mismatch_tally = 0
-
-
-        # MySQL feature
-        # Gene data checks
-        self._m_translation_errors_tally = 0
-        self._m_boundary_errors_tally = 0
-
-
-        # GenBank feature
-        # Gene data checks
-        self._g_translation_errors_tally = 0
-        self._g_boundary_errors_tally = 0
-        self._g_missing_locus_tags_tally = 0
-        self._g_locus_tag_typos_tally = 0
-        self._g_description_field_errors_tally = 0
-
-        # MySQL-GenBank checks
-        self._m_g_different_descriptions_tally = 0
-        self._m_g_different_start_sites_tally = 0
-        self._m_g_different_translation_tally = 0
-        self._m_g_unmatched_m_ftrs_tally = 0
-        self._m_g_unmatched_g_ftrs_tally = 0
-
-
-        # Calculate summary metrics
-        self._m_total_gnms_analyzed = 0
-        self._m_gnms_unmatched_to_p_tally = 0
-        self._m_gnms_unmatched_to_g_tally = 0
-        self._total_genomes_with_errors = 0
-
-
-    # Define setter functions
-    def compute_summary(self):
-        for matched_genomes in self._matched_genomes_list:
-
-            self._m_total_gnms_analyzed += 1
-            m_gnm = matched_genomes.m_genome
-            p_gnm = matched_genomes.p_genome
-            g_gnm = matched_genomes.g_genome
-
-            if matched_genomes._contains_errors:
-                self._total_genomes_with_errors += 1
-
-
-            # MySQL data
-            if isinstance(m_gnm, Genome):
-
-                self._m_g_update_flag_tally += m_gnm.retrieve_record
-
-                # Genome data checks
-                if m_gnm._nucleotide_errors:
-                    self._m_gnms_with_nucleotide_errors_tally += 1
-                if m_gnm._cds_features_with_translation_error_tally > 0:
-                    self._m_gnms_with_translation_errors_tally += 1
-                    self._m_translation_errors_tally += m_gnm._cds_features_with_translation_error_tally
-                if m_gnm._cds_features_boundary_error_tally > 0:
-                    self._m_gnms_with_boundary_errors_tally += 1
-                    self._m_boundary_errors_tally += m_gnm._cds_features_boundary_error_tally
-                if m_gnm._status_accession_error:
-                    self._m_gnms_with_status_accession_error_tally += 1
-                if m_gnm._status_description_error:
-                    self._m_gnms_with_status_description_error_tally += 1
-
-            # PhagesDB data
-            if isinstance(p_gnm, Genome):
-
-                # Genome data checks
-                if p_gnm._nucleotide_errors:
-                    self._p_gnms_with_nucleotide_errors_tally += 1
-            else:
-                self._m_gnms_unmatched_to_p_tally += 1
-
-            # GenBank data
-            if isinstance(g_gnm, Genome):
-
-                # Genome data checks
-                if g_gnm._nucleotide_errors:
-                    self._g_gnms_with_nucleotide_errors_tally += 1
-                if g_gnm._cds_features_with_translation_error_tally > 0:
-                    self._g_gnms_with_translation_errors_tally += 1
-                    self._g_translation_errors_tally += g_gnm._cds_features_with_translation_error_tally
-                if g_gnm._cds_features_boundary_error_tally > 0:
-                    self._g_gnms_with_boundary_errors_tally += 1
-                    self._g_boundary_errors_tally += g_gnm._cds_features_boundary_error_tally
-                if g_gnm._missing_locus_tags_tally > 0:
-                    self._g_gnms_with_missing_locus_tags_tally += 1
-                    self._g_missing_locus_tags_tally += g_gnm._missing_locus_tags_tally
-                if g_gnm._locus_tag_typos_tally > 0:
-                    self._g_gnms_with_locus_tag_typos_tally += 1
-                    self._g_locus_tag_typos_tally += g_gnm._locus_tag_typos_tally
-                if g_gnm._description_field_error_tally > 0:
-                    self._g_gnms_with_description_field_errors_tally += 1
-                    self._g_description_field_errors_tally += g_gnm._description_field_error_tally
-
-            else:
-                self._m_gnms_unmatched_to_g_tally += 1
-
-            # MySQL-PhagesDB checks
-            if matched_genomes._m_p_seq_mismatch:
-                self._m_p_seq_mismatch_tally += 1
-            if matched_genomes._m_p_seq_length_mismatch:
-                self._m_p_seq_length_mismatch_tally += 1
-            if matched_genomes._m_p_cluster_mismatch:
-                self._m_p_cluster_mismatch_tally += 1
-            if matched_genomes._m_p_accession_mismatch:
-                self._m_p_accession_mismatch_tally += 1
-            if matched_genomes._m_p_host_mismatch:
-                self._m_p_host_mismatch_tally += 1
-
-            # MySQL-GenBank checks
-            if matched_genomes._m_g_seq_mismatch:
-                self._m_g_seq_mismatch_tally += 1
-            if matched_genomes._m_g_seq_length_mismatch:
-                self._m_g_seq_length_mismatch_tally += 1
-            if matched_genomes._g_header_fields_name_mismatch:
-                self._m_g_header_phage_mismatch_tally += 1
-            if matched_genomes._g_host_mismatch:
-                self._m_g_header_host_mismatch_tally += 1
-            if matched_genomes._m_g_imperfect_matched_ftrs_tally > 0:
-                self._m_g_gnms_with_imperfectly_matched_ftrs_tally += 1
-                self._m_g_different_start_sites_tally += matched_genomes._m_g_imperfect_matched_ftrs_tally
-            if matched_genomes._m_ftrs_unmatched_in_g_tally > 0:
-                self._m_g_gnms_with_unmatched_m_ftrs_tally += 1
-                self._m_g_unmatched_m_ftrs_tally += matched_genomes._m_ftrs_unmatched_in_g_tally
-            if matched_genomes._g_ftrs_unmatched_in_m_tally > 0:
-                self._m_g_gnms_with_unmatched_g_ftrs_tally += 1
-                self._m_g_unmatched_g_ftrs_tally += matched_genomes._g_ftrs_unmatched_in_m_tally
-            if matched_genomes._m_g_different_descriptions_tally > 0:
-                self._m_g_gnms_with_different_descriptions_tally += 1
-                self._m_g_different_descriptions_tally += matched_genomes._m_g_different_descriptions_tally
-            if matched_genomes._m_g_different_translations_tally > 0:
-                self._m_g_gnms_with_different_translations_tally += 1
-                self._m_g_different_translation_tally += matched_genomes._m_g_different_translations_tally
-            if matched_genomes._m_g_author_error:
-                self._m_g_gnms_with_author_errors_tally += 1
-
-
-            # PhagesDB-GenBank checks
-            if matched_genomes._p_g_seq_mismatch:
-                self._p_g_seq_mismatch_tally += 1
-            if matched_genomes._p_g_seq_length_mismatch:
-                self._p_g_seq_length_mismatch_tally += 1
 
 # End of class definitions
 
@@ -1227,6 +559,9 @@ def get_status(draft, final, unknown):
 
 def main(unparsed_args_list):
     """Run compare pipeline."""
+    modify_genome_class(Genome)
+    modify_cds_class(Cds)
+
     start_time = time.strftime("%x %X")
     args = parse_args(unparsed_args_list)
     database = args.database
@@ -1440,7 +775,7 @@ def create_mysql_gnms(list_of_dicts, valid_status, valid_authors):
 def create_mysql_gnm(dict):
     """Create genome object from MySQL data."""
     gnm = Genome()
-    gnm.type = "mysql"
+    gnm.type = GNM_MYSQL
     gnm.id = dict["PhageID"]
     gnm.name = dict["Name"]
     gnm.host_genus = dict["HostGenus"]
@@ -1489,17 +824,16 @@ def get_gene_obs_list(list_of_dicts):
 
 def create_mysql_cds(dict):
     """Create MySQL CDS feature object."""
-    cds_ftr = CdsFeature()
-    cds_ftr.set_genome_id(dict["PhageID"])
+    cds_ftr = Cds()
+    cds_ftr.genome_id = dict["PhageID"]
     cds_ftr.id = dict["GeneID"]
     cds_ftr.name = dict["Name"]
-    cds_ftr.type = "CDS"
+    cds_ftr.type = CDS_MYSQL
     cds_ftr.start = dict["Start"]
     cds_ftr.stop = dict["Stop"]
-    cds_ftr.set_strand(dict["Orientation"])
+    cds_ftr.set_orientation(dict["Orientation"], "fr_long", case=False)
     cds_ftr.set_translation(dict["Translation"])
-    tup2 = basic.reformat_description(dict["Notes"].decode("utf-8"))
-    cds_ftr.set_notes(tup2[0], tup2[1])
+    cds_ftr.set_description_field("description", dict["Notes"].decode("utf-8"))
     return cds_ftr
 
 def set_mysql_cds_attr(cds_ftr):
@@ -1597,7 +931,7 @@ def create_pdb_gnm(dict):
     """Parse PhagesDB data to genome object."""
 
     gnm = Genome()
-    gnm.type = "phagesdb"
+    gnm.type = GNM_PDB
 
     #Name, Host, Accession
     gnm.id = dict["phage_name"]
@@ -1733,7 +1067,7 @@ def create_gbk_gnm(retrieved_record):
     """Parse GenBank data to genome object."""
 
     gnm = Genome()
-    gnm.type = "genbank"
+    gnm.type = GNM_GBK
 
     try:
         # There may be a list of accessions associated with this file.
@@ -1843,10 +1177,10 @@ def check_gbk_gnms(gnm_dict):
 def create_gbk_cds(feature):
     """Parse data from GenBank CDS feature."""
 
-    gene_object = CdsFeature()
+    gene_object = Cds()
 
     # Feature type
-    gene_object.type = "CDS"
+    gene_object.type = CDS_GBK
 
     # Locus tag
     try:
@@ -1857,12 +1191,12 @@ def create_gbk_cds(feature):
 
     # Orientation
     if feature.strand == 1:
-        gene_object.set_strand("forward")
+        gene_object.set_orientation("forward", "fr_long", case=False)
     elif feature.strand == -1:
-        gene_object.set_strand("reverse")
+        gene_object.set_orientation("reverse", "fr_long", case=False)
     # ssRNA phages
     elif feature.strand is None:
-        gene_object.set_strand("NA")
+        gene_object.set_orientation("NA", "fr_long", case=True)
 
     # Gene boundary coordinates
     # Compound features are tricky to parse.
@@ -1893,19 +1227,16 @@ def create_gbk_cds(feature):
 
     # Gene function, note, and product descriptions
     try:
-        tup1 = basic.reformat_description(feature.qualifiers["product"][0])
-        gene_object.set_product_description(tup1[0],tup1[1])
+        gene_object.set_description_field("product", feature.qualifiers["product"][0])
     except:
         pass
     try:
-        tup2 = basic.reformat_description(feature.qualifiers["function"][0])
-        gene_object.set_function_description(tup2[0],tup2[1])
+        gene_object.set_description_field("function", feature.qualifiers["function"][0])
     except:
         pass
 
     try:
-        tup3 = basic.reformat_description(feature.qualifiers["note"][0])
-        gene_object.set_note_description(tup3[0],tup3[1])
+        gene_object.set_description_field("note", feature.qualifiers["note"][0])
     except:
         pass
 
@@ -1954,7 +1285,7 @@ def match_all_genomes(mysql_gnms, pdb_gnms, gbk_gnms, pdb_name_duplicates,
 
         print("Matching genome %s of %s" %(match_count,total_count))
         mysql_gnm = mysql_gnms[id]
-        matched_objects = MatchedGenomes()
+        matched_objects = genometriad.GenomeTriad()
         matched_objects.m_genome = mysql_gnm
 
         # Match up PhagesDB genome
@@ -1965,10 +1296,12 @@ def match_all_genomes(mysql_gnms, pdb_gnms, gbk_gnms, pdb_name_duplicates,
             # Make sure the pdb_genome doesn't have a search name
             # that was duplicated
             if pdb_genome.id in pdb_name_duplicates:
-                pdb_genome = ""
+                # Do NOT set genome.type, so that it remains ""
+                pdb_genome = Genome()
 
         else:
-            pdb_genome = ""
+            # Do NOT set genome.type, so that it remains ""
+            pdb_genome = Genome()
             mysql_unmatched_to_pdb_gnms.append(mysql_gnm)
 
         matched_objects.p_genome = pdb_genome
@@ -1980,11 +1313,13 @@ def match_all_genomes(mysql_gnms, pdb_gnms, gbk_gnms, pdb_name_duplicates,
                 try:
                     g_gnm = gbk_gnms[acc]
                 except:
-                    g_gnm = ""
+                    # Do NOT set genome.type, so that it remains ""
+                    g_gnm = Genome()
                     mysql_unmatched_to_gbk_gnms.append(mysql_gnm)
 
         else:
-            g_gnm = ""
+            # Do NOT set genome.type, so that it remains ""
+            g_gnm = Genome()
             mysql_unmatched_to_gbk_gnms.append(mysql_gnm)
 
         matched_objects.g_genome = g_gnm
@@ -2013,10 +1348,11 @@ def check_matched_gnms(matched_gnms):
     total = len(matched_gnms)
     for matched_gnm in matched_gnms:
         print(f"Comparing matched genome set {count} of {total}")
-        matched_gnm.compare_mysql_gbk_genomes()
-        matched_gnm.compare_mysql_phagesdb_genomes()
-        matched_gnm.compare_phagesdb_gbk_genomes()
-        matched_gnm.compute_total_genome_errors()
+
+        matched_gnm.compare_mysql_gbk_genomes(GNM_MYSQL, GNM_GBK, CDSPAIR_MYSQL_GBK)
+        matched_gnm.compare_mysql_phagesdb_genomes(GNM_MYSQL, GNM_PDB)
+        matched_gnm.compare_phagesdb_gbk_genomes(GNM_PDB, GNM_GBK)
+        matched_gnm.compute_total_genome_errors(GNM_GBK, GNM_PDB)
         count += 1
 
 
@@ -2025,8 +1361,8 @@ def check_matched_gnms(matched_gnms):
 
 def summarize_data(matched_genomes_list, working_path):
     """Create summary of data and save."""
-    summary_object = DatabaseSummary(matched_genomes_list)
-    summary_object.compute_summary()
+    summary_object = dbcomparesummary.DbCompareSummary(matched_genomes_list)
+    summary_object.compute_summary(GNM_MYSQL, GNM_PDB, GNM_GBK)
     output_all_data(working_path, summary_object)
 
 
@@ -2052,7 +1388,7 @@ def output_all_data(output_path, summary_object):
                    CDS_SUMMARY_OUTPUT)
 
     # Now iterate through matched objects.
-    # All MySQL genomes are stored in a MatchedGenomes object,
+    # All MySQL genomes are stored in a GenomeTriad object,
     # even if there are no PhagesDB or GenBank matches.
     # All but a few MySQL phages should be matched to PhagesDB
     # Many MySQL phages should be matched to GenBank
@@ -2463,22 +1799,30 @@ def create_feature_data(mysql_genome, mixed_ftr):
     lst.append(mysql_genome.id) # matched MySQL search name
     lst.append(mixed_ftr._total_errors) # total # of errors for this gene
 
-    if isinstance(mixed_ftr,MatchedCdsFeatures):
+    # Default type attribute is empty ""
+    cds_pair = cdspair.CdsPair()
+    mysql_ftr = Cds()
+    gbk_ftr = Cds()
+
+    # Determine what exactly the mixed feature object is and assign to
+    # the appropriate variable.
+    if isinstance(mixed_ftr, cdspair.CdsPair):
+        cds_pair = mixed_ftr
         mysql_ftr = mixed_ftr._m_feature
         gbk_ftr = mixed_ftr._g_feature
-    else:
-        if isinstance(mixed_ftr, CdsFeature):
+    elif isinstance(mixed_ftr, Cds):
+        if mixed_ftr.type == CDS_MYSQL:
             mysql_ftr = mixed_ftr
-            gbk_ftr = ""
-        elif isinstance(mixed_ftr, CdsFeature):
-            mysql_ftr = ""
+        elif mixed_ftr.type == CDS_GBK:
             gbk_ftr = mixed_ftr
         else:
-            mysql_ftr = ""
-            gbk_ftr = ""
+            pass
+    else:
+        pass
+
 
     # MySQL feature
-    if isinstance(mysql_ftr, CdsFeature):
+    if mysql_ftr.type == CDS_MYSQL:
 
         # General gene data
         lst.append(mysql_ftr.genome_id)
@@ -2502,7 +1846,7 @@ def create_feature_data(mysql_genome, mixed_ftr):
 
 
     # GenBank feature
-    if isinstance(gbk_ftr, CdsFeature):
+    if gbk_ftr.type == CDS_GBK:
 
         # General gene data
         lst.append(gbk_ftr.locus_tag)
@@ -2528,15 +1872,15 @@ def create_feature_data(mysql_genome, mixed_ftr):
 
 
     # MySQL-GenBank checks
-    if isinstance(mixed_ftr,MatchedCdsFeatures):
+    if cds_pair.type == CDSPAIR_MYSQL_GBK:
 
         # If this is a matched CDS feature, both MySQL and
         # GenBank features should have identical unmatched_error value.
-        lst.append(mixed_ftr._m_feature._unmatched_error)
+        lst.append(cds_pair._m_feature._unmatched_error)
 
-        lst.append(mixed_ftr._m_g_different_descriptions)
-        lst.append(mixed_ftr._m_g_different_start_sites)
-        lst.append(mixed_ftr._m_g_different_translations)
+        lst.append(cds_pair._m_g_different_descriptions)
+        lst.append(cds_pair._m_g_different_start_sites)
+        lst.append(cds_pair._m_g_different_translations)
     else:
         lst.append(mixed_ftr._unmatched_error)
         lst.extend(["","",""])
@@ -2583,7 +1927,7 @@ def create_genome_data(matched_genomes):
 
 
     # PhagesDB data
-    if isinstance(pdb_genome, Genome):
+    if pdb_genome.type == GNM_PDB:
 
         # General genome data
         lst.append(pdb_genome.name)
@@ -2602,7 +1946,7 @@ def create_genome_data(matched_genomes):
 
 
     # GenBank data
-    if isinstance(gbk_gnm, Genome):
+    if gbk_gnm.type == GNM_GBK:
 
         # General genome data
         lst.append(gbk_gnm.name)
@@ -2638,7 +1982,8 @@ def create_genome_data(matched_genomes):
                     "","",""])
 
     # MySQL-PhagesDB checks
-    if isinstance(pdb_genome, Genome):
+    if pdb_genome.type == GNM_PDB:
+
         lst.append(matched_genomes._m_p_seq_mismatch)
         lst.append(matched_genomes._m_p_seq_length_mismatch)
         lst.append(matched_genomes._m_p_cluster_mismatch)
@@ -2649,7 +1994,7 @@ def create_genome_data(matched_genomes):
 
 
     # MySQL-GenBank checks
-    if isinstance(gbk_gnm, Genome):
+    if gbk_gnm.type == GNM_GBK:
         lst.append(matched_genomes._m_g_seq_mismatch)
         lst.append(matched_genomes._m_g_seq_length_mismatch)
         lst.append(matched_genomes._g_header_fields_name_mismatch)
@@ -2668,7 +2013,7 @@ def create_genome_data(matched_genomes):
     lst.append(matched_genomes._total_number_genes_with_errors)
 
     # Output PhagesDB-GenBank checks
-    if isinstance(pdb_genome, Genome) and isinstance(gbk_gnm, Genome):
+    if pdb_genome.type == GNM_PDB and gbk_gnm.type == GNM_GBK:
         lst.append(matched_genomes._p_g_seq_mismatch)
         lst.append(matched_genomes._p_g_seq_length_mismatch)
     else:

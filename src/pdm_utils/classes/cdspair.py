@@ -2,105 +2,79 @@
 features.
 """
 
+# TODO CdsPair class currently implemented in compare_db pipeline.
+# TODO currently relies on extra Cds object attributes that are not present
+# in the base Cds class and that are added during compare pipeline.
+
+# Variables are prefixed to indicate genome type:
+# GenBank =  "gbk", "g"
+# MySQL = "mysql", "m"
+# PhagesDB = "pdb", "p"
 
 
 
-
-#Old python2 code
 class CdsPair:
 
     # Initialize all attributes:
     def __init__(self):
-        pass
 
-
-
-#Old python2 code
-class MatchedCdsFeatures:
-
-    # Initialize all attributes:
-    def __init__(self):
+        self.type = ""
 
         # Initialize all non-calculated attributes:
-        self.__phamerator_feature = ''
-        self.__ncbi_feature = ''
+        self._m_feature = ""
+        self._g_feature = ""
 
-        #Matched data comparison results
-        self.__phamerator_ncbi_different_translations = False #True = there are different translations
-        self.__phamerator_ncbi_different_start_sites = False #True = there are different start sites
-        self.__phamerator_ncbi_different_descriptions = False #True = there are different gene descriptions
+        # Matched data comparison results
+        self._m_g_different_translations = False
+        self._m_g_different_start_sites = False
+        self._m_g_different_descriptions = False
 
-        #Total errors summary
-        self.__total_errors = 0
-
+        # Total errors summary
+        self._total_errors = 0
 
 
     # Define all attribute setters:
-    def set_phamerator_feature(self,value):
-        self.__phamerator_feature = value
-    def set_ncbi_feature(self,value):
-        self.__ncbi_feature = value
 
+    def compare_mysql_gbk_cds_ftrs(self):
 
-    def compare_phamerator_ncbi_cds_features(self):
-
-        if self.__phamerator_feature.get_strand() == 'forward':
-            if str(self.__phamerator_feature.get_left()) != str(self.__ncbi_feature.get_left()):
-                self.__phamerator_ncbi_different_start_sites = True
-        elif self.__phamerator_feature.get_strand() == 'reverse':
-            if str(self.__phamerator_feature.get_right()) != str(self.__ncbi_feature.get_right()):
-                self.__phamerator_ncbi_different_start_sites = True
+        if self._m_feature.orientation == "forward":
+            if str(self._m_feature.start) != str(self._g_feature.start):
+                self._m_g_different_start_sites = True
+        elif self._m_feature.orientation == "reverse":
+            if str(self._m_feature.stop) != str(self._g_feature.stop):
+                self._m_g_different_start_sites = True
         else:
             pass
 
 
-        product_set = set()
-        product_set.add(self.__phamerator_feature.get_search_notes())
-        product_set.add(self.__ncbi_feature.get_search_product())
+        product_description_set = set()
+        product_description_set.add(self._m_feature.description)
+        product_description_set.add(self._g_feature.product)
 
 
-        if len(product_set) != 1:
-            self.__phamerator_ncbi_different_descriptions = True
+        if len(product_description_set) != 1:
+            self._m_g_different_descriptions = True
 
-        if self.__phamerator_feature.get_translation() != self.__ncbi_feature.get_translation():
-            self.__phamerator_ncbi_different_translations = True
+        if self._m_feature.translation != self._g_feature.translation:
+            self._m_g_different_translations = True
 
+        # Compute total errors
+        # First add all matched feature errors
+        if self._m_g_different_translations:
+            self._total_errors += 1
 
+        if self._m_g_different_start_sites:
+            self._total_errors += 1
 
-        #Compute total errors
-        #First add all matched feature errors
-        if self.__phamerator_ncbi_different_translations:
-            self.__total_errors += 1
+        if self._m_g_different_descriptions:
+            self._total_errors += 1
 
-        if self.__phamerator_ncbi_different_start_sites:
-            self.__total_errors += 1
-
-        if self.__phamerator_ncbi_different_descriptions:
-            self.__total_errors += 1
-
-        #Now add all errors from each individual feature
-        #You first compute errors for each individual feature.
-        #This step is performed here instead of in the mainline code
-        #because you need to wait for the feature matching step after the genome matching step
-        self.__phamerator_feature.compute_total_cds_errors()
-        self.__ncbi_feature.compute_total_cds_errors()
-        self.__total_errors += self.__phamerator_feature.get_total_errors()
-        self.__total_errors += self.__ncbi_feature.get_total_errors()
-
-
-
-
-
-    # Define all attribute getters:
-    def get_phamerator_feature(self):
-        return self.__phamerator_feature
-    def get_ncbi_feature(self):
-        return self.__ncbi_feature
-    def get_phamerator_ncbi_different_start_sites(self):
-        return self.__phamerator_ncbi_different_start_sites
-    def get_phamerator_ncbi_different_descriptions(self):
-        return self.__phamerator_ncbi_different_descriptions
-    def get_phamerator_ncbi_different_translations(self):
-        return self.__phamerator_ncbi_different_translations
-    def get_total_errors(self):
-        return self.__total_errors
+        # Now add all errors from each individual feature
+        # You first compute errors for each individual feature.
+        # This step is performed here instead of in the mainline code
+        # because you need to wait for the feature matching step
+        # after the genome matching step.
+        self._m_feature.compute_total_cds_errors()
+        self._g_feature.compute_total_cds_errors()
+        self._total_errors += self._m_feature._total_errors
+        self._total_errors += self._g_feature._total_errors
