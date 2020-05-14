@@ -43,7 +43,6 @@ from pdm_utils.functions import ncbi
 from pdm_utils.functions import phagesdb
 
 
-
 DEFAULT_OUTPUT_FOLDER = os.getcwd()
 
 #Create output directories
@@ -89,11 +88,16 @@ CDSPAIR_MYSQL_GBK = "mysql_genbank"
 
 
 
-# TODO these modifications should ultimately be integrated directly into
-# the base pdm_utils classes or the compare pipeline should be revamped
-# to not need these extra attributes and methods.
+# TODO these Genome and Cds class modifications are a temporary
+# solution to be able to integrate the compare pipeline into pdm_utils.
+# These modifications should ultimately be
+# integrated directly into the base pdm_utils classes or
+# the compare pipeline should be revamped to not need these extra
+# attributes and methods.
 
-# Define class modifications
+### Genome class modifications
+
+# TODO refactor and test.
 def modify_genome_class(GenomeClass):
     """Add new attributes and methods to Genome class."""
 
@@ -114,21 +118,30 @@ def modify_genome_class(GenomeClass):
     setattr(GenomeClass, "_cds_features_boundary_error_tally", 0)
 
     # New methods
-    setattr(GenomeClass, "compute_nucleotide_errors", compute_nucleotide_errors)
-    setattr(GenomeClass, "compute_cds_feature_errors", compute_cds_feature_errors)
-    setattr(GenomeClass, "check_status_accession", check_status_accession)
-    setattr(GenomeClass, "compute_status_description_error", compute_status_description_error)
-    setattr(GenomeClass, "compute_genes_with_errors_tally", compute_genes_with_errors_tally)
-    setattr(GenomeClass, "compute_gbk_cds_feature_errors", compute_gbk_cds_feature_errors)
+    setattr(GenomeClass, "compute_nucleotide_errors",
+            compute_nucleotide_errors)
+    setattr(GenomeClass, "compute_cds_feature_errors",
+            compute_cds_feature_errors)
+    setattr(GenomeClass, "check_status_accession",
+            check_status_accession)
+    setattr(GenomeClass, "compute_status_description_error",
+            compute_status_description_error)
+    setattr(GenomeClass, "compute_genes_with_errors_tally",
+            compute_genes_with_errors_tally)
+    setattr(GenomeClass, "compute_gbk_cds_feature_errors",
+            compute_gbk_cds_feature_errors)
 
 
 # Genome error checks
+
+# TODO refactor and test.
 def compute_nucleotide_errors(self, dna_alphabet):
     nucleotide_set = set(self.seq)
     nucleotide_error_set = nucleotide_set - dna_alphabet
     if len(nucleotide_error_set) > 0:
         self._nucleotide_errors = True
 
+# TODO refactor and test.
 def compute_cds_feature_errors(self):
     for cds_feature in self.cds_features:
         if cds_feature._amino_acid_errors:
@@ -136,6 +149,7 @@ def compute_cds_feature_errors(self):
         if cds_feature._boundary_error:
             self._cds_features_boundary_error_tally += 1
 
+# TODO refactor and test.
 def check_status_accession(self):
 
     # Be sure to first set the accession attribute before the
@@ -151,6 +165,7 @@ def check_status_accession(self):
     if self.annotation_status == "final" and self.accession == "":
         self._status_accession_error = True
 
+# TODO refactor and test.
 def compute_status_description_error(self):
     # Iterate through all CDS features, see if they have descriptions,
     # then compare to the annotation_status.
@@ -164,17 +179,20 @@ def compute_status_description_error(self):
     else:
         pass
 
-#Even though this method iterates through the CDS features
-# like the compute_status_description_error does,
-#it has to be kept separate, since you need to wait to run
-# this method after all genome and gene matching is completed.
+
+# TODO refactor and test.
 def compute_genes_with_errors_tally(self):
+    #Even though this method iterates through the CDS features
+    # like the compute_status_description_error does,
+    #it has to be kept separate, since you need to wait to run
+    # this method after all genome and gene matching is completed.
     for feature in self.cds_features:
         # Need to first compute the number of errors per gene
         feature.compute_total_cds_errors()
         if feature._total_errors > 0:
             self._genes_with_errors_tally += 1
 
+# TODO refactor and test.
 def compute_gbk_cds_feature_errors(self):
     for cds_feature in self.cds_features:
 
@@ -206,7 +224,9 @@ def compute_gbk_cds_feature_errors(self):
             self._description_field_error_tally += 1
 
 
-###Cds
+### Cds class modification
+
+# TODO refactor and test.
 def modify_cds_class(CdsClass):
     """Add new attributes and methods to Cds class."""
 
@@ -231,6 +251,7 @@ def modify_cds_class(CdsClass):
     setattr(CdsClass, "compute_description_error", compute_description_error)
     setattr(CdsClass, "compute_total_cds_errors", compute_total_cds_errors)
 
+# TODO refactor and test.
 def set_start_end_strand_id(self):
     # Create a tuple of feature location data.
     # For start and end of feature, it doesn't matter whether
@@ -249,34 +270,41 @@ def set_start_end_strand_id(self):
     else:
         pass
 
+# TODO refactor and test.
 def set_search_genome_id(self):
     self._search_genome_id = basic.edit_suffix(self.genome_id, "remove").lower()
 
 
+# TODO refactor and test.
 def check_locus_tag(self):
     if self.locus_tag == "":
         self._locus_tag_missing = True
 
+# TODO refactor and test.
 def compute_amino_acid_errors(self, protein_alphabet):
     amino_acid_set = set(self.translation)
     amino_acid_error_set = amino_acid_set - protein_alphabet
     if len(amino_acid_error_set) > 0:
         self._amino_acid_errors = True
 
+# TODO refactor and test.
 def compute_boundary_error(self):
     # Check if start and end coordinates are fuzzy
     if not (str(self.start).isdigit() and str(self.stop).isdigit()):
         self._boundary_error = True
 
+# TODO refactor and test.
 def set_locus_tag_typo(self):
     self._locus_tag_typo = True
 
+# TODO refactor and test.
 def compute_description_error(self):
     # If the product description is empty or generic,
     # and the function or note descriptions are not, there is an error.
     if (self.product == "" and self.function != "" or self.note != ""):
         self._description_field_error = True
 
+# TODO refactor and test.
 def compute_total_cds_errors(self):
     if self._amino_acid_errors:
         self._total_errors += 1
@@ -291,150 +319,12 @@ def compute_total_cds_errors(self):
     if self._unmatched_error:
         self._total_errors += 1
 
-# End of class definitions
 
 
 
+### Pipeline begins below
 
-def output_to_file(data_list, folder, filename):
-    """Output list data to file."""
-    file_path = pathlib.Path(folder, filename)
-    with file_path.open("w") as handle:
-        writer = csv.writer(handle)
-        for element in data_list:
-            writer.writerow(element)
-
-def prepare_unmatched_to_gbk_output(gnms):
-    """Prepare list of MySQL unmatched to GenBank data to be saved to file."""
-    l = []
-    if len(gnms) > 0:
-        l.append(["PhageID", "PhageName", "Author", "Status", "Accession"])
-        for gnm in gnms:
-            l.append([gnm.id,
-                      gnm.name,
-                      gnm.annotation_author,
-                      gnm.annotation_status,
-                      gnm.accession])
-    return l
-
-def prepare_unmatched_to_pdb_output(gnms):
-    """Prepare list of MySQL unmatched to PhagesDB data to be saved to file."""
-    l = []
-    if len(gnms) > 0:
-        l.append(["PhageID", "PhageName", "Author", "Status"])
-        for gnm in gnms:
-            l.append([gnm.id,
-                      gnm.name,
-                      gnm.annotation_author,
-                      gnm.annotation_status])
-    return l
-
-def save_seqrecord(seqrecord, output_path, file_prefix, ext, seqrecord_ext, interactive):
-    """Save record to file."""
-    file_path = basic.make_new_file(output_path, file_prefix, ext, attempt=100)
-    if file_path is not None:
-        SeqIO.write(seqrecord, file_path, seqrecord_ext)
-    else:
-        print(f"Duplicated filenames for {file_prefix}. Unable to output data.")
-        if interactive:
-            input('Press ENTER to proceed')
-
-
-
-def parse_args(unparsed_args_list):
-    """Verify the correct arguments are selected for comparing databases."""
-
-    COMPARE_HELP = ("Pipeline to compare MySQL, PhagesDB, and "
-                    "GenBank databases for inconsistencies.")
-    DATABASE_HELP = "Name of the MySQL database from which to compare data."
-    OUTPUT_FOLDER_HELP = ("Path to the folder to store results.")
-    NCBI_CRED_FILE_HELP = ("Path to the file containing NCBI credentials.")
-
-    PHAGESDB_HELP = "Indicates that PhagesDB data should be compared."
-    GENBANK_HELP = "Indicates that GenBank data should be compared."
-    SAVE_RECORDS_HELP = \
-        ("Indicates that records retrieved from external "
-         "databases will be saved.")
-    INTERNAL_AUTHORS_HELP = \
-        "Indicates that genomes with internal authorship will be evaluated."
-    EXTERNAL_AUTHORS_HELP = \
-        "Indicates that genomes with external authorship will be evaluated."
-
-    DRAFT_HELP = \
-        "Indicates that genomes with 'draft' annotation_status will be evaluated."
-    FINAL_HELP = \
-        "Indicates that genomes with 'final' annotation_status will be evaluated."
-    UNKNOWN_HELP = \
-        "Indicates that genomes with 'unknown' annotation_status will be evaluated."
-    INTERACTIVE_HELP = \
-        "Indicates whether evaluation is paused when errors are encountered."
-
-    parser = argparse.ArgumentParser(description=COMPARE_HELP)
-    parser.add_argument("database", type=str, help=DATABASE_HELP)
-    parser.add_argument("-o", "--output_folder", type=pathlib.Path,
-                        default=pathlib.Path(DEFAULT_OUTPUT_FOLDER),
-                        help=OUTPUT_FOLDER_HELP)
-    parser.add_argument("-p", "--phagesdb", action="store_true",
-        default=False, help=PHAGESDB_HELP)
-    parser.add_argument("-g", "--genbank", action="store_true",
-        default=False, help=GENBANK_HELP)
-    parser.add_argument("-c", "--ncbi_credentials_file", type=pathlib.Path,
-        help=NCBI_CRED_FILE_HELP)
-    parser.add_argument("-s", "--save_records", action="store_true",
-        default=False, help=SAVE_RECORDS_HELP)
-    parser.add_argument("-ia", "--internal_authors", action="store_true",
-        default=False, help=INTERNAL_AUTHORS_HELP)
-    parser.add_argument("-ea", "--external_authors", action="store_true",
-        default=False, help=EXTERNAL_AUTHORS_HELP)
-    parser.add_argument("-d", "--draft", action="store_true",
-        default=False, help=DRAFT_HELP)
-    parser.add_argument("-f", "--final", action="store_true",
-        default=False, help=FINAL_HELP)
-    parser.add_argument("-u", "--unknown", action="store_true",
-        default=False, help=UNKNOWN_HELP)
-    parser.add_argument("-i", "--interactive", action="store_true",
-        default=False, help=INTERACTIVE_HELP)
-
-
-
-    # Assumed command line arg structure:
-    # python3 -m pdm_utils <pipeline> <additional args...>
-    # sys.argv:      [0]            [1]         [2...]
-    args = parser.parse_args(unparsed_args_list[2:])
-    return args
-
-
-def get_dbs(pdb, gbk):
-    """Create set of databases to compare to MySQL."""
-    dbs = set()
-    if pdb == True:
-        dbs.add("phagesdb")
-    if gbk == True:
-        dbs.add("genbank")
-    return dbs
-
-
-def get_authors(internal, external):
-    """Create set of authorship to compare."""
-    authorship = set()
-    if internal == True:
-        authorship.add(1)
-    if external == True:
-        authorship.add(0)
-    return authorship
-
-def get_status(draft, final, unknown):
-    """Create set of annotation_status to compare."""
-    status = set()
-    if draft == True:
-        status.add("draft")
-    if final == True:
-        status.add("final")
-    if unknown == True:
-        status.add("unknown")
-    return status
-
-
+# TODO refactor and test.
 def main(unparsed_args_list):
     """Run compare pipeline."""
     modify_genome_class(genome.Genome)
@@ -531,6 +421,155 @@ def main(unparsed_args_list):
     return
 
 
+# TODO refactor and test.
+def parse_args(unparsed_args_list):
+    """Verify the correct arguments are selected for comparing databases."""
+
+    COMPARE_HELP = ("Pipeline to compare MySQL, PhagesDB, and "
+                    "GenBank databases for inconsistencies.")
+    DATABASE_HELP = "Name of the MySQL database from which to compare data."
+    OUTPUT_FOLDER_HELP = ("Path to the folder to store results.")
+    NCBI_CRED_FILE_HELP = ("Path to the file containing NCBI credentials.")
+
+    PHAGESDB_HELP = "Indicates that PhagesDB data should be compared."
+    GENBANK_HELP = "Indicates that GenBank data should be compared."
+    SAVE_RECORDS_HELP = \
+        ("Indicates that records retrieved from external "
+         "databases will be saved.")
+    INTERNAL_AUTHORS_HELP = \
+        "Indicates that genomes with internal authorship will be evaluated."
+    EXTERNAL_AUTHORS_HELP = \
+        "Indicates that genomes with external authorship will be evaluated."
+
+    DRAFT_HELP = \
+        "Indicates that genomes with 'draft' annotation_status will be evaluated."
+    FINAL_HELP = \
+        "Indicates that genomes with 'final' annotation_status will be evaluated."
+    UNKNOWN_HELP = \
+        "Indicates that genomes with 'unknown' annotation_status will be evaluated."
+    INTERACTIVE_HELP = \
+        "Indicates whether evaluation is paused when errors are encountered."
+
+    parser = argparse.ArgumentParser(description=COMPARE_HELP)
+    parser.add_argument("database", type=str, help=DATABASE_HELP)
+    parser.add_argument("-o", "--output_folder", type=pathlib.Path,
+                        default=pathlib.Path(DEFAULT_OUTPUT_FOLDER),
+                        help=OUTPUT_FOLDER_HELP)
+    parser.add_argument("-p", "--phagesdb", action="store_true",
+        default=False, help=PHAGESDB_HELP)
+    parser.add_argument("-g", "--genbank", action="store_true",
+        default=False, help=GENBANK_HELP)
+    parser.add_argument("-c", "--ncbi_credentials_file", type=pathlib.Path,
+        help=NCBI_CRED_FILE_HELP)
+    parser.add_argument("-s", "--save_records", action="store_true",
+        default=False, help=SAVE_RECORDS_HELP)
+    parser.add_argument("-ia", "--internal_authors", action="store_true",
+        default=False, help=INTERNAL_AUTHORS_HELP)
+    parser.add_argument("-ea", "--external_authors", action="store_true",
+        default=False, help=EXTERNAL_AUTHORS_HELP)
+    parser.add_argument("-d", "--draft", action="store_true",
+        default=False, help=DRAFT_HELP)
+    parser.add_argument("-f", "--final", action="store_true",
+        default=False, help=FINAL_HELP)
+    parser.add_argument("-u", "--unknown", action="store_true",
+        default=False, help=UNKNOWN_HELP)
+    parser.add_argument("-i", "--interactive", action="store_true",
+        default=False, help=INTERACTIVE_HELP)
+
+    # Assumed command line arg structure:
+    # python3 -m pdm_utils <pipeline> <additional args...>
+    # sys.argv:      [0]            [1]         [2...]
+    args = parser.parse_args(unparsed_args_list[2:])
+    return args
+
+
+# TODO refactor and test.
+def get_dbs(pdb, gbk):
+    """Create set of databases to compare to MySQL."""
+    dbs = set()
+    if pdb == True:
+        dbs.add("phagesdb")
+    if gbk == True:
+        dbs.add("genbank")
+    return dbs
+
+
+# TODO refactor and test.
+def get_authors(internal, external):
+    """Create set of authorship to compare."""
+    authorship = set()
+    if internal == True:
+        authorship.add(1)
+    if external == True:
+        authorship.add(0)
+    return authorship
+
+
+# TODO refactor and test.
+def get_status(draft, final, unknown):
+    """Create set of annotation_status to compare."""
+    status = set()
+    if draft == True:
+        status.add("draft")
+    if final == True:
+        status.add("final")
+    if unknown == True:
+        status.add("unknown")
+    return status
+
+# TODO refactor and test.
+def output_to_file(data_list, folder, filename):
+    """Output list data to file."""
+    file_path = pathlib.Path(folder, filename)
+    with file_path.open("w") as handle:
+        writer = csv.writer(handle)
+        for element in data_list:
+            writer.writerow(element)
+
+
+# TODO refactor and test.
+def prepare_unmatched_to_gbk_output(gnms):
+    """Prepare list of MySQL unmatched to GenBank data to be saved to file."""
+    l = []
+    if len(gnms) > 0:
+        l.append(["PhageID", "PhageName", "Author", "Status", "Accession"])
+        for gnm in gnms:
+            l.append([gnm.id,
+                      gnm.name,
+                      gnm.annotation_author,
+                      gnm.annotation_status,
+                      gnm.accession])
+    return l
+
+
+# TODO refactor and test.
+def prepare_unmatched_to_pdb_output(gnms):
+    """Prepare list of MySQL unmatched to PhagesDB data to be saved to file."""
+    l = []
+    if len(gnms) > 0:
+        l.append(["PhageID", "PhageName", "Author", "Status"])
+        for gnm in gnms:
+            l.append([gnm.id,
+                      gnm.name,
+                      gnm.annotation_author,
+                      gnm.annotation_status])
+    return l
+
+
+# TODO refactor and test.
+def save_seqrecord(seqrecord, output_path, file_prefix, ext,
+                   seqrecord_ext, interactive):
+    """Save record to file."""
+    file_path = basic.make_new_file(output_path, file_prefix, ext, attempt=100)
+    if file_path is not None:
+        SeqIO.write(seqrecord, file_path, seqrecord_ext)
+    else:
+        print(f"Duplicated filenames for {file_prefix}. Unable to output data.")
+        if interactive:
+            input('Press ENTER to proceed')
+
+
+# TODO refactor and test.
 def record_compare_settings(working_path, database, engine, valid_status,
                             valid_authors, valid_dbs):
     """Save user-selected settings."""
@@ -551,12 +590,14 @@ def record_compare_settings(working_path, database, engine, valid_status,
 
     output_to_file(lst, pathlib.Path(working_path), COMPARE_SETTINGS)
 
+# TODO refactor and test.
 def selected_authors_lst(lst1):
     lst1 = [str(i) for i in list(lst1)]
     lst2 =  ["Genomes with the following AnnotationAuthor will be compared:",
              ", ".join(lst1)]
     return lst2
 
+# TODO refactor and test.
 def process_mysql_data(working_path, engine, valid_status, valid_authors,
                        interactive, save):
     """Retrieve and process MySQL data."""
@@ -611,6 +652,7 @@ def process_mysql_data(working_path, engine, valid_status, valid_authors,
     return gnm_dict, accessions, accession_dupes
 
 
+# TODO refactor and test.
 def filter_mysql_genomes(genome_list, valid_status, valid_authors):
     """Only keep selected subset of genomes."""
 
@@ -649,7 +691,7 @@ def filter_mysql_genomes(genome_list, valid_status, valid_authors):
     return (gnm_dict, names, duplicate_names, accessions, duplicate_accessions)
 
 
-
+# TODO refactor and test.
 def set_mysql_gnm_attr(gnm_dict):
     """Set compare-specific attributes not in pdm_utils Genome class."""
     for key in gnm_dict.keys():
@@ -657,7 +699,7 @@ def set_mysql_gnm_attr(gnm_dict):
         for cds_ftr in gnm.cds_features:
             set_mysql_cds_attr(cds_ftr)
 
-
+# TODO refactor and test.
 def save_gnms_to_fasta(gnm_dict, main_path, new_dir, interactive):
     """Save genome data to fasta file."""
 
@@ -667,22 +709,25 @@ def save_gnms_to_fasta(gnm_dict, main_path, new_dir, interactive):
     for key in gnm_dict.keys():
         gnm = gnm_dict[key]
         fasta = SeqRecord(gnm.seq, id=gnm.id, description="")
-        save_seqrecord(fasta, output_path, gnm.id, "fasta", "fasta", interactive)
+        save_seqrecord(fasta, output_path, gnm.id, "fasta",
+                       "fasta", interactive)
 
 
+# TODO refactor and test.
 def set_mysql_cds_attr(cds_ftr):
     """Set compare-specific MySQL Cds attributes not in pdm_utils Cds class."""
     cds_ftr.set_search_genome_id()
     cds_ftr.set_start_end_strand_id()
     cds_ftr.type = CDS_MYSQL
 
-
+# TODO refactor and test.
 def check_mysql_cds(cds_ftr):
     """Check for errors in MySQL CDS feature."""
     cds_ftr.compute_amino_acid_errors(constants.PROTEIN_ALPHABET)
     cds_ftr.compute_boundary_error()
 
 
+# TODO refactor and test.
 def check_mysql_gnms(gnm_dict):
     """Check for errors in MySQL matched genome and CDS features."""
     for id in gnm_dict.keys():
@@ -697,6 +742,7 @@ def check_mysql_gnms(gnm_dict):
         gnm.compute_status_description_error()
 
 
+# TODO refactor and test.
 def process_phagesdb_data(working_path, interactive, save):
     """Retrieve data from PhagesDB and process results."""
 
@@ -726,6 +772,7 @@ def process_phagesdb_data(working_path, interactive, save):
     return gnm_dict, name_dupes
 
 
+# TODO refactor and test.
 def get_pdb_data(interactive):
     """Retrieve data from PhagesDB."""
     print('\n\nRetrieving data from PhagesDB...')
@@ -736,7 +783,8 @@ def get_pdb_data(interactive):
 
     if len(data_list) > 0:
         for i in range(len(data_list)):
-            gnm = phagesdb.parse_genome_data(data_list[i], gnm_type=GNM_PDB, seq=True)
+            gnm = phagesdb.parse_genome_data(data_list[i], gnm_type=GNM_PDB,
+                                             seq=True)
             pdb_id = gnm.id
             if pdb_id in names:
                 dupe_names.add(pdb_id)
@@ -750,6 +798,7 @@ def get_pdb_data(interactive):
     return gnm_dict, names, dupe_names
 
 
+# TODO refactor and test.
 def check_pdb_gnms(gnm_dict):
     """Check for errors in PhagesDB genome."""
     for id in gnm_dict.keys():
@@ -757,7 +806,7 @@ def check_pdb_gnms(gnm_dict):
         if str(gnm.seq) != "":
             gnm.compute_nucleotide_errors(constants.DNA_ALPHABET)
 
-
+# TODO refactor and test.
 def process_gbk_data(working_path, creds_file, accessions, interactive, save):
     """Retrieve and process GenBank data."""
 
@@ -775,7 +824,7 @@ def process_gbk_data(working_path, creds_file, accessions, interactive, save):
     gnm_dict = {}
     for record in records:
         gnm = flat_files.parse_genome_data(record,gnm_type=GNM_GBK)
-        set_gbk_gnm_attr(gnm, record)
+        set_gbk_gnm_attr(gnm)
         gnm_dict[gnm.accession] = gnm
         if save == True:
             save_gbk_genome(gnm, record, output_path, interactive)
@@ -783,6 +832,7 @@ def process_gbk_data(working_path, creds_file, accessions, interactive, save):
     return gnm_dict
 
 
+# TODO refactor and test.
 def get_genbank_data(ncbi_cred_dict, accession_set, batch_size=200):
     """Retrieve genomes from GenBank."""
 
@@ -850,38 +900,23 @@ def get_genbank_data(ncbi_cred_dict, accession_set, batch_size=200):
     return retrieved_records, retrieval_errors
 
 
-def set_gbk_gnm_attr(gnm, retrieved_record):
+# TODO refactor and test.
+def set_gbk_gnm_attr(gnm):
     """Set compare-specific attributes not in pdm_utils Genome class."""
     gnm.record_name = ""
     gnm.record_id = ""
 
-    source_feature_list = []
-    for feature in retrieved_record.features:
-        # Retrieve the Source Feature info
-        if feature.type == "source":
-            source_feature_list.append(feature)
-
-    if len(source_feature_list) == 1:
-        try:
-            src_org = str(source_feature_list[0].qualifiers["organism"][0])
-            gnm.source_feature_organism = src_org
-        except:
-            pass
-        try:
-            src_host = str(source_feature_list[0].qualifiers["host"][0])
-            gnm.source_feature_host = src_host
-        except:
-            pass
-        try:
-            src_lab_host = str(source_feature_list[0].qualifiers["lab_host"][0])
-            gnm.source_feature_lab_host = src_lab_host
-        except:
-            pass
+    if len(gnm.source_features) == 1:
+        src_ftr = gnm.source_features[0]
+        gnm.source_feature_organism = src_ftr.organism
+        gnm.source_feature_host = src_ftr.host
+        gnm.source_feature_lab_host = src_ftr.lab_host
 
     for cds_ftr in gnm.cds_features:
         set_gbk_cds_attr(cds_ftr)
 
 
+# TODO refactor and test.
 def check_gbk_gnms(gnm_dict):
     """Check for errors in GenBank genome and CDS features."""
     for id in gnm_dict.keys():
@@ -894,12 +929,14 @@ def check_gbk_gnms(gnm_dict):
         gnm.compute_gbk_cds_feature_errors()
 
 
+# TODO refactor and test.
 def set_gbk_cds_attr(cds_ftr):
     """Set compare-specific Cds attributes not in pdm_utils Cds class."""
     cds_ftr.set_start_end_strand_id()
     cds_ftr.type = CDS_GBK
 
 
+# TODO refactor and test.
 def check_gbk_cds(cds_ftr):
     """Check for errors in GenBank CDS feature."""
     cds_ftr.check_locus_tag()
@@ -908,12 +945,15 @@ def check_gbk_cds(cds_ftr):
     cds_ftr.compute_description_error()
 
 
+# TODO refactor and test.
 def save_gbk_genome(gnm, record, output_path, interactive):
     """Save GenBank record to file."""
     file_prefix = gnm.id + "__" + gnm.accession
-    save_seqrecord(record, output_path, file_prefix, "gb", "genbank", interactive)
+    save_seqrecord(record, output_path, file_prefix,
+                   "gb", "genbank", interactive)
 
 
+# TODO refactor and test.
 def match_all_genomes(mysql_gnms, pdb_gnms, gbk_gnms, pdb_name_duplicates,
                       mysql_acc_duplicates):
     """Match MySQL, PhagesDB, and GenBank genomes."""
@@ -970,20 +1010,23 @@ def match_all_genomes(mysql_gnms, pdb_gnms, gbk_gnms, pdb_name_duplicates,
         matched_gnms.append(gnm_triad)
         match_count += 1
 
-    return matched_gnms, mysql_unmatched_to_pdb_gnms, mysql_unmatched_to_gbk_gnms
+    return (matched_gnms, mysql_unmatched_to_pdb_gnms, mysql_unmatched_to_gbk_gnms)
 
+# TODO refactor and test.
 def record_unmatched_gbk_data(gnms, working_path):
     """Save unmatched MySQL data not matched to GenBank."""
     lst1 = prepare_unmatched_to_gbk_output(gnms)
     output_to_file(lst1, pathlib.Path(working_path, ERROR_FOLDER),
                    FAILED_ACC_RETRIEVE)
 
+# TODO refactor and test.
 def record_unmatched_pdb_data(gnms, working_path):
     """Save unmatched MySQL data not matched to PhagesDB."""
     lst2 = prepare_unmatched_to_pdb_output(gnms)
     output_to_file(lst2, pathlib.Path(working_path, ERROR_FOLDER),
                    UNMATCHED_GENOMES)
 
+# TODO refactor and test.
 def check_matched_gnms(gnm_triads):
     """Compare all matched data."""
 
@@ -993,13 +1036,15 @@ def check_matched_gnms(gnm_triads):
     for gnm_triad in gnm_triads:
         print(f"Comparing matched genome set {count} of {total}")
 
-        gnm_triad.compare_mysql_gbk_genomes(GNM_MYSQL, GNM_GBK, CDSPAIR_MYSQL_GBK)
+        gnm_triad.compare_mysql_gbk_genomes(GNM_MYSQL, GNM_GBK,
+                                            CDSPAIR_MYSQL_GBK)
         gnm_triad.compare_mysql_phagesdb_genomes(GNM_MYSQL, GNM_PDB)
         gnm_triad.compare_phagesdb_gbk_genomes(GNM_PDB, GNM_GBK)
         gnm_triad.compute_total_genome_errors(GNM_GBK, GNM_PDB)
         count += 1
 
 
+# TODO refactor and test.
 def summarize_data(matched_genomes_list, working_path):
     """Create summary of data and save."""
     summary = dbcomparesummary.DbCompareSummary(matched_genomes_list)
@@ -1007,6 +1052,7 @@ def summarize_data(matched_genomes_list, working_path):
     output_all_data(working_path, summary)
 
 
+# TODO refactor and test.
 def output_all_data(output_path, summary):
     """Output all analysis results."""
     print("Outputting results to file...")
@@ -1054,6 +1100,7 @@ def output_all_data(output_path, summary):
     return
 
 
+# TODO refactor and test.
 def get_all_features(gnm_triad):
     """Create list of all features."""
 
@@ -1071,6 +1118,7 @@ def get_all_features(gnm_triad):
     return lst
 
 
+# TODO refactor and test.
 def create_gene_headers():
     """Create list of column headers."""
     headers = [
@@ -1126,6 +1174,7 @@ def create_gene_headers():
     return headers
 
 
+# TODO refactor and test.
 def create_genome_headers():
     """Create list of column headers."""
     headers = [
@@ -1233,6 +1282,7 @@ def create_genome_headers():
     return headers
 
 
+# TODO refactor and test.
 def create_genome_summary_fields():
     """Create genome summary row ids."""
     lst = [
@@ -1296,6 +1346,7 @@ def create_genome_summary_fields():
     return lst
 
 
+# TODO refactor and test.
 def create_cds_summary_fields():
     """Create CDS summary row ids."""
     lst = [
@@ -1325,6 +1376,7 @@ def create_cds_summary_fields():
     return lst
 
 
+# TODO refactor and test.
 def create_genome_summary_data(summary):
     """Create summary of all genome results."""
 
@@ -1394,6 +1446,7 @@ def create_genome_summary_data(summary):
     return lst3
 
 
+# TODO refactor and test.
 def create_cds_summary_data(summary):
     """Create summary of all CDS results."""
     lst1 = [
@@ -1427,7 +1480,7 @@ def create_cds_summary_data(summary):
         lst3.append([lst2[i],lst1[i]])
     return lst3
 
-
+# TODO refactor and test.
 def create_feature_data(mysql_gnm, mixed_ftr):
     """Create feature data to output."""
 
@@ -1528,6 +1581,7 @@ def create_feature_data(mysql_gnm, mixed_ftr):
 
 
 
+# TODO refactor and test.
 def create_genome_data(gnm_triad):
     """Create genome data to output."""
 

@@ -2,8 +2,10 @@
 features.
 """
 
-# TODO CdsPair class currently implemented in compare_db pipeline.
-# TODO currently relies on extra Cds object attributes that are not present
+# TODO this class needs to be refactored, with attributes and methods
+# simplified. The class is used in the compare pipeline, which has only
+# been partially refactored since integrating into pdm_utils.
+# It relies on extra Cds object attributes that are not present
 # in the base Cds class and that are added during compare pipeline.
 
 # Variables are prefixed to indicate genome type:
@@ -12,7 +14,7 @@ features.
 # PhagesDB = "pdb", "p"
 
 
-
+# TODO refactor and test.
 class CdsPair:
 
     # Initialize all attributes:
@@ -35,6 +37,7 @@ class CdsPair:
 
     # Define all attribute setters:
 
+    # TODO refactor and test.
     def compare_mysql_gbk_cds_ftrs(self):
 
         if self._m_feature.orientation == "forward":

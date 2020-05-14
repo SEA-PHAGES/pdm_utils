@@ -2,25 +2,26 @@
 perform comparisons between them to identify inconsistencies."""
 
 
-# TODO GenomeTriad class currently implemented in compare_db pipeline.
-# Currently relies on extra Genome object attributes that are not present
+# TODO this class needs to be refactored, with attributes and methods
+# simplified. The class is used in the compare pipeline, which has only
+# been partially refactored since integrating into pdm_utils.
+# It relies on extra Genome object attributes that are not present
 # in the base Genome class and that are added during compare pipeline.
-# Eventually, GenomeTriad should be generalized such that multiple GenomePair
-# objects can be used.
-
-import re
-
-from pdm_utils.functions import basic
-from pdm_utils.classes import cdspair
-
+# Eventually, GenomeTriad should be generalized and/or replaced with
+# implementing multiple GenomePair objects to represent all pairwise
+# comparisons.
 
 # Variables are prefixed to indicate genome type:
 # GenBank =  "gbk", "g"
 # MySQL = "mysql", "m"
 # PhagesDB = "pdb", "p"
 
+import re
 
+from pdm_utils.functions import basic
+from pdm_utils.classes import cdspair
 
+# TODO refactor and test.
 class GenomeTriad:
     """Stores three Genome objects."""
     # TODO: similar to GenomePair, but it has three Genome slots instead of two.
@@ -80,6 +81,8 @@ class GenomeTriad:
 
     # Define all attribute setters:
 
+
+    # TODO refactor and test.
     def compare_mysql_gbk_genomes(self, gnm_mysql, gnm_gbk, cdspair_mysql_gbk):
 
         # verify that there is a MySQL and GenBank genome in
@@ -122,10 +125,10 @@ class GenomeTriad:
                 self._g_host_mismatch = True
 
             # Check author list for errors
-            # For genomes with AnnotationAuthor = 1 (Hatfull), Graham is expected
-            # to be an author.
-            # For genomes with AnnotationAuthor = 0 (non-Hatfull/GenBank), Graham
-            # is NOT expected to be an author.
+            # For genomes with AnnotationAuthor = 1 (Hatfull), Graham is
+            # expected to be an author.
+            # For genomes with AnnotationAuthor = 0 (non-Hatfull/GenBank),
+            # Graham is NOT expected to be an author.
             pattern5 = re.compile("hatfull")
             search_result = pattern5.search(g_gnm.authors.lower())
             if m_gnm.annotation_author == 1 and search_result == None:
@@ -133,7 +136,8 @@ class GenomeTriad:
             elif m_gnm.annotation_author == 0 and search_result != None:
                 self._m_g_author_error = True
             else:
-                # Any other combination of MySQL and GenBank author can be skipped
+                # Any other combination of MySQL and GenBank
+                # author can be skipped.
                 pass
 
 
@@ -152,7 +156,8 @@ class GenomeTriad:
                 else:
                     m_start_end_strand_duplicate_id_set.add(cds_ftr._start_end_strand_id)
             # Remove the duplicate end_strand ids from the main id_set
-            m_start_end_strand_id_set = m_start_end_strand_id_set - m_start_end_strand_duplicate_id_set
+            m_start_end_strand_id_set = \
+                m_start_end_strand_id_set - m_start_end_strand_duplicate_id_set
 
 
             g_cds_list = g_gnm.cds_features
@@ -167,16 +172,20 @@ class GenomeTriad:
                 else:
                     g_start_end_strand_duplicate_id_set.add(cds_ftr._start_end_strand_id)
             # Remove the duplicate end_strand ids from the main id_set
-            g_start_end_strand_id_set = g_start_end_strand_id_set - g_start_end_strand_duplicate_id_set
+            g_start_end_strand_id_set = \
+                g_start_end_strand_id_set - g_start_end_strand_duplicate_id_set
 
             # Create the perfect matched and unmatched sets
-            m_unmatched_start_end_strand_id_set = m_start_end_strand_id_set - g_start_end_strand_id_set
-            g_unmatched_start_end_strand_id_set = g_start_end_strand_id_set - m_start_end_strand_id_set
-            perfect_matched_cds_id_set = m_start_end_strand_id_set & g_start_end_strand_id_set
+            m_unmatched_start_end_strand_id_set = \
+                        m_start_end_strand_id_set - g_start_end_strand_id_set
+            g_unmatched_start_end_strand_id_set = \
+                        g_start_end_strand_id_set - m_start_end_strand_id_set
+            perfect_matched_cds_id_set = \
+                        m_start_end_strand_id_set & g_start_end_strand_id_set
 
 
-            # From the unmatched sets, created second round of end-orientation id sets
-            # MySQL end_strand data
+            # From the unmatched sets, created second round of
+            # end-orientation id sets MySQL end_strand data
             m_end_strand_id_set = set()
 
             # All end_strand ids that are not unique
@@ -189,26 +198,29 @@ class GenomeTriad:
                         m_end_strand_duplicate_id_set.add(cds_ftr._end_strand_id)
 
             # Remove the duplicate end_strand ids from the main id_set
-            m_end_strand_id_set = m_end_strand_id_set - m_end_strand_duplicate_id_set
+            m_end_strand_id_set = \
+                        m_end_strand_id_set - m_end_strand_duplicate_id_set
 
 
             g_end_strand_id_set = set()
 
             # All end_strand ids that are not unique
-            g_end_strand_duplicate_id_set = set()
+            g_end_strand_duplicates = set()
             for cds_ftr in g_cds_list:
                 if cds_ftr._start_end_strand_id in g_unmatched_start_end_strand_id_set:
                     if cds_ftr._end_strand_id not in g_end_strand_id_set:
                         g_end_strand_id_set.add(cds_ftr._end_strand_id)
                     else:
-                        g_end_strand_duplicate_id_set.add(cds_ftr._end_strand_id)
+                        g_end_strand_duplicates.add(cds_ftr._end_strand_id)
 
             # Remove the duplicate end_strand ids from the main id_set
-            g_end_strand_id_set = g_end_strand_id_set - g_end_strand_duplicate_id_set
+            g_end_strand_id_set = \
+                        g_end_strand_id_set - g_end_strand_duplicates
 
 
             # Create the imperfect matched set
-            imperfect_matched_cds_id_set = m_end_strand_id_set & g_end_strand_id_set
+            imperfect_matched_cds_id_set = \
+                        m_end_strand_id_set & g_end_strand_id_set
 
 
             # Now go back through all CDS features and assign
@@ -247,8 +259,10 @@ class GenomeTriad:
 
                 matched_cds_object = cdspair.CdsPair()
                 matched_cds_object.type = cdspair_mysql_gbk
-                matched_cds_object._m_feature = m_perfect_matched_cds_dict[start_end_strand_tup]
-                matched_cds_object._g_feature = g_perfect_matched_cds_dict[start_end_strand_tup]
+                matched_cds_object._m_feature = \
+                            m_perfect_matched_cds_dict[start_end_strand_tup]
+                matched_cds_object._g_feature = \
+                            g_perfect_matched_cds_dict[start_end_strand_tup]
                 matched_cds_object.compare_mysql_gbk_cds_ftrs()
 
                 if matched_cds_object._total_errors > 0:
@@ -268,8 +282,10 @@ class GenomeTriad:
 
                 matched_cds_object = cdspair.CdsPair()
                 matched_cds_object.type = cdspair_mysql_gbk
-                matched_cds_object._m_feature = m_imperfect_matched_cds_dict[end_strand_tup]
-                matched_cds_object._g_feature = g_imperfect_matched_cds_dict[end_strand_tup]
+                matched_cds_object._m_feature = \
+                                m_imperfect_matched_cds_dict[end_strand_tup]
+                matched_cds_object._g_feature = \
+                                g_imperfect_matched_cds_dict[end_strand_tup]
                 matched_cds_object.compare_mysql_gbk_cds_ftrs()
 
                 if matched_cds_object._total_errors > 0:
@@ -300,8 +316,10 @@ class GenomeTriad:
             self._g_ftrs_unmatched_in_m = g_unmatched_cds_list
 
             # Now compute the number of features in each category
-            self._m_g_perfect_matched_ftrs_tally = len(self._m_g_perfect_matched_ftrs)
-            self._m_g_imperfect_matched_ftrs_tally = len(self._m_g_imperfect_matched_ftrs)
+            self._m_g_perfect_matched_ftrs_tally = \
+                                        len(self._m_g_perfect_matched_ftrs)
+            self._m_g_imperfect_matched_ftrs_tally = \
+                                        len(self._m_g_imperfect_matched_ftrs)
             self._m_ftrs_unmatched_in_g_tally = len(self._m_ftrs_unmatched_in_g)
             self._g_ftrs_unmatched_in_m_tally = len(self._g_ftrs_unmatched_in_m)
 
@@ -323,6 +341,7 @@ class GenomeTriad:
             self._total_number_genes_with_errors = m_gnm._genes_with_errors_tally
 
 
+    # TODO refactor and test.
     def compare_mysql_phagesdb_genomes(self, gnm_mysql, gnm_pdb):
 
         # verify that there is a MySQL and PhagesDB genome
@@ -344,6 +363,7 @@ class GenomeTriad:
                 self._m_p_cluster_mismatch = True
 
 
+    # TODO refactor and test.
     def compare_phagesdb_gbk_genomes(self, gnm_pdb, gnm_gbk):
 
         # verify that there is a PhagesDB and GenBank genome
@@ -360,6 +380,7 @@ class GenomeTriad:
 
 
 
+    # TODO refactor and test.
     def compute_total_genome_errors(self, gnm_gbk, gnm_pdb):
         m_gnm = self.m_genome
         g_gnm = self.g_genome
