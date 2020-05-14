@@ -52,6 +52,8 @@ class TestFilter(unittest.TestCase):
         self.PhageID = self.phage.c.PhageID
         self.Cluster = self.phage.c.Cluster
         self.Subcluster = self.phage.c.Subcluster
+        
+        self.Notes = self.gene.c.Notes
 
     def tearDown(self):
         self.alchemist.clear()
@@ -227,6 +229,15 @@ class TestFilter(unittest.TestCase):
 
         self.assertEqual(len(values), 1)
         self.assertEqual(values, ["A"])
+
+    def test_build_values_4(self):
+        """Verify that build_values() recognizes bytes-type column data.
+        """
+        self.db_filter.key = self.Notes
+
+        values = self.db_filter.build_values()
+
+        self.assertTrue(isinstance(values[0], str))
 
     def test_query_1(self):
         """Verify that query() creates instances as expected.

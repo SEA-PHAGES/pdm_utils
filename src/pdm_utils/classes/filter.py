@@ -307,7 +307,7 @@ class Filter:
         :param filter: Formatted MySQL WHERE clause.
         :type filter: str
         """
-        filter_key = parsing.parse_out_spaces(filter)
+        filter_key = parsing.create_filter_key(filter)
 
         or_block = self._filters[self._or_index]
 
@@ -436,8 +436,8 @@ class Filter:
                                                     limit=limit) 
 
         if not raw_bytes:
-            if self._key.type.python_type == bytes:
-                parsing.convert_from_encoded(values)
+            if column_obj.type.python_type is bytes:
+                values = parsing.convert_to_decoded(values)
 
         return values
 
