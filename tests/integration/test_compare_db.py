@@ -202,7 +202,7 @@ class TestCompare(unittest.TestCase):
 
     # Calls to PhagesDB need to be mocked, since the pipeline downloads
     # and parses all sequenced genome data.
-    @patch("pdm_utils.pipelines.compare_db.get_phagesdb_data")
+    @patch("pdm_utils.pipelines.compare_db.get_pdb_data")
     @patch("pdm_utils.pipelines.compare_db.AlchemyHandler")
     def test_main_2(self, alchemy_mock, gpd_mock):
         """Verify duplicate PhagesDB names are identified."""
@@ -222,17 +222,17 @@ class TestCompare(unittest.TestCase):
 
     # Calls to PhagesDB need to be mocked, since the pipeline downloads
     # and parses all sequenced genome data.
-    @patch("pdm_utils.pipelines.compare_db.get_phagesdb_data")
-    @patch("pdm_utils.pipelines.compare_db.create_mysql_gnms")
+    @patch("pdm_utils.pipelines.compare_db.get_pdb_data")
+    @patch("pdm_utils.pipelines.compare_db.filter_mysql_genomes")
     @patch("pdm_utils.pipelines.compare_db.AlchemyHandler")
-    def test_main_3(self, alchemy_mock, cmg_mock, gpd_mock):
+    def test_main_3(self, alchemy_mock, fmg_mock, gpd_mock):
         """Verify duplicate MySQL names are identified."""
         # Clear accessions so that GenBank is not queried. No need for that.
         stmt = create_update("phage", "Accession", "")
         test_db_utils.execute(stmt)
 
         alchemy_mock.return_value = self.alchemist
-        cmg_mock.return_value = ({}, set(), {"L5"}, set(), set())
+        fmg_mock.return_value = ({}, set(), {"L5"}, set(), set())
         gpd_mock.return_value = ({}, set(), set())
 
         run.main(self.unparsed_args)
@@ -241,7 +241,7 @@ class TestCompare(unittest.TestCase):
         with self.subTest():
             self.assertTrue(count > 0)
         with self.subTest():
-            cmg_mock.assert_called()
+            fmg_mock.assert_called()
         with self.subTest():
             gpd_mock.assert_called()
 

@@ -90,7 +90,7 @@ class GenomeTriad:
 
         if m_gnm.type == gnm_mysql and g_gnm.type == gnm_gbk:
 
-            if m_gnm.sequence != g_gnm.sequence:
+            if m_gnm.seq != g_gnm.seq:
                 self._m_g_seq_mismatch = True
             if m_gnm.length != g_gnm.length:
                 self._m_g_seq_length_mismatch = True
@@ -332,7 +332,7 @@ class GenomeTriad:
 
         if m_gnm.type == gnm_mysql and p_gnm.type == gnm_pdb:
 
-            if m_gnm.sequence != p_gnm.sequence:
+            if m_gnm.seq != p_gnm.seq:
                 self._m_p_seq_mismatch = True
             if m_gnm.length != p_gnm.length:
                 self._m_p_seq_length_mismatch = True
@@ -353,7 +353,7 @@ class GenomeTriad:
 
         if p_gnm.type == gnm_pdb and g_gnm.type == gnm_gbk:
 
-            if p_gnm.sequence != g_gnm.sequence:
+            if p_gnm.seq != g_gnm.seq:
                 self._p_g_seq_mismatch = True
             if p_gnm.length != g_gnm.length:
                 self._p_g_seq_length_mismatch = True
