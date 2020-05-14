@@ -16,12 +16,14 @@ from pdm_utils.pipelines import get_gb_records
 from pdm_utils.pipelines import import_genome
 from pdm_utils.pipelines import phamerate
 from pdm_utils.pipelines import push_db
+from pdm_utils.pipelines import resubmit
+from pdm_utils.pipelines import review
 from pdm_utils.pipelines import update_field
 
 VALID_PIPELINES = {
     "compare", "convert", "export", "find_domains", "freeze", "get_data",
-    "get_db", "get_gb_records", "import", "phamerate", "push", "update"
-    }
+    "get_db", "get_gb_records", "import", "phamerate", "push", "resubmit",
+    "review", "update"}
 
 def main(unparsed_args):
     """Run a pdm_utils pipeline."""
@@ -51,6 +53,10 @@ def main(unparsed_args):
         get_gb_records.main(unparsed_args)
     elif args.pipeline == "convert":
         convert_db.main(unparsed_args)
+    elif args.pipeline == "resubmit":
+        resubmit.main(unparsed_args)
+    elif args.pipeline == "review":
+        review.main(unparsed_args)
     else:
         pass
     print("\n\n\nPipeline completed")
