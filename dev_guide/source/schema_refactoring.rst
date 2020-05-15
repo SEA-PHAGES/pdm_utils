@@ -3,6 +3,9 @@ Schema refactoring
 
 Any changes made to the structure (schema) of the database (in the form of schema refactoring, schema improvements, and data migration) should be tracked. In order to do this, paired upgrade/downgrade scripts should be created, so that the schema changes can be implemented or reversed if needed.
 
+
+The following steps can be performed without impacting tests or management of the production database.
+
     1. Determine which aspects of the schema should be changed.
 
     2. Create a MySQL script that contains the statements needed to make all changes (including incrementing version.SchemaVersion).
@@ -43,14 +46,6 @@ Any changes made to the structure (schema) of the database (in the form of schem
 
     8. In the convert module, edit the MAX_VERSION variable accordingly.
 
-
-
-    8. In the convert module, edit the CURRENT_VERSION variable accordingly (this can only be done in sync with upgrading the production database).
-    8. In the constants module, edit the CODE_SCHEMA_VERSION variable accordingly (this can only be done in sync with upgrading the test database files).
-
-
-
-
     9. Use the convert module to upgrade the primary production database to the new schema version. This will convert the schema and update version.SchemaVersion.
 
     10. A history of each unique database schema is stored under /misc/schemas/. Create an empty schema of the upgraded database::
@@ -83,7 +78,20 @@ Any changes made to the structure (schema) of the database (in the form of schem
         - page describing prior schema version schema maps
         - page describing schema version changelog
 
-    15. Update files required for integration tests:
+
+
+
+
+
+The following steps can be performed when ready to upgrade the production database.
+
+    1. In the convert module, edit the CURRENT_VERSION variable accordingly (this can only be done in sync with upgrading the production database).
+
+    2. In the constants module, edit the CODE_SCHEMA_VERSION variable accordingly (this can only be done in sync with upgrading the test database files).
+
+    3. Confirm schema_updates.txt history has been fully updated.
+
+    4. Update files required for integration tests:
 
         1. Copy the new empty schema file to the following directory::
 
@@ -93,5 +101,5 @@ Any changes made to the structure (schema) of the database (in the form of schem
         3. Remove the test schema file of the prior version.
         4. Create a new filled test database using the new schema.
 
-    16. Update the package version and upload new package to PyPI.
-    17. Update online user guide.
+    5. Update the package version and upload new package to PyPI.
+    6. Update online user guide.
