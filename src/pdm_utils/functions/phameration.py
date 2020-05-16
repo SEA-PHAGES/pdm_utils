@@ -138,7 +138,8 @@ def map_geneids_to_translations(engine):
     """
     gs_to_ts = dict()
 
-    query = "SELECT GeneID, Translation FROM gene"
+    query = ("SELECT GeneID, CONVERT(Translation USING utf8) as Translation "
+             "FROM gene")
     results = mysqldb_basic.query_dict_list(engine, query)
 
     for dictionary in results:
@@ -160,7 +161,8 @@ def map_translations_to_geneids(engine):
     """
     ts_to_gs = dict()
 
-    query = "SELECT GeneID, Translation FROM gene"
+    query = ("SELECT GeneID, CONVERT(Translation USING utf8) as Translation "
+             "FROM gene")
     results = mysqldb_basic.query_dict_list(engine, query)
 
     for dictionary in results:

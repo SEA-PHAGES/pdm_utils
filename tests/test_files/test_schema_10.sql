@@ -20,7 +20,7 @@ CREATE TABLE `domain` (
   `Name` varchar(25) DEFAULT NULL,
   PRIMARY KEY (`ID`),
   UNIQUE KEY `hit_id` (`HitID`)
-) ENGINE=InnoDB AUTO_INCREMENT=3015221 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=3009983 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `gene`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -32,7 +32,7 @@ CREATE TABLE `gene` (
   `Stop` mediumint(9) NOT NULL,
   `Length` mediumint(9) NOT NULL,
   `Name` varchar(50) NOT NULL,
-  `Translation` varchar(5000) DEFAULT NULL,
+  `Translation` blob,
   `Orientation` enum('F','R') DEFAULT NULL,
   `Notes` blob,
   `DomainStatus` tinyint(1) NOT NULL DEFAULT '0',
@@ -61,7 +61,7 @@ CREATE TABLE `gene_domain` (
   KEY `hit_id` (`HitID`),
   CONSTRAINT `gene_domain_ibfk_1` FOREIGN KEY (`GeneID`) REFERENCES `gene` (`GeneID`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `gene_domain_ibfk_2` FOREIGN KEY (`HitID`) REFERENCES `domain` (`HitID`)
-) ENGINE=InnoDB AUTO_INCREMENT=412018 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=412641 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `phage`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;

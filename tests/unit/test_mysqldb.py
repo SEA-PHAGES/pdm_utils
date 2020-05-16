@@ -103,19 +103,19 @@ class TestMysqldbFunctions1(unittest.TestCase):
         """Verify standard MySQL CDS data is parsed correctly
         from a data dictionary returned from a SQL query."""
 
-        data_dict = {"GeneID":"L5_001",
-                     "PhageID":"L5",
-                     "Start":10,
-                     "Stop":100,
-                     "Parts":1,
-                     "Length":1000,
-                     "Name":"1",
-                     "Translation":"AGGPT",
-                     "Orientation":"F",
-                     "Notes":"description".encode("utf-8"),
-                     "DomainStatus":1,
-                     "PhamID":1,
-                     "LocusTag":"SEA_L5_001"}
+        data_dict = {"GeneID": "L5_001",
+                     "PhageID": "L5",
+                     "Start": 10,
+                     "Stop": 100,
+                     "Parts": 1,
+                     "Length": 1000,
+                     "Name": "1",
+                     "Translation": "AGGPT".encode("utf-8"),
+                     "Orientation": "F",
+                     "Notes": "description".encode("utf-8"),
+                     "DomainStatus": 1,
+                     "PhamID": 1,
+                     "LocusTag": "SEA_L5_001"}
 
         cds1 = mysqldb.parse_gene_table_data(data_dict)
 

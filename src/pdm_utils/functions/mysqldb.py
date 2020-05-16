@@ -167,7 +167,7 @@ def parse_gene_table_data(data_dict, trans_table=11):
         pass
 
     try:
-        cds_ftr.set_translation(data_dict["Translation"])
+        cds_ftr.set_translation(data_dict["Translation"].decode("utf-8"))
     except:
         pass
 
@@ -427,11 +427,11 @@ def create_trna_table_insert(trna_ftr):
     source = mysqldb_basic.convert_for_sql(
         trna_ftr.use, check_set={None}, single=False)
 
-    statement = f"""INSERT INTO trna (GeneID, PhageID, Start, Stop, Length, 
-                    Name, Orientation, Note, LocusTag, AminoAcid, Anticodon, 
-                    Structure, Source) VALUES ("{geneid}", "{phageid}", 
-                    {start}, {stop}, {length}, "{name}", "{orientation}", 
-                    {note}, {locus_tag}, "{amino_acid}", "{anticodon}", 
+    statement = f"""INSERT INTO trna (GeneID, PhageID, Start, Stop, Length,
+                    Name, Orientation, Note, LocusTag, AminoAcid, Anticodon,
+                    Structure, Source) VALUES ("{geneid}", "{phageid}",
+                    {start}, {stop}, {length}, "{name}", "{orientation}",
+                    {note}, {locus_tag}, "{amino_acid}", "{anticodon}",
                     {structure}, {source})"""
 
     return statement
@@ -454,10 +454,10 @@ def create_tmrna_table_insert(tmrna_ftr):
     peptide_tag = mysqldb_basic.convert_for_sql(
         tmrna_ftr.peptide_tag, check_set={""}, single=False)
 
-    statement = f"""INSERT INTO tmrna (GeneID, PhageID, Start, Stop, Length, 
+    statement = f"""INSERT INTO tmrna (GeneID, PhageID, Start, Stop, Length,
                     Name, Orientation, Note, LocusTag, PeptideTag) VALUES (
-                    "{geneid}", "{phageid}", {start}, {stop}, {length}, 
-                    "{name}", "{orientation}", {note}, {locus_tag}, 
+                    "{geneid}", "{phageid}", {start}, {stop}, {length},
+                    "{name}", "{orientation}", {note}, {locus_tag},
                     {peptide_tag})"""
 
     return statement

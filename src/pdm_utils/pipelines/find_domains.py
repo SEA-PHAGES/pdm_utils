@@ -22,7 +22,8 @@ from pdm_utils.functions.parallelize import *
 
 # SQL QUERIES
 GET_GENES_FOR_CDD = (
-    "SELECT GeneID, Translation FROM gene WHERE DomainStatus = 0")
+    "SELECT GeneID, CONVERT(Translation USING utf8) as Translation "
+    "FROM gene WHERE DomainStatus = 0")
 GET_UNIQUE_HIT_IDS = "SELECT HitID FROM domain"
 
 # SQL COMMANDS

@@ -5,7 +5,7 @@
 # Schema version: 10
 # Implemented by: Travis Mavrich
 # Convert gene.Translation datatype.
-# Not implemented yet.
+# Implemented 20200515 in database version = 355 -> 356.
 
 # Schema version: 9
 # Implemented by: Travis Mavrich

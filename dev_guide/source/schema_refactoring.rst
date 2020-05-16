@@ -46,7 +46,7 @@ The following steps can be performed without impacting tests or management of th
 
     8. In the convert module, edit the MAX_VERSION variable accordingly.
 
-    9. Use the convert module to upgrade the primary production database to the new schema version. This will convert the schema and update version.SchemaVersion.
+    9. Use the convert module to upgrade the current production database to the new schema version. This will convert the schema and update version.SchemaVersion.
 
     10. A history of each unique database schema is stored under /misc/schemas/. Create an empty schema of the upgraded database::
 
@@ -72,24 +72,16 @@ The following steps can be performed without impacting tests or management of th
 
         7. Add the JPEG to the repo in the user guide directory.
 
-    14. Update the user guide as needed with information about the new schema:
-
-        - page describing the current database
-        - page describing prior schema version schema maps
-        - page describing schema version changelog
-
-
-
 
 
 
 The following steps can be performed when ready to upgrade the production database.
 
-    1. In the convert module, edit the CURRENT_VERSION variable accordingly (this can only be done in sync with upgrading the production database).
+    1. Run all tests to confirm that are successful before changing schema.
 
-    2. In the constants module, edit the CODE_SCHEMA_VERSION variable accordingly (this can only be done in sync with upgrading the test database files).
+    2. In the convert module, edit the CURRENT_VERSION variable accordingly (this can only be done in sync with upgrading the production database).
 
-    3. Confirm schema_updates.txt history has been fully updated.
+    3. In the constants module, edit the CODE_SCHEMA_VERSION variable accordingly (this can only be done in sync with upgrading the test database files).
 
     4. Update files required for integration tests:
 
@@ -101,5 +93,44 @@ The following steps can be performed when ready to upgrade the production databa
         3. Remove the test schema file of the prior version.
         4. Create a new filled test database using the new schema.
 
-    5. Update the package version and upload new package to PyPI.
-    6. Update online user guide.
+    5. Fix tests that are broken due to schema upgrade.
+
+    6. Upgrade current production database:
+        - download current production database from the server::
+
+            python3 -m pdm_utils get_db Actinobacteriophage server
+
+        - use convert pipeline to upgrade schema and increment version.SchemaVersion::
+
+            python3 -m pdm_utils convert Actinobacteriophage
+
+        - use update pipeline to increment version.Version::
+
+            python3 -m pdm_utils update Actinobacteriophage -v
+
+        - use export and push pipelines to export database and push to server::
+
+            python3 -m pdm_utils export Actinobacteriophage sql
+            python3 -m pdm_utils push -d ./<new_database_folder>
+
+        - use convert pipeline to created a downgraded database::
+
+            python3 -m pdm_utils convert Actinobacteriophage -s 6 -n Actino_Draft
+
+        - use export and push pipelines to export downgraded database and push to server::
+
+            python3 -m pdm_utils export Actino_Draft sql
+            python3 -m pdm_utils push -d ./<new_downgraded_database_folder>
+
+
+    7. Confirm schema_updates.txt history has been fully updated.
+
+    8. Update the user guide as needed with information about the new schema:
+
+        - page describing the current database
+        - page describing prior schema version schema maps
+        - page describing schema version changelog
+
+    9. Update the package version and upload new package to PyPI.
+
+    10. Update online user guide.

@@ -320,6 +320,7 @@ def process_gene_table_data(list_of_sql_results):
     for x in range(len(list_of_sql_results)):
         data_dict = list_of_sql_results[x]
         data_dict["Notes"] = data_dict["Notes"].decode("utf-8")
+        data_dict["Translation"] = data_dict["Translation"].decode("utf-8")
         data_dict["Length"] = int(data_dict["Length"])
         data_dict["Start"] = int(data_dict["Start"])
         data_dict["Stop"] = int(data_dict["Stop"])

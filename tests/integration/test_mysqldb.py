@@ -420,7 +420,7 @@ class TestMysqldbFunctions3(unittest.TestCase):
         with self.subTest():
             self.assertEqual(results["Name"], "Int")
         with self.subTest():
-            self.assertEqual(results["Translation"], "ACKLG")
+            self.assertEqual(results["Translation"].decode("utf-8"), "ACKLG")
         with self.subTest():
             self.assertEqual(results["Orientation"], "F")
         with self.subTest():

@@ -74,7 +74,8 @@ PHAGE_QUERY = ("SELECT PhageID, Name, HostGenus, Sequence, Length, "
                "Status, Cluster, Accession, RetrieveRecord, "
                "DateLastModified, AnnotationAuthor FROM phage")
 GENE_QUERY = ("SELECT PhageID, GeneID, Name, Start, Stop, Orientation, "
-              "Translation, Notes from gene")
+              "CONVERT(Translation USING utf8) as Translation, "
+              "Notes from gene")
 VERSION_QUERY = "SELECT Version FROM version"
 
 

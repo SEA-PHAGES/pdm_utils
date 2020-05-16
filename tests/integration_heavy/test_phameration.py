@@ -101,7 +101,7 @@ class TestPhamerationFunctions(unittest.TestCase):
         """Verify we get back a dictionary"""
         ts_to_gs = map_translations_to_geneids(self.engine)
 
-        command = "SELECT distinct(Translation) FROM gene"
+        command = "SELECT distinct(CONVERT(Translation USING utf8)) FROM gene"
         results = mysqldb_basic.query_dict_list(self.engine, command)
 
 
