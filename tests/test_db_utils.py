@@ -22,9 +22,9 @@ unittest_file = Path(__file__)
 test_dir = unittest_file.parent
 test_file_dir = Path(test_dir, "test_files")
 SCHEMA_VERSION = constants.CODE_SCHEMA_VERSION
-SCHEMA_FILE = f"test_schema_{SCHEMA_VERSION}.sql" # Empty schema
+SCHEMA_FILE = f"test_db_empty.sql" # Empty schema
 SCHEMA_FILEPATH = Path(test_file_dir, SCHEMA_FILE)
-TEST_DB_FILEPATH = Path(test_file_dir, "test_db.sql") # Contains data
+TEST_DB_FILEPATH = Path(test_file_dir, "test_db_filled.sql") # Contains data
 VERSION_TABLE_DATA = {"Version": 1, "SchemaVersion": SCHEMA_VERSION}
 
 # Common queries
@@ -93,7 +93,7 @@ def create_empty_test_db(db=DB, user=USER, pwd=PWD):
 
 def create_filled_test_db(db=DB, user=USER, pwd=PWD):
     """Creates a test database with the current schema version and with data."""
-    # No need to add data to version table, since test_db.sql already
+    # No need to add data to version table, since test_db_filled.sql already
     # has data in this table.
     create_new_db(schema_filepath=TEST_DB_FILEPATH, db=db, user=user, pwd=pwd)
 
