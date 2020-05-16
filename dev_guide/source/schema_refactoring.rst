@@ -98,7 +98,8 @@ The following steps can be performed when ready to upgrade the production databa
     6. Upgrade current production database:
         - download current production database from the server::
 
-            python3 -m pdm_utils get_db Actinobacteriophage server
+            python3 -m pdm_utils get_db Actinobacteriophage server -d -o ./
+            python3 -m pdm_utils get_db Actinobacteriophage file ./Actinobacteriophage.sql
 
         - use convert pipeline to upgrade schema and increment version.SchemaVersion::
 

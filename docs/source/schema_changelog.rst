@@ -7,6 +7,16 @@ Below is a history of schema changes.
 For maps of each schema version: :ref:`schema maps <schemamaps>`.
 
 
+Schema version 10
+*****************
+
+Single column datatype changed.
+
+**Column modified**
+
+    - gene.Translation datatype = blob
+
+
 Schema version 9
 ****************
 

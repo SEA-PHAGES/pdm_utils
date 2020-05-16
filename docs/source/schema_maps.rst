@@ -3,6 +3,10 @@
 Database schema Entity Relationship Diagrams
 ============================================
 
+.. figure:: /images/database_structure/schema_9_map.jpg
+
+    Schema version 9.
+
 .. figure:: /images/database_structure/schema_8_map.jpg
 
     Schema version 8.

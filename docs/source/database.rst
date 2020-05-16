@@ -3,7 +3,7 @@
 Database structure
 ==================
 
-The database (schema version 9) contains the following tables:
+The database (schema version 10) contains the following tables:
 
     1.  phage
     2.  gene
@@ -16,7 +16,7 @@ The database (schema version 9) contains the following tables:
 
 .. _figschema:
 
-.. figure:: /images/database_structure/schema_9_map.jpg
+.. figure:: /images/database_structure/schema_10_map.jpg
 
     Schema Entity Relationship Diagram.
 
