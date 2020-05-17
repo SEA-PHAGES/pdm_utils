@@ -189,7 +189,7 @@ def compute_genes_with_errors_tally(self):
     # this method after all genome and gene matching is completed.
     for feature in self.cds_features:
         # Need to first compute the number of errors per gene
-        feature.compute_total_cds_errors()
+        feature.check_for_errors()
         if feature._total_errors > 0:
             self._genes_with_errors_tally += 1
 
@@ -250,7 +250,7 @@ def modify_cds_class(CdsClass):
     setattr(CdsClass, "compute_boundary_error", compute_boundary_error)
     setattr(CdsClass, "set_locus_tag_typo", set_locus_tag_typo)
     setattr(CdsClass, "compute_description_error", compute_description_error)
-    setattr(CdsClass, "compute_total_cds_errors", compute_total_cds_errors)
+    setattr(CdsClass, "check_for_errors", check_for_errors)
 
 # TODO refactor and test.
 def set_start_end_strand_id(self):
@@ -306,7 +306,7 @@ def compute_description_error(self):
         self._description_field_error = True
 
 # TODO refactor and test.
-def compute_total_cds_errors(self):
+def check_for_errors(self):
     if self._amino_acid_errors:
         self._total_errors += 1
     if self._boundary_error:
@@ -1502,8 +1502,8 @@ def create_feature_data(mysql_gnm, mixed_ftr):
     # the appropriate variable.
     if isinstance(mixed_ftr, cdspair.CdsPair):
         cds_pair = mixed_ftr
-        mysql_ftr = mixed_ftr._m_feature
-        gbk_ftr = mixed_ftr._g_feature
+        mysql_ftr = mixed_ftr.cds1
+        gbk_ftr = mixed_ftr.cds2
     elif isinstance(mixed_ftr, cds.Cds):
         if mixed_ftr.type == CDS_MYSQL:
             mysql_ftr = mixed_ftr
@@ -1570,11 +1570,11 @@ def create_feature_data(mysql_gnm, mixed_ftr):
 
         # If this is a matched CDS feature, both MySQL and
         # GenBank features should have identical unmatched_error value.
-        lst.append(cds_pair._m_feature._unmatched_error)
+        lst.append(cds_pair.cds1._unmatched_error)
 
-        lst.append(cds_pair._m_g_different_descriptions)
-        lst.append(cds_pair._m_g_different_start_sites)
-        lst.append(cds_pair._m_g_different_translations)
+        lst.append(cds_pair.different_description)
+        lst.append(cds_pair.different_start_site)
+        lst.append(cds_pair.different_translation)
     else:
         lst.append(mixed_ftr._unmatched_error)
         lst.extend(["","",""])

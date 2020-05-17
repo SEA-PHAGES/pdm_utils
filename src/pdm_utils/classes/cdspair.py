@@ -5,14 +5,10 @@ features.
 # TODO this class needs to be refactored, with attributes and methods
 # simplified. The class is used in the compare pipeline, which has only
 # been partially refactored since integrating into pdm_utils.
-# It relies on extra Cds object attributes that are not present
+# It relies on extra Cds object attributes that are NOT present
 # in the base Cds class and that are added during compare pipeline.
-
-# Variables are prefixed to indicate genome type:
-# GenBank =  "gbk", "g"
-# MySQL = "mysql", "m"
-# PhagesDB = "pdb", "p"
-
+# So do NOT use this class for anything other than in the compare pipeline
+# until it has been properly refactored.
 
 # TODO refactor and test.
 class CdsPair:
@@ -21,55 +17,50 @@ class CdsPair:
     def __init__(self):
 
         self.type = ""
+        self.cds1 = None
+        self.cds2 = None
 
-        # Initialize all non-calculated attributes:
-        self._m_feature = ""
-        self._g_feature = ""
-
-        # Matched data comparison results
-        self._m_g_different_translations = False
-        self._m_g_different_start_sites = False
-        self._m_g_different_descriptions = False
-
-        # Total errors summary
+        self.different_translation = False
+        self.different_start_site = False
+        self.different_description = False
         self._total_errors = 0
 
 
     # Define all attribute setters:
 
     # TODO refactor and test.
-    def compare_mysql_gbk_cds_ftrs(self):
+    def compare_cds(self):
 
-        if self._m_feature.orientation == "forward":
-            if str(self._m_feature.start) != str(self._g_feature.start):
-                self._m_g_different_start_sites = True
-        elif self._m_feature.orientation == "reverse":
-            if str(self._m_feature.stop) != str(self._g_feature.stop):
-                self._m_g_different_start_sites = True
+        if self.cds1.orientation == "forward":
+            if str(self.cds1.start) != str(self.cds2.start):
+                self.different_start_site = True
+        elif self.cds1.orientation == "reverse":
+            if str(self.cds1.stop) != str(self.cds2.stop):
+                self.different_start_site = True
         else:
             pass
 
 
         product_description_set = set()
-        product_description_set.add(self._m_feature.description)
-        product_description_set.add(self._g_feature.product)
+        product_description_set.add(self.cds1.description)
+        product_description_set.add(self.cds2.product)
 
 
         if len(product_description_set) != 1:
-            self._m_g_different_descriptions = True
+            self.different_description = True
 
-        if self._m_feature.translation != self._g_feature.translation:
-            self._m_g_different_translations = True
+        if self.cds1.translation != self.cds2.translation:
+            self.different_translation = True
 
         # Compute total errors
         # First add all matched feature errors
-        if self._m_g_different_translations:
+        if self.different_translation:
             self._total_errors += 1
 
-        if self._m_g_different_start_sites:
+        if self.different_start_site:
             self._total_errors += 1
 
-        if self._m_g_different_descriptions:
+        if self.different_description:
             self._total_errors += 1
 
         # Now add all errors from each individual feature
@@ -77,7 +68,7 @@ class CdsPair:
         # This step is performed here instead of in the mainline code
         # because you need to wait for the feature matching step
         # after the genome matching step.
-        self._m_feature.compute_total_cds_errors()
-        self._g_feature.compute_total_cds_errors()
-        self._total_errors += self._m_feature._total_errors
-        self._total_errors += self._g_feature._total_errors
+        self.cds1.check_for_errors()
+        self.cds2.check_for_errors()
+        self._total_errors += self.cds1._total_errors
+        self._total_errors += self.cds2._total_errors

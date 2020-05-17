@@ -5,6 +5,8 @@ differ from each other.
 # TODO this class needs to be refactored, with attributes and methods
 # simplified. The class is used in the compare pipeline, which has only
 # been partially refactored since integrating into pdm_utils.
+# So do NOT use this class for anything other than in the compare pipeline
+# until it has been properly refactored.
 
 
 # TODO refactor and test.

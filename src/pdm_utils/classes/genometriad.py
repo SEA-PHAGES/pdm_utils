@@ -5,11 +5,13 @@ perform comparisons between them to identify inconsistencies."""
 # TODO this class needs to be refactored, with attributes and methods
 # simplified. The class is used in the compare pipeline, which has only
 # been partially refactored since integrating into pdm_utils.
-# It relies on extra Genome object attributes that are not present
+# It relies on extra Genome object attributes that are NOT present
 # in the base Genome class and that are added during compare pipeline.
 # Eventually, GenomeTriad should be generalized and/or replaced with
 # implementing multiple GenomePair objects to represent all pairwise
 # comparisons.
+# So do NOT use this class for anything other than in the compare pipeline
+# until it has been properly refactored.
 
 # Variables are prefixed to indicate genome type:
 # GenBank =  "gbk", "g"
@@ -259,20 +261,20 @@ class GenomeTriad:
 
                 matched_cds_object = cdspair.CdsPair()
                 matched_cds_object.type = cdspair_mysql_gbk
-                matched_cds_object._m_feature = \
+                matched_cds_object.cds1 = \
                             m_perfect_matched_cds_dict[start_end_strand_tup]
-                matched_cds_object._g_feature = \
+                matched_cds_object.cds2 = \
                             g_perfect_matched_cds_dict[start_end_strand_tup]
-                matched_cds_object.compare_mysql_gbk_cds_ftrs()
+                matched_cds_object.compare_cds()
 
                 if matched_cds_object._total_errors > 0:
                     self._total_number_genes_with_errors += 1
 
 
 
-                if matched_cds_object._m_g_different_translations:
+                if matched_cds_object.different_translation:
                     self._m_g_different_translations_tally += 1
-                if matched_cds_object._m_g_different_descriptions:
+                if matched_cds_object.different_description:
                     self._m_g_different_descriptions_tally += 1
                 self._m_g_perfect_matched_ftrs.append(matched_cds_object)
 
@@ -282,16 +284,16 @@ class GenomeTriad:
 
                 matched_cds_object = cdspair.CdsPair()
                 matched_cds_object.type = cdspair_mysql_gbk
-                matched_cds_object._m_feature = \
+                matched_cds_object.cds1 = \
                                 m_imperfect_matched_cds_dict[end_strand_tup]
-                matched_cds_object._g_feature = \
+                matched_cds_object.cds2 = \
                                 g_imperfect_matched_cds_dict[end_strand_tup]
-                matched_cds_object.compare_mysql_gbk_cds_ftrs()
+                matched_cds_object.compare_cds()
 
                 if matched_cds_object._total_errors > 0:
                     self._total_number_genes_with_errors += 1
 
-                if matched_cds_object._m_g_different_descriptions:
+                if matched_cds_object.different_description:
                     self._m_g_different_descriptions_tally += 1
                 self._m_g_imperfect_matched_ftrs.append(matched_cds_object)
 
@@ -300,13 +302,13 @@ class GenomeTriad:
             # all unmatched features.
             for cds_ftr in m_unmatched_cds_list:
                 cds_ftr._unmatched_error = True
-                cds_ftr.compute_total_cds_errors()
+                cds_ftr.check_for_errors()
                 if cds_ftr._total_errors > 0:
                     self._total_number_genes_with_errors += 1
 
             for cds_ftr in g_unmatched_cds_list:
                 cds_ftr._unmatched_error = True
-                cds_ftr.compute_total_cds_errors()
+                cds_ftr.check_for_errors()
                 if cds_ftr._total_errors > 0:
                     self._total_number_genes_with_errors += 1
 
