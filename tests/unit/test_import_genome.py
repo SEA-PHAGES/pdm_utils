@@ -1,22 +1,23 @@
 """ Unit tests for import functions."""
 
-
+import pathlib
 import unittest
+from unittest.mock import patch
+
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
 from datetime import datetime
-import pathlib
 import sqlalchemy
-from unittest.mock import patch
+
 from pdm_utils.classes import bundle
 from pdm_utils.classes import genome
 from pdm_utils.classes import source
 from pdm_utils.classes import cds, trna, tmrna
 from pdm_utils.classes import genomepair
+from pdm_utils.classes import ticket
 from pdm_utils.constants import constants
 from pdm_utils.functions import eval_modes
 from pdm_utils.pipelines import import_genome
-from pdm_utils.classes import ticket, eval
 
 def count_status(item, *args):
     count = 0
@@ -552,7 +553,7 @@ class TestImportGenome4(unittest.TestCase):
     def setUp(self):
         self.date_jan1 = datetime.strptime('1/1/2000', '%m/%d/%Y')
 
-        # Eval dict with all flags = True.
+        # Evaluation dict with all flags = True.
         self.eval_dict = eval_modes.get_eval_flag_dict("base")
 
         self.tkt = ticket.ImportTicket()
@@ -1564,7 +1565,7 @@ class TestImportGenome5(unittest.TestCase):
 class TestImportGenome6(unittest.TestCase):
 
     def setUp(self):
-        # Eval dict with all flags = True.
+        # Evaluation dict with all flags = True.
         self.eval_dict = eval_modes.get_eval_flag_dict("base")
 
         self.tkt = ticket.ImportTicket()

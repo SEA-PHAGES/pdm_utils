@@ -8,8 +8,10 @@ import sys
 import time
 import unittest
 from unittest.mock import patch
+
 import sqlalchemy
-from pdm_utils.classes import bundle, genome, genomepair, ticket, eval, cds, source
+
+from pdm_utils.classes import bundle, genome, genomepair, ticket, evaluation, cds, source
 from pdm_utils.constants import constants
 from pdm_utils.functions import basic, eval_modes, mysqldb
 from pdm_utils.pipelines import import_genome
@@ -98,7 +100,7 @@ class TestImportGenome1(unittest.TestCase):
 
         self.engine = sqlalchemy.create_engine(engine_string1, echo=False)
 
-        # Eval dict with all flags = True.
+        # Evaluation dict with all flags = True.
         self.eval_flags = eval_modes.get_eval_flag_dict("base")
 
         self.data_dict = {}
@@ -911,7 +913,7 @@ class TestImportGenome5(unittest.TestCase):
 
         self.engine = sqlalchemy.create_engine(engine_string2, echo=False)
 
-        # Eval dict with all flags = True.
+        # Evaluation dict with all flags = True.
         self.eval_flags = eval_modes.get_eval_flag_dict("base")
 
         self.data_dict1 = {}
@@ -1205,7 +1207,7 @@ class TestImportGenome5(unittest.TestCase):
         one error evaluation in ticket (ensuring at least one error
         in all evaluations),
         interactive = False."""
-        self.tkt1.evaluations = [eval.Eval(status="error")]
+        self.tkt1.evaluations = [evaluation.Evaluation(status="error")]
         ticket_dict = {self.tkt1.phage_id: self.tkt1}
         files = [self.flat_file_l5]
         results_tuple = import_genome.process_files_and_tickets(ticket_dict,
@@ -1236,7 +1238,7 @@ class TestImportGenome5(unittest.TestCase):
         in all evaluations),
         interactive = True,
         with no 'warning' status corrections."""
-        self.tkt1.evaluations = [eval.Eval(status="error")]
+        self.tkt1.evaluations = [evaluation.Evaluation(status="error")]
         ask_mock.return_value = True
         ticket_dict = {self.tkt1.phage_id: self.tkt1}
         files = [self.flat_file_l5]
@@ -1271,7 +1273,7 @@ class TestImportGenome5(unittest.TestCase):
         in all evaluations),
         interactive = True,
         with all 'warning' status changes to 'error'."""
-        self.tkt1.evaluations = [eval.Eval(status="error")]
+        self.tkt1.evaluations = [evaluation.Evaluation(status="error")]
         ask_mock.return_value = False
         ticket_dict = {self.tkt1.phage_id: self.tkt1}
         files = [self.flat_file_l5]
@@ -1306,8 +1308,8 @@ class TestImportGenome5(unittest.TestCase):
         interactive = True,
         with all 'warning' status corrections to 'error' in first file
         but no corrections in second file."""
-        self.tkt1.evaluations = [eval.Eval(status="warning")]
-        self.tkt2.evaluations = [eval.Eval(status="warning")]
+        self.tkt1.evaluations = [evaluation.Evaluation(status="warning")]
+        self.tkt2.evaluations = [evaluation.Evaluation(status="warning")]
         ticket_dict = {self.tkt1.phage_id: self.tkt1,
                        self.tkt2.phage_id: self.tkt2}
         files = [self.flat_file_l5, self.flat_file_trixie]
@@ -1687,17 +1689,17 @@ class TestImportGenome7(unittest.TestCase):
 
     def setUp(self):
 
-        self.eval_warning1 = eval.Eval(status="warning", result="temp")
-        self.eval_warning2 = eval.Eval(status="warning")
-        self.eval_warning3 = eval.Eval(status="warning")
-        self.eval_warning4 = eval.Eval(status="warning")
-        self.eval_warning5 = eval.Eval(status="warning")
-        self.eval_warning6 = eval.Eval(status="warning")
-        self.eval_warning7 = eval.Eval(status="warning")
-        self.eval_correct1 = eval.Eval(status="correct")
-        self.eval_correct2 = eval.Eval(status="correct")
-        self.eval_correct3 = eval.Eval(status="correct")
-        self.eval_error1 = eval.Eval(status="error")
+        self.eval_warning1 = evaluation.Evaluation(status="warning", result="temp")
+        self.eval_warning2 = evaluation.Evaluation(status="warning")
+        self.eval_warning3 = evaluation.Evaluation(status="warning")
+        self.eval_warning4 = evaluation.Evaluation(status="warning")
+        self.eval_warning5 = evaluation.Evaluation(status="warning")
+        self.eval_warning6 = evaluation.Evaluation(status="warning")
+        self.eval_warning7 = evaluation.Evaluation(status="warning")
+        self.eval_correct1 = evaluation.Evaluation(status="correct")
+        self.eval_correct2 = evaluation.Evaluation(status="correct")
+        self.eval_correct3 = evaluation.Evaluation(status="correct")
+        self.eval_error1 = evaluation.Evaluation(status="error")
 
 
         self.tkt = ticket.ImportTicket()
@@ -1746,7 +1748,7 @@ class TestImportGenome7(unittest.TestCase):
     @patch("pdm_utils.functions.basic.ask_yes_no")
     def test_review_evaluation_1(self, ask_mock):
         """Verify values and no need for user input with:
-        interactive=False and 'warning' eval."""
+        interactive=False and 'warning' evaluation."""
         exit, correct = import_genome.review_evaluation(self.eval_warning1,
                                                         interactive=False)
         with self.subTest():
@@ -1762,7 +1764,7 @@ class TestImportGenome7(unittest.TestCase):
     @patch("pdm_utils.functions.basic.ask_yes_no")
     def test_review_evaluation_2(self, ask_mock):
         """Verify values and need for user input with:
-        interactive=True, 'warning' eval, response=True."""
+        interactive=True, 'warning' evaluation, response=True."""
         ask_mock.side_effect = [True]
         exit, correct = import_genome.review_evaluation(self.eval_warning1,
                                                         interactive=True)
@@ -1781,7 +1783,7 @@ class TestImportGenome7(unittest.TestCase):
     @patch("pdm_utils.functions.basic.ask_yes_no")
     def test_review_evaluation_3(self, ask_mock):
         """Verify values and need for user input with:
-        interactive=True, 'warning' eval, response=False."""
+        interactive=True, 'warning' evaluation, response=False."""
         ask_mock.side_effect = [False]
         exit, correct = import_genome.review_evaluation(self.eval_warning1,
                                                         interactive=True)
@@ -1802,7 +1804,7 @@ class TestImportGenome7(unittest.TestCase):
     @patch("pdm_utils.functions.basic.ask_yes_no")
     def test_review_evaluation_4(self, ask_mock):
         """Verify values and need for user input with:
-        interactive=True, 'warning' eval, response=None."""
+        interactive=True, 'warning' evaluation, response=None."""
         ask_mock.side_effect = [None]
         exit, correct = import_genome.review_evaluation(self.eval_warning1,
                                                         interactive=True)
@@ -1823,7 +1825,7 @@ class TestImportGenome7(unittest.TestCase):
     @patch("builtins.input")
     def test_review_evaluation_5(self, input_mock):
         """Verify values and need for user input with:
-        interactive=True, 'warning' eval, 3 invalid responses."""
+        interactive=True, 'warning' evaluation, 3 invalid responses."""
         input_mock.side_effect = ["invalid", "invalid", "invalid"]
         exit, correct = import_genome.review_evaluation(self.eval_warning1,
                                                         interactive=True)
@@ -1844,7 +1846,7 @@ class TestImportGenome7(unittest.TestCase):
     @patch("builtins.input")
     def test_review_evaluation_6(self, input_mock):
         """Verify values and need for user input with:
-        interactive=True and 'error' eval."""
+        interactive=True and 'error' evaluation."""
         exit, correct = import_genome.review_evaluation(self.eval_error1,
                                                         interactive=True)
         with self.subTest():
@@ -1860,7 +1862,7 @@ class TestImportGenome7(unittest.TestCase):
     @patch("builtins.input")
     def test_review_evaluation_7(self, input_mock):
         """Verify values and no need for user input with:
-        interactive=False and 'error' eval."""
+        interactive=False and 'error' evaluation."""
         exit, correct = import_genome.review_evaluation(self.eval_error1,
                                                         interactive=False)
         with self.subTest():
@@ -1876,7 +1878,7 @@ class TestImportGenome7(unittest.TestCase):
     @patch("builtins.input")
     def test_review_evaluation_8(self, input_mock):
         """Verify values and no need for user input with
-        interactive=True and 'correct' eval."""
+        interactive=True and 'correct' evaluation."""
         exit, correct = import_genome.review_evaluation(self.eval_correct1,
                                                         interactive=True)
         with self.subTest():
@@ -2467,19 +2469,19 @@ class TestImportGenome8(unittest.TestCase):
 
 class TestImportGenomeClass9(unittest.TestCase):
     def setUp(self):
-        self.evl1 = eval.Eval()
+        self.evl1 = evaluation.Evaluation()
         self.evl1.id = "GNM0001"
         self.evl1.definition = "temp"
         self.evl1.status = "error"
         self.evl1.result = "Failed evaluation."
 
-        self.evl2 = eval.Eval()
+        self.evl2 = evaluation.Evaluation()
         self.evl2.id = "GNM0002"
         self.evl2.definition = "temp"
         self.evl2.status = "error"
         self.evl2.result = "Failed evaluation."
 
-        self.evl3 = eval.Eval()
+        self.evl3 = evaluation.Evaluation()
         self.evl3.id = "GNM0003"
         self.evl3.definition = "temp"
         self.evl3.status = "correct"

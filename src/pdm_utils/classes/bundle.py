@@ -1,6 +1,6 @@
 """Represents a structure to directly compare data between two or more genomes."""
 
-from pdm_utils.classes import eval
+from pdm_utils.classes import evaluation
 from pdm_utils.classes import ticket
 from pdm_utils.functions import basic
 
@@ -56,7 +56,7 @@ class Bundle:
 
     # Evaluations.
     def set_eval(self, eval_id, definition, result, status):
-        """Constructs and adds an Eval object to the evaluations list.
+        """Constructs and adds an Evaluation object to the evaluations list.
 
         :param eval_id: Unique identifier for the evaluation.
         :type eval_id: str
@@ -67,7 +67,7 @@ class Bundle:
         :param status: Outcome of the evaluation.
         :type status: str
         """
-        evl = eval.Eval(eval_id, definition, result, status)
+        evl = evaluation.Evaluation(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
     def check_ticket(self, eval_id=None, success="correct", fail="error",

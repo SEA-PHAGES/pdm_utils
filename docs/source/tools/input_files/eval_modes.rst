@@ -1,7 +1,7 @@
 .. _evalmodes:
 
-Eval modes and evaluation flags
-===============================
+Evaluation modes and evaluation flags
+=====================================
 
 
 Evaluation flags

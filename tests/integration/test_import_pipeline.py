@@ -2337,7 +2337,7 @@ class TestImportGenome2(unittest.TestCase):
     @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_replacement_13(self, getpass_mock):
         """Test pipeline with:
-        valid replace ticket for final genome using 'final' eval mode,
+        valid replace ticket for final genome using 'final' evaluation mode,
         valid flat file,
         Alice data already in the database and is 'final',
         and annotation_status remains 'final'."""
@@ -2368,7 +2368,7 @@ class TestImportGenome2(unittest.TestCase):
     @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_replacement_14(self, getpass_mock):
         """Identical to test_replacement_13,
-        except using 'auto' eval mode."""
+        except using 'auto' evaluation mode."""
         logging.info("test_replacement_14")
         getpass_mock.side_effect = [user, pwd]
         SeqIO.write(self.alice_record, alice_flat_file_path, "genbank")

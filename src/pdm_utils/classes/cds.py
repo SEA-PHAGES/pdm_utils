@@ -2,14 +2,18 @@
 to maintain and update SEA-PHAGES phage genomics data.
 """
 
-from pdm_utils.functions import basic
-from pdm_utils.constants import constants
-from pdm_utils.classes import eval
+from collections import OrderedDict
+import re
+
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
-import re
-from collections import OrderedDict
+
+from pdm_utils.constants import constants
+from pdm_utils.classes import evaluation
+from pdm_utils.functions import basic
+
+
 
 
 class Cds:
@@ -578,7 +582,7 @@ class Cds:
 
     # Evaluations.
     def set_eval(self, eval_id, definition, result, status):
-        """Constructs and adds an Eval object to the evaluations list.
+        """Constructs and adds an Evaluation object to the evaluations list.
 
         :param eval_id: Unique identifier for the evaluation.
         :type eval_id: str
@@ -589,7 +593,7 @@ class Cds:
         :param status: Outcome of the evaluation.
         :type status: str
         """
-        evl = eval.Eval(eval_id, definition, result, status)
+        evl = evaluation.Evaluation(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
 

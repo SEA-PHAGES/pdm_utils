@@ -7,8 +7,8 @@
 # the base pdm_utils Cds and Genome classes, but then requires additional
 # attributes and methods, which are added in this module. The pipeline keeps
 # track of errors using booleans and tallies, in contrast to the import pipeline
-# which keeps track of errors using Eval objects. Ultimately, this pipeline
-# should probably realy on Eval objects.
+# which keeps track of errors using Evaluation objects. Ultimately, this pipeline
+# should probably realy on Evaluation objects.
 
 # 2. It also utilizes GenomeTriad, CdsPair, and DbCompareSummary classes
 # which need to be substantially refactored and generalized.

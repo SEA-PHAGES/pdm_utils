@@ -9,9 +9,10 @@ import os
 import pathlib
 import shutil
 import sys
-from tabulate import tabulate
-import pdm_utils # to get version number.
 
+from tabulate import tabulate
+
+import pdm_utils # to get version number.
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.classes import bundle
 from pdm_utils.classes import genomepair
@@ -463,7 +464,7 @@ def prepare_tickets(import_table_file=pathlib.Path(), eval_data_dict=None,
         string_list = []
         for key in tkt.eval_flags:
             string_list.append(f"{key}: {tkt.eval_flags[key]}")
-        logger.info(f"Eval flags are {', '.join(string_list)}")
+        logger.info(f"Evaluation flags are {', '.join(string_list)}")
         check_ticket(tkt,
                      type_set=constants.IMPORT_TICKET_TYPE_SET,
                      description_field_set=constants.DESCRIPTION_FIELD_SET,
@@ -595,7 +596,7 @@ def process_files_and_tickets(ticket_dict, files_in_folder, engine=None,
 
         # TODO this section below could probably be improved.
         # import_into_db may not need to return result, since it now
-        # records in an Eval object whether import succeeded or not.
+        # records in an Evaluation object whether import succeeded or not.
         # It also checks_for_errors twice (before and after attempting to add
         # data to MySQL), which can probably be simplified.
         bndl.check_for_errors()
@@ -1057,7 +1058,7 @@ def review_object_list(object_list, object_type, attr_list, interactive=False):
 def review_evaluation_list(evaluation_list, interactive=False):
     """Iterate through all evaluations and review 'warning' results.
 
-    :param evaluation_list: List of pdm_utils Eval objects.
+    :param evaluation_list: List of pdm_utils Evaluation objects.
     :type evaluation_list: list
     :param interactive: same as for data_io().
     :returns: Indicates whether user selected to exit the review process.
@@ -1084,8 +1085,8 @@ def review_evaluation_list(evaluation_list, interactive=False):
 def review_evaluation(evl, interactive=False):
     """Review an evaluation object.
 
-    :param evl: A pdm_utils Eval object.
-    :type evl: Eval
+    :param evl: A pdm_utils Evaluation object.
+    :type evl: Evaluation
     :param interactive: same as for data_io().
     :returns:
         tuple (exit, message)
@@ -1927,7 +1928,7 @@ def import_into_db(bndl, engine=None, gnm_key="", prod_run=False):
                     statement = basic.truncate_value(statement, 150, "...")
                     logger.info(statement)
 
-            # Result of statement execution is stored in an eval object
+            # Result of statement execution is stored in an evaluation object
             # so that it can be recorded in the log file.
             # It is stored in the bundle object instead of the genome object
             # since the collection of MySQL statements are constructed

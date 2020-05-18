@@ -8,7 +8,7 @@ from collections import OrderedDict
 from Bio.Alphabet import IUPAC
 from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, FeatureLocation, CompoundLocation
-from pdm_utils.classes import eval
+from pdm_utils.classes import evaluation
 from pdm_utils.classes.aragornhandler import AragornHandler
 from pdm_utils.classes.trnascansehandler import TRNAscanSEHandler
 from pdm_utils.functions import basic
@@ -594,7 +594,7 @@ class TrnaFeature:
     #  but documented slightly differently.
     def set_eval(self, eval_id, definition, result, status):
         """
-        Constructs and adds and Eval object to this feature's list of
+        Constructs and adds and Evaluation object to this feature's list of
         evaluations.
         :param eval_id: unique identifier for the evaluation
         :type eval_id: str
@@ -606,7 +606,7 @@ class TrnaFeature:
         :type status: str
         :return:
         """
-        evl = eval.Eval(eval_id, definition, result, status)
+        evl = evaluation.Evaluation(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
     # TODO: create base feature class - nearly identical to Cds version,

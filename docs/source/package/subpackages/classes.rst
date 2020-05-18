@@ -28,7 +28,7 @@ Data processing
     aragornhandler <./classes_submodules/aragornhandler_submodule>
     bundle <./classes_submodules/bundle_submodule>
     cdspair <./classes_submodules/cdspair_submodule>
-    eval <./classes_submodules/eval_submodule>
+    evaluation <./classes_submodules/evaluation_submodule>
     filter <./classes_submodules/filter_submodule>
     genomepair <./classes_submodules/genomepair_submodule>
     randomfieldupdatehandler <./classes_submodules/randomfieldupdatehandler_submodule>

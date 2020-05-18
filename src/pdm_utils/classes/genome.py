@@ -7,7 +7,7 @@ from Bio.Alphabet import IUPAC
 from Bio.Seq import Seq
 from Bio.SeqUtils import GC
 
-from pdm_utils.classes import eval, cds, trna, tmrna, source
+from pdm_utils.classes import evaluation, cds, trna, tmrna, source
 from pdm_utils.constants import constants
 from pdm_utils.functions import basic
 
@@ -515,7 +515,7 @@ class Genome:
 
     # Evaluations.
     def set_eval(self, eval_id, definition, result, status):
-        """Constructs and adds an Eval object to the evaluations list.
+        """Constructs and adds an Evaluation object to the evaluations list.
 
         :param eval_id: Unique identifier for the evaluation.
         :type eval_id: str
@@ -526,7 +526,7 @@ class Genome:
         :param status: Outcome of the evaluation.
         :type status: str
         """
-        evl = eval.Eval(eval_id, definition, result, status)
+        evl = evaluation.Evaluation(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
 

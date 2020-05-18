@@ -1,7 +1,7 @@
 """Represents a structure to contain directions for how to parse and import
 genomes into a MySQL database."""
 
-from pdm_utils.classes import eval
+from pdm_utils.classes import evaluation
 from pdm_utils.functions import basic
 
 
@@ -63,7 +63,7 @@ class ImportTicket:
 
     # Evaluations
     def set_eval(self, eval_id, definition, result, status):
-        """Constructs and adds an Eval object to the evaluations list.
+        """Constructs and adds an Evaluation object to the evaluations list.
 
         :param eval_id: Unique identifier for the evaluation.
         :type eval_id: str
@@ -74,7 +74,7 @@ class ImportTicket:
         :param status: Outcome of the evaluation.
         :type status: str
         """
-        evl = eval.Eval(eval_id, definition, result, status)
+        evl = evaluation.Evaluation(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
 
@@ -135,7 +135,7 @@ class ImportTicket:
         :param eval_def: same as for check_attribute().
         """
         keys = len(self.eval_flags)
-        msg = f"There are {keys} eval flags present, which is "
+        msg = f"There are {keys} evaluation flags present, which is "
         if keys > 0 and expect:
             output = True
         elif keys == 0 and not expect:
@@ -149,7 +149,7 @@ class ImportTicket:
         else:
             result = msg + "not expected."
             status = fail
-        definition = "Check if there are eval flags."
+        definition = "Check if there are evaluation flags."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 

@@ -84,7 +84,7 @@ def parse_import_ticket_data(data_dict):
             7. Feature field
             8. Accession
             9. Retrieve Record (int)
-            10. Eval mode
+            10. Evaluation mode
 
     :type data_dict: dict
     :returns: A pdm_utils ImportTicket object.

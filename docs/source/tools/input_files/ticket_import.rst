@@ -20,7 +20,7 @@ Within the import table, an individual row of data populating 11 columns constru
 
     3. **description_field**: indicates the field in the CDS feature annotations in the associated Genbank-formatted flat file that is expected to contain the gene descriptions ('product', 'function', 'note').
 
-    4. **eval_mode**: indicates the :ref:`eval mode <evalmodes>` ('draft', 'final', 'auto', 'misc', 'custom'), determining which QC checks to implement and thus how the flat file is evaluated.
+    4. **eval_mode**: indicates the :ref:`evaluation mode <evalmodes>` ('draft', 'final', 'auto', 'misc', 'custom'), determining which QC checks to implement and thus how the flat file is evaluated.
 
     5. **host_genus**: the genus of the bacterial host that the phage infects.
 

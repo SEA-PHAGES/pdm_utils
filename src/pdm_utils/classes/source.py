@@ -3,7 +3,7 @@ to maintain and update SEA-PHAGES phage genomics data.
 """
 
 from pdm_utils.functions import basic
-from pdm_utils.classes import eval
+from pdm_utils.classes import evaluation
 
 class Source:
 
@@ -50,7 +50,7 @@ class Source:
 
     # Evaluations
     def set_eval(self, eval_id, definition, result, status):
-        """Constructs and adds an Eval object to the evaluations list.
+        """Constructs and adds an Evaluation object to the evaluations list.
 
         :param eval_id: Unique identifier for the evaluation.
         :type eval_id: str
@@ -61,7 +61,7 @@ class Source:
         :param status: Outcome of the evaluation.
         :type status: str
         """
-        evl = eval.Eval(eval_id, definition, result, status)
+        evl = evaluation.Evaluation(eval_id, definition, result, status)
         self.evaluations.append(evl)
 
 

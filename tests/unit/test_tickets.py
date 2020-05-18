@@ -1,15 +1,12 @@
 """Unit tests for misc. ticket functions."""
 
+import unittest
+
 from pdm_utils.classes import bundle
 from pdm_utils.classes import genome
 from pdm_utils.classes import ticket
-from pdm_utils.classes import eval
 from pdm_utils.functions import tickets
 from pdm_utils.constants import constants
-import unittest
-
-
-
 
 
 class TestTicketFunctions1(unittest.TestCase):

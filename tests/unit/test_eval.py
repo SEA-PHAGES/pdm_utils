@@ -1,13 +1,14 @@
-""" Unit tests for the Eval class."""
+""" Unit tests for the Evaluation class."""
 
-from pdm_utils.classes import eval
 import unittest
+
+from pdm_utils.classes import evaluation
 
 class TestEvalClass(unittest.TestCase):
 
 
     def setUp(self):
-        self.eval_result = eval.Eval()
+        self.eval_result = evaluation.Evaluation()
 
     def test_default_eval_1(self):
         """Verify default status is empty."""

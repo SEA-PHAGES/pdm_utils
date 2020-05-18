@@ -1,4 +1,4 @@
-"""Eval mode functions and dictionaries."""
+"""Evaluation mode functions and dictionaries."""
 
 from pdm_utils.functions import basic
 
@@ -24,7 +24,7 @@ EVAL_FLAGS = {
     "check_coords": "Should feature duplication be evaluated? "
     }
 
-# Eval mode definitions.
+# Evaluation mode definitions.
 EVAL_MODES = {
     "draft": ("Relaxed evaluations for automatically generated draft "
               "genome annotations since data have not been manually reviewed."),

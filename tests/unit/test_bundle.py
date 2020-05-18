@@ -1,14 +1,14 @@
 """ Unit tests for the Bundle Class."""
 
+import unittest
 
 from pdm_utils.classes import bundle
+from pdm_utils.classes import cds
+from pdm_utils.classes import evaluation
 from pdm_utils.classes import genome
 from pdm_utils.classes import genomepair
 from pdm_utils.classes import source
-from pdm_utils.classes import cds
 from pdm_utils.classes import ticket
-from pdm_utils.classes import eval
-import unittest
 
 
 class TestBundleClass1(unittest.TestCase):
@@ -204,10 +204,10 @@ class TestBundleClass2(unittest.TestCase):
         self.bndl.genome_pair_dict["genome_pair1"] = self.genome_pair1
         self.bndl.genome_pair_dict["genome_pair2"] = self.genome_pair2
 
-        self.eval_correct1 = eval.Eval(status="correct")
-        self.eval_correct2 = eval.Eval(status="correct")
-        self.eval_error1 = eval.Eval(status="error")
-        self.eval_error2 = eval.Eval(status="error")
+        self.eval_correct1 = evaluation.Evaluation(status="correct")
+        self.eval_correct2 = evaluation.Evaluation(status="correct")
+        self.eval_error1 = evaluation.Evaluation(status="error")
+        self.eval_error2 = evaluation.Evaluation(status="error")
 
 
 
@@ -218,25 +218,25 @@ class TestBundleClass2(unittest.TestCase):
         self.assertEqual(self.bndl._errors, 0)
 
     def test_check_for_errors_2(self):
-        """Check that a Bundle 'correct' eval is not counted."""
+        """Check that a Bundle 'correct' evaluation is not counted."""
         self.bndl.evaluations.append(self.eval_correct1)
         self.bndl.check_for_errors()
         self.assertEqual(self.bndl._errors, 0)
 
     def test_check_for_errors_3(self):
-        """Check that a Bundle 'error' eval is counted."""
+        """Check that a Bundle 'error' evaluation is counted."""
         self.bndl.evaluations.append(self.eval_error1)
         self.bndl.check_for_errors()
         self.assertEqual(self.bndl._errors, 1)
 
     def test_check_for_errors_4(self):
-        """Check that a ticket 'correct' eval is not counted."""
+        """Check that a ticket 'correct' evaluation is not counted."""
         self.ticket1.evaluations.append(self.eval_correct1)
         self.bndl.check_for_errors()
         self.assertEqual(self.bndl._errors, 0)
 
     def test_check_for_errors_5(self):
-        """Check that a ticket 'error' eval is counted."""
+        """Check that a ticket 'error' evaluation is counted."""
         self.ticket1.evaluations.append(self.eval_error1)
         self.bndl.check_for_errors()
         self.assertEqual(self.bndl._errors, 1)
@@ -248,13 +248,13 @@ class TestBundleClass2(unittest.TestCase):
         self.assertEqual(self.bndl._errors, 0)
 
     def test_check_for_errors_7(self):
-        """Check that a genome 'correct' eval is not counted."""
+        """Check that a genome 'correct' evaluation is not counted."""
         self.genome1.evaluations.append(self.eval_correct1)
         self.bndl.check_for_errors()
         self.assertEqual(self.bndl._errors, 0)
 
     def test_check_for_errors_8(self):
-        """Check that a genome 'error' eval is counted."""
+        """Check that a genome 'error' evaluation is counted."""
         self.genome1.evaluations.append(self.eval_error1)
         self.bndl.check_for_errors()
         self.assertEqual(self.bndl._errors, 1)
@@ -274,13 +274,13 @@ class TestBundleClass2(unittest.TestCase):
         self.assertEqual(self.bndl._errors, 2)
 
     def test_check_for_errors_11(self):
-        """Check that a source feature 'correct' eval is not counted."""
+        """Check that a source feature 'correct' evaluation is not counted."""
         self.src1.evaluations.append(self.eval_correct1)
         self.bndl.check_for_errors()
         self.assertEqual(self.bndl._errors, 0)
 
     def test_check_for_errors_12(self):
-        """Check that a source feature 'error' eval is counted."""
+        """Check that a source feature 'error' evaluation is counted."""
         self.src1.evaluations.append(self.eval_error1)
         self.bndl.check_for_errors()
         self.assertEqual(self.bndl._errors, 1)
@@ -300,13 +300,13 @@ class TestBundleClass2(unittest.TestCase):
         self.assertEqual(self.bndl._errors, 2)
 
     def test_check_for_errors_15(self):
-        """Check that a cds 'correct' eval is not counted."""
+        """Check that a cds 'correct' evaluation is not counted."""
         self.cds1.evaluations.append(self.eval_correct1)
         self.bndl.check_for_errors()
         self.assertEqual(self.bndl._errors, 0)
 
     def test_check_for_errors_16(self):
-        """Check that a cds 'error' eval is counted."""
+        """Check that a cds 'error' evaluation is counted."""
         self.cds1.evaluations.append(self.eval_error1)
         self.bndl.check_for_errors()
         self.assertEqual(self.bndl._errors, 1)
@@ -326,13 +326,13 @@ class TestBundleClass2(unittest.TestCase):
         self.assertEqual(self.bndl._errors, 2)
 
     def test_check_for_errors_19(self):
-        """Check that a genome_pair 'correct' eval is not counted."""
+        """Check that a genome_pair 'correct' evaluation is not counted."""
         self.genome_pair1.evaluations.append(self.eval_correct1)
         self.bndl.check_for_errors()
         self.assertEqual(self.bndl._errors, 0)
 
     def test_check_for_errors_20(self):
-        """Check that a genome_pair 'error' eval is counted."""
+        """Check that a genome_pair 'error' evaluation is counted."""
         self.genome_pair1.evaluations.append(self.eval_error1)
         self.bndl.check_for_errors()
         self.assertEqual(self.bndl._errors, 1)
@@ -355,19 +355,19 @@ class TestBundleClass2(unittest.TestCase):
 
 
     def test_get_evaluations_1(self):
-        """Verify one eval is returned from Bundle eval list."""
+        """Verify one evaluation is returned from Bundle evaluation list."""
         self.bndl.evaluations.append(self.eval_correct1)
         eval_dict = self.bndl.get_evaluations()
         self.assertEqual(len(eval_dict["bundle"]), 1)
 
     def test_get_evaluations_2(self):
-        """Verify one eval is returned from Ticket eval list."""
+        """Verify one evaluation is returned from Ticket evaluation list."""
         self.ticket1.evaluations.append(self.eval_correct1)
         eval_dict = self.bndl.get_evaluations()
         self.assertEqual(len(eval_dict["ticket"]), 1)
 
     def test_get_evaluations_3(self):
-        """Verify one eval is returned from each genome eval list."""
+        """Verify one evaluation is returned from each genome evaluation list."""
         self.genome1.evaluations.append(self.eval_correct1)
         self.genome1.evaluations.append(self.eval_correct2)
         self.genome2.evaluations.append(self.eval_error1)
@@ -378,7 +378,7 @@ class TestBundleClass2(unittest.TestCase):
             self.assertEqual(len(eval_dict["genome_mysql"]), 1)
 
     def test_get_evaluations_4(self):
-        """Verify one eval is returned from each Source eval list in
+        """Verify one evaluation is returned from each Source evaluation list in
         each genome."""
         self.src1.evaluations.append(self.eval_correct1)
         self.src1.evaluations.append(self.eval_correct2)
@@ -395,7 +395,7 @@ class TestBundleClass2(unittest.TestCase):
             self.assertEqual(len(eval_dict["src_L5_SRC_3"]), 1)
 
     def test_get_evaluations_5(self):
-        """Verify one eval is returned from each Cds eval list in
+        """Verify one evaluation is returned from each Cds evaluation list in
         each genome."""
         self.cds1.evaluations.append(self.eval_correct1)
         self.cds1.evaluations.append(self.eval_correct2)
@@ -412,7 +412,7 @@ class TestBundleClass2(unittest.TestCase):
             self.assertEqual(len(eval_dict["cds_L5_CDS_3"]), 1)
 
     def test_get_evaluations_6(self):
-        """Verify one eval is returned from each genome_pair eval list."""
+        """Verify one evaluation is returned from each genome_pair evaluation list."""
         self.genome_pair1.evaluations.append(self.eval_correct1)
         self.genome_pair1.evaluations.append(self.eval_correct2)
         self.genome_pair2.evaluations.append(self.eval_error1)

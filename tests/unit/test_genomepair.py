@@ -1,13 +1,14 @@
 """ Unit tests for the GenomePair Class."""
 
 from datetime import datetime
-from pdm_utils.classes import genomepair
-from pdm_utils.classes import genome
-from pdm_utils.classes import ticket
-from pdm_utils.classes import eval
 import unittest
+
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
+
+from pdm_utils.classes import genome
+from pdm_utils.classes import genomepair
+from pdm_utils.classes import ticket
 
 class TestGenomePairClass(unittest.TestCase):
 
