@@ -105,16 +105,28 @@ class TestPhamReview(unittest.TestCase):
         self.assertTrue(self.review_test_dir.is_dir())
 
     def test_execute_review_6(self):
-        """Verify execute_review() pg_report parameter functions as expected.
+        """Verify execute_review() g_reports parameter functions as expected.
         """
         review.execute_review(self.alchemist, self.test_dir,
                               self.review_test_dir.name,
-                              pg_report=True)
+                              g_reports=True)
 
         self.assertTrue(self.review_test_dir.is_dir())
 
         gene_report_dir = self.review_test_dir.joinpath("GeneReports")
         self.assertTrue(gene_report_dir.is_dir())
+
+    def test_execute_review_7(self):
+        """Verify execute_review() s_report parameter functions as expected.
+        """
+        review.execute_review(self.alchemist, self.test_dir,
+                              self.review_test_dir.name,
+                              s_report=True)
+
+        self.assertTrue(self.review_test_dir.is_dir())
+
+        summary_report_file = self.review_test_dir.joinpath("SummaryReport.txt")
+        self.assertTrue(summary_report_file.is_file())
 
     def test_review_phams_1(self):
         """Verify review_phams() correctly identifies disrepencies.
@@ -141,19 +153,19 @@ class TestPhamReview(unittest.TestCase):
                 self.assertTrue(header in pf_data[0].keys())
                 self.assertFalse(isinstance(pf_data[0][header], list))
 
-    def test_get_pg_data_1(self):
-        """Verify get_pg_data() retreives and retrusn data as expected.
+    def test_get_g_data_1(self):
+        """Verify get_g_data() retreives and retrusn data as expected.
         """
         self.db_filter.values = [40481]
 
-        pg_data = review.get_pg_data(self.alchemist, self.db_filter, 40481)
+        g_data = review.get_g_data(self.alchemist, self.db_filter, 40481)
 
-        self.assertTrue(isinstance(pg_data, list))
+        self.assertTrue(isinstance(g_data, list))
 
         for header in review.PG_HEADER:
             with self.subTest(header=header):
-                self.assertTrue(header in pg_data[0].keys())
-                self.assertFalse(isinstance(pg_data[0][header], list))
+                self.assertTrue(header in g_data[0].keys())
+                self.assertFalse(isinstance(g_data[0][header], list))
 
 
 if __name__ == "__main__":

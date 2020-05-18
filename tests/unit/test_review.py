@@ -22,7 +22,8 @@ class TestMain(unittest.TestCase):
         self.mock_filters = Mock()
         self.mock_groups = Mock()
         self.mock_sort = Mock()
-        self.mock_pham_gene_report = Mock()
+        self.mock_gene_report = Mock()
+        self.mock_summary_report = Mock()
         self.mock_verbose = Mock()
 
 
@@ -42,8 +43,10 @@ class TestMain(unittest.TestCase):
                                         return_value=self.mock_groups)
         type(self.args).sort = PropertyMock(
                                         return_value=self.mock_sort)
-        type(self.args).pham_gene_report = PropertyMock(
-                                        return_value=self.mock_pham_gene_report)
+        type(self.args).gene_reports = PropertyMock(
+                                        return_value=self.mock_gene_report)
+        type(self.args).summary_report = PropertyMock(
+                                        return_value=self.mock_summary_report)
         type(self.args).verbose = PropertyMock(
                                         return_value=self.mock_verbose)
 
@@ -69,7 +72,8 @@ class TestMain(unittest.TestCase):
                             self.mock_folder_name, review=self.mock_review,
                             values=self.mock_values, filters=self.mock_filters,
                             groups=self.mock_groups, sort=self.mock_sort, 
-                            pg_report=self.mock_pham_gene_report, 
+                            g_reports=self.mock_gene_report, 
+                            s_report=self.mock_summary_report,
                             verbose=self.mock_verbose)
 
 if __name__ == "__main__":
