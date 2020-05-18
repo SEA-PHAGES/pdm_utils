@@ -44,8 +44,10 @@ def get_unparsed_args():
     """Returns list of command line arguments to compare databases."""
     unparsed_args = ["run.py", pipeline, DB,
                       "-o", str(test_folder),
-                      "-p", #this will retrieve all data from PhagesDB
-                      "-g", "-s", "-ia", "-d", "-f", "-u"
+                      "-p", # this will retrieve all data from PhagesDB
+                      "-g", # this will retrieve data from GenBank
+                      "-s", # save all genomes to file
+                      "-f phage.AnnotationAuthor=1"
                     ]
     return unparsed_args
 

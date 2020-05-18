@@ -194,7 +194,7 @@ def add_filters(filter_obj, filters):
             try:
                 filter_obj.add(filter)
             except:
-                print(f"Invalid filter: filter")
+                print(f"Invalid filter: {filter}")
                 errors += 1
     if errors > 0:
         print("Unable to create new database.")

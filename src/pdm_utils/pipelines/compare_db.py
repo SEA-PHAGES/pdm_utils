@@ -28,19 +28,24 @@ from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
 
-from pdm_utils.classes.alchemyhandler import AlchemyHandler
+
 from pdm_utils.classes import cds
 from pdm_utils.classes import genome
 from pdm_utils.classes import cdspair
 from pdm_utils.classes import dbcomparesummary
 from pdm_utils.classes import genometriad
+from pdm_utils.classes.alchemyhandler import AlchemyHandler
+from pdm_utils.classes.filter import Filter
 from pdm_utils.constants import constants
 from pdm_utils.functions import basic
 from pdm_utils.functions import flat_files
 from pdm_utils.functions import mysqldb
 from pdm_utils.functions import mysqldb_basic
 from pdm_utils.functions import ncbi
+from pdm_utils.functions import parsing
 from pdm_utils.functions import phagesdb
+from pdm_utils.functions import querying
+
 
 
 DEFAULT_OUTPUT_FOLDER = os.getcwd()
@@ -78,6 +83,7 @@ GENE_QUERY = ("SELECT PhageID, GeneID, Name, Start, Stop, Orientation, "
               "Notes from gene")
 VERSION_QUERY = "SELECT Version FROM version"
 
+TARGET_TABLE = "phage"
 
 # Identifiers for object types based on their database source.
 GNM_MYSQL = "mysql"
@@ -338,6 +344,11 @@ def main(unparsed_args_list):
     ncbi_credentials_file = args.ncbi_credentials_file
     interactive = args.interactive
 
+    # Filters input: phage.Status=draft AND phage.HostGenus=Mycobacterium
+    # Args structure: [['phage.Status=draft'], ['phage.HostGenus=Mycobacterium']]
+    filters = args.filters
+
+
     # Setup output
     output_folder = basic.set_path(args.output_folder, kind="dir",
                                         expect=True)
@@ -359,23 +370,31 @@ def main(unparsed_args_list):
     print("Connecting to the MySQL database...")
     alchemist = AlchemyHandler(database=database)
     alchemist.connect(pipeline=True)
+    alchemist.build_metadata()
     engine = alchemist.engine
     mysqldb.check_schema_compatibility(engine, "the compare pipeline")
 
-    # Gather sets of settings to determine which types of comparison to do.
+    # Get PhageIDs, which also validates filters.
+    phage_ids = get_ids(alchemist, filters, TARGET_TABLE)
+
+    # Gather user-selected databases.
     valid_dbs = get_dbs(args.phagesdb, args.genbank)
-    valid_authors = get_authors(args.internal_authors, args.external_authors)
-    valid_status = get_status(args.draft, args.final, args.unknown)
+
+    # Get version from the MySQL database.
+    version = str(mysqldb_basic.scalar(engine, VERSION_QUERY))
 
     # Record the summary of settings for the comparison.
-    record_compare_settings(working_path, database, engine, valid_status,
-                            valid_authors, valid_dbs)
+    record_compare_settings(working_path, database, version, filters, valid_dbs)
 
-    pmd_tup = process_mysql_data(working_path, engine, valid_status,
-                                 valid_authors, interactive, save_records)
+    # Now proceed with getting all genome data.
+    pmd_tup = process_mysql_data(working_path, engine, phage_ids,
+                                 interactive, save_records)
     mysql_genome_dict = pmd_tup[0]
     mysql_accessions = pmd_tup[1]
     mysql_acc_duplicates = pmd_tup[2]
+
+    # Close connections since no need to interact with MySQL anymore.
+    engine.dispose()
 
     #Now retrieve all PhagesDB data
     if "phagesdb" in valid_dbs:
@@ -387,12 +406,13 @@ def main(unparsed_args_list):
         pdb_genome_dict = {}
         pdb_name_duplicates = set()
 
-    #Retrieve and parse GenBank records if selected by user
+    # Retrieve and parse GenBank records if selected by user
     if "genbank" in valid_dbs:
         gbk_genome_dict = process_gbk_data(working_path, ncbi_credentials_file,
                                 mysql_accessions, interactive, save_records)
+        # gbk_genome_dict: Key = accession; #Value = genome data
     else:
-        gbk_genome_dict = {} #Key = accession; #Value = genome data
+        gbk_genome_dict = {}
 
     # Now that all GenBank and PhagesDB data is retrieved,
     # match up to MySQL genome data.
@@ -401,7 +421,7 @@ def main(unparsed_args_list):
                       mysql_acc_duplicates)
     matched_genomes_list = match_tup[0]
 
-    #Output unmatched data to file
+    # Output unmatched data to file
     record_unmatched_pdb_data(match_tup[1], working_path)
     record_unmatched_gbk_data(match_tup[2], working_path)
 
@@ -426,30 +446,22 @@ def main(unparsed_args_list):
 def parse_args(unparsed_args_list):
     """Verify the correct arguments are selected for comparing databases."""
 
-    COMPARE_HELP = ("Pipeline to compare MySQL, PhagesDB, and "
-                    "GenBank databases for inconsistencies.")
+    COMPARE_HELP = (
+        "Pipeline to compare MySQL, PhagesDB, and "
+        "GenBank databases for inconsistencies.")
     DATABASE_HELP = "Name of the MySQL database from which to compare data."
-    OUTPUT_FOLDER_HELP = ("Path to the folder to store results.")
-    NCBI_CRED_FILE_HELP = ("Path to the file containing NCBI credentials.")
-
+    OUTPUT_FOLDER_HELP = "Path to the folder to store results."
+    NCBI_CRED_FILE_HELP = "Path to the file containing NCBI credentials."
     PHAGESDB_HELP = "Indicates that PhagesDB data should be compared."
     GENBANK_HELP = "Indicates that GenBank data should be compared."
-    SAVE_RECORDS_HELP = \
-        ("Indicates that records retrieved from external "
-         "databases will be saved.")
-    INTERNAL_AUTHORS_HELP = \
-        "Indicates that genomes with internal authorship will be evaluated."
-    EXTERNAL_AUTHORS_HELP = \
-        "Indicates that genomes with external authorship will be evaluated."
-
-    DRAFT_HELP = \
-        "Indicates that genomes with 'draft' annotation_status will be evaluated."
-    FINAL_HELP = \
-        "Indicates that genomes with 'final' annotation_status will be evaluated."
-    UNKNOWN_HELP = \
-        "Indicates that genomes with 'unknown' annotation_status will be evaluated."
-    INTERACTIVE_HELP = \
-        "Indicates whether evaluation is paused when errors are encountered."
+    SAVE_RECORDS_HELP = (
+        "Indicates that all genomes compared will be saved to file.")
+    FILTERS_HELP = (
+        "Indicates which genomes to include/exclude from the comparison."
+        "Follow selection argument with formatted filter request: "
+        "Table.Field=Value")
+    INTERACTIVE_HELP = (
+        "Indicates whether evaluation is paused when errors are encountered.")
 
     parser = argparse.ArgumentParser(description=COMPARE_HELP)
     parser.add_argument("database", type=str, help=DATABASE_HELP)
@@ -462,18 +474,11 @@ def parse_args(unparsed_args_list):
         default=False, help=GENBANK_HELP)
     parser.add_argument("-c", "--ncbi_credentials_file", type=pathlib.Path,
         help=NCBI_CRED_FILE_HELP)
+    parser.add_argument("-f", "--filters", nargs="?",
+                        type=parsing.parse_cmd_string, help=FILTERS_HELP,
+                        default=[])
     parser.add_argument("-s", "--save_records", action="store_true",
         default=False, help=SAVE_RECORDS_HELP)
-    parser.add_argument("-ia", "--internal_authors", action="store_true",
-        default=False, help=INTERNAL_AUTHORS_HELP)
-    parser.add_argument("-ea", "--external_authors", action="store_true",
-        default=False, help=EXTERNAL_AUTHORS_HELP)
-    parser.add_argument("-d", "--draft", action="store_true",
-        default=False, help=DRAFT_HELP)
-    parser.add_argument("-f", "--final", action="store_true",
-        default=False, help=FINAL_HELP)
-    parser.add_argument("-u", "--unknown", action="store_true",
-        default=False, help=UNKNOWN_HELP)
     parser.add_argument("-i", "--interactive", action="store_true",
         default=False, help=INTERACTIVE_HELP)
 
@@ -482,6 +487,58 @@ def parse_args(unparsed_args_list):
     # sys.argv:      [0]            [1]         [2...]
     args = parser.parse_args(unparsed_args_list[2:])
     return args
+
+
+
+# TODO test.
+def get_ids(alchemist, filters, target_table):
+    """Get list of unique MySQL target table primary key values to evaluate."""
+
+    primary_key = get_primary_key(alchemist.metadata, target_table)
+
+    # Create filter object and then add command line filter strings
+    db_filter = Filter(alchemist=alchemist, key=primary_key)
+    db_filter.values = []
+
+    # Attempt to add filters and exit if needed.
+    add_filters(db_filter, filters)
+
+    # Performs the query
+    db_filter.update()
+
+    # db_filter.values now contains list of PhageIDs that pass the filters.
+    return db_filter.values
+
+
+# TODO test.
+def get_primary_key(metadata, target_table):
+    """Get the primary key to the target table."""
+
+    # Get SQLAlchemy metadata Table object
+    # table_obj.primary_key.columns is a
+    # SQLAlchemy ColumnCollection iterable object
+    # Set primary key = 'phage.PhageID'
+    table = querying.get_table(metadata, target_table)
+    for column in table.primary_key.columns:
+        primary_key = column
+    return primary_key
+
+
+# TODO test.
+def add_filters(filter_obj, filters):
+    """Add filters from command line to filter object."""
+    errors = 0
+    for or_filters in filters:
+        for filter in or_filters:
+            # Catch the error if it is an invalid table.column
+            try:
+                filter_obj.add(filter)
+            except:
+                print(f"Invalid filter: {filter}")
+                errors += 1
+    if errors > 0:
+        print("Unable to run compare pipeline.")
+        sys.exit(1)
 
 
 # TODO refactor and test.
@@ -494,29 +551,6 @@ def get_dbs(pdb, gbk):
         dbs.add("genbank")
     return dbs
 
-
-# TODO refactor and test.
-def get_authors(internal, external):
-    """Create set of authorship to compare."""
-    authorship = set()
-    if internal == True:
-        authorship.add(1)
-    if external == True:
-        authorship.add(0)
-    return authorship
-
-
-# TODO refactor and test.
-def get_status(draft, final, unknown):
-    """Create set of annotation_status to compare."""
-    status = set()
-    if draft == True:
-        status.add("draft")
-    if final == True:
-        status.add("final")
-    if unknown == True:
-        status.add("unknown")
-    return status
 
 # TODO refactor and test.
 def output_to_file(data_list, folder, filename):
@@ -571,23 +605,23 @@ def save_seqrecord(seqrecord, output_path, file_prefix, ext,
 
 
 # TODO refactor and test.
-def record_compare_settings(working_path, database, engine, valid_status,
-                            valid_authors, valid_dbs):
+def record_compare_settings(working_path, database, version, filters, valid_dbs):
     """Save user-selected settings."""
-
-    # Get data from the MySQL database.
-    version = str(mysqldb_basic.scalar(engine, VERSION_QUERY))
 
     # Format setting strings
     lst = [
         ["Comparison date:", CURRENT_DATE],
         ["MySQL database:", database],
         ["MySQL database version:", version],
-        selected_authors_lst(valid_authors),
-        ["Databases compared to MySQL:", ", ".join(valid_dbs)],
-        ["Genomes with the following Annotation Status will be compared:",
-             ", ".join(valid_status)]
-         ]
+        ["Databases compared to MySQL:", ", ".join(valid_dbs)]
+        ]
+
+    # Add the filters
+    count = 1
+    for or_filters in filters:
+        for filter in or_filters:
+            lst.append([f"Filter {count}:", filter])
+            count += 1
 
     output_to_file(lst, pathlib.Path(working_path), COMPARE_SETTINGS)
 
@@ -599,18 +633,17 @@ def selected_authors_lst(lst1):
     return lst2
 
 # TODO refactor and test.
-def process_mysql_data(working_path, engine, valid_status, valid_authors,
-                       interactive, save):
+def process_mysql_data(working_path, engine, phage_ids, interactive, save):
     """Retrieve and process MySQL data."""
 
     print('\n\nPreparing genome data sets from the MySQL database...')
-    genome_list = mysqldb.parse_genome_data(engine, phage_query=PHAGE_QUERY,
-                                    gene_query=GENE_QUERY, gnm_type=GNM_MYSQL)
+    genome_list = mysqldb.parse_genome_data(engine,
+                                            phage_id_list=phage_ids,
+                                            phage_query=PHAGE_QUERY,
+                                            gene_query=GENE_QUERY,
+                                            gnm_type=GNM_MYSQL)
 
-    # TODO Filter object could be implemented to get list of PhageIDs that
-    # meet criteria that get passed to parse_genome_data() so that the
-    # following function filter_mysql_genomes() is not needed.
-    tup = filter_mysql_genomes(genome_list, valid_status, valid_authors)
+    tup = filter_mysql_genomes(genome_list)
     gnm_dict = tup[0]
     name_duplicates = tup[2]
     accessions = tup[3]
@@ -654,8 +687,8 @@ def process_mysql_data(working_path, engine, valid_status, valid_authors,
 
 
 # TODO refactor and test.
-def filter_mysql_genomes(genome_list, valid_status, valid_authors):
-    """Only keep selected subset of genomes."""
+def filter_mysql_genomes(genome_list):
+    """Only keep selected subset of genomes with no value duplications."""
 
     gnm_dict = {}
     names = set()
@@ -663,31 +696,24 @@ def filter_mysql_genomes(genome_list, valid_status, valid_authors):
     accessions = set()
     duplicate_accessions = set()
 
-    # Iterate through each MySQL genome and create a genome object
     for gnm in genome_list:
 
-        # Check to see if the genome has a user-selected
-        # annotation_status and authorship.
-        if (gnm.annotation_status not in valid_status or
-                gnm.annotation_author not in valid_authors):
-            continue
+        gnm_dict[gnm.id] = gnm
+
+        # This keeps track of whether there are duplicate phage
+        # names that will be used to match up to PhagesDB data.
+        if gnm.id in names:
+            duplicate_names.add(gnm.id)
         else:
-            gnm_dict[gnm.id] = gnm
+            names.add(gnm.id)
 
-            # This keeps track of whether there are duplicate phage
-            # names that will be used to match up to PhagesDB data.
-            if gnm.id in names:
-                duplicate_names.add(gnm.id)
+        # This keeps track of whether there are duplicate
+        # accession numbers that will be used to match up to GenBank data.
+        if gnm.accession != "":
+            if gnm.accession in accessions:
+                duplicate_accessions.add(gnm.accession)
             else:
-                names.add(gnm.id)
-
-            # This keeps track of whether there are duplicate
-            # accession numbers that will be used to match up to GenBank data.
-            if gnm.accession != "":
-                if gnm.accession in accessions:
-                    duplicate_accessions.add(gnm.accession)
-                else:
-                    accessions.add(gnm.accession)
+                accessions.add(gnm.accession)
 
     return (gnm_dict, names, duplicate_names, accessions, duplicate_accessions)
 
