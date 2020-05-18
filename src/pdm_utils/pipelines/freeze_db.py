@@ -104,28 +104,26 @@ def main(unparsed_args_list):
 def parse_args(unparsed_args_list):
     """Verify the correct arguments are selected."""
 
-    PIPELINE_HELP = ("Pipeline to prepare a database for publication.")
-    DATABASE_HELP = "Name of the MySQL database."
-    FILTERS_HELP = (
-        "Indicates which genomes to retain in the new database."
-        "Follow selection argument with formatted filter request: "
-        "Table.Field=Value"
-        )
-    NEW_DATABASE_NAME_HELP = ("The new name of the frozen database")
-    PREFIX_HELP = ("The prefix used in the new name of the frozen database")
-    RESET_HELP = "Reset version to 0 in new database."
+    freeze_help = "Pipeline to prepare a database for publication."
+    database_help = "Name of the MySQL database."
+    filters_help = (
+        "Indicates which genomes to retain in the new database, "
+        "with each conditional formatted as 'table.Field=value'.")
+    new_database_name_help = "The new name of the frozen database"
+    prefix_help = "The prefix used in the new name of the frozen database"
+    reset_help = "Reset version to 0 in new database."
 
-    parser = argparse.ArgumentParser(description=PIPELINE_HELP)
-    parser.add_argument("database", type=str, help=DATABASE_HELP)
+    parser = argparse.ArgumentParser(description=freeze_help)
+    parser.add_argument("database", type=str, help=database_help)
     parser.add_argument("-f", "--filters", nargs="?",
-                        type=parsing.parse_cmd_string, help=FILTERS_HELP,
+                        type=parsing.parse_cmd_string, help=filters_help,
                         default=[])
     parser.add_argument("-n", "--new_database_name", type=str,
-        help=NEW_DATABASE_NAME_HELP)
+        help=new_database_name_help)
     parser.add_argument("-p", "--prefix", type=str,
-        help=PREFIX_HELP)
+        help=prefix_help)
     parser.add_argument("-r", "--reset", action="store_true",
-        default=False, help=RESET_HELP)
+        default=False, help=reset_help)
 
     # Assumed command line arg structure:
     # python3 -m pdm_utils.run <pipeline> <additional args...>

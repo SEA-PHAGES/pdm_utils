@@ -147,43 +147,39 @@ def download_file(file_url, filepath):
 def parse_args(unparsed_args_list):
     """Verify the correct arguments are selected for getting a new database."""
 
-    GET_DB_HELP = \
-        "Pipeline to retrieve and install a new version of a MySQL database."
-    DATABASE_HELP = \
-        "Name of the MySQL database."
-    OPTION_HELP = \
-        "Source of data to create database."
-    SERVER_HELP = \
-        "Download database from server."
-    OUTPUT_FOLDER_HELP = \
-        ("Path to the folder to create the folder for downloading "
+    get_db_help = (
+        "Pipeline to retrieve and install a new version of a MySQL database.")
+    database_help = "Name of the MySQL database."
+    option_help = "Source of data to create database."
+    server_help = "Download database from server."
+    output_folder_help = (
+        "Path to the folder to create the folder for downloading "
         f"the database. Default is {DEFAULT_OUTPUT_FOLDER}")
-    DOWNLOAD_ONLY_HELP = \
-        "The database should be downloaded but not installed locally."
-    FILENAME_HELP = \
-        "Name of the SQL file and version file."
-    NEW_HELP = \
-        "Indicates whether a new, empty database should be created."
-    SCHEMA_VERSION_HELP = \
-        "Database schema version to which the database should be converted."
+    download_only_help = (
+        "The database should be downloaded but not installed locally.")
+    file_help = "Install database from a SQL file."
+    filename_help = "Name of the SQL file and version file."
+    new_help = "Create a new empty database."
+    schema_version_help = (
+        "Database schema version to which the database should be converted.")
 
-    parser = argparse.ArgumentParser(description=GET_DB_HELP)
-    parser.add_argument("database", type=str, help=DATABASE_HELP)
-    subparsers = parser.add_subparsers(dest="option", help=OPTION_HELP)
+    parser = argparse.ArgumentParser(description=get_db_help)
+    parser.add_argument("database", type=str, help=database_help)
+    subparsers = parser.add_subparsers(dest="option", help=option_help)
 
-    parser_a = subparsers.add_parser("server", help=SERVER_HELP)
+    parser_a = subparsers.add_parser("server", help=server_help)
     parser_a.add_argument("-o", "--output_folder", type=pathlib.Path,
-        default=pathlib.Path(DEFAULT_OUTPUT_FOLDER), help=OUTPUT_FOLDER_HELP)
+        default=pathlib.Path(DEFAULT_OUTPUT_FOLDER), help=output_folder_help)
     parser_a.add_argument("-d", "--download_only", action="store_true",
-        default=False, help=DOWNLOAD_ONLY_HELP)
+        default=False, help=download_only_help)
 
-    parser_b = subparsers.add_parser("file", help="Install from local file.")
-    parser_b.add_argument("filename", type=pathlib.Path, help=FILENAME_HELP)
+    parser_b = subparsers.add_parser("file", help=file_help)
+    parser_b.add_argument("filename", type=pathlib.Path, help=filename_help)
 
-    parser_c = subparsers.add_parser("new", help="Create empty database.")
+    parser_c = subparsers.add_parser("new", help=new_help)
     parser_c.add_argument("-s", "--schema_version", type=int,
         choices=list(convert_db.CHOICES), default=convert_db.CURRENT_VERSION,
-        help=SCHEMA_VERSION_HELP)
+        help=schema_version_help)
 
     # Assumed command line arg structure:
     # python3 -m pdm_utils.run <pipeline> <additional args...>

@@ -26,26 +26,25 @@ TARGET_TABLE = "phage"
 # TODO unittest.
 def parse_args(unparsed_args_list):
     """Verify the correct arguments are selected for getting GenBank records."""
-    GET_GB_RECORDS_HELP = ("Pipeline to retrieve GenBank records using "
-                           "accessions stored in a MySQL database.")
-    DATABASE_HELP = "Name of the MySQL database."
-    OUTPUT_FOLDER_HELP = ("Path to the directory where records will be stored.")
-    NCBI_CRED_FILE_HELP = ("Path to the file containing NCBI credentials.")
-    FILTERS_HELP = (
-        "Indicates which genomes to retain in the new database."
-        "Follow selection argument with formatted filter request: "
-        "Table.Field=Value"
-        )
+    get_gb_records_help = (
+        "Pipeline to retrieve GenBank records using "
+        "accessions stored in a MySQL database.")
+    database_help = "Name of the MySQL database."
+    output_folder_help = "Path to the directory where records will be stored."
+    ncbi_cred_file_help = "Path to the file containing NCBI credentials."
+    filters_help = (
+        "Indicates which genomes to retrieve, "
+        "with each conditional formatted as 'table.Field=value'.")
 
-    parser = argparse.ArgumentParser(description=GET_GB_RECORDS_HELP)
-    parser.add_argument("database", type=str, help=DATABASE_HELP)
+    parser = argparse.ArgumentParser(description=get_gb_records_help)
+    parser.add_argument("database", type=str, help=database_help)
     parser.add_argument("-o", "--output_folder", type=pathlib.Path,
                         default=pathlib.Path(DEFAULT_OUTPUT_FOLDER),
-                        help=OUTPUT_FOLDER_HELP)
+                        help=output_folder_help)
     parser.add_argument("-c", "--ncbi_credentials_file", type=pathlib.Path,
-                        help=NCBI_CRED_FILE_HELP)
+                        help=ncbi_cred_file_help)
     parser.add_argument("-f", "--filters", nargs="?",
-                        type=parsing.parse_cmd_string, help=FILTERS_HELP,
+                        type=parsing.parse_cmd_string, help=filters_help,
                         default=[])
 
     # Assumed command line arg structure:

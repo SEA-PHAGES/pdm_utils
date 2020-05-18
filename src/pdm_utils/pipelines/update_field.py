@@ -94,13 +94,13 @@ def update_field(alchemist, update_ticket):
         print(f"\nInvalid selection key '{update_ticket['key_name']}' "
               f"for table '{table_obj.name}'")
         return 0
- 
+
     primary_keys = list(table_obj.primary_key.columns)
     if key_field not in primary_keys:
         print(f"\nInvalid selection key '{update_ticket['key_name']}' "
-              f"for table '{table_obj.name}'") 
+              f"for table '{table_obj.name}'")
         return 0
-    
+
     key_value_clause = (key_field == update_ticket["key_value"])
 
     key_value_query = querying.build_count(alchemist.graph, key_field, where=key_value_clause)
@@ -109,35 +109,34 @@ def update_field(alchemist, update_ticket):
     if key_value_count != 1:
         print(f"\nInvalid selection value '{update_field['key_value']}' "
               f"for key '{key_field.name}' in table '{table_obj.name}'")
-        return 0 
-   
+        return 0
+
     statement = update(table_obj).where(key_value_clause).values(
                                     {field.name : update_ticket["value"]})
     alchemist.engine.execute(statement)
     return 1
-    
+
 # TODO unittest.
 def parse_args(unparsed_args_list):
     """Verify the correct arguments are selected for getting updates."""
-    UPDATE_HELP = ("Pipeline to update specific fields in a "
-                   "MySQL database.")
-    DATABASE_HELP = "Name of the MySQL database."
-    TICKET_TABLE_HELP = """
-            Path to the CSV-formatted table containing
-            instructions to process each update.
-            Structure of update ticket table:
-                1. Table name
-                2. Column name to be updated
-                3. New value that will be added
-                4. Conditional column name
-                5. Conditional column value
-            """
-    VERSION_HELP = "Increment database version by 1."
-    parser = argparse.ArgumentParser(description=UPDATE_HELP)
-    parser.add_argument("database", type=str, help=DATABASE_HELP)
+    update_help = "Pipeline to update specific fields in a MySQL database."
+    database_help = "Name of the MySQL database."
+    ticket_table_help = """
+        Path to the CSV-formatted table containing
+        instructions to process each update.
+        Structure of update ticket table:
+            1. Table name
+            2. Column name to be updated
+            3. New value that will be added
+            4. Conditional column name
+            5. Conditional column value
+        """
+    version_help = "Increment database version by 1."
+    parser = argparse.ArgumentParser(description=update_help)
+    parser.add_argument("database", type=str, help=database_help)
     parser.add_argument("-f", "--ticket_table", type=pathlib.Path,
-        help=TICKET_TABLE_HELP)
+        help=ticket_table_help)
     parser.add_argument("-v", "--version", action="store_true",
-        default=False, help=VERSION_HELP)
+        default=False, help=version_help)
     args = parser.parse_args(unparsed_args_list)
     return args

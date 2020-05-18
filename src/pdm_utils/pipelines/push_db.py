@@ -63,18 +63,19 @@ def main(unparsed_args_list):
 # TODO unittest.
 def parse_args(unparsed_args_list):
     """Verify the correct arguments are selected for uploading to the server."""
-    PUSH_DB_HELP = ("Pipeline to upload a new version of "
-                   "a MySQL database to the server.")
-    DIRECTORY_HELP = ("Path to the folder containing files for upload.")
-    FILE_HELP = ("Path to the file for upload.")
-    LOG_FILE_HELP = ("Path to the file to log paramiko output.")
-    parser = argparse.ArgumentParser(description=PUSH_DB_HELP)
+
+    push_db_help = "Pipeline to upload files to a server."
+    directory_help = "Path to the folder containing files for upload."
+    file_help = "Path to the file for upload."
+    log_file_help = "Path to the file to log paramiko output."
+
+    parser = argparse.ArgumentParser(description=push_db_help)
     parser.add_argument("-d", "--directory", type=pathlib.Path,
-        help=DIRECTORY_HELP)
+        help=directory_help)
     parser.add_argument("-f", "--file", type=pathlib.Path,
-        help=FILE_HELP)
+        help=file_help)
     parser.add_argument("-l", "--log_file", type=pathlib.Path,
-        default=pathlib.Path("/tmp/paramiko.log"), help=LOG_FILE_HELP)
+        default=pathlib.Path("/tmp/paramiko.log"), help=log_file_help)
 
     # Assumed command line arg structure:
     # python3 -m pdm_utils.run <pipeline> <additional args...>

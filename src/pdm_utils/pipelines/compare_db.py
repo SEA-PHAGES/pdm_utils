@@ -457,41 +457,40 @@ def main(unparsed_args_list):
 def parse_args(unparsed_args_list):
     """Verify the correct arguments are selected for comparing databases."""
 
-    COMPARE_HELP = (
+    compare_help = (
         "Pipeline to compare MySQL, PhagesDB, and "
         "GenBank databases for inconsistencies.")
-    DATABASE_HELP = "Name of the MySQL database from which to compare data."
-    OUTPUT_FOLDER_HELP = "Path to the folder to store results."
-    NCBI_CRED_FILE_HELP = "Path to the file containing NCBI credentials."
-    PHAGESDB_HELP = "Indicates that PhagesDB data should be compared."
-    GENBANK_HELP = "Indicates that GenBank data should be compared."
-    SAVE_RECORDS_HELP = (
+    database_help = "Name of the MySQL database from which to compare data."
+    output_folder_help = "Path to the folder to store results."
+    ncbi_cred_file_help = "Path to the file containing NCBI credentials."
+    phagesdb_help = "Indicates that PhagesDB data should be compared."
+    genbank_help = "Indicates that GenBank data should be compared."
+    save_records_help = (
         "Indicates that all genomes compared will be saved to file.")
-    FILTERS_HELP = (
-        "Indicates which genomes to include/exclude from the comparison."
-        "Follow selection argument with formatted filter request: "
-        "Table.Field=Value")
-    INTERACTIVE_HELP = (
+    filters_help = (
+        "Indicates which genomes to include/exclude from the comparison, "
+        "with each conditional formatted as 'table.Field=value'.")
+    interactive_help = (
         "Indicates whether evaluation is paused when errors are encountered.")
 
-    parser = argparse.ArgumentParser(description=COMPARE_HELP)
-    parser.add_argument("database", type=str, help=DATABASE_HELP)
+    parser = argparse.ArgumentParser(description=compare_help)
+    parser.add_argument("database", type=str, help=database_help)
     parser.add_argument("-o", "--output_folder", type=pathlib.Path,
                         default=pathlib.Path(DEFAULT_OUTPUT_FOLDER),
-                        help=OUTPUT_FOLDER_HELP)
+                        help=output_folder_help)
     parser.add_argument("-p", "--phagesdb", action="store_true",
-        default=False, help=PHAGESDB_HELP)
+        default=False, help=phagesdb_help)
     parser.add_argument("-g", "--genbank", action="store_true",
-        default=False, help=GENBANK_HELP)
+        default=False, help=genbank_help)
     parser.add_argument("-c", "--ncbi_credentials_file", type=pathlib.Path,
-        help=NCBI_CRED_FILE_HELP)
+        help=ncbi_cred_file_help)
     parser.add_argument("-f", "--filters", nargs="?",
-                        type=parsing.parse_cmd_string, help=FILTERS_HELP,
+                        type=parsing.parse_cmd_string, help=filters_help,
                         default=[])
     parser.add_argument("-s", "--save_records", action="store_true",
-        default=False, help=SAVE_RECORDS_HELP)
+        default=False, help=save_records_help)
     parser.add_argument("-i", "--interactive", action="store_true",
-        default=False, help=INTERACTIVE_HELP)
+        default=False, help=interactive_help)
 
     # Assumed command line arg structure:
     # python3 -m pdm_utils <pipeline> <additional args...>

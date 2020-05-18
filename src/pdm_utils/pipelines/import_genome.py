@@ -122,66 +122,66 @@ def parse_args(unparsed_args_list):
     :rtype: Namespace
     """
 
-    IMPORT_HELP = \
-        "Pipeline to import new genome data into a MySQL database."
-    DATABASE_HELP = \
-        "Name of the MySQL database to import the genomes."
-    INPUT_FOLDER_HELP = \
-        ("Path to the folder containing GenBank-formatted "
+    import_help = (
+        "Pipeline to import new genome data into a MySQL database.")
+    database_help = (
+        "Name of the MySQL database to import the genomes.")
+    input_folder_help = (
+        "Path to the folder containing GenBank-formatted "
         "flat files to be processed.")
-    OUTPUT_FOLDER_HELP = \
-        ("Path to the folder to store results. "
+    output_folder_help = (
+        "Path to the folder to store results. "
         f"Default is {DEFAULT_OUTPUT_FOLDER}")
-    IMPORT_TABLE_HELP = \
-        ("Path to the CSV-formatted table containing "
+    import_table_help = (
+        "Path to the CSV-formatted table containing "
         "instructions to process each genome.")
-    GENOME_ID_FIELD_HELP = \
-        ("Indicates the flat file field that should be used "
+    genome_id_field_help = (
+        "Indicates the flat file field that should be used "
         "as the unique identifier for the genome during import.")
-    HOST_GENUS_FIELD_HELP = \
-        ("Indicates the flat file field that should be used "
+    host_genus_field_help = (
+        "Indicates the flat file field that should be used "
         "to identify the host genus for the genome during import.")
-    PROD_RUN_HELP = \
-        ("Indicates whether the script should make any changes to the database. "
-         "If True, the production run will implement all changes in the "
-         "indicated database. If False, the test run will not "
-         "implement any changes.")
-    EVAL_MODE_HELP = \
-        "Indicates the evaluation configuration for importing genomes."
-    DESCRIPTION_FIELD_HELP = \
-        ("Indicates the field in CDS features that is expected "
-         "to store the gene description.")
-    INTERACTIVE_HELP = \
-        "Indicates whether interactive evaluation of data is permitted."
+    prod_run_help = (
+        "Indicates whether the script should make any changes to the database. "
+        "If True, the production run will implement all changes in the "
+        "indicated database. If False, the test run will not "
+        "implement any changes.")
+    eval_mode_help = (
+        "Indicates the evaluation configuration for importing genomes.")
+    description_field_help = (
+        "Indicates the field in CDS features that is expected "
+        "to store the gene description.")
+    interactive_help = (
+        "Indicates whether interactive evaluation of data is permitted.")
 
-    parser = argparse.ArgumentParser(description=IMPORT_HELP)
-    parser.add_argument("database", type=str, help=DATABASE_HELP)
+    parser = argparse.ArgumentParser(description=import_help)
+    parser.add_argument("database", type=str, help=database_help)
     parser.add_argument("input_folder", type=pathlib.Path,
-        help=INPUT_FOLDER_HELP)
+        help=input_folder_help)
     parser.add_argument("import_table", type=pathlib.Path,
-        help=IMPORT_TABLE_HELP)
+        help=import_table_help)
     parser.add_argument("-g", "--genome_id_field", type=str.lower,
         default="_organism_name",
         choices=["_organism_name", "_description_name",
                  "_source_name", "filename"],
-        help=GENOME_ID_FIELD_HELP)
+        help=genome_id_field_help)
     parser.add_argument("-hg", "--host_genus_field", type=str.lower,
         default="_organism_host_genus",
         choices=["_organism_host_genus", "_description_host_genus",
                  "_source_host_genus"],
-        help=GENOME_ID_FIELD_HELP)
+        help=host_genus_field_help)
     parser.add_argument("-p", "--prod_run", action="store_true",
-        default=False, help=PROD_RUN_HELP)
+        default=False, help=prod_run_help)
     parser.add_argument("-e", "--eval_mode", type=str.lower,
         choices=list(eval_modes.EVAL_MODES.keys()), default="final",
-        help=EVAL_MODE_HELP)
+        help=eval_mode_help)
     parser.add_argument("-d", "--description_field", type=str.lower,
         default="product", choices=list(constants.DESCRIPTION_FIELD_SET),
-        help=DESCRIPTION_FIELD_HELP)
+        help=description_field_help)
     parser.add_argument("-o", "--output_folder", type=pathlib.Path,
-        default=pathlib.Path(DEFAULT_OUTPUT_FOLDER), help=OUTPUT_FOLDER_HELP)
+        default=pathlib.Path(DEFAULT_OUTPUT_FOLDER), help=output_folder_help)
     parser.add_argument("-i", "--interactive", action="store_true",
-        default=False, help=INTERACTIVE_HELP)
+        default=False, help=interactive_help)
 
     # Assumed command line arg structure:
     # python3 -m pdm_utils.run <pipeline> <additional args...>

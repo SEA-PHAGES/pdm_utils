@@ -66,39 +66,39 @@ GENBANK_STATUS = {NOT_AUTO, NO_ACC, DUPE_ACC, OLD_DOCSUM,
 def parse_args(unparsed_args_list):
     """Verify the correct arguments are selected for getting updates."""
 
-    RETRIEVE_HELP = "Pipeline to get new data to import into a database."
-    DATABASE_HELP = "Name of the MySQL database."
-    OUTPUT_FOLDER_HELP = "Path to the directory where updates will be stored."
-    UPDATES_HELP = "Retrieve field updates from PhagesDB."
-    DRAFT_HELP = "Retrieve auto-annotated 'draft' genomes from PECAAN."
-    FINAL_HELP = "Retrieve manually-annotated 'final' genomes from PhagesDB."
-    GENBANK_HELP = "Retrieve annotated genomes from GenBank."
-    ALL_HELP = "Retrieve all types of new data."
-    NCBI_CRED_FILE_HELP = "Path to the file containing NCBI credentials."
-    GENBANK_RESULTS_HELP = "Store results of Genbank record retrieval."
-    FORCE_DOWNLOAD_HELP = "Retrieve genomes regardless of date in database."
+    retrieve_help = "Pipeline to get new data to import into a database."
+    database_help = "Name of the MySQL database."
+    output_folder_help = "Path to the directory where updates will be stored."
+    updates_help = "Retrieve field updates from PhagesDB."
+    draft_help = "Retrieve auto-annotated 'draft' genomes from PECAAN."
+    final_help = "Retrieve manually-annotated 'final' genomes from PhagesDB."
+    genbank_help = "Retrieve annotated genomes from GenBank."
+    all_help = "Retrieve all types of new data."
+    ncbi_cred_file_help = "Path to the file containing NCBI credentials."
+    genbank_results_help = "Store results of Genbank record retrieval."
+    force_download_help = "Retrieve genomes regardless of date in database."
 
-    parser = argparse.ArgumentParser(description=RETRIEVE_HELP)
-    parser.add_argument("database", type=str, help=DATABASE_HELP)
+    parser = argparse.ArgumentParser(description=retrieve_help)
+    parser.add_argument("database", type=str, help=database_help)
     parser.add_argument("-o", "--output_folder", type=pathlib.Path,
-        default=pathlib.Path(DEFAULT_OUTPUT_FOLDER), help=OUTPUT_FOLDER_HELP)
+        default=pathlib.Path(DEFAULT_OUTPUT_FOLDER), help=output_folder_help)
     parser.add_argument("-u", "--updates", action="store_true",
-        default=False, help=UPDATES_HELP)
+        default=False, help=updates_help)
     parser.add_argument("-d", "--draft", action="store_true",
-        default=False, help=DRAFT_HELP)
+        default=False, help=draft_help)
     parser.add_argument("-f", "--final", action="store_true",
-        default=False, help=FINAL_HELP)
+        default=False, help=final_help)
     parser.add_argument("-g", "--genbank", action="store_true",
-        default=False, help=GENBANK_HELP)
+        default=False, help=genbank_help)
     parser.add_argument("-a", "--all_data", action="store_true",
-        default=False, help=ALL_HELP)
+        default=False, help=all_help)
     parser.add_argument("-c", "--ncbi_credentials_file", type=pathlib.Path,
-        help=NCBI_CRED_FILE_HELP)
+        help=ncbi_cred_file_help)
     parser.add_argument("-gr", "--genbank_results", action="store_true",
-        default=False, help=GENBANK_RESULTS_HELP)
+        default=False, help=genbank_results_help)
 
     parser.add_argument("-fd", "--force_download", action="store_true",
-        default=False, help=FORCE_DOWNLOAD_HELP)
+        default=False, help=force_download_help)
 
     # Assumed command line arg structure:
     # python3 -m pdm_utils.run <pipeline> <additional args...>
