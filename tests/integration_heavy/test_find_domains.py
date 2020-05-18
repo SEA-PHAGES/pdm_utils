@@ -44,14 +44,19 @@ logging.basicConfig(filename=log, filemode="w",level=logging.DEBUG)
 
 # The following integration tests user the 'pdm_anon' MySQL user.
 # It is expected that this user has all privileges for 'pdm_test_db' database.
-pipeline = "find_domains"
+PIPELINE = "find_domains"
 USER = test_db_utils.USER
 PWD = test_db_utils.PWD
 DB = test_db_utils.DB
 DB2 = "Actinobacteriophage"
 
+PHAGE = "phage"
+GENE = "gene"
+DOMAIN = "domain"
+GENE_DOMAIN = "gene_domain"
+
 # Assumes that output message contains "SQLAlchemy Error..."
-error_msg = "SQLAlchemy"
+ERROR_MSG = "SQLAlchemy"
 
 def get_unparsed_args():
     """Returns list of command line arguments to find domains."""
@@ -59,7 +64,7 @@ def get_unparsed_args():
     # computing power, although it slows down the tests.
     # Specify output folder, else it will create folder in working directory
     # where the test module is run from.
-    unparsed_args = ["run.py", pipeline, DB,
+    unparsed_args = ["run.py", PIPELINE, DB,
                      "-t", str(1),
                      "-o", str(test_folder),
                      "-b", str(2)]
@@ -129,7 +134,7 @@ class TestFindDomains1(unittest.TestCase):
 
     def setUp(self):
         test_db_utils.create_empty_test_db()
-        test_db_utils.insert_phage_data(test_data_utils.get_trixie_phage_data())
+        test_db_utils.insert_data(PHAGE, test_data_utils.get_trixie_phage_data())
         self.gene_data_1 = test_data_utils.get_trixie_gene_data()
         self.gene_data_1["GeneID"] = "TRIXIE_0001"
         self.gene_data_2 = test_data_utils.get_trixie_gene_data()
@@ -137,9 +142,9 @@ class TestFindDomains1(unittest.TestCase):
         self.gene_data_3 = test_data_utils.get_trixie_gene_data()
         self.gene_data_3["GeneID"] = "TRIXIE_0003"
 
-        test_db_utils.insert_gene_data(self.gene_data_1)
-        test_db_utils.insert_gene_data(self.gene_data_2)
-        test_db_utils.insert_gene_data(self.gene_data_3)
+        test_db_utils.insert_data(GENE, self.gene_data_1)
+        test_db_utils.insert_data(GENE, self.gene_data_2)
+        test_db_utils.insert_data(GENE, self.gene_data_3)
 
         self.domain_data = test_data_utils.get_trixie_domain_data()
         self.gene_domain_data = test_data_utils.get_trixie_gene_domain_data()
@@ -230,7 +235,7 @@ class TestFindDomains1(unittest.TestCase):
         """Verify gene_domain table data can be inserted."""
         # Use previously validated gene_domain data.
         # Valid domain data needs to be inserted first.
-        test_db_utils.insert_domain_data(self.domain_data)
+        test_db_utils.insert_data(DOMAIN, self.domain_data)
 
         # Pop gene_id. The dictionary for find_domains doesn't need it as a key.
         gene_id_1 = self.gene_domain_data.pop("GeneID")
@@ -343,7 +348,7 @@ class TestFindDomains2(unittest.TestCase):
 
     def setUp(self):
         test_db_utils.create_empty_test_db()
-        test_db_utils.insert_phage_data(test_data_utils.get_trixie_phage_data())
+        test_db_utils.insert_data(PHAGE, test_data_utils.get_trixie_phage_data())
 
         # Insert data into gene table.
         self.gene_data_1 = test_data_utils.get_trixie_gene_data()
@@ -355,9 +360,9 @@ class TestFindDomains2(unittest.TestCase):
         self.gene_data_3 = test_data_utils.get_trixie_gene_data()
         self.gene_data_3["GeneID"] = "TRIXIE_0003"
         self.gene_data_3["DomainStatus"] = 1
-        test_db_utils.insert_gene_data(self.gene_data_1)
-        test_db_utils.insert_gene_data(self.gene_data_2)
-        test_db_utils.insert_gene_data(self.gene_data_3)
+        test_db_utils.insert_data(GENE, self.gene_data_1)
+        test_db_utils.insert_data(GENE, self.gene_data_2)
+        test_db_utils.insert_data(GENE, self.gene_data_3)
 
         # Insert data into domain table.
         self.domain_data1 = test_data_utils.get_trixie_domain_data()
@@ -366,9 +371,9 @@ class TestFindDomains2(unittest.TestCase):
         self.domain_data1["HitID"] = "hit_1"
         self.domain_data2["HitID"] = "hit_2"
         self.domain_data3["HitID"] = "hit_3"
-        test_db_utils.insert_domain_data(self.domain_data1)
-        test_db_utils.insert_domain_data(self.domain_data2)
-        test_db_utils.insert_domain_data(self.domain_data3)
+        test_db_utils.insert_data(DOMAIN, self.domain_data1)
+        test_db_utils.insert_data(DOMAIN, self.domain_data2)
+        test_db_utils.insert_data(DOMAIN, self.domain_data3)
 
 
         # Insert data into gene_domain table.
@@ -378,9 +383,9 @@ class TestFindDomains2(unittest.TestCase):
         self.gene_domain_data1["HitID"] = "hit_1"
         self.gene_domain_data2["HitID"] = "hit_2"
         self.gene_domain_data3["HitID"] = "hit_3"
-        test_db_utils.insert_gene_domain_data(self.gene_domain_data1)
-        test_db_utils.insert_gene_domain_data(self.gene_domain_data2)
-        test_db_utils.insert_gene_domain_data(self.gene_domain_data3)
+        test_db_utils.insert_data(GENE_DOMAIN, self.gene_domain_data1)
+        test_db_utils.insert_data(GENE_DOMAIN, self.gene_domain_data2)
+        test_db_utils.insert_data(GENE_DOMAIN, self.gene_domain_data3)
 
 
         self.alchemist = AlchemyHandler(database=DB, username=USER, password=PWD)
@@ -430,8 +435,8 @@ class TestFindDomains3(unittest.TestCase):
 
     def setUp(self):
         test_db_utils.create_empty_test_db()
-        test_db_utils.insert_phage_data(test_data_utils.get_trixie_phage_data())
-        test_db_utils.insert_gene_data(test_data_utils.get_trixie_gene_data())
+        test_db_utils.insert_data(PHAGE, test_data_utils.get_trixie_phage_data())
+        test_db_utils.insert_data(GENE, test_data_utils.get_trixie_gene_data())
 
         self.alchemist = AlchemyHandler(database=DB, username=USER, password=PWD)
         self.alchemist.build_engine()
@@ -607,9 +612,9 @@ class TestFindDomains3(unittest.TestCase):
         with self.subTest():
             self.assertFalse(value_error2)
         with self.subTest():
-            self.assertFalse(error_msg in msg1)
+            self.assertFalse(ERROR_MSG in msg1)
         with self.subTest():
-            self.assertTrue(error_msg in msg2)
+            self.assertTrue(ERROR_MSG in msg2)
 
 
     def test_execute_statement_6(self):
@@ -631,7 +636,7 @@ class TestFindDomains3(unittest.TestCase):
         with self.subTest():
             self.assertEqual(result, 1)
         with self.subTest():
-            self.assertTrue(error_msg in msg)
+            self.assertTrue(ERROR_MSG in msg)
         with self.subTest():
             self.assertFalse(type_error)
         with self.subTest():
@@ -659,7 +664,7 @@ class TestFindDomains3(unittest.TestCase):
         with self.subTest():
             self.assertEqual(result, 1)
         with self.subTest():
-            self.assertFalse(error_msg in msg)
+            self.assertFalse(ERROR_MSG in msg)
         with self.subTest():
             self.assertTrue(type_error)
         with self.subTest():
@@ -715,7 +720,7 @@ class TestFindDomains3(unittest.TestCase):
         with self.subTest():
             self.assertEqual(result, 1)
         with self.subTest():
-            self.assertFalse(error_msg in msg)
+            self.assertFalse(ERROR_MSG in msg)
         with self.subTest():
             self.assertFalse(type_error)
         with self.subTest():
@@ -756,8 +761,8 @@ class TestFindDomains4(unittest.TestCase):
 
     def setUp(self):
         test_db_utils.create_empty_test_db()
-        test_db_utils.insert_phage_data(test_data_utils.get_trixie_phage_data())
-        test_db_utils.insert_gene_data(test_data_utils.get_trixie_gene_data())
+        test_db_utils.insert_data(PHAGE, test_data_utils.get_trixie_phage_data())
+        test_db_utils.insert_data(GENE, test_data_utils.get_trixie_gene_data())
 
         self.alchemist = AlchemyHandler(database=DB, username=USER, password=PWD)
         self.alchemist.build_engine()
@@ -818,7 +823,7 @@ class TestFindDomains4(unittest.TestCase):
         """Verify list of three statements (including one with
         duplicated HitID) are inserted."""
         domain_data1 = test_data_utils.get_trixie_domain_data()
-        test_db_utils.insert_domain_data(domain_data1)
+        test_db_utils.insert_data(DOMAIN, domain_data1)
         domain_table_results1 = test_db_utils.get_data(test_db_utils.domain_table_query)
         # Duplicate HitID
         statement1 = test_db_utils.domain_stmt(domain_data1)
@@ -1002,16 +1007,16 @@ class TestFindDomains5(unittest.TestCase):
 
     def setUp(self):
         test_db_utils.create_empty_test_db()
-        test_db_utils.insert_phage_data(test_data_utils.get_trixie_phage_data())
+        test_db_utils.insert_data(PHAGE, test_data_utils.get_trixie_phage_data())
 
         cds1 = test_data_utils.get_trixie_gene_data() # GeneID = "TRIXIE_0001"
         cds2 = test_data_utils.get_trixie_gene_data()
         cds3 = test_data_utils.get_trixie_gene_data()
         cds2["GeneID"] = "TRIXIE_0002"
         cds3["GeneID"] = "TRIXIE_0003"
-        test_db_utils.insert_gene_data(cds1)
-        test_db_utils.insert_gene_data(cds2)
-        test_db_utils.insert_gene_data(cds3)
+        test_db_utils.insert_data(GENE, cds1)
+        test_db_utils.insert_data(GENE, cds2)
+        test_db_utils.insert_data(GENE, cds3)
         stmt = get_gene_update_statement(0)
         test_db_utils.execute(stmt)
 
@@ -1180,7 +1185,7 @@ class TestFindDomains6(unittest.TestCase):
     def setUp(self):
         test_folder.mkdir()
         test_db_utils.create_empty_test_db()
-        test_db_utils.insert_phage_data(test_data_utils.get_trixie_phage_data())
+        test_db_utils.insert_data(PHAGE, test_data_utils.get_trixie_phage_data())
 
         # Translation from Trixie gene 35, contains multiple conserved domains.
         translation = (
@@ -1207,10 +1212,10 @@ class TestFindDomains6(unittest.TestCase):
         cds4["Translation"] = translation + "A"
         cds4["GeneID"] = "TRIXIE_0004"
 
-        test_db_utils.insert_gene_data(cds1)
-        test_db_utils.insert_gene_data(cds2)
-        test_db_utils.insert_gene_data(cds3)
-        test_db_utils.insert_gene_data(cds4)
+        test_db_utils.insert_data(GENE, cds1)
+        test_db_utils.insert_data(GENE, cds2)
+        test_db_utils.insert_data(GENE, cds3)
+        test_db_utils.insert_data(GENE, cds4)
 
         stmt = get_gene_update_statement(1)
         test_db_utils.execute(stmt)

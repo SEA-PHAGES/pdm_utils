@@ -34,6 +34,11 @@ gene_table_query = "SELECT * FROM gene;"
 gene_domain_table_query = "SELECT * FROM gene_domain;"
 domain_table_query = "SELECT * FROM domain;"
 version_table_query = "SELECT * FROM version;"
+trna_table_query = "SELECT * FROM trna;"
+tmrna_table_query = "SELECT * FROM tmrna;"
+
+
+
 
 # SQLAlchemy setup
 
@@ -125,7 +130,7 @@ def create_new_db(schema_filepath=None, db=DB, user=USER, pwd=PWD,
     if schema_filepath is not None:
         install_db(schema_filepath, db=db, user=user, pwd=pwd)
     if version_table_data is not None:
-        insert_version_data(version_table_data, db=db, user=user, pwd=pwd)
+        insert_data("version", version_table_data, db=db, user=user, pwd=pwd)
 
 def create_db(db=DB, user=USER, pwd=PWD):
     """Create a MySQL database for the test."""
@@ -168,14 +173,6 @@ def version_stmt(data_dict=VERSION_TABLE_DATA):
         )
     return statement
 
-def insert_version_data(data_dict=VERSION_TABLE_DATA, db=DB, user=USER, pwd=PWD):
-    """Insert data into the version table."""
-    # Unlike other tables, version table data is expected to have one row
-    # that reflects the structure of the database. So by default, data_dict
-    # has a default value.
-    statement = version_stmt(data_dict)
-    execute(statement, db=db, user=user, pwd=pwd)
-
 def domain_stmt(data_dict):
     """Construct SQL statement for inserting data into the domain table."""
     # No need to insert ID, since that is auto-incremented.
@@ -190,11 +187,6 @@ def domain_stmt(data_dict):
                     data_dict["Name"],
                     data_dict["Description"])
     return statement
-
-def insert_domain_data(data_dict, db=DB, user=USER, pwd=PWD):
-    """Insert data into the domain table."""
-    statement = domain_stmt(data_dict)
-    execute(statement, db=db, user=user, pwd=pwd)
 
 def gene_domain_stmt(data_dict):
     """Construct SQL statement for inserting data into the gene_domain table."""
@@ -211,13 +203,6 @@ def gene_domain_stmt(data_dict):
                     data_dict["QueryEnd"]
                     )
     return statement
-
-
-def insert_gene_domain_data(data_dict, db=DB, user=USER, pwd=PWD):
-    """Insert data into the gene_domain table."""
-    statement= gene_domain_stmt(data_dict)
-    execute(statement, db=db, user=user, pwd=pwd)
-
 
 def phage_stmt(data_dict):
     """Construct SQL statement for inserting data into the phage table."""
@@ -254,12 +239,6 @@ def phage_stmt(data_dict):
         )
     return statement
 
-def insert_phage_data(data_dict, db=DB, user=USER, pwd=PWD):
-    """Insert data into the phage table."""
-    statement = phage_stmt(data_dict)
-    execute(statement, db=db, user=user, pwd=pwd)
-
-
 def gene_stmt(data_dict):
     """Construct SQL statement for inserting data into the gene table."""
 
@@ -286,11 +265,60 @@ def gene_stmt(data_dict):
         )
     return statement
 
+def trna_stmt(data_dict):
+    """Construct SQL statement for inserting data into the trna table."""
 
-def insert_gene_data(data_dict, db=DB, user=USER, pwd=PWD):
-    """Insert data into the gene table."""
-    statement = gene_stmt(data_dict)
+    statement = (
+        "INSERT INTO trna "
+        "(GeneID, PhageID, Start, Stop, Length, Name, Orientation, Note, "
+        "LocusTag, AminoAcid, Anticodon, Structure, Source) "
+        "VALUES ("
+        f"'{data_dict['GeneID']}', '{data_dict['PhageID']}', "
+        f"{data_dict['Start']}, {data_dict['Stop']}, {data_dict['Length']}, "
+        f"'{data_dict['Name']}', '{data_dict['Orientation']}', "
+        f"'{data_dict['Note']}', '{data_dict['LocusTag']}', "
+        f"'{data_dict['AminoAcid']}', '{data_dict['Anticodon']}', "
+        f"'{data_dict['Structure']}', '{data_dict['Source']}');"
+        )
+    return statement
+
+def tmrna_stmt(data_dict):
+    """Construct SQL statement for inserting data into the tmrna table."""
+
+    statement = (
+        "INSERT INTO tmrna "
+        "(GeneID, PhageID, Start, Stop, Length, "
+        "Name, Orientation, Note, LocusTag, PeptideTag) "
+        "VALUES ("
+        f"'{data_dict['GeneID']}', '{data_dict['PhageID']}', "
+        f"{data_dict['Start']}, {data_dict['Stop']}, {data_dict['Length']}, "
+        f"'{data_dict['Name']}', '{data_dict['Orientation']}', "
+        f"'{data_dict['Note']}', '{data_dict['LocusTag']}', "
+        f"'{data_dict['PeptideTag']}');"
+        )
+
+    return statement
+
+def insert_data(table, data_dict, db=DB, user=USER, pwd=PWD):
+    """Insert data from a dictionary into a specific table."""
+    if table == "phage":
+        statement = phage_stmt(data_dict)
+    elif table == "gene_domain":
+        statement= gene_domain_stmt(data_dict)
+    elif table == "domain":
+        statement = domain_stmt(data_dict)
+    elif table == "gene":
+        statement = gene_stmt(data_dict)
+    elif table == "version":
+        statement = version_stmt(data_dict)
+    elif table == "trna":
+        statement = trna_stmt(data_dict)
+    elif table == "tmrna":
+        statement = tmrna_stmt(data_dict)
+    else:
+        statement = ""
     execute(statement, db=db, user=user, pwd=pwd)
+
 
 
 

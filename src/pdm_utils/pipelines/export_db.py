@@ -590,7 +590,7 @@ def get_genome_seqrecords(alchemist, values=[], verbose=False):
     return seqrecords
 
 def get_cds_seqrecords(alchemist, values=[], nucleotide=False, verbose=False):
-    cds_list = parse_cds_data(alchemist, values=values)
+    cds_list = parse_feature_data(alchemist, values=values)
 
     seqrecords = []
     genomes_dict = {}
@@ -837,10 +837,10 @@ def process_cds_features(phage_genome):
 #Functions to be evaluated for another module:
 #-----------------------------------------------------------------------------
 
-#Copy of mysqldb.parse_cds_data() with value subquerying.
+#Copy of mysqldb.parse_feature_data() with value subquerying.
 #Value subquerying needed for +300000 GeneID entries.
 #Unsure about function redundancy.
-def parse_cds_data(alchemist, values=[], limit=8000):
+def parse_feature_data(alchemist, values=[], limit=8000):
     """Returns Cds objects containing data parsed from a MySQL database.
 
     :param alchemist: A connected and fully built AlchemyHandler object.

@@ -1,15 +1,18 @@
 """ Unit tests for misc. functions that interact with a MySQL database."""
 
 
-import unittest
-from pdm_utils.functions import mysqldb
-from pdm_utils.classes import genome
-from pdm_utils.classes import cds
 from datetime import datetime
-from pdm_utils.classes import bundle
-from pdm_utils.constants import constants
+from pathlib import Path
+import sys
+import unittest
+
 from Bio.Seq import Seq
 
+from pdm_utils.classes import bundle
+from pdm_utils.classes import cds
+from pdm_utils.classes import genome
+from pdm_utils.constants import constants
+from pdm_utils.functions import mysqldb
 
 
 class TestMysqldbFunctions1(unittest.TestCase):
@@ -102,7 +105,6 @@ class TestMysqldbFunctions1(unittest.TestCase):
     def test_parse_gene_table_data_1(self):
         """Verify standard MySQL CDS data is parsed correctly
         from a data dictionary returned from a SQL query."""
-
         data_dict = {"GeneID": "L5_001",
                      "PhageID": "L5",
                      "Start": 10,
@@ -172,6 +174,153 @@ class TestMysqldbFunctions1(unittest.TestCase):
             self.assertEqual(cds1.locus_tag, "")
         with self.subTest():
             self.assertEqual(cds1.translation_table, 11)
+
+
+
+
+    def test_parse_trna_table_data_1(self):
+        """Verify standard MySQL tRNA data is parsed correctly
+        from a data dictionary returned from a SQL query."""
+        data_dict = {
+            "GeneID": "TRIXIE_0001",
+            "PhageID": "Trixie",
+            "Start": 100,
+            "Stop": 1100,
+            "Length": 1000,
+            "Name": "1",
+            "Orientation": "F",
+            "Note": "misc".encode("utf-8"),
+            "LocusTag": "SEA_TRIXIE_0001",
+            "AminoAcid": "Ala",
+            "Anticodon": "AAA",
+            "Structure": "AAAAAAAA".encode("utf-8"),
+            "Source": "aragorn"
+            }
+
+        trna1 = mysqldb.parse_trna_table_data(data_dict)
+
+        with self.subTest():
+            self.assertEqual(trna1.id, "TRIXIE_0001")
+        with self.subTest():
+            self.assertEqual(trna1.genome_id, "Trixie")
+        with self.subTest():
+            self.assertEqual(trna1.start, 100)
+        with self.subTest():
+            self.assertEqual(trna1.stop, 1100)
+        with self.subTest():
+            self.assertEqual(trna1.parts, 1)
+        with self.subTest():
+            self.assertEqual(trna1.length, 1000)
+        with self.subTest():
+            self.assertEqual(trna1.name, "1")
+        with self.subTest():
+            self.assertEqual(trna1.type, "tRNA")
+        with self.subTest():
+            self.assertEqual(trna1.orientation, "F")
+        with self.subTest():
+            self.assertEqual(trna1.locus_tag, "SEA_TRIXIE_0001")
+        with self.subTest():
+            self.assertEqual(trna1.note, "misc")
+        with self.subTest():
+            self.assertEqual(trna1.coordinate_format, "0_half_open")
+        with self.subTest():
+            self.assertEqual(trna1.amino_acid, "Ala")
+        with self.subTest():
+            self.assertEqual(trna1.anticodon, "AAA")
+        with self.subTest():
+            self.assertEqual(trna1.structure, "AAAAAAAA")
+        with self.subTest():
+            self.assertEqual(trna1.use, "aragorn")
+
+    def test_parse_trna_table_data_2(self):
+        """Verify truncated MySQL tRNA data is parsed correctly
+        from a data dictionary returned from a SQL query."""
+        data_dict = {
+            "GeneID": "TRIXIE_0001",
+            "PhageID": "Trixie",
+            "Start": 100,
+            "LocusTag": "SEA_TRIXIE_0001"
+            }
+
+        trna1 = mysqldb.parse_trna_table_data(data_dict)
+
+        with self.subTest():
+            self.assertEqual(trna1.id, "TRIXIE_0001")
+        with self.subTest():
+            self.assertEqual(trna1.genome_id, "Trixie")
+        with self.subTest():
+            self.assertEqual(trna1.start, 100)
+        with self.subTest():
+            self.assertEqual(trna1.locus_tag, "SEA_TRIXIE_0001")
+
+
+
+
+    def test_parse_tmrna_table_data_1(self):
+        """Verify standard MySQL tmRNA data is parsed correctly
+        from a data dictionary returned from a SQL query."""
+        data_dict = {
+            "GeneID": "TRIXIE_0001",
+            "PhageID": "Trixie",
+            "Start": 100,
+            "Stop": 1100,
+            "Length": 1000,
+            "Name": "1",
+            "Orientation": "F",
+            "Note": "misc".encode("utf-8"),
+            "LocusTag": "SEA_TRIXIE_0001",
+            "PeptideTag": "random"
+            }
+
+        tmrna1 = mysqldb.parse_tmrna_table_data(data_dict)
+
+        with self.subTest():
+            self.assertEqual(tmrna1.id, "TRIXIE_0001")
+        with self.subTest():
+            self.assertEqual(tmrna1.genome_id, "Trixie")
+        with self.subTest():
+            self.assertEqual(tmrna1.start, 100)
+        with self.subTest():
+            self.assertEqual(tmrna1.stop, 1100)
+        with self.subTest():
+            self.assertEqual(tmrna1.parts, 1)
+        with self.subTest():
+            self.assertEqual(tmrna1.length, 1000)
+        with self.subTest():
+            self.assertEqual(tmrna1.name, "1")
+        with self.subTest():
+            self.assertEqual(tmrna1.type, "tmRNA")
+        with self.subTest():
+            self.assertEqual(tmrna1.orientation, "F")
+        with self.subTest():
+            self.assertEqual(tmrna1.locus_tag, "SEA_TRIXIE_0001")
+        with self.subTest():
+            self.assertEqual(tmrna1.note, "misc")
+        with self.subTest():
+            self.assertEqual(tmrna1.coordinate_format, "0_half_open")
+        with self.subTest():
+            self.assertEqual(tmrna1.peptide_tag, "random")
+
+    def test_parse_tmrna_table_data_2(self):
+        """Verify truncated MySQL tmRNA data is parsed correctly
+        from a data dictionary returned from a SQL query."""
+        data_dict = {
+            "GeneID": "TRIXIE_0001",
+            "PhageID": "Trixie",
+            "Start": 100,
+            "LocusTag": "SEA_TRIXIE_0001",
+            }
+
+        tmrna1 = mysqldb.parse_tmrna_table_data(data_dict)
+
+        with self.subTest():
+            self.assertEqual(tmrna1.id, "TRIXIE_0001")
+        with self.subTest():
+            self.assertEqual(tmrna1.genome_id, "Trixie")
+        with self.subTest():
+            self.assertEqual(tmrna1.start, 100)
+        with self.subTest():
+            self.assertEqual(tmrna1.locus_tag, "SEA_TRIXIE_0001")
 
 
 

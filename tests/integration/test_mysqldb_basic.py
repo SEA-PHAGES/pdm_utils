@@ -33,6 +33,8 @@ COUNT_QUERY = "SELECT COUNT(*) FROM phage"
 PHAGE_QUERY = "SELECT * FROM phage"
 GENE_QUERY = "SELECT * FROM gene"
 
+PHAGE = "phage"
+GENE = "gene"
 
 # TODO this should be moved to test_db_utils
 TABLES_QUERY = ("SELECT table_name FROM information_schema.tables "
@@ -365,7 +367,7 @@ class TestMysqldbBasic3(unittest.TestCase):
         """Verify the correct number of phages is returned when
         the database contains one genome."""
         phage_data = test_data_utils.get_trixie_phage_data()
-        test_db_utils.insert_phage_data(phage_data)
+        test_db_utils.insert_data(PHAGE, phage_data)
         count = mysqldb_basic.get_table_count(self.engine, TABLE)
         self.assertEqual(count, 1)
 
@@ -380,7 +382,7 @@ class TestMysqldbBasic3(unittest.TestCase):
     def test_get_first_row_data_2(self):
         """Verify dictionary is returned when there is one row of data."""
         phage_data = test_data_utils.get_trixie_phage_data()
-        test_db_utils.insert_phage_data(phage_data)
+        test_db_utils.insert_data(PHAGE, phage_data)
         data = mysqldb_basic.get_first_row_data(self.engine, TABLE)
         self.assertTrue(COLUMN in data.keys())
 
@@ -390,8 +392,8 @@ class TestMysqldbBasic3(unittest.TestCase):
         phage_data2 = test_data_utils.get_trixie_phage_data()
         phage_data1["PhageID"] = "Trixie"
         phage_data2["PhageID"] = "L5"
-        test_db_utils.insert_phage_data(phage_data1)
-        test_db_utils.insert_phage_data(phage_data2)
+        test_db_utils.insert_data(PHAGE, phage_data1)
+        test_db_utils.insert_data(PHAGE, phage_data2)
         # Get all data from table just to confirm there is more than one row.
         all_data = test_db_utils.get_data(test_db_utils.phage_table_query)
         data = mysqldb_basic.get_first_row_data(self.engine, TABLE)
@@ -409,8 +411,8 @@ class TestMysqldbBasic3(unittest.TestCase):
         phage_data2 = test_data_utils.get_trixie_phage_data()
         phage_data1["PhageID"] = "Trixie"
         phage_data2["PhageID"] = "L5"
-        test_db_utils.insert_phage_data(phage_data1)
-        test_db_utils.insert_phage_data(phage_data2)
+        test_db_utils.insert_data(PHAGE, phage_data1)
+        test_db_utils.insert_data(PHAGE, phage_data2)
         data = mysqldb_basic.first(self.engine, PHAGE_QUERY, return_dict=True)
         self.assertTrue(COLUMN in data.keys())
 
@@ -420,8 +422,8 @@ class TestMysqldbBasic3(unittest.TestCase):
         phage_data2 = test_data_utils.get_trixie_phage_data()
         phage_data1["PhageID"] = "Trixie"
         phage_data2["PhageID"] = "L5"
-        test_db_utils.insert_phage_data(phage_data1)
-        test_db_utils.insert_phage_data(phage_data2)
+        test_db_utils.insert_data(PHAGE, phage_data1)
+        test_db_utils.insert_data(PHAGE, phage_data2)
         data = mysqldb_basic.first(self.engine, PHAGE_QUERY, return_dict=False)
         with self.subTest():
             self.assertIsInstance(data, tuple)
@@ -435,8 +437,8 @@ class TestMysqldbBasic3(unittest.TestCase):
         phage_data2 = test_data_utils.get_trixie_phage_data()
         phage_data1["PhageID"] = "Trixie"
         phage_data2["PhageID"] = "L5"
-        test_db_utils.insert_phage_data(phage_data1)
-        test_db_utils.insert_phage_data(phage_data2)
+        test_db_utils.insert_data(PHAGE, phage_data1)
+        test_db_utils.insert_data(PHAGE, phage_data2)
         count = mysqldb_basic.scalar(self.engine, COUNT_QUERY)
         self.assertEqual(count, 2)
 
@@ -492,7 +494,7 @@ class TestMysqldbBasic4(unittest.TestCase):
 
         phage_data_list = [phage_data1, phage_data2, phage_data3]
         for phage_data in phage_data_list:
-            test_db_utils.insert_phage_data(phage_data)
+            test_db_utils.insert_data(PHAGE, phage_data)
 
         gene_data1 = test_data_utils.get_trixie_gene_data()
         gene_data2 = test_data_utils.get_trixie_gene_data()
@@ -511,7 +513,7 @@ class TestMysqldbBasic4(unittest.TestCase):
 
         gene_data_list = [gene_data1, gene_data2, gene_data3, gene_data4]
         for gene_data in gene_data_list:
-            test_db_utils.insert_gene_data(gene_data)
+            test_db_utils.insert_data(GENE, gene_data)
 
 
     def tearDown(self):

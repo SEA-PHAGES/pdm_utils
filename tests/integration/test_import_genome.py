@@ -68,15 +68,17 @@ def count_status_from_dict(dict, *args):
 
 # The following integration tests user the 'pdm_anon' MySQL user.
 # It is expected that this user has all privileges for 'pdm_test_db' database.
-user = test_db_utils.USER
-pwd = test_db_utils.PWD
-db = test_db_utils.DB
+USER = test_db_utils.USER
+PWD = test_db_utils.PWD
+DB = test_db_utils.DB
 
 #sqlalchemy setup
-engine_string1 = test_db_utils.create_engine_string()
-engine_string2 = test_db_utils.create_engine_string(db="Actinobacteriophage")
+ENGINE_STRING1 = test_db_utils.create_engine_string()
+ENGINE_STRING2 = test_db_utils.create_engine_string(db="Actinobacteriophage")
 
 test_file_dir = Path(test_dir, "test_files")
+
+PHAGE = "phage"
 
 def count_contents(path_to_folder):
     count = 0
@@ -98,7 +100,7 @@ class TestImportGenome1(unittest.TestCase):
         self.test_flat_file1 = Path(test_file_dir, "test_flat_file_1.gb")
         self.test_flat_file2 = Path(test_file_dir, "test_flat_file_2.gb")
 
-        self.engine = sqlalchemy.create_engine(engine_string1, echo=False)
+        self.engine = sqlalchemy.create_engine(ENGINE_STRING1, echo=False)
 
         # Evaluation dict with all flags = True.
         self.eval_flags = eval_modes.get_eval_flag_dict("base")
@@ -305,9 +307,9 @@ class TestImportGenome1(unittest.TestCase):
         phage_data1["Accession"] = "BCD456"
         phage_data2["Accession"] = "XYZ123"
         phage_data3["Accession"] = "EFG789"
-        test_db_utils.insert_phage_data(phage_data1)
-        test_db_utils.insert_phage_data(phage_data2)
-        test_db_utils.insert_phage_data(phage_data3)
+        test_db_utils.insert_data(PHAGE, phage_data1)
+        test_db_utils.insert_data(PHAGE, phage_data2)
+        test_db_utils.insert_data(PHAGE, phage_data3)
         self.tkt1.type = "replace"
         self.tkt1.data_dict["host_genus"] = "retain"
         self.tkt1.data_add = set(["cluster", "subcluster",
@@ -347,9 +349,9 @@ class TestImportGenome1(unittest.TestCase):
         phage_data1["PhageID"] = "L5x"
         phage_data2["PhageID"] = "Trixie"
         phage_data3["PhageID"] = "D29"
-        test_db_utils.insert_phage_data(phage_data1)
-        test_db_utils.insert_phage_data(phage_data2)
-        test_db_utils.insert_phage_data(phage_data3)
+        test_db_utils.insert_data(PHAGE, phage_data1)
+        test_db_utils.insert_data(PHAGE, phage_data2)
+        test_db_utils.insert_data(PHAGE, phage_data3)
         self.tkt1.type = "replace"
         self.tkt1.data_dict["host_genus"] = "retain"
         self.tkt1.data_add = set(["cluster", "subcluster",
@@ -380,9 +382,9 @@ class TestImportGenome1(unittest.TestCase):
         phage_data1["PhageID"] = "L5x"
         phage_data2["PhageID"] = "Trixie"
         phage_data3["PhageID"] = "D29"
-        test_db_utils.insert_phage_data(phage_data1)
-        test_db_utils.insert_phage_data(phage_data2)
-        test_db_utils.insert_phage_data(phage_data3)
+        test_db_utils.insert_data(PHAGE, phage_data1)
+        test_db_utils.insert_data(PHAGE, phage_data2)
+        test_db_utils.insert_data(PHAGE, phage_data3)
         self.tkt1.type = "replace"
         self.tkt1.data_dict["host_genus"] = "retain"
         self.tkt1.data_add = set(["cluster", "subcluster",
@@ -516,9 +518,9 @@ class TestImportGenome1(unittest.TestCase):
         phage_data3["Cluster"] = "B"
         phage_data3["Subcluster"] = "NULL"
 
-        test_db_utils.insert_phage_data(phage_data1)
-        test_db_utils.insert_phage_data(phage_data2)
-        test_db_utils.insert_phage_data(phage_data3)
+        test_db_utils.insert_data(PHAGE, phage_data1)
+        test_db_utils.insert_data(PHAGE, phage_data2)
+        test_db_utils.insert_data(PHAGE, phage_data3)
 
         ref_dict = import_genome.get_mysql_reference_sets(self.engine)
         exp_keys = {"phage_id_set", "accession_set", "seq_set",
@@ -666,11 +668,11 @@ class TestImportGenome3(unittest.TestCase):
         self.input_folder = Path(self.base_dir, "input_folder")
         self.output_folder = Path(self.base_dir, "output_folder")
 
-        self.engine = sqlalchemy.create_engine(engine_string1, echo=False)
+        self.engine = sqlalchemy.create_engine(ENGINE_STRING1, echo=False)
 
         self.args_list = ["run.py",
                           "import",
-                          db,
+                          DB,
                           str(self.input_folder),
                           str(self.import_table),
                           "-g", "FILENAME",
@@ -694,7 +696,7 @@ class TestImportGenome3(unittest.TestCase):
         """Verify that correct args calls data_io."""
         self.input_folder.mkdir()
         self.output_folder.mkdir()
-        getpass_mock.side_effect = [user, pwd]
+        getpass_mock.side_effect = [USER, PWD]
 
         import_genome.main(self.args_list)
         self.assertTrue(data_io_mock.called)
@@ -706,7 +708,7 @@ class TestImportGenome3(unittest.TestCase):
     def test_main_2(self, sys_exit_mock, getpass_mock, data_io_mock):
         """Verify that invalid input folder calls sys exit."""
         self.output_folder.mkdir()
-        getpass_mock.side_effect = [user, pwd]
+        getpass_mock.side_effect = [USER, PWD]
         import_genome.main(self.args_list)
         self.assertTrue(sys_exit_mock.called)
 
@@ -719,7 +721,7 @@ class TestImportGenome3(unittest.TestCase):
         self.input_folder.mkdir()
         self.output_folder.mkdir()
         self.args_list[4] = ""
-        getpass_mock.side_effect = [user, pwd]
+        getpass_mock.side_effect = [USER, PWD]
         import_genome.main(self.args_list)
         self.assertTrue(sys_exit_mock.called)
 
@@ -734,7 +736,7 @@ class TestImportGenome3(unittest.TestCase):
         # Need to provide filename in a valid directory to create log file
         # since output folder is invalid.
         mnd_mock.return_value = Path(self.input_folder, "temp")
-        getpass_mock.side_effect = [user, pwd]
+        getpass_mock.side_effect = [USER, PWD]
         import_genome.main(self.args_list)
         self.assertTrue(sys_exit_mock.called)
 
@@ -767,7 +769,7 @@ class TestImportGenome3(unittest.TestCase):
         test_db_utils.execute("UPDATE version SET SchemaVersion = 0")
         self.input_folder.mkdir()
         self.output_folder.mkdir()
-        getpass_mock.side_effect = [user, pwd]
+        getpass_mock.side_effect = [USER, PWD]
         import_genome.main(self.args_list)
         self.assertTrue(sys_exit_mock.called)
 
@@ -911,7 +913,7 @@ class TestImportGenome5(unittest.TestCase):
         self.flat_file_l5 = Path(test_file_dir, "test_flat_file_1.gb")
         self.flat_file_trixie = Path(test_file_dir, "test_flat_file_6.gb")
 
-        self.engine = sqlalchemy.create_engine(engine_string2, echo=False)
+        self.engine = sqlalchemy.create_engine(ENGINE_STRING2, echo=False)
 
         # Evaluation dict with all flags = True.
         self.eval_flags = eval_modes.get_eval_flag_dict("base")
@@ -1368,7 +1370,7 @@ class TestImportGenome6(unittest.TestCase):
         self.output_folder = Path(self.base_dir, import_genome.RESULTS_FOLDER)
 
 
-        self.engine = sqlalchemy.create_engine(engine_string1, echo=False)
+        self.engine = sqlalchemy.create_engine(ENGINE_STRING1, echo=False)
 
         self.tkt1 = ticket.ImportTicket()
         self.tkt1.phage_id = "L5"

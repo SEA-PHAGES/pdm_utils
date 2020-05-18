@@ -546,7 +546,44 @@ def get_trixie_domain_data():
         }
     return dict
 
+def get_trixie_trna_data():
+    """Mock trna table data for Trixie.
 
+    Data is not accurate, but serves as simple test data."""
+    dict = {
+        "GeneID": "TRIXIE_0001",
+        "PhageID": "Trixie",
+        "Start": 100,
+        "Stop": 1100,
+        "Length": 1000,
+        "Name": "1",
+        "Orientation": "F",
+        "Note": "misc",
+        "LocusTag": "SEA_TRIXIE_0001",
+        "AminoAcid": "Ala",
+        "Anticodon": "AAA",
+        "Structure": "AAAAAAAA",
+        "Source": "aragorn",
+        }
+    return dict
+
+def get_trixie_tmrna_data():
+    """Mock tmrna table data for Trixie.
+
+    Data is not accurate, but serves as simple test data."""
+    dict = {
+        "GeneID": "TRIXIE_0001",
+        "PhageID": "Trixie",
+        "Start": 100,
+        "Stop": 1100,
+        "Length": 1000,
+        "Name": "1",
+        "Orientation": "F",
+        "Note": "misc",
+        "LocusTag": "SEA_TRIXIE_0001",
+        "PeptideTag": "random"
+        }
+    return dict
 
 
 ###Lifes genome

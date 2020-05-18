@@ -10,7 +10,7 @@ from Bio.Alphabet import IUPAC
 from Bio.Seq import Seq
 import sqlalchemy
 
-from pdm_utils.classes import cds, genome
+from pdm_utils.classes import cds, trna, tmrna, genome
 from pdm_utils.constants import constants
 from pdm_utils.functions import mysqldb
 
@@ -24,17 +24,30 @@ import test_data_utils
 
 # The following integration tests user the 'pdm_anon' MySQL user.
 # It is expected that this user has all privileges for 'pdm_test_db' database.
-user = test_db_utils.USER
-pwd = test_db_utils.PWD
-db = test_db_utils.DB
-db2 = "Actinobacteriophage"
-engine_string1 = test_db_utils.create_engine_string()
+ENGINE_STRING = test_db_utils.create_engine_string()
 
+# Remove the semi-colon at the very end.
+PHAGE_QUERY = test_db_utils.phage_table_query[:-1]
+GENE_QUERY = test_db_utils.gene_table_query[:-1]
+TRNA_QUERY = test_db_utils.trna_table_query[:-1]
+TMRNA_QUERY = test_db_utils.tmrna_table_query[:-1]
+
+PHAGE_QUERY2 = PHAGE_QUERY + " WHERE PhageID = 'Trixie'"
+GENE_QUERY2 = GENE_QUERY + " WHERE PhageID = 'Trixie'"
+TRNA_QUERY2 = TRNA_QUERY + " WHERE PhageID = 'Trixie'"
+TMRNA_QUERY2 = TMRNA_QUERY + " WHERE PhageID = 'Trixie'"
+
+# Globals for table name strings
+PHAGE = "phage"
+GENE = "gene"
+TRNA = "trna"
+TMRNA = "tmrna"
+VERSION = "version"
 
 class TestMysqldbFunctions1(unittest.TestCase):
 
     def setUp(self):
-        self.engine = sqlalchemy.create_engine(engine_string1, echo=False)
+        self.engine = sqlalchemy.create_engine(ENGINE_STRING, echo=False)
         test_db_utils.create_empty_test_db()
         phage_data1 = test_data_utils.get_trixie_phage_data()
         phage_data2 = test_data_utils.get_trixie_phage_data()
@@ -74,7 +87,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
 
         phage_data_list = [phage_data1, phage_data2, phage_data3]
         for phage_data in phage_data_list:
-            test_db_utils.insert_phage_data(phage_data)
+            test_db_utils.insert_data(PHAGE, phage_data)
 
         gene_data1 = test_data_utils.get_trixie_gene_data()
         gene_data2 = test_data_utils.get_trixie_gene_data()
@@ -93,11 +106,36 @@ class TestMysqldbFunctions1(unittest.TestCase):
 
         gene_data_list = [gene_data1, gene_data2, gene_data3, gene_data4]
         for gene_data in gene_data_list:
-            test_db_utils.insert_gene_data(gene_data)
+            test_db_utils.insert_data(GENE, gene_data)
 
-        self.phage_query = "SELECT * FROM phage"
-        self.gene_query = "SELECT * FROM gene"
+        trna_data1 = test_data_utils.get_trixie_trna_data()
+        trna_data2 = test_data_utils.get_trixie_trna_data()
+        trna_data3 = test_data_utils.get_trixie_trna_data()
 
+        trna_data1["PhageID"] = "Trixie"
+        trna_data2["PhageID"] = "Trixie"
+        trna_data3["PhageID"] = "D29"
+
+        trna_data1["GeneID"] = "Trixie_4"
+        trna_data2["GeneID"] = "Trixie_5"
+        trna_data3["GeneID"] = "D29_1"
+
+        trna_data_list = [trna_data1, trna_data2, trna_data3]
+        for trna_data in trna_data_list:
+            test_db_utils.insert_data(TRNA, trna_data)
+
+        tmrna_data1 = test_data_utils.get_trixie_tmrna_data()
+        tmrna_data2 = test_data_utils.get_trixie_tmrna_data()
+
+        tmrna_data1["PhageID"] = "Trixie"
+        tmrna_data2["PhageID"] = "L5"
+
+        tmrna_data1["GeneID"] = "Trixie_6"
+        tmrna_data2["GeneID"] = "L5_1"
+
+        tmrna_data_list = [tmrna_data1, tmrna_data2]
+        for tmrna_data in tmrna_data_list:
+            test_db_utils.insert_data(TMRNA, tmrna_data)
 
     def tearDown(self):
         self.engine.dispose()
@@ -106,15 +144,20 @@ class TestMysqldbFunctions1(unittest.TestCase):
 
 
 
-    # TODO not sure if this is needed.
     def test_verify_db_setup(self):
         """Confirm that the database was setup correctly for the tests."""
         phage_data = test_db_utils.get_data(test_db_utils.phage_table_query)
         gene_data = test_db_utils.get_data(test_db_utils.gene_table_query)
+        trna_data = test_db_utils.get_data(test_db_utils.trna_table_query)
+        tmrna_data = test_db_utils.get_data(test_db_utils.tmrna_table_query)
         with self.subTest():
             self.assertEqual(len(phage_data), 3)
         with self.subTest():
             self.assertEqual(len(gene_data), 4)
+        with self.subTest():
+            self.assertEqual(len(trna_data), 3)
+        with self.subTest():
+            self.assertEqual(len(tmrna_data), 2)
 
 
     def test_create_seq_set_1(self):
@@ -126,40 +169,46 @@ class TestMysqldbFunctions1(unittest.TestCase):
             self.assertTrue(Seq("ATCG", IUPAC.ambiguous_dna) in result)
 
 
+
+
     def test_parse_genome_data_1(self):
         """Verify that a Genome object is constructed correctly for a
         valid PhageID."""
         genome_list = mysqldb.parse_genome_data(self.engine,
-                        phage_id_list=["L5"], phage_query=self.phage_query,
+                        phage_id_list=["Trixie"], phage_query=PHAGE_QUERY,
                         gnm_type="mysql")
         with self.subTest():
             self.assertEqual(len(genome_list), 1)
         with self.subTest():
-            self.assertEqual(genome_list[0].id, "L5")
+            self.assertEqual(genome_list[0].id, "Trixie")
         with self.subTest():
-            self.assertEqual(genome_list[0].seq, "ATCG")
+            self.assertEqual(genome_list[0].seq, "AATT")
         with self.subTest():
             self.assertEqual(genome_list[0].type, "mysql")
         with self.subTest():
             self.assertEqual(genome_list[0].date, constants.EMPTY_DATE)
         with self.subTest():
             self.assertEqual(len(genome_list[0].cds_features), 0)
+        with self.subTest():
+            self.assertEqual(len(genome_list[0].trna_features), 0)
+        with self.subTest():
+            self.assertEqual(len(genome_list[0].tmrna_features), 0)
 
     def test_parse_genome_data_2(self):
         """Verify that an empty Genome object list is constructed for an
         invalid PhageID."""
         genome_list = mysqldb.parse_genome_data(
                           self.engine, phage_id_list=["EagleEye"],
-                          phage_query=self.phage_query)
+                          phage_query=PHAGE_QUERY)
         self.assertEqual(len(genome_list), 0)
 
     def test_parse_genome_data_3(self):
-        """Verify that a Genome object with CDS features
+        """Verify that a Genome object with CDS, tRNA, and tmRNA features
         is constructed correctly for a valid PhageID."""
         genome_list = mysqldb.parse_genome_data(
                         self.engine, phage_id_list=["Trixie"],
-                        phage_query=self.phage_query,
-                        gene_query=self.gene_query)
+                        phage_query=PHAGE_QUERY, gene_query=GENE_QUERY,
+                        trna_query=TRNA_QUERY, tmrna_query=TMRNA_QUERY)
         with self.subTest():
             self.assertEqual(len(genome_list), 1)
         with self.subTest():
@@ -174,13 +223,21 @@ class TestMysqldbFunctions1(unittest.TestCase):
             self.assertEqual(len(genome_list[0].cds_features), 3)
         with self.subTest():
             self.assertEqual(genome_list[0].cds_features[0].genome_length, 4)
+        with self.subTest():
+            self.assertEqual(len(genome_list[0].trna_features), 2)
+        with self.subTest():
+            self.assertEqual(genome_list[0].trna_features[0].genome_length, 4)
+        with self.subTest():
+            self.assertEqual(len(genome_list[0].tmrna_features), 1)
+        with self.subTest():
+            self.assertEqual(genome_list[0].tmrna_features[0].genome_length, 4)
 
     def test_parse_genome_data_4(self):
-        """Verify that multiple Genome objects with CDS features
+        """Verify that multiple Genome objects with CDS, tRNA, and tmRNA features
         are constructed correctly for multiple valid PhageIDs."""
-        genome_list = mysqldb.parse_genome_data(
-                        self.engine, phage_query=self.phage_query,
-                        gene_query=self.gene_query)
+        genome_list = mysqldb.parse_genome_data(self.engine,
+                                phage_query=PHAGE_QUERY, gene_query=GENE_QUERY,
+                                trna_query=TRNA_QUERY, tmrna_query=TMRNA_QUERY)
 
         genome_dict = {}
         for gnm in genome_list:
@@ -199,22 +256,39 @@ class TestMysqldbFunctions1(unittest.TestCase):
             self.assertEqual(
                 genome_dict["Trixie"].cds_features[1].genome_length, 4)
         with self.subTest():
+            self.assertEqual(len(genome_dict["Trixie"].trna_features), 2)
+        with self.subTest():
+            self.assertEqual(len(genome_dict["Trixie"].tmrna_features), 1)
+        with self.subTest():
             self.assertEqual(len(genome_dict["D29"].cds_features), 1)
         with self.subTest():
             self.assertEqual(
                 genome_dict["D29"].cds_features[0].genome_length, 5)
         with self.subTest():
+            self.assertEqual(len(genome_dict["D29"].trna_features), 1)
+        with self.subTest():
+            self.assertEqual(genome_dict["D29"].trna_features[0].id, "D29_1")
+        with self.subTest():
+            self.assertEqual(len(genome_dict["D29"].tmrna_features), 0)
+        with self.subTest():
             self.assertEqual(len(genome_dict["L5"].cds_features), 0)
+        with self.subTest():
+            self.assertEqual(len(genome_dict["L5"].trna_features), 0)
+        with self.subTest():
+            self.assertEqual(len(genome_dict["L5"].tmrna_features), 1)
+        with self.subTest():
+            self.assertEqual(genome_dict["L5"].tmrna_features[0].id, "L5_1")
 
 
 
 
-    def test_parse_cds_data_1(self):
+    def test_parse_feature_data_1(self):
         """Verify that a Cds object is constructed correctly for a
         valid PhageID."""
-        cds_list = mysqldb.parse_cds_data(self.engine, column="PhageID",
-                                             phage_id_list=["Trixie"],
-                                             query=self.gene_query)
+        cds_list = mysqldb.parse_feature_data(self.engine, "cds",
+                                              column="PhageID",
+                                              phage_id_list=["Trixie"],
+                                              query=GENE_QUERY)
         with self.subTest():
             self.assertEqual(len(cds_list), 3)
         with self.subTest():
@@ -222,20 +296,61 @@ class TestMysqldbFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(cds_list[0].genome_id, "Trixie")
 
-    def test_parse_cds_data_2(self):
+    def test_parse_feature_data_2(self):
         """Verify that an empty Cds object list is constructed for an
         invalid PhageID."""
-        cds_list = mysqldb.parse_cds_data(self.engine, column="PhageID",
-                                          phage_id_list=["L5"],
-                                          query=self.gene_query)
+        cds_list = mysqldb.parse_feature_data(self.engine, "cds",
+                                              column="PhageID",
+                                              phage_id_list=["L5"],
+                                              query=GENE_QUERY)
         self.assertEqual(len(cds_list), 0)
 
-    def test_parse_cds_data_3(self):
+    def test_parse_feature_data_3(self):
         """Verify that Cds objects are constructed correctly for multiple
         valid PhageID when the phage_id parameter is not specified."""
-        cds_list = mysqldb.parse_cds_data(self.engine, query=self.gene_query)
+        cds_list = mysqldb.parse_feature_data(self.engine, "cds",
+                                              query=GENE_QUERY)
         with self.subTest():
             self.assertEqual(len(cds_list), 4)
+
+    def test_parse_feature_data_4(self):
+        """Verify that a TrnaFeature object is constructed correctly for a
+        valid PhageID."""
+        ftr_list = mysqldb.parse_feature_data(self.engine, "trna",
+                                              column="PhageID",
+                                              phage_id_list=["Trixie"],
+                                              query=TRNA_QUERY)
+        with self.subTest():
+            self.assertEqual(len(ftr_list), 2)
+        with self.subTest():
+            self.assertEqual(ftr_list[0].id, "Trixie_4")
+        with self.subTest():
+            self.assertEqual(ftr_list[0].genome_id, "Trixie")
+
+    def test_parse_feature_data_5(self):
+        """Verify that a TmrnaFeature object is constructed correctly for a
+        valid PhageID."""
+        ftr_list = mysqldb.parse_feature_data(self.engine, "tmrna",
+                                              column="PhageID",
+                                              phage_id_list=["Trixie"],
+                                              query=TMRNA_QUERY)
+        with self.subTest():
+            self.assertEqual(len(ftr_list), 1)
+        with self.subTest():
+            self.assertEqual(ftr_list[0].id, "Trixie_6")
+        with self.subTest():
+            self.assertEqual(ftr_list[0].genome_id, "Trixie")
+
+    def test_parse_feature_data_6(self):
+        """Verify that a dictionary is returned for an invalid feature type."""
+        ftr_list = mysqldb.parse_feature_data(self.engine, "invalid",
+                                              column="PhageID",
+                                              phage_id_list=["Trixie"],
+                                              query=TMRNA_QUERY)
+        with self.subTest():
+            self.assertEqual(len(ftr_list), 1)
+        with self.subTest():
+            self.assertIsInstance(ftr_list[0], dict)
 
 
 
@@ -243,7 +358,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
 class TestMysqldbFunctions2(unittest.TestCase):
 
     def setUp(self):
-        self.engine = sqlalchemy.create_engine(engine_string1, echo=False)
+        self.engine = sqlalchemy.create_engine(ENGINE_STRING, echo=False)
         test_db_utils.create_empty_test_db()
         test_db_utils.execute("TRUNCATE version")
 
@@ -320,7 +435,7 @@ class TestMysqldbFunctions2(unittest.TestCase):
     def test_change_version_1(self):
         """Verify the version is incremented by 1."""
         data = {"Version": 10, "SchemaVersion": 1}
-        test_db_utils.insert_version_data(data)
+        test_db_utils.insert_data(VERSION, data)
         mysqldb.change_version(self.engine)
         result = test_db_utils.get_data(test_db_utils.version_table_query)
         output_value = result[0]["Version"]
@@ -329,7 +444,7 @@ class TestMysqldbFunctions2(unittest.TestCase):
     def test_change_version_2(self):
         """Verify the version is incremented by 5."""
         data = {"Version": 10, "SchemaVersion": 1}
-        test_db_utils.insert_version_data(data)
+        test_db_utils.insert_data(VERSION, data)
         mysqldb.change_version(self.engine, amount=5)
         result = test_db_utils.get_data(test_db_utils.version_table_query)
         output_value = result[0]["Version"]
@@ -338,7 +453,7 @@ class TestMysqldbFunctions2(unittest.TestCase):
     def test_change_version_3(self):
         """Verify the version is decremented by 5."""
         data = {"Version": 10, "SchemaVersion": 1}
-        test_db_utils.insert_version_data(data)
+        test_db_utils.insert_data(VERSION, data)
         mysqldb.change_version(self.engine, amount=-5)
         result = test_db_utils.get_data(test_db_utils.version_table_query)
         output_value = result[0]["Version"]
@@ -350,7 +465,7 @@ class TestMysqldbFunctions2(unittest.TestCase):
 class TestMysqldbFunctions3(unittest.TestCase):
 
     def setUp(self):
-        self.engine = sqlalchemy.create_engine(engine_string1, echo=False)
+        self.engine = sqlalchemy.create_engine(ENGINE_STRING, echo=False)
         test_db_utils.create_empty_test_db()
         phage_data = test_data_utils.get_trixie_phage_data()
         phage_data["PhageID"] = "Trixie"
@@ -361,9 +476,7 @@ class TestMysqldbFunctions3(unittest.TestCase):
         phage_data["Sequence"] = "atcg"
         phage_data["Length"] = 6
         phage_data["DateLastModified"] = constants.EMPTY_DATE
-        test_db_utils.insert_phage_data(phage_data)
-        self.phage_query = "SELECT * FROM phage WHERE PhageID = 'Trixie'"
-        self.gene_query = "SELECT * FROM gene WHERE PhageID = 'Trixie'"
+        test_db_utils.insert_data(PHAGE, phage_data)
 
 
     def tearDown(self):
@@ -395,7 +508,7 @@ class TestMysqldbFunctions3(unittest.TestCase):
         cds1.locus_tag = "TAG1"
         statement = mysqldb.create_gene_table_insert(cds1)
         test_db_utils.execute(statement)
-        result = test_db_utils.get_data(self.gene_query)
+        result = test_db_utils.get_data(GENE_QUERY2)
         results = result[0]
         exp = ("""INSERT INTO gene """
                """(GeneID, PhageID, Start, Stop, Length, Name, """
@@ -451,7 +564,7 @@ class TestMysqldbFunctions3(unittest.TestCase):
         cds1.locus_tag = ""
         statement = mysqldb.create_gene_table_insert(cds1)
         test_db_utils.execute(statement)
-        result = test_db_utils.get_data(self.gene_query)
+        result = test_db_utils.get_data(GENE_QUERY2)
         results = result[0]
         exp = ("""INSERT INTO gene """
                """(GeneID, PhageID, Start, Stop, Length, Name, """
@@ -469,12 +582,122 @@ class TestMysqldbFunctions3(unittest.TestCase):
 
 
 
+    def test_create_trna_table_insert_1(self):
+        """Verify trna table INSERT statement is created correctly when
+        locus_tag, note, and structure, and use are not empty."""
+        # Note: even though this function returns a string and doesn't
+        # actually utilize a MySQL database, this test ensures
+        # that the returned statement will function properly in MySQL.
+        trna1 = trna.TrnaFeature()
+        trna1.id = "Trixie_1"
+        trna1.genome_id = "Trixie"
+        trna1.name = "1"
+        trna1.locus_tag = "TAG1"
+        trna1.start = 5
+        trna1.stop = 10
+        trna1.length = 200
+        trna1.orientation = "F"
+        trna1.note = "misc"
+        trna1.amino_acid = "Ala"
+        trna1.anticodon = "AAA"
+        trna1.structure = "random"
+        trna1.use = "aragorn"
+        statement = mysqldb.create_trna_table_insert(trna1)
+        test_db_utils.execute(statement)
+        result = test_db_utils.get_data(TRNA_QUERY2)
+        results = result[0]
+        exp = ("""INSERT INTO trna """
+               """(GeneID, PhageID, Start, Stop, Length, """
+               """Name, Orientation, Note, LocusTag, AminoAcid, Anticodon, """
+               """Structure, Source) """
+               """VALUES """
+               """("Trixie_1", "Trixie", 5, 10, 200, "1", "F", "misc", """
+               """"TAG1", "Ala", "AAA", "random", "aragorn");""")
+
+        with self.subTest():
+            self.assertEqual(statement, exp)
+        with self.subTest():
+            self.assertEqual(results["GeneID"], "Trixie_1")
+        with self.subTest():
+            self.assertEqual(results["PhageID"], "Trixie")
+        with self.subTest():
+            self.assertEqual(results["Start"], 5)
+        with self.subTest():
+            self.assertEqual(results["Stop"], 10)
+        with self.subTest():
+            self.assertEqual(results["Length"], 200)
+        with self.subTest():
+            self.assertEqual(results["Name"], "1")
+        with self.subTest():
+            self.assertEqual(results["Orientation"], "F")
+        with self.subTest():
+            self.assertEqual(results["Note"].decode("utf-8"), "misc")
+        with self.subTest():
+            self.assertEqual(results["LocusTag"], "TAG1")
+        with self.subTest():
+            self.assertEqual(results["Structure"].decode("utf-8"), "random")
+        with self.subTest():
+            self.assertEqual(results["AminoAcid"], "Ala")
+        with self.subTest():
+            self.assertEqual(results["Anticodon"], "AAA")
+        with self.subTest():
+            self.assertEqual(results["Source"], "aragorn")
+
+
+    def test_create_trna_table_insert_2(self):
+        """Verify trna table INSERT statement is created correctly when
+        locus_tag, note, and structure, and use are empty."""
+        # Note: even though this function returns a string and doesn't
+        # actually utilize a MySQL database, this test ensures
+        # that the returned statement will function properly in MySQL.
+        trna1 = trna.TrnaFeature()
+        trna1.id = "Trixie_1"
+        trna1.genome_id = "Trixie"
+        trna1.name = "1"
+        trna1.locus_tag = ""
+        trna1.start = 5
+        trna1.stop = 10
+        trna1.length = 200
+        trna1.orientation = "F"
+        trna1.note = ""
+        trna1.amino_acid = "Ala"
+        trna1.anticodon = "AAA"
+        trna1.structure = ""
+        trna1.use = None
+        statement = mysqldb.create_trna_table_insert(trna1)
+        test_db_utils.execute(statement)
+        result = test_db_utils.get_data(TRNA_QUERY2)
+        results = result[0]
+        exp = ("""INSERT INTO trna """
+               """(GeneID, PhageID, Start, Stop, Length, """
+               """Name, Orientation, Note, LocusTag, AminoAcid, Anticodon, """
+               """Structure, Source) """
+               """VALUES """
+               """("Trixie_1", "Trixie", 5, 10, 200, "1", "F", NULL, """
+               """NULL, "Ala", "AAA", NULL, NULL);""")
+
+        with self.subTest():
+            self.assertEqual(statement, exp)
+        with self.subTest():
+            self.assertEqual(results["GeneID"], "Trixie_1")
+        with self.subTest():
+            self.assertEqual(results["Note"], None)
+        with self.subTest():
+            self.assertEqual(results["LocusTag"], None)
+        with self.subTest():
+            self.assertEqual(results["Structure"], None)
+        with self.subTest():
+            self.assertEqual(results["Source"], None)
+
+
+
+
     def test_create_update_1(self):
         """Verify correct Cluster statement is created for a non-singleton."""
         statement = mysqldb.create_update(
             "phage", "Cluster", "B", "PhageID", "Trixie")
         test_db_utils.execute(statement)
-        result = test_db_utils.get_data(self.phage_query)
+        result = test_db_utils.get_data(PHAGE_QUERY2)
         results = result[0]
         exp = "UPDATE phage SET Cluster = 'B' WHERE PhageID = 'Trixie';"
         with self.subTest():
@@ -487,7 +710,7 @@ class TestMysqldbFunctions3(unittest.TestCase):
         statement = mysqldb.create_update(
             "phage", "Cluster", "Singleton", "PhageID", "Trixie")
         test_db_utils.execute(statement)
-        result = test_db_utils.get_data(self.phage_query)
+        result = test_db_utils.get_data(PHAGE_QUERY2)
         results = result[0]
         exp = "UPDATE phage SET Cluster = NULL WHERE PhageID = 'Trixie';"
         with self.subTest():
@@ -501,7 +724,7 @@ class TestMysqldbFunctions3(unittest.TestCase):
         statement = mysqldb.create_update(
             "phage", "Subcluster", "A2", "PhageID", "Trixie")
         test_db_utils.execute(statement)
-        result = test_db_utils.get_data(self.phage_query)
+        result = test_db_utils.get_data(PHAGE_QUERY2)
         results = result[0]
         exp = "UPDATE phage SET Subcluster = 'A2' WHERE PhageID = 'Trixie';"
         with self.subTest():
@@ -516,13 +739,13 @@ class TestMysqldbFunctions3(unittest.TestCase):
         gene_data["PhageID"] = "Trixie"
         gene_data["Notes"] = "none"
         gene_data["GeneID"] = "Trixie_1"
-        test_db_utils.insert_gene_data(gene_data)
+        test_db_utils.insert_data(GENE, gene_data)
 
         # Second run the update statement.
         statement = mysqldb.create_update(
             "gene", "Notes", "Repressor", "GeneID", "Trixie_1")
         test_db_utils.execute(statement)
-        result = test_db_utils.get_data(self.gene_query)
+        result = test_db_utils.get_data(GENE_QUERY2)
         results = result[0]
         exp = "UPDATE gene SET Notes = 'Repressor' WHERE GeneID = 'Trixie_1';"
         with self.subTest():
@@ -536,7 +759,7 @@ class TestMysqldbFunctions3(unittest.TestCase):
 class TestMysqldbFunctions4(unittest.TestCase):
 
     def setUp(self):
-        self.engine = sqlalchemy.create_engine(engine_string1, echo=False)
+        self.engine = sqlalchemy.create_engine(ENGINE_STRING, echo=False)
         test_db_utils.create_empty_test_db()
 
         phage_data1 = test_data_utils.get_trixie_phage_data()
@@ -548,7 +771,7 @@ class TestMysqldbFunctions4(unittest.TestCase):
         phage_data1["Sequence"] = "atcg"
         phage_data1["Length"] = 6
         phage_data1["DateLastModified"] = constants.EMPTY_DATE
-        test_db_utils.insert_phage_data(phage_data1)
+        test_db_utils.insert_data(PHAGE, phage_data1)
 
         gene_data1 = test_data_utils.get_trixie_gene_data()
         gene_data2 = test_data_utils.get_trixie_gene_data()
@@ -559,11 +782,8 @@ class TestMysqldbFunctions4(unittest.TestCase):
         gene_data1["GeneID"] = "Trixie_1"
         gene_data2["GeneID"] = "Trixie_2"
 
-        test_db_utils.insert_gene_data(gene_data1)
-        test_db_utils.insert_gene_data(gene_data2)
-
-        self.phage_query = "SELECT * FROM phage where PhageID = 'Trixie'"
-        self.gene_query = "SELECT * FROM gene where PhageID = 'Trixie'"
+        test_db_utils.insert_data(GENE, gene_data1)
+        test_db_utils.insert_data(GENE, gene_data2)
 
     def tearDown(self):
         self.engine.dispose()
@@ -576,7 +796,7 @@ class TestMysqldbFunctions4(unittest.TestCase):
         """Verify correct DELETE statement is created
         for a PhageID in the phage table."""
         # First, retrieve the current state of the phage table.
-        results1 = test_db_utils.get_data(self.phage_query)
+        results1 = test_db_utils.get_data(PHAGE_QUERY2)
         results1_phageids = set()
         for dict in results1:
             results1_phageids.add(dict["PhageID"])
@@ -586,7 +806,7 @@ class TestMysqldbFunctions4(unittest.TestCase):
         test_db_utils.execute(statement)
 
         # Third, retrieve the current state of the phage table.
-        results2 = test_db_utils.get_data(self.phage_query)
+        results2 = test_db_utils.get_data(PHAGE_QUERY2)
         results2_phageids = set()
         for dict in results2:
             results2_phageids.add(dict["PhageID"])
@@ -604,7 +824,7 @@ class TestMysqldbFunctions4(unittest.TestCase):
         for a single GeneID in the gene table."""
 
         # First, retrieve the current state of the gene table.
-        results1 = test_db_utils.get_data(self.gene_query)
+        results1 = test_db_utils.get_data(GENE_QUERY2)
         results1_phageids = set()
         results1_geneids = set()
         for dict in results1:
@@ -616,7 +836,7 @@ class TestMysqldbFunctions4(unittest.TestCase):
         test_db_utils.execute(statement)
 
         # Third, retrieve the current state of the gene table.
-        results2 = test_db_utils.get_data(self.gene_query)
+        results2 = test_db_utils.get_data(GENE_QUERY2)
         results2_phageids = set()
         results2_geneids = set()
         for dict in results2:

@@ -8,7 +8,7 @@ from Bio.Alphabet import IUPAC
 from Bio.Seq import Seq
 import sqlalchemy
 
-from pdm_utils.classes import cds
+from pdm_utils.classes import cds, trna, tmrna
 from pdm_utils.classes import genome
 from pdm_utils.classes import genomepair
 from pdm_utils.constants import constants
@@ -127,84 +127,247 @@ def parse_gene_table_data(data_dict, trans_table=11):
     :rtype: Cds
     """
 
-    cds_ftr = cds.Cds()
-    cds_ftr.type = "CDS"
+    ftr = cds.Cds()
+    ftr.type = "CDS"
     try:
-        cds_ftr.id = data_dict["GeneID"]
+        ftr.id = data_dict["GeneID"]
     except:
         pass
 
     try:
-        cds_ftr.genome_id = data_dict["PhageID"]
+        ftr.genome_id = data_dict["PhageID"]
     except:
         pass
 
     try:
-        cds_ftr.start = int(data_dict["Start"])
+        ftr.start = int(data_dict["Start"])
     except:
         pass
 
     try:
-        cds_ftr.stop = int(data_dict["Stop"])
+        ftr.stop = int(data_dict["Stop"])
     except:
         pass
 
     try:
-        cds_ftr.parts = int(data_dict["Parts"])
+        ftr.parts = int(data_dict["Parts"])
     except:
         pass
 
-    cds_ftr.coordinate_format = "0_half_open"
+    ftr.coordinate_format = "0_half_open"
 
     try:
-        cds_ftr.length = int(data_dict["Length"])
-    except:
-        pass
-
-    try:
-        cds_ftr.name = data_dict["Name"]
+        ftr.length = int(data_dict["Length"])
     except:
         pass
 
     try:
-        cds_ftr.set_translation(data_dict["Translation"].decode("utf-8"))
+        ftr.name = data_dict["Name"]
     except:
         pass
 
     try:
-        cds_ftr.orientation = data_dict["Orientation"]
+        ftr.set_translation(data_dict["Translation"].decode("utf-8"))
     except:
         pass
 
     try:
-        cds_ftr.description = data_dict["Notes"].decode("utf-8")
+        ftr.orientation = data_dict["Orientation"]
     except:
         pass
 
     try:
-        cds_ftr.set_locus_tag(data_dict["LocusTag"])
+        ftr.description = data_dict["Notes"].decode("utf-8")
     except:
         pass
 
     try:
-        cds_ftr.pham_id = int(data_dict["PhamID"])
+        ftr.set_locus_tag(data_dict["LocusTag"])
     except:
         pass
 
     try:
-        cds_ftr.domain_status = int(data_dict["DomainStatus"])
+        ftr.pham_id = int(data_dict["PhamID"])
     except:
         pass
 
     try:
-        cds_ftr.translation_table = trans_table
+        ftr.domain_status = int(data_dict["DomainStatus"])
     except:
         pass
-    return cds_ftr
+
+    try:
+        ftr.translation_table = trans_table
+    except:
+        pass
+
+    return ftr
 
 
+# TODO Christian review
+def parse_trna_table_data(data_dict):
+    """Parse a MySQL database dictionary to create a TrnaFeature object.
 
-def parse_cds_data(engine, column=None, phage_id_list=None, query=None):
+    :param data_dict:
+        Dictionary of data retrieved from the gene table.
+    :type data_dict: dict
+    :returns: A pdm_utils TrnaFeature object.
+    :rtype: TrnaFeature
+    """
+
+    ftr = trna.TrnaFeature()
+    ftr.type = "tRNA"
+
+    try:
+        ftr.id = data_dict["GeneID"]
+    except:
+        pass
+
+    try:
+        ftr.genome_id = data_dict["PhageID"]
+    except:
+        pass
+
+    try:
+        ftr.start = int(data_dict["Start"])
+    except:
+        pass
+
+    try:
+        ftr.stop = int(data_dict["Stop"])
+    except:
+        pass
+
+    try:
+        ftr.length = int(data_dict["Length"])
+    except:
+        pass
+
+    try:
+        ftr.name = data_dict["Name"]
+    except:
+        pass
+
+    try:
+        ftr.orientation = data_dict["Orientation"]
+    except:
+        pass
+
+    try:
+        ftr.set_locus_tag(data_dict["LocusTag"])
+    except:
+        pass
+
+    try:
+        ftr.note = data_dict["Note"].decode("utf-8")
+    except:
+        pass
+
+    try:
+        ftr.amino_acid = data_dict["AminoAcid"]
+    except:
+        pass
+
+    try:
+        ftr.anticodon = data_dict["Anticodon"]
+    except:
+        pass
+
+    try:
+        ftr.structure = data_dict["Structure"].decode("utf-8")
+    except:
+        pass
+
+    try:
+        ftr.use = data_dict["Source"]
+    except:
+        pass
+
+    try:
+        ftr.parts = 1
+    except:
+        pass
+
+    ftr.coordinate_format = "0_half_open"
+
+    return ftr
+
+# TODO Christian review
+def parse_tmrna_table_data(data_dict):
+    """Parse a MySQL database dictionary to create a TmrnaFeature object.
+
+    :param data_dict:
+        Dictionary of data retrieved from the gene table.
+    :type data_dict: dict
+    :returns: A pdm_utils TmrnaFeature object.
+    :rtype: TmrnaFeature
+    """
+
+    ftr = tmrna.TmrnaFeature()
+    ftr.type = "tmRNA"
+
+    try:
+        ftr.id = data_dict["GeneID"]
+    except:
+        pass
+
+    try:
+        ftr.genome_id = data_dict["PhageID"]
+    except:
+        pass
+
+    try:
+        ftr.start = int(data_dict["Start"])
+    except:
+        pass
+
+    try:
+        ftr.stop = int(data_dict["Stop"])
+    except:
+        pass
+
+    try:
+        ftr.length = int(data_dict["Length"])
+    except:
+        pass
+
+    try:
+        ftr.name = data_dict["Name"]
+    except:
+        pass
+
+    try:
+        ftr.orientation = data_dict["Orientation"]
+    except:
+        pass
+
+    try:
+        ftr.set_locus_tag(data_dict["LocusTag"])
+    except:
+        pass
+
+    try:
+        ftr.note = data_dict["Note"].decode("utf-8")
+    except:
+        pass
+
+    try:
+        ftr.peptide_tag = data_dict["PeptideTag"]
+    except:
+        pass
+
+    try:
+        ftr.parts = 1
+    except:
+        pass
+
+    ftr.coordinate_format = "0_half_open"
+
+    return ftr
+
+
+def parse_feature_data(engine, ftr_type, column=None, phage_id_list=None,
+                       query=None):
     """Returns Cds objects containing data parsed from a
     MySQL database.
 
@@ -214,6 +377,9 @@ def parse_cds_data(engine, column=None, phage_id_list=None, query=None):
     :param query:
         This parameter is passed directly to the 'retrieve_data' function.
     :type query: str
+    :param ftr_type:
+        Indicates the type of features retrieved.
+    :type ftr_type: str
     :param column:
         This parameter is passed directly to the 'retrieve_data' function.
     :type column: str
@@ -223,17 +389,28 @@ def parse_cds_data(engine, column=None, phage_id_list=None, query=None):
     :returns: A list of pdm_utils Cds objects.
     :rtype: list
     """
-    cds_list = []
-    result_list = mysqldb_basic.retrieve_data(engine, column=column, query=query,
+    result_list = mysqldb_basic.retrieve_data(engine, column=column,
+                                              query=query,
                                               id_list=phage_id_list)
+    ftrs = []
     for data_dict in result_list:
-        cds_ftr = parse_gene_table_data(data_dict)
-        cds_list.append(cds_ftr)
-    return cds_list
+        if ftr_type == "cds":
+            ftr = parse_gene_table_data(data_dict)
+        elif ftr_type == "trna":
+            ftr = parse_trna_table_data(data_dict)
+        elif ftr_type == "tmrna":
+            ftr = parse_tmrna_table_data(data_dict)
+        else:
+            # If the ftr_type is invalid, just take the data dictionary.
+            # Alternatively it could raise an error.
+            ftr = data_dict
+        ftrs.append(ftr)
+    return ftrs
 
 
 def parse_genome_data(engine, phage_id_list=None, phage_query=None,
-                      gene_query=None, trna_query=None, gnm_type=""):
+                      gene_query=None, trna_query=None, tmrna_query=None,
+                      gnm_type=""):
     """Returns a list of Genome objects containing data parsed from a MySQL
     database.
 
@@ -245,19 +422,26 @@ def parse_genome_data(engine, phage_id_list=None, phage_query=None,
         to retrieve data from the phage table.
     :type phage_query: str
     :param gene_query:
-        This parameter is passed directly to the 'parse_cds_data' function
+        This parameter is passed directly to the 'parse_feature_data' function
         to retrieve data from the gene table.
         If not None, pdm_utils Cds objects for all of the phage's
         CDS features in the gene table will be constructed
         and added to the Genome object.
     :type gene_query: str
     :param trna_query:
-        This parameter is passed directly to the '' function
-        to retrieve data from the tRNA table. Note: not yet implemented.
-        If not None, pdm_utils Trna objects for all of the phage's
-        CDS features in the gene table will be constructed
+        This parameter is passed directly to the 'parse_feature_data' function
+        to retrieve data from the trna table.
+        If not None, pdm_utils TrnaFeature objects for all of the phage's
+        tRNA features in the trna table will be constructed
         and added to the Genome object.
     :type trna_query: str
+    :param tmrna_query:
+        This parameter is passed directly to the 'parse_feature_data' function
+        to retrieve data from the tmrna table.
+        If not None, pdm_utils TmrnaFeature objects for all of the phage's
+        tmRNA features in the tmrna table will be constructed
+        and added to the Genome object.
+    :type tmrna_query: str
     :param phage_id_list:
         This parameter is passed directly to the 'retrieve_data' function.
         If there is at at least one valid PhageID, a pdm_utils genome
@@ -270,26 +454,43 @@ def parse_genome_data(engine, phage_id_list=None, phage_query=None,
     :returns: A list of pdm_utils Genome objects.
     :rtype: list
     """
+    COLUMN = "PhageID"
     genome_list = []
-    result_list1 = mysqldb_basic.retrieve_data(engine, column="PhageID",
+    result_list1 = mysqldb_basic.retrieve_data(engine, column=COLUMN,
                                                id_list=phage_id_list,
                                                query=phage_query)
     for data_dict in result_list1:
         gnm = parse_phage_table_data(data_dict, gnm_type=gnm_type)
+
         if gene_query is not None:
-            cds_list = parse_cds_data(engine, column="PhageID",
-                                      phage_id_list=[gnm.id],
-                                      query=gene_query)
+            cds_list = parse_feature_data(engine, "cds", column=COLUMN,
+                                          phage_id_list=[gnm.id],
+                                          query=gene_query)
 
             for x in range(len(cds_list)):
                 cds_list[x].genome_length = gnm.length
             gnm.cds_features = cds_list
+
         if trna_query is not None:
-            # TODO develop this step once tRNA table and objects are built.
-            pass
+            trna_list = parse_feature_data(engine, "trna", column=COLUMN,
+                                          phage_id_list=[gnm.id],
+                                          query=trna_query)
+
+            for x in range(len(trna_list)):
+                trna_list[x].genome_length = gnm.length
+            gnm.trna_features = trna_list
+
+        if tmrna_query is not None:
+            tmrna_list = parse_feature_data(engine, "tmrna", column=COLUMN,
+                                          phage_id_list=[gnm.id],
+                                          query=tmrna_query)
+
+            for x in range(len(tmrna_list)):
+                tmrna_list[x].genome_length = gnm.length
+            gnm.tmrna_features = tmrna_list
+
         genome_list.append(gnm)
     return genome_list
-
 
 
 def create_seq_set(engine):
@@ -427,16 +628,25 @@ def create_trna_table_insert(trna_ftr):
     source = mysqldb_basic.convert_for_sql(
         trna_ftr.use, check_set={None}, single=False)
 
-    statement = f"""INSERT INTO trna (GeneID, PhageID, Start, Stop, Length,
-                    Name, Orientation, Note, LocusTag, AminoAcid, Anticodon,
-                    Structure, Source) VALUES ("{geneid}", "{phageid}",
-                    {start}, {stop}, {length}, "{name}", "{orientation}",
-                    {note}, {locus_tag}, "{amino_acid}", "{anticodon}",
-                    {structure}, {source})"""
+    # statement = f"""INSERT INTO trna (GeneID, PhageID, Start, Stop, Length,
+    #                 Name, Orientation, Note, LocusTag, AminoAcid, Anticodon,
+    #                 Structure, Source) VALUES ("{geneid}", "{phageid}",
+    #                 {start}, {stop}, {length}, "{name}", "{orientation}",
+    #                 {note}, {locus_tag}, "{amino_acid}", "{anticodon}",
+    #                 {structure}, {source})"""
 
+    statement = ("""INSERT INTO trna """
+                 """(GeneID, PhageID, Start, Stop, Length, """
+                 """Name, Orientation, Note, LocusTag, AminoAcid, Anticodon, """
+                 """Structure, Source) VALUES ("{}", "{}", {}, {}, {}, """
+                 """"{}", "{}", {}, {}, "{}", "{}", {}, {});""")
+    statement = statement.format(geneid, phageid, start, stop, length,
+                                 name, orientation, note, locus_tag,
+                                 amino_acid, anticodon, structure, source)
     return statement
 
 
+# TODO test
 def create_tmrna_table_insert(tmrna_ftr):
     """
 
@@ -498,6 +708,7 @@ def create_phage_table_insert(gnm):
     return statement
 
 
+# TODO test genome statements with tRNA and tmRNA additions
 def create_genome_statements(gnm, tkt_type=""):
     """Create list of MySQL statements based on the ticket type.
 
