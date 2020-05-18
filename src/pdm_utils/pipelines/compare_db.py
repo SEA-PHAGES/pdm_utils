@@ -1,13 +1,29 @@
 """Pipeline to compare data between MySQL, PhagesDB, and GenBank databases."""
 
-# TODO this object-oriented pipeline is not fully integrated into
-# the pdm_utils package. The majority of the code is redundant and can be
-# dramatically reduced once integrated. Steps that are redundant:
-# 1. Many class definitions (CDS features, Genomes)
-# 2. ORM functions to map data from MySQL, PhagesDB, and GenBank to the classes
-# 3. GenBank data retrieval
+# TODO this pipeline is not fully integrated into the pdm_utils package, and
+# several parts need to be improved.
 
-# Note this script compares and matches data from GenBank data and MySQL data.
+# 1. It originally utilized its own Cds and Genome classes. It now relies on
+# the base pdm_utils Cds and Genome classes, but then requires additional
+# attributes and methods, which are added in this module. The pipeline keeps
+# track of errors using booleans and tallies, in contrast to the import pipeline
+# which keeps track of errors using Eval objects. Ultimately, this pipeline
+# should probably realy on Eval objects.
+
+# 2. It also utilizes GenomeTriad, CdsPair, and DbCompareSummary classes
+# which need to be substantially refactored and generalized.
+
+# 3. In order to compare PhagesDB to MySQL, it needs to retrieve genome
+# sequences from PhagesDB. This requires retrieving and parsing thousands of
+# fasta files, which is very slow. It does this for all genomes on PhagesDB,
+# even if they are not matched to MySQL genomes, so it is a big waste of time.
+
+# 4. The data consistency checks are not comprehensive. Many more checks
+# should be added.
+
+# 5. None of the functions in this pipeline are tested.
+
+# Note this script compares and matches data from PhagesDB, GenBank, and MySQL.
 # As a result, there are many similarly named variables.
 # Variables are prefixed to indicate database:
 # GenBank =  "gbk", "g"
@@ -28,7 +44,6 @@ from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
 
-
 from pdm_utils.classes import cds
 from pdm_utils.classes import genome
 from pdm_utils.classes import cdspair
@@ -46,11 +61,8 @@ from pdm_utils.functions import parsing
 from pdm_utils.functions import phagesdb
 from pdm_utils.functions import querying
 
-
-
 DEFAULT_OUTPUT_FOLDER = os.getcwd()
 
-#Create output directories
 CURRENT_DATE = date.today().strftime("%Y%m%d")
 WORKING_FOLDER = f"{CURRENT_DATE}_compare"
 
@@ -347,7 +359,6 @@ def main(unparsed_args_list):
     # Filters input: phage.Status=draft AND phage.HostGenus=Mycobacterium
     # Args structure: [['phage.Status=draft'], ['phage.HostGenus=Mycobacterium']]
     filters = args.filters
-
 
     # Setup output
     output_folder = basic.set_path(args.output_folder, kind="dir",
@@ -810,6 +821,8 @@ def get_pdb_data(interactive):
 
     if len(data_list) > 0:
         for i in range(len(data_list)):
+            # Note: this step take a long time because it needs to retrieve
+            # and parse fasta files to get the genome sequence.
             gnm = phagesdb.parse_genome_data(data_list[i], gnm_type=GNM_PDB,
                                              seq=True)
             pdb_id = gnm.id
