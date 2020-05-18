@@ -9,6 +9,6 @@ Since the ``pdm_utils`` Python package is designed to manage a MySQL database st
 .. toctree::
     :maxdepth: 1
 
-    Current database schema <database>
-    Log of schema changes <schema_changelog>
-    ER diagrams for prior schemas <schema_maps>
+    Current database schema <./database/database>
+    Log of schema changes <./database/schema_changelog>
+    ER diagrams for prior schemas <./database/schema_maps>
