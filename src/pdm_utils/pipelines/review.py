@@ -115,17 +115,17 @@ def parse_review(unparsed_args_list):
             names of genomes in the database.
         """
    
-    FILTERS_HELP = """
+    WHERE_HELP = """
         Data filtering option that filters data by the inputted expressions.
             Follow selection argument with formatted filter expression:
                 {Table}.{Column}={Value}
         """
-    GROUPS_HELP = """
+    GROUP_BY_HELP = """
         Data selection option that groups data by the inputted columns.
             Follow selection argument with formatted column expressions:
                 {Table}.{Column}={Value}
         """
-    SORT_HELP = """
+    ORDER_BY_HELP = """
         Data selection option that sorts data by the inputted columns.
             Follow selection argument with formatted column expressions:
                 {Table}.{Column}={Value}
@@ -155,12 +155,12 @@ def parse_review(unparsed_args_list):
     parser.add_argument("-in", "--import_names", nargs="*", dest="input",
                                                help=IMPORT_NAMES_HELP)
 
-    parser.add_argument("-f", "--filter", nargs="?", dest="filters",
-                                               help=FILTERS_HELP)
-    parser.add_argument("-g", "--group", nargs="*", dest="groups",
-                                               help=GROUPS_HELP)
-    parser.add_argument("-s", "--sort", nargs="*",
-                                               help=SORT_HELP)
+    parser.add_argument("-f", "--where", nargs="?", dest="filters",
+                                               help=WHERE_HELP)
+    parser.add_argument("-g", "--group_by", nargs="*", dest="groups",
+                                               help=GROUP_BY_HELP)
+    parser.add_argument("-s", "--order_by", nargs="*", dest="sort",
+                                               help=ORDER_BY_HELP)
     
     
     default_folder_name = DEFAULT_FOLDER_NAME
@@ -284,10 +284,12 @@ def execute_g_report_export(alchemist, db_filter, export_path, total_g_data={},
     :param verbose: A boolean value to toggle progress print statements.
     :type verbose: bool
     """
+    phams = db_filter.values
+
     pg_path = export_path.joinpath("GeneReports")
     pg_path.mkdir()
 
-    for pham in db_filter.values:
+    for pham in phams:
         db_filter.values = [pham]
 
         try:
@@ -300,6 +302,8 @@ def execute_g_report_export(alchemist, db_filter, export_path, total_g_data={},
         write_report(g_data, pg_path, PG_HEADER,
                      csv_name=f"{pham}_GeneReport",
                      verbose=verbose)
+
+    db_filter.values = phams
 
 def execute_s_report_export(alchemist, db_filter, conditionals, export_path, 
                                                     verbose=False):
