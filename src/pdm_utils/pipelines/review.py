@@ -267,7 +267,8 @@ def execute_review(alchemist, folder_path, folder_name,
                                                     verbose=verbose)
 
         if s_report:
-            execute_s_report_export(alchemist, db_filter, mapped_path,
+            execute_s_report_export(alchemist, db_filter, conditionals, 
+                                                    mapped_path,
                                                     verbose=verbose)
                
 def execute_g_report_export(alchemist, db_filter, export_path, total_g_data={},
@@ -300,7 +301,8 @@ def execute_g_report_export(alchemist, db_filter, export_path, total_g_data={},
                      csv_name=f"{pham}_GeneReport",
                      verbose=verbose)
 
-def execute_s_report_export(alchemist, db_filter, export_path, verbose=False):
+def execute_s_report_export(alchemist, db_filter, conditionals, export_path, 
+                                                    verbose=False):
     """Executes export of summary data for all reviewed phams.
 
     :param alchemist: A connected and fully build
@@ -311,12 +313,16 @@ def execute_s_report_export(alchemist, db_filter, export_path, verbose=False):
     :param verbose: A boolean value to toggle progress print statements.
     :type verbose: bool
     """
+    phams = db_filter.values
+
     if verbose:
         print(f"Retrieving SummaryReport data...")
     phages_histogram = {}
-
-    for pham in db_filter.values:
-        phages = db_filter.transpose("phage.PhageID", filter=True)
+ 
+    for pham in phams:
+        db_filter.values = [pham]
+        phages = db_filter.build_values(column="phage.PhageID",
+                                        where=conditionals)
 
         increment_histogram(phages, phages_histogram)
 
@@ -341,6 +347,8 @@ def execute_s_report_export(alchemist, db_filter, export_path, verbose=False):
     s_file.write(f"\n\n")
     s_file.write(f"Most occuring phages: {', '.join(top_phages)}\n")
     s_file.close()
+
+    db_filter.values = phams
 
 def review_phams(db_filter, verbose=False):
     """Finds and stores phams with discrepant function calls in a Filter.
