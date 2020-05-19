@@ -577,7 +577,7 @@ class TestMysqldbFunctions3(unittest.TestCase):
         with self.subTest():
             self.assertEqual(results["GeneID"], "SEA_TRIXIE_123")
         with self.subTest():
-            self.assertEqual(results["LocusTag"], None)
+            self.assertIsNone(results["LocusTag"])
 
 
 
@@ -643,7 +643,6 @@ class TestMysqldbFunctions3(unittest.TestCase):
         with self.subTest():
             self.assertEqual(results["Source"], "aragorn")
 
-
     def test_create_trna_table_insert_2(self):
         """Verify trna table INSERT statement is created correctly when
         locus_tag, note, and structure, and use are empty."""
@@ -681,13 +680,106 @@ class TestMysqldbFunctions3(unittest.TestCase):
         with self.subTest():
             self.assertEqual(results["GeneID"], "Trixie_1")
         with self.subTest():
-            self.assertEqual(results["Note"], None)
+            self.assertIsNone(results["Note"])
         with self.subTest():
-            self.assertEqual(results["LocusTag"], None)
+            self.assertIsNone(results["LocusTag"])
         with self.subTest():
-            self.assertEqual(results["Structure"], None)
+            self.assertIsNone(results["Structure"])
         with self.subTest():
-            self.assertEqual(results["Source"], None)
+            self.assertIsNone(results["Source"])
+
+
+
+
+    def test_create_tmrna_table_insert_1(self):
+        """Verify tmrna table INSERT statement is created correctly when
+        locus_tag, note, and peptide_tag are not empty."""
+        # Note: even though this function returns a string and doesn't
+        # actually utilize a MySQL database, this test ensures
+        # that the returned statement will function properly in MySQL.
+        tmrna1 = tmrna.TmrnaFeature()
+        tmrna1.id = "Trixie_1"
+        tmrna1.genome_id = "Trixie"
+        tmrna1.name = "1"
+        tmrna1.locus_tag = "TAG1"
+        tmrna1.start = 5
+        tmrna1.stop = 10
+        tmrna1.length = 200
+        tmrna1.orientation = "F"
+        tmrna1.note = "misc"
+        tmrna1.peptide_tag = "random"
+        statement = mysqldb.create_tmrna_table_insert(tmrna1)
+        test_db_utils.execute(statement)
+        result = test_db_utils.get_data(TMRNA_QUERY2)
+        results = result[0]
+        exp = ("""INSERT INTO tmrna """
+               """(GeneID, PhageID, Start, Stop, Length, """
+               """Name, Orientation, Note, LocusTag, PeptideTag) """
+               """VALUES """
+               """("Trixie_1", "Trixie", 5, 10, 200, """
+               """"1", "F", "misc", "TAG1", "random");""")
+
+        with self.subTest():
+            self.assertEqual(statement, exp)
+        with self.subTest():
+            self.assertEqual(results["GeneID"], "Trixie_1")
+        with self.subTest():
+            self.assertEqual(results["PhageID"], "Trixie")
+        with self.subTest():
+            self.assertEqual(results["Start"], 5)
+        with self.subTest():
+            self.assertEqual(results["Stop"], 10)
+        with self.subTest():
+            self.assertEqual(results["Length"], 200)
+        with self.subTest():
+            self.assertEqual(results["Name"], "1")
+        with self.subTest():
+            self.assertEqual(results["Orientation"], "F")
+        with self.subTest():
+            self.assertEqual(results["Note"].decode("utf-8"), "misc")
+        with self.subTest():
+            self.assertEqual(results["LocusTag"], "TAG1")
+        with self.subTest():
+            self.assertEqual(results["PeptideTag"], "random")
+
+    def test_create_tmrna_table_insert_2(self):
+        """Verify tmrna table INSERT statement is created correctly when
+        locus_tag, note, and peptide_tag are empty."""
+        # Note: even though this function returns a string and doesn't
+        # actually utilize a MySQL database, this test ensures
+        # that the returned statement will function properly in MySQL.
+        tmrna1 = tmrna.TmrnaFeature()
+        tmrna1.id = "Trixie_1"
+        tmrna1.genome_id = "Trixie"
+        tmrna1.name = "1"
+        tmrna1.locus_tag = ""
+        tmrna1.start = 5
+        tmrna1.stop = 10
+        tmrna1.length = 200
+        tmrna1.orientation = "F"
+        tmrna1.note = ""
+        tmrna1.peptide_tag = ""
+        statement = mysqldb.create_tmrna_table_insert(tmrna1)
+        test_db_utils.execute(statement)
+        result = test_db_utils.get_data(TMRNA_QUERY2)
+        results = result[0]
+        exp = ("""INSERT INTO tmrna """
+               """(GeneID, PhageID, Start, Stop, Length, """
+               """Name, Orientation, Note, LocusTag, PeptideTag) """
+               """VALUES """
+               """("Trixie_1", "Trixie", 5, 10, 200, """
+               """"1", "F", NULL, NULL, NULL);""")
+
+        with self.subTest():
+            self.assertEqual(statement, exp)
+        with self.subTest():
+            self.assertEqual(results["GeneID"], "Trixie_1")
+        with self.subTest():
+            self.assertIsNone(results["Note"])
+        with self.subTest():
+            self.assertIsNone(results["LocusTag"])
+        with self.subTest():
+            self.assertIsNone(results["PeptideTag"])
 
 
 

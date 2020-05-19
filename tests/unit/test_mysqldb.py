@@ -9,7 +9,7 @@ import unittest
 from Bio.Seq import Seq
 
 from pdm_utils.classes import bundle
-from pdm_utils.classes import cds
+from pdm_utils.classes import cds, trna, tmrna
 from pdm_utils.classes import genome
 from pdm_utils.constants import constants
 from pdm_utils.functions import mysqldb
@@ -325,10 +325,11 @@ class TestMysqldbFunctions1(unittest.TestCase):
 
 
 
-    def test_create_genome_statements_1(self):
-        """Verify list of INSERT statements is created correctly for:
-        'add' ticket, and no CDS features."""
+class TestMysqldbFunctions2(unittest.TestCase):
 
+
+    def setUp(self):
+        self.genome1 = genome.Genome()
         self.genome1.id = "L5"
         self.genome1.name = "L5_Draft"
         self.genome1.host_genus = "Mycobacterium"
@@ -343,82 +344,120 @@ class TestMysqldbFunctions1(unittest.TestCase):
         self.genome1.cluster = "A"
         self.genome1.subcluster = "A2"
 
+        self.cds1 = cds.Cds()
+        self.cds1.genome_id = "L5"
+        self.cds1.start = 10
+        self.cds1.stop = 100
+        self.cds1.parts = 1
+        self.cds1.length = 1000
+        self.cds1.name = "1"
+        self.cds1.type = "CDS"
+        self.cds1.translation = "AGGPT"
+        self.cds1.orientation = "F"
+        self.cds1.description = "description"
+        self.cds1.locus_tag = "SEA_L5_001"
+
+        self.cds2 = cds.Cds()
+        self.cds2.genome_id = "L5"
+        self.cds2.start = 100
+        self.cds2.stop = 1000
+        self.cds2.parts = 1
+        self.cds2.length = 10000
+        self.cds2.name = "2"
+        self.cds2.type = "CDS"
+        self.cds2.translation = "AKKQE"
+        self.cds2.orientation = "R"
+        self.cds2.description = "description"
+        self.cds2.locus_tag = "SEA_L5_002"
+
+        self.cds_features = [self.cds1, self.cds2]
+
+        self.trna1 = trna.TrnaFeature()
+        self.trna1.id = "Trixie_1"
+        self.trna1.genome_id = "Trixie"
+        self.trna1.name = "1"
+        self.trna1.locus_tag = "TAG1"
+        self.trna1.start = 5
+        self.trna1.stop = 10
+        self.trna1.length = 200
+        self.trna1.orientation = "F"
+        self.trna1.note = "misc"
+        self.trna1.amino_acid = "Ala"
+        self.trna1.anticodon = "AAA"
+        self.trna1.structure = "random"
+        self.trna1.use = "aragorn"
+
+        self.trna2 = trna.TrnaFeature()
+        self.trna2.id = "Trixie_1"
+        self.trna2.genome_id = "Trixie"
+        self.trna2.name = "1"
+        self.trna2.locus_tag = "TAG1"
+        self.trna2.start = 5
+        self.trna2.stop = 10
+        self.trna2.length = 200
+        self.trna2.orientation = "F"
+        self.trna2.note = "misc"
+        self.trna2.amino_acid = "Ala"
+        self.trna2.anticodon = "AAA"
+        self.trna2.structure = "random"
+        self.trna2.use = "aragorn"
+
+        self.trna_features = [self.trna1, self.trna2]
+
+        self.tmrna1 = tmrna.TmrnaFeature()
+        self.tmrna1.id = "Trixie_1"
+        self.tmrna1.genome_id = "Trixie"
+        self.tmrna1.name = "1"
+        self.tmrna1.locus_tag = "TAG1"
+        self.tmrna1.start = 5
+        self.tmrna1.stop = 10
+        self.tmrna1.length = 200
+        self.tmrna1.orientation = "F"
+        self.tmrna1.note = "misc"
+        self.tmrna1.peptide_tag = "random"
+
+        self.tmrna2 = tmrna.TmrnaFeature()
+        self.tmrna2.id = "Trixie_1"
+        self.tmrna2.genome_id = "Trixie"
+        self.tmrna2.name = "1"
+        self.tmrna2.locus_tag = "TAG1"
+        self.tmrna2.start = 5
+        self.tmrna2.stop = 10
+        self.tmrna2.length = 200
+        self.tmrna2.orientation = "F"
+        self.tmrna2.note = "misc"
+        self.tmrna2.peptide_tag = "random"
+
+        self.tmrna_features = [self.tmrna1, self.tmrna2]
+
+    def test_create_genome_statements_1(self):
+        """Verify list of INSERT statements is created correctly for:
+        'add' ticket, and no CDS features."""
         statements = mysqldb.create_genome_statements(
                         self.genome1, tkt_type="add")
         self.assertEqual(len(statements), 1)
 
-
     def test_create_genome_statements_2(self):
         """Verify list of INSERT statements is created correctly for:
         'replace' ticket, and no CDS features."""
-
-        self.genome1.id = "L5"
-        self.genome1.name = "L5_Draft"
-        self.genome1.host_genus = "Mycobacterium"
-        self.genome1.annotation_status = "final"
-        self.genome1.accession = "ABC123"
-        self.genome1.seq = "ATCG"
-        self.genome1.length = 4
-        self.genome1.gc = 0.5001
-        self.genome1.date = '1/1/2000'
-        self.genome1.retrieve_record = "1"
-        self.genome1.annotation_author = "1"
-        self.genome1.cluster = "A"
-        self.genome1.subcluster = "A2"
-
         statements = mysqldb.create_genome_statements(
                         self.genome1, tkt_type="replace")
         self.assertEqual(len(statements), 2)
 
-
     def test_create_genome_statements_3(self):
         """Verify list of INSERT statements is created correctly for:
-        'add' ticket, and two CDS features."""
-
-        cds1 = cds.Cds()
-        cds1.genome_id = "L5"
-        cds1.start = 10
-        cds1.stop = 100
-        cds1.parts = 1
-        cds1.length = 1000
-        cds1.name = "1"
-        cds1.type = "CDS"
-        cds1.translation = "AGGPT"
-        cds1.orientation = "F"
-        cds1.description = "description"
-        cds1.locus_tag = "SEA_L5_001"
-
-        cds2 = cds.Cds()
-        cds2.genome_id = "L5"
-        cds2.start = 100
-        cds2.stop = 1000
-        cds2.parts = 1
-        cds2.length = 10000
-        cds2.name = "2"
-        cds2.type = "CDS"
-        cds2.translation = "AKKQE"
-        cds2.orientation = "R"
-        cds2.description = "description"
-        cds2.locus_tag = "SEA_L5_002"
-
-        self.genome1.id = "L5"
-        self.genome1.name = "L5_Draft"
-        self.genome1.host_genus = "Mycobacterium"
-        self.genome1.annotation_status = "final"
-        self.genome1.accession = "ABC123"
-        self.genome1.seq = "ATCG"
-        self.genome1.length = 4
-        self.genome1.gc = 0.5001
-        self.genome1.date = '1/1/2000'
-        self.genome1.retrieve_record = "1"
-        self.genome1.annotation_author = "1"
-        self.genome1.cluster = "A"
-        self.genome1.subcluster = "A2"
-        self.genome1.cds_features = [cds1, cds2]
-
+        'add' ticket, two CDS features, two tRNA features, and
+        two tmRNA features."""
+        self.genome1.cds_features = self.cds_features
+        self.genome1.trna_features = self.trna_features
+        self.genome1.tmrna_features = self.tmrna_features
         statements = mysqldb.create_genome_statements(
                         self.genome1, tkt_type="add")
-        self.assertEqual(len(statements), 3)
+        self.assertEqual(len(statements), 7)
+
+
+
+
 
 
 if __name__ == '__main__':

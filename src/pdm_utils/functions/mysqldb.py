@@ -602,6 +602,7 @@ def create_gene_table_insert(cds_ftr):
     return statement
 
 
+# TODO Christian review
 def create_trna_table_insert(trna_ftr):
     """
     Create a MySQL trna table INSERT statement.
@@ -646,7 +647,7 @@ def create_trna_table_insert(trna_ftr):
     return statement
 
 
-# TODO test
+# TODO Christian review
 def create_tmrna_table_insert(tmrna_ftr):
     """
 
@@ -664,12 +665,19 @@ def create_tmrna_table_insert(tmrna_ftr):
     peptide_tag = mysqldb_basic.convert_for_sql(
         tmrna_ftr.peptide_tag, check_set={""}, single=False)
 
-    statement = f"""INSERT INTO tmrna (GeneID, PhageID, Start, Stop, Length,
-                    Name, Orientation, Note, LocusTag, PeptideTag) VALUES (
-                    "{geneid}", "{phageid}", {start}, {stop}, {length},
-                    "{name}", "{orientation}", {note}, {locus_tag},
-                    {peptide_tag})"""
+    # statement = f"""INSERT INTO tmrna (GeneID, PhageID, Start, Stop, Length,
+    #                 Name, Orientation, Note, LocusTag, PeptideTag) VALUES (
+    #                 "{geneid}", "{phageid}", {start}, {stop}, {length},
+    #                 "{name}", "{orientation}", {note}, {locus_tag},
+    #                 {peptide_tag})"""
 
+    statement = ("""INSERT INTO tmrna """
+                 """(GeneID, PhageID, Start, Stop, Length, """
+                 """Name, Orientation, Note, LocusTag, PeptideTag) VALUES """
+                 """("{}", "{}", {}, {}, {}, "{}", "{}", {}, {}, {});""")
+    statement = statement.format(geneid, phageid, start, stop, length,
+                                 name, orientation, note, locus_tag,
+                                 peptide_tag)
     return statement
 
 
@@ -708,7 +716,6 @@ def create_phage_table_insert(gnm):
     return statement
 
 
-# TODO test genome statements with tRNA and tmRNA additions
 def create_genome_statements(gnm, tkt_type=""):
     """Create list of MySQL statements based on the ticket type.
 
@@ -723,25 +730,23 @@ def create_genome_statements(gnm, tkt_type=""):
     :rtype: list
     """
 
-    sql_statements = []
+    stmts = []
     if tkt_type == "replace":
-        statement1 = create_delete("phage", "PhageID", gnm.id)
-        sql_statements.append(statement1)
-    statement2 = create_phage_table_insert(gnm)
-    sql_statements.append(statement2)
+        stmt1 = create_delete("phage", "PhageID", gnm.id)
+        stmts.append(stmt1)
+    stmt2 = create_phage_table_insert(gnm)
+    stmts.append(stmt2)
     for cds_ftr in gnm.cds_features:
-        statement3 = create_gene_table_insert(cds_ftr)
-        sql_statements.append(statement3)
+        stmt3 = create_gene_table_insert(cds_ftr)
+        stmts.append(stmt3)
     for trna_ftr in gnm.trna_features:
-        statement4 = create_trna_table_insert(trna_ftr)
-        sql_statements.append(statement4)
+        stmt4 = create_trna_table_insert(trna_ftr)
+        stmts.append(stmt4)
     for tmrna_ftr in gnm.tmrna_features:
-        statement5 = create_tmrna_table_insert(tmrna_ftr)
-        sql_statements.append(statement5)
+        stmt5 = create_tmrna_table_insert(tmrna_ftr)
+        stmts.append(stmt5)
 
-    # TODO add steps to insert tRNA and tmRNA data.
-
-    return sql_statements
+    return stmts
 
 
 
