@@ -330,8 +330,16 @@ def execute_s_report_export(alchemist, db_filter, conditionals, export_path,
 
         increment_histogram(phages, phages_histogram)
 
-    sorted_phages = sort_histogram_keys(phages_histogram)
-    top_phages = chunk_list(sorted_phages, 5)[0]
+    db_filter.values = phams
+    db_filter.transpose("phage.PhageID", set_values=True)
+    db_filter.sort("phage.DateLastModified")
+
+    submitted_sorted_phages = db_filter.values
+    submitted_sorted_phages.reverse()
+    last_submitted_phages = chunk_list(submitted_sorted_phages, 5)[0]
+
+    occurance_sorted_phages = sort_histogram_keys(phages_histogram)
+    top_occuring_phages = chunk_list(occurance_sorted_phages, 5)[0]
 
     version_data = mysqldb_basic.get_first_row_data(alchemist.engine, "version")
 
@@ -349,10 +357,12 @@ def execute_s_report_export(alchemist, db_filter, conditionals, export_path,
     s_file.write(f"    {BASE_CONDITIONALS}\n")
 
     s_file.write(f"\n\n")
-    s_file.write(f"Most occuring phages: {', '.join(top_phages)}\n")
+    s_file.write(f"Most occuring phages: {', '.join(top_occuring_phages)}\n")
+    s_file.write(f"Phages recently submitted: {', '.join(last_submitted_phages)}\n")
     s_file.close()
 
     db_filter.values = phams
+    db_filter.key = "pham.PhamID"
 
 def review_phams(db_filter, verbose=False):
     """Finds and stores phams with discrepant function calls in a Filter.
