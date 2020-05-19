@@ -4,6 +4,7 @@ import time
 from pathlib import Path
 
 from sqlalchemy import Column
+from sqlalchemy import and_
 from sqlalchemy.sql import func
 
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
@@ -206,17 +207,13 @@ def execute_review(alchemist, folder_path, folder_name,
     """
     db_filter = Filter(alchemist=alchemist)
     db_filter.key = ("gene.PhamID")
-
-    db_filter.add(BASE_CONDITIONALS)
-   
+ 
     if values:
         db_filter.values = values
-    else:
-        db_filter.values = db_filter.build_values(
-                                        where=db_filter.build_where_clauses())
+
     if verbose:
-        print(f"Identified {db_filter.hits()} phams to review...")
-            
+        print(f"Identified {len(values)} phams to review...")
+           
     if filters != "":
         try:
             db_filter.add(filters)
@@ -225,7 +222,14 @@ def execute_review(alchemist, folder_path, folder_name,
                  f"{filters}")
             sys.exit(1)
         finally:
-            db_filter.update()
+            db_filter.update() 
+
+    db_filter._filters = []
+    db_filter._updated = False 
+    db_filter._or_index = -1
+
+    db_filter.add(BASE_CONDITIONALS)
+    db_filter.update()
 
     if not db_filter.values:
         print("Current settings produced no database hits.")
