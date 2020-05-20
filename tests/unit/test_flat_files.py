@@ -648,6 +648,13 @@ class TestFlatFileFunctions3(unittest.TestCase):
                                             1, 11000, 1, "source")
         self.seqfeature7 = test_data_utils.create_1_part_seqfeature(
                                             1, 9000, 1, "source")
+        self.seqfeature8 = test_data_utils.create_1_part_seqfeature(
+                                            50000, 60000, 1, "tmRNA")
+        self.seqfeature9 = test_data_utils.create_1_part_seqfeature(
+                                            5001, 6001, 1, "tRNA")
+        self.seqfeature10 = test_data_utils.create_1_part_seqfeature(
+                                            50001, 60001, 1, "tmRNA")
+
 
         # Wrap-around feature, directly copied from
         # Biopython-parsed Alice flat file.
@@ -663,7 +670,10 @@ class TestFlatFileFunctions3(unittest.TestCase):
                              self.seqfeature4,
                              self.seqfeature5,
                              self.seqfeature6,
-                             self.seqfeature7]
+                             self.seqfeature7,
+                             self.seqfeature8,
+                             self.seqfeature9,
+                             self.seqfeature10]
         self.reference1 = test_data_utils.create_reference("Jane")
         self.reference2 = test_data_utils.create_reference("Doe")
         self.reference3 = test_data_utils.create_reference("Smith")
@@ -737,13 +747,17 @@ class TestFlatFileFunctions3(unittest.TestCase):
         with self.subTest():
             self.assertEqual(len(gnm.source_features), 2)
         with self.subTest():
-            self.assertEqual(len(gnm.trna_features), 1)
+            self.assertEqual(len(gnm.trna_features), 2)
+        with self.subTest():
+            self.assertEqual(len(gnm.tmrna_features), 2)
         with self.subTest():
             self.assertEqual(gnm._cds_features_tally, 4)
         with self.subTest():
             self.assertEqual(gnm._source_features_tally, 2)
         with self.subTest():
-            self.assertEqual(gnm._trna_features_tally, 1)
+            self.assertEqual(gnm._trna_features_tally, 2)
+        with self.subTest():
+            self.assertEqual(gnm._tmrna_features_tally, 2)
         with self.subTest():
             self.assertEqual(gnm.translation_table, 11)
         with self.subTest():
@@ -792,6 +806,30 @@ class TestFlatFileFunctions3(unittest.TestCase):
             self.assertEqual(gnm.source_features[0].id, "KatherineG_SRC_2")
         with self.subTest():
             self.assertEqual(gnm.source_features[1].id, "KatherineG_SRC_1")
+        with self.subTest():
+            self.assertEqual(gnm.trna_features[0].start, 5000)
+        with self.subTest():
+            self.assertEqual(gnm.trna_features[0].stop, 6000)
+        with self.subTest():
+            self.assertEqual(gnm.trna_features[0].genome_length, 4)
+        with self.subTest():
+            self.assertEqual(gnm.trna_features[0].id, "KatherineG_TRNA_1")
+        with self.subTest():
+            self.assertEqual(gnm.trna_features[1].genome_length, 4)
+        with self.subTest():
+            self.assertEqual(gnm.trna_features[1].id, "KatherineG_TRNA_2")
+        with self.subTest():
+            self.assertEqual(gnm.tmrna_features[0].start, 50000)
+        with self.subTest():
+            self.assertEqual(gnm.tmrna_features[0].stop, 60000)
+        with self.subTest():
+            self.assertEqual(gnm.tmrna_features[0].genome_length, 4)
+        with self.subTest():
+            self.assertEqual(gnm.tmrna_features[0].id, "KatherineG_TMRNA_1")
+        with self.subTest():
+            self.assertEqual(gnm.tmrna_features[1].genome_length, 4)
+        with self.subTest():
+            self.assertEqual(gnm.tmrna_features[1].id, "KatherineG_TMRNA_2")
 
     def test_parse_genome_data_2(self):
         """Verify retrieved flat file data is parsed correctly with no
@@ -947,7 +985,8 @@ class TestFlatFileFunctions3(unittest.TestCase):
         CDS features."""
         self.feature_list = [self.seqfeature2,
                              self.seqfeature3,
-                             self.seqfeature7]
+                             self.seqfeature7,
+                             self.seqfeature10]
         self.record.features = self.feature_list
         gnm = flat_files.parse_genome_data(self.record, self.filepath,
                                                 gnm_type="flat_file")
@@ -960,6 +999,8 @@ class TestFlatFileFunctions3(unittest.TestCase):
         with self.subTest():
             self.assertEqual(len(gnm.trna_features), 1)
         with self.subTest():
+            self.assertEqual(len(gnm.tmrna_features), 1)
+        with self.subTest():
             self.assertEqual(gnm._cds_features_tally, 0)
 
     def test_parse_genome_data_13(self):
@@ -969,7 +1010,8 @@ class TestFlatFileFunctions3(unittest.TestCase):
                              self.seqfeature2,
                              self.seqfeature4,
                              self.seqfeature5,
-                             self.seqfeature6]
+                             self.seqfeature6,
+                             self.seqfeature10]
         self.record.features = self.feature_list
         gnm = flat_files.parse_genome_data(self.record, self.filepath,
                                                 gnm_type="flat_file")
@@ -982,12 +1024,41 @@ class TestFlatFileFunctions3(unittest.TestCase):
         with self.subTest():
             self.assertEqual(len(gnm.trna_features), 1)
         with self.subTest():
+            self.assertEqual(len(gnm.tmrna_features), 1)
+        with self.subTest():
             self.assertEqual(gnm._source_features_tally, 0)
 
     def test_parse_genome_data_14(self):
         """Verify retrieved flat file data is parsed correctly with no
         tRNA features."""
         self.feature_list = [self.seqfeature1,
+                             self.seqfeature3,
+                             self.seqfeature4,
+                             self.seqfeature5,
+                             self.seqfeature6,
+                             self.seqfeature7,
+                             self.seqfeature10]
+        self.record.features = self.feature_list
+        gnm = flat_files.parse_genome_data(self.record, self.filepath,
+                                                gnm_type="flat_file")
+        with self.subTest():
+            self.assertEqual(gnm.filename, "Phage_ZZZ")
+        with self.subTest():
+            self.assertEqual(len(gnm.cds_features), 4)
+        with self.subTest():
+            self.assertEqual(len(gnm.source_features), 2)
+        with self.subTest():
+            self.assertEqual(len(gnm.trna_features), 0)
+        with self.subTest():
+            self.assertEqual(len(gnm.tmrna_features), 1)
+        with self.subTest():
+            self.assertEqual(gnm._trna_features_tally, 0)
+
+    def test_parse_genome_data_15(self):
+        """Verify retrieved flat file data is parsed correctly with no
+        tmRNA features."""
+        self.feature_list = [self.seqfeature1,
+                             self.seqfeature2,
                              self.seqfeature3,
                              self.seqfeature4,
                              self.seqfeature5,
@@ -1003,11 +1074,13 @@ class TestFlatFileFunctions3(unittest.TestCase):
         with self.subTest():
             self.assertEqual(len(gnm.source_features), 2)
         with self.subTest():
-            self.assertEqual(len(gnm.trna_features), 0)
+            self.assertEqual(len(gnm.trna_features), 1)
         with self.subTest():
-            self.assertEqual(gnm._trna_features_tally, 0)
+            self.assertEqual(len(gnm.tmrna_features), 0)
+        with self.subTest():
+            self.assertEqual(gnm._tmrna_features_tally, 0)
 
-    def test_parse_genome_data_15(self):
+    def test_parse_genome_data_16(self):
         """Verify retrieved flat file data is parsed correctly with no
         features."""
         self.record.features = []
@@ -1027,8 +1100,10 @@ class TestFlatFileFunctions3(unittest.TestCase):
             self.assertEqual(gnm._source_features_tally, 0)
         with self.subTest():
             self.assertEqual(gnm._trna_features_tally, 0)
+        with self.subTest():
+            self.assertEqual(gnm._tmrna_features_tally, 0)
 
-    def test_parse_genome_data_16(self):
+    def test_parse_genome_data_17(self):
         """Verify retrieved flat file data is parsed correctly with no
         filepath provided."""
         gnm = flat_files.parse_genome_data(self.record, gnm_type="flat_file")
@@ -1037,7 +1112,7 @@ class TestFlatFileFunctions3(unittest.TestCase):
         with self.subTest():
             self.assertEqual(gnm.name, "KatherineG")
 
-    def test_parse_genome_data_17(self):
+    def test_parse_genome_data_18(self):
         """Verify retrieved flat file data is parsed correctly with no
         date provided."""
         self.annotation_dict.pop("date")
@@ -1049,7 +1124,7 @@ class TestFlatFileFunctions3(unittest.TestCase):
         with self.subTest():
             self.assertEqual(gnm.date, self.exp_date)
 
-    def test_parse_genome_data_18(self):
+    def test_parse_genome_data_19(self):
         """Verify retrieved flat file data is parsed correctly with
         modified translation table."""
         gnm = flat_files.parse_genome_data(self.record, self.filepath,
@@ -1060,7 +1135,7 @@ class TestFlatFileFunctions3(unittest.TestCase):
         with self.subTest():
             self.assertEqual(gnm.translation_table, 1)
 
-    def test_parse_genome_data_19(self):
+    def test_parse_genome_data_20(self):
         """Verify retrieved flat file data is parsed correctly with
         id field and host genus field specified as non-standard fields."""
         gnm = flat_files.parse_genome_data(

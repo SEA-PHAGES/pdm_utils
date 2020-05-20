@@ -529,8 +529,6 @@ def parse_genome_data(seqrecord, filepath=pathlib.Path(),
             src_ftr.genome_id = gnm.id
             source_list.append(src_ftr)
 
-    # TODO unit test after functions are constructed.
-    # TODO implement for trnas
     trna_list = []
     if "tRNA" in seqfeature_dict.keys():
         for seqfeature in seqfeature_dict["tRNA"]:
@@ -543,7 +541,6 @@ def parse_genome_data(seqrecord, filepath=pathlib.Path(),
             trna_ftr.parse_anticodon()
             trna_list.append(trna_ftr)
 
-    # TODO unit test after functions are constructed.
     tmrna_list = []
     if "tmRNA" in seqfeature_dict.keys():
         for seqfeature in seqfeature_dict["tmRNA"]:
@@ -562,11 +559,9 @@ def parse_genome_data(seqrecord, filepath=pathlib.Path(),
     gnm.set_trna_features(trna_list)
     gnm.set_tmrna_features(tmrna_list)
 
-    # The Cds.id is constructed from the Genome.id and the Cds order.
+    # The feature.id is constructed from the Genome.id and the feature order.
     gnm.set_feature_ids(use_type=True, use_cds=True)
     gnm.set_feature_ids(use_type=True, use_source=True)
-
-    # TODO set tRNA feature ids.
     gnm.set_feature_ids(use_type=True, use_trna=True)
     gnm.set_feature_ids(use_type=True, use_tmrna=True)
     return gnm

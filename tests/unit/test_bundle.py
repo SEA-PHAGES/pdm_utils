@@ -3,11 +3,10 @@
 import unittest
 
 from pdm_utils.classes import bundle
-from pdm_utils.classes import cds
+from pdm_utils.classes import cds, trna, tmrna, source
 from pdm_utils.classes import evaluation
 from pdm_utils.classes import genome
 from pdm_utils.classes import genomepair
-from pdm_utils.classes import source
 from pdm_utils.classes import ticket
 
 
@@ -175,24 +174,42 @@ class TestBundleClass2(unittest.TestCase):
     def setUp(self):
 
         self.ticket1 = ticket.ImportTicket()
+
         self.src1 = source.Source()
         self.src1.id = "L5_SRC_1"
         self.src2 = source.Source()
         self.src2.id = "L5_SRC_2"
         self.src3 = source.Source()
         self.src3.id = "L5_SRC_3"
+
         self.cds1 = cds.Cds()
         self.cds1.id = "L5_CDS_1"
         self.cds2 = cds.Cds()
         self.cds2.id = "L5_CDS_2"
         self.cds3 = cds.Cds()
         self.cds3.id = "L5_CDS_3"
+
+        self.trna1 = trna.TrnaFeature()
+        self.trna1.id = "L5_TRNA_1"
+        self.trna2 = trna.TrnaFeature()
+        self.trna2.id = "L5_TRNA_2"
+        self.trna3 = trna.TrnaFeature()
+        self.trna3.id = "L5_TRNA_3"
+
+        self.tmrna1 = tmrna.TmrnaFeature()
+        self.tmrna1.id = "L5_TMRNA_1"
+        self.tmrna2 = tmrna.TmrnaFeature()
+        self.tmrna2.id = "L5_TMRNA_2"
+        self.tmrna3 = tmrna.TmrnaFeature()
+        self.tmrna3.id = "L5_TMRNA_3"
+
         self.genome1 = genome.Genome()
         self.genome1.type = "flat_file"
-        self.genome1.cds_features.append(self.cds1)
-        self.genome1.cds_features.append(self.cds2)
-        self.genome1.source_features.append(self.src1)
-        self.genome1.source_features.append(self.src2)
+        self.genome1.cds_features = [self.cds1, self.cds2]
+        self.genome1.source_features = [self.src1, self.src2]
+        self.genome1.trna_features = [self.trna1, self.trna2]
+        self.genome1.tmrna_features = [self.tmrna1, self.tmrna2]
+
         self.genome2 = genome.Genome()
         self.genome2.type = "mysql"
         self.genome_pair1 = genomepair.GenomePair()
@@ -326,25 +343,77 @@ class TestBundleClass2(unittest.TestCase):
         self.assertEqual(self.bndl._errors, 2)
 
     def test_check_for_errors_19(self):
+        """Check that a trna 'correct' evaluation is not counted."""
+        self.trna1.evaluations.append(self.eval_correct1)
+        self.bndl.check_for_errors()
+        self.assertEqual(self.bndl._errors, 0)
+
+    def test_check_for_errors_20(self):
+        """Check that a trna 'error' evaluation is counted."""
+        self.trna1.evaluations.append(self.eval_error1)
+        self.bndl.check_for_errors()
+        self.assertEqual(self.bndl._errors, 1)
+
+    def test_check_for_errors_21(self):
+        """Check that two trna 'correct' evals are not counted."""
+        self.trna1.evaluations.append(self.eval_correct1)
+        self.trna2.evaluations.append(self.eval_correct2)
+        self.bndl.check_for_errors()
+        self.assertEqual(self.bndl._errors, 0)
+
+    def test_check_for_errors_22(self):
+        """Check that two trna 'error' evals are counted."""
+        self.trna1.evaluations.append(self.eval_error1)
+        self.trna2.evaluations.append(self.eval_error2)
+        self.bndl.check_for_errors()
+        self.assertEqual(self.bndl._errors, 2)
+
+    def test_check_for_errors_23(self):
+        """Check that a tmrna 'correct' evaluation is not counted."""
+        self.tmrna1.evaluations.append(self.eval_correct1)
+        self.bndl.check_for_errors()
+        self.assertEqual(self.bndl._errors, 0)
+
+    def test_check_for_errors_24(self):
+        """Check that a tmrna 'error' evaluation is counted."""
+        self.tmrna1.evaluations.append(self.eval_error1)
+        self.bndl.check_for_errors()
+        self.assertEqual(self.bndl._errors, 1)
+
+    def test_check_for_errors_25(self):
+        """Check that two tmrna 'correct' evals are not counted."""
+        self.tmrna1.evaluations.append(self.eval_correct1)
+        self.tmrna2.evaluations.append(self.eval_correct2)
+        self.bndl.check_for_errors()
+        self.assertEqual(self.bndl._errors, 0)
+
+    def test_check_for_errors_26(self):
+        """Check that two tmrna 'error' evals are counted."""
+        self.tmrna1.evaluations.append(self.eval_error1)
+        self.tmrna2.evaluations.append(self.eval_error2)
+        self.bndl.check_for_errors()
+        self.assertEqual(self.bndl._errors, 2)
+
+    def test_check_for_errors_27(self):
         """Check that a genome_pair 'correct' evaluation is not counted."""
         self.genome_pair1.evaluations.append(self.eval_correct1)
         self.bndl.check_for_errors()
         self.assertEqual(self.bndl._errors, 0)
 
-    def test_check_for_errors_20(self):
+    def test_check_for_errors_28(self):
         """Check that a genome_pair 'error' evaluation is counted."""
         self.genome_pair1.evaluations.append(self.eval_error1)
         self.bndl.check_for_errors()
         self.assertEqual(self.bndl._errors, 1)
 
-    def test_check_for_errors_21(self):
+    def test_check_for_errors_29(self):
         """Check that two genome_pair 'correct' evals are not counted."""
         self.genome_pair1.evaluations.append(self.eval_correct1)
         self.genome_pair2.evaluations.append(self.eval_correct2)
         self.bndl.check_for_errors()
         self.assertEqual(self.bndl._errors, 0)
 
-    def test_check_for_errors_22(self):
+    def test_check_for_errors_30(self):
         """Check that two genome_pair 'error' evals are counted."""
         self.genome_pair1.evaluations.append(self.eval_error1)
         self.genome_pair2.evaluations.append(self.eval_error2)
@@ -412,7 +481,42 @@ class TestBundleClass2(unittest.TestCase):
             self.assertEqual(len(eval_dict["cds_L5_CDS_3"]), 1)
 
     def test_get_evaluations_6(self):
-        """Verify one evaluation is returned from each genome_pair evaluation list."""
+        """Verify one evaluation is returned from each Trna evaluation list in
+        each genome."""
+        self.trna1.evaluations.append(self.eval_correct1)
+        self.trna1.evaluations.append(self.eval_correct2)
+        self.trna2.evaluations.append(self.eval_error1)
+        self.trna3.evaluations.append(self.eval_error2)
+        self.genome1.trna_features = [self.trna1, self.trna2]
+        self.genome2.trna_features = [self.trna3]
+        eval_dict = self.bndl.get_evaluations()
+        with self.subTest():
+            self.assertEqual(len(eval_dict["trna_L5_TRNA_1"]), 2)
+        with self.subTest():
+            self.assertEqual(len(eval_dict["trna_L5_TRNA_2"]), 1)
+        with self.subTest():
+            self.assertEqual(len(eval_dict["trna_L5_TRNA_3"]), 1)
+
+    def test_get_evaluations_7(self):
+        """Verify one evaluation is returned from each Tmrna evaluation list in
+        each genome."""
+        self.tmrna1.evaluations.append(self.eval_correct1)
+        self.tmrna1.evaluations.append(self.eval_correct2)
+        self.tmrna2.evaluations.append(self.eval_error1)
+        self.tmrna3.evaluations.append(self.eval_error2)
+        self.genome1.tmrna_features = [self.tmrna1, self.tmrna2]
+        self.genome2.tmrna_features = [self.tmrna3]
+        eval_dict = self.bndl.get_evaluations()
+        with self.subTest():
+            self.assertEqual(len(eval_dict["tmrna_L5_TMRNA_1"]), 2)
+        with self.subTest():
+            self.assertEqual(len(eval_dict["tmrna_L5_TMRNA_2"]), 1)
+        with self.subTest():
+            self.assertEqual(len(eval_dict["tmrna_L5_TMRNA_3"]), 1)
+
+    def test_get_evaluations_8(self):
+        """Verify one evaluation is returned from each genome_pair
+        evaluation list."""
         self.genome_pair1.evaluations.append(self.eval_correct1)
         self.genome_pair1.evaluations.append(self.eval_correct2)
         self.genome_pair2.evaluations.append(self.eval_error1)

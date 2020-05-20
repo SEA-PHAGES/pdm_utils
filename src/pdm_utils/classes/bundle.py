@@ -185,6 +185,9 @@ class Bundle:
     def check_for_errors(self):
         """Check evaluation lists of all objects contained in the Bundle
         and determine how many errors there are."""
+        # TODO eventually, cds_pair objects can also be evaluated here, once
+        # they are integrated more fully into pdm_utils.
+
         self._errors = 0
         for evl in self.evaluations:
             if evl.status == "error":
@@ -228,13 +231,6 @@ class Bundle:
                     self._errors += 1
 
 
-            # TODO need to implement this once this class is implemented.
-            # for cds_pair in genome_pair.matched_cds_list:
-            #     for evl in cds_pair.evaluations:
-            #         if evl.status == "error":
-            #             self._errors += 1
-
-
     def get_evaluations(self):
         """Get all evaluations for all objects stored in the Bundle.
 
@@ -252,14 +248,17 @@ class Bundle:
             genome_key = "genome_" + key
             if len(gnm.evaluations) > 0:
                 eval_dict[genome_key] = gnm.evaluations
+
             for src_ftr in gnm.source_features:
                 src_key = "src_" + src_ftr.id
                 if len(src_ftr.evaluations) > 0:
                     eval_dict[src_key] = src_ftr.evaluations
+
             for cds_ftr in gnm.cds_features:
                 cds_key = "cds_" + cds_ftr.id
                 if len(cds_ftr.evaluations) > 0:
                     eval_dict[cds_key] = cds_ftr.evaluations
+
             for trna_ftr in gnm.trna_features:
                 trna_key = "trna_" + trna_ftr.id
                 if len(trna_ftr.evaluations) > 0:

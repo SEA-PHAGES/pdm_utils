@@ -1,7 +1,6 @@
 """Import evaluations descriptions."""
 from pdm_utils.constants import constants
 
-
 def get_string(value_set):
     value_list = list(value_set)
     value_list.sort()
@@ -14,16 +13,14 @@ statuses = get_string(constants.ANNOTATION_STATUS_SET)
 authors = get_string(constants.ANNOTATION_AUTHOR_SET)
 records = get_string(constants.RETRIEVE_RECORD_SET)
 
-
 pfx1 = "A genome that needs to be added"
-sfx1 = "that is already in the database"
-
 pfx2 = "A genome that needs to be replaced"
 pfx3 = "The genome is expected to have"
 pfx4 = "The genome is not expected to have"
 pfx5 = "The new and old genomes are expected to have"
-
 pfx6 = "The bundled data is expected to contain"
+
+sfx1 = "that is already in the database"
 
 EVAL_DESCRIPTIONS = {
     # Target genome to import
