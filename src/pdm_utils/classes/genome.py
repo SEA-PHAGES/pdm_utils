@@ -435,11 +435,8 @@ class Genome:
             list_to_sort.extend(self.cds_features)
         if use_source:
             list_to_sort.extend(self.source_features)
-        # TODO: unit test after trna features are implemented.
         if use_trna:
             list_to_sort.extend(self.trna_features)
-
-        # TODO unit test after tmrna features are implemented.
         if use_tmrna:
             list_to_sort.extend(self.tmrna_features)
 
@@ -451,11 +448,8 @@ class Genome:
                     delimiter = "_CDS_"
                 elif isinstance(sorted_list[index], source.Source):
                     delimiter = "_SRC_"
-                # TODO unit test after trna features are implemented
                 elif isinstance(sorted_list[index], trna.TrnaFeature):
                     delimiter = "_TRNA_"
-
-                # TODO unit test after tmRNA class implemented.
                 elif isinstance(sorted_list[index], tmrna.TmrnaFeature):
                     delimiter = "_TMRNA_"
                 else:
@@ -465,49 +459,48 @@ class Genome:
 
             sorted_list[index].id = self.id + delimiter + str(index + 1)
 
-    # TODO add parameters to specify which feature types (e.g. cds=True, trna=True, ...)
+    # TODO add parameters to specify which feature types
+    # (e.g. cds=True, trna=True, ...).
     def clear_locus_tags(self):
         """Resets locus_tags to empty string."""
-        x = 0
-        while x < len(self.cds_features):
+        for x in range(len(self.cds_features)):
             self.cds_features[x].locus_tag = ""
-            x += 1
+        for x in range(len(self.trna_features)):
+            self.trna_features[x].locus_tag = ""
+        for x in range(len(self.tmrna_features)):
+            self.tmrna_features[x].locus_tag = ""
 
-        # TODO implement for tRNA and tmRNA feature lists.
-        y = 0
-        while y < len(self.trna_features):
-            self.trna_features[y].locus_tag = ""
-            y += 1
-
-        z = 0
-        while z < len(self.tmrna_features):
-            self.tmrna_features[z].locus_tag = ""
-            z += 1
-
-    # TODO unittest
-    def set_feature_genome_ids(self, feature_type, value=None):
+    def set_feature_genome_ids(self, use_cds=False, use_trna=False,
+                               use_tmrna=False, use_source=False, value=None):
         """Sets the genome_id of each feature.
 
-        :param feature_type:
-            Type of features to set genome_id for (CDS, tRNA, etc.)
-        :type feature_type: str
+        :param use_cds:
+            Indicates whether genome_id for CDS features should be set.
+        :type use_cds: bool
+        :param use_trna:
+            Indicates whether genome_id for tRNA features should be set.
+        :type use_trna: bool
+        :param use_tmrna:
+            Indicates whether genome_id for tmRNA features should be set.
+        :type use_tmrna: bool
+        :param use_source:
+            Indicates whether genome_id for source features should be set.
+        :type use_source: bool
         :param value: Genome identifier.
         :type value: str
         """
         if value is None:
             value = self.id
 
-        if feature_type.lower() == "cds":
-            feature_list = self.cds_features
-        elif feature_type.lower() == "source":
-            feature_list = self.source_features
-        # TODO implement.
-        elif feature_type.lower() == "trna":
-            feature_list = self.trna_features
-        elif feature_type.lower() == "tmrna":
-            feature_list = self.tmrna_features
-        else:
-            feature_list = []
+        feature_list = []
+        if use_cds == True:
+            feature_list.extend(self.cds_features)
+        if use_source == True:
+            feature_list.extend(self.source_features)
+        if use_trna == True:
+            feature_list.extend(self.trna_features)
+        if use_tmrna == True:
+            feature_list.extend(self.tmrna_features)
 
         for feature in feature_list:
             feature.genome_id = value
@@ -903,18 +896,21 @@ class Genome:
         self.set_eval(eval_id, definition, result, status)
 
 
-    def check_feature_coordinates(self, cds_ftr=False, trna_ftr=False,
-                tmrna_ftr=False, other=None, strand=False, eval_id=None,
+    def check_feature_coordinates(self, use_cds=False, use_trna=False,
+                use_tmrna=False, other=None, strand=False, eval_id=None,
                 success="correct", fail="error", eval_def=None):
         """Identify nested, duplicated, or partially-duplicated
         features.
 
-        :param cds_ftr: Indicates whether ids of CDS features should be included.
-        :type cds_ftr: bool
-        :param trna_ftr: Indicates whether ids of tRNA features should be included.
-        :type trna_ftr: bool
-        :param tmrna_ftr: Indicates whether ids of tmRNA features should be included.
-        :type tmrna_ftr: bool
+        :param use_cds:
+            Indicates whether ids for CDS features should be generated.
+        :type use_cds: bool
+        :param use_trna:
+            Indicates whether ids for tRNA features should be generated.
+        :type use_trna: bool
+        :param use_tmrna:
+            Indicates whether ids for tmRNA features should be generated.
+        :type use_tmrna: bool
         :param other: List of features that should be included.
         :type other: list
         :param strand: Indicates if feature orientation should be included.
@@ -927,13 +923,13 @@ class Genome:
         unsorted_feature_lists = []
         unsorted_features = []
         ftr_types = set()
-        if cds_ftr:
+        if use_cds:
             ftr_types.add("cds")
             unsorted_features.extend(self.cds_features)
-        if trna_ftr:
+        if use_trna:
             ftr_types.add("trna")
             unsorted_features.extend(self.trna_features)
-        if tmrna_ftr:
+        if use_tmrna:
             ftr_types.add("tmrna")
             unsorted_features.extend(self.tmrna_features)
         if other is not None:
@@ -960,10 +956,6 @@ class Genome:
         result = (f"The following types of features were evaluated: {ft_string}. "
                   f"Features {ft_string} separately grouped "
                   "by orientation for evaluation. ")
-
-        # result = (f"The following types of features were evaluated {s_info} "
-        #           f"regard to feature orientation: {ft_string}. ")
-
         msgs = ["There are one or more errors with the feature coordinates."]
         for unsorted_features in unsorted_feature_lists:
             sorted_features = sorted(unsorted_features,

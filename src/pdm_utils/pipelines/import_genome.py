@@ -804,15 +804,14 @@ def prepare_bundle(filepath=pathlib.Path(), ticket_dict={}, engine=None,
             # Need to recompute the feature ids using the new genome id.
             ff_gnm.set_feature_ids(use_type=True, use_cds=True)
             ff_gnm.set_feature_ids(use_type=True, use_source=True)
-            # TODO set tRNA and tmRNA feature ids.
+
+            # TODO test tRNA and tmRNA feature ids have been set.
             ff_gnm.set_feature_ids(use_type=True, use_trna=True)
             ff_gnm.set_feature_ids(use_type=True, use_tmrna=True)
 
-            ff_gnm.set_feature_genome_ids("cds")
-            ff_gnm.set_feature_genome_ids("source")
-            # TODO set tRNA and tmRNA feature genome_ids.
-            ff_gnm.set_feature_genome_ids("trna")
-            ff_gnm.set_feature_genome_ids("tmrna")
+            # TODO test that trna and tmrna genome_ids have been changed.
+            ff_gnm.set_feature_genome_ids(use_cds=True, use_trna=True,
+                                          use_tmrna=True, use_source=True)
 
         bndl.genome_dict[ff_gnm.type] = ff_gnm
 
@@ -1482,8 +1481,8 @@ def check_genome(gnm, tkt_type, eval_flags, phage_id_set=set(),
                                     eval_def=EDD["GNM_013"])
 
     if eval_flags["check_coords"]:
-        # TODO set trna=True and tmrna=True after they are implemented.
-        gnm.check_feature_coordinates(cds_ftr=True, trna_ftr=True, tmrna_ftr=True,
+        # TODO test trna and tmrna after set.
+        gnm.check_feature_coordinates(use_cds=True, use_trna=True, use_tmrna=True,
                                       strand=False, eval_id="GNM_030",
                                       eval_def=EDD["GNM_030"], fail="warning")
 

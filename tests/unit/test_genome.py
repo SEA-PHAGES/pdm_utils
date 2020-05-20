@@ -1,24 +1,20 @@
 """ Unit tests for the Genome class."""
 
-
-import unittest
-from pdm_utils.constants import constants
-from pdm_utils.classes import genome
-from pdm_utils.classes import cds
-from pdm_utils.classes import trna
-from pdm_utils.classes import source
 from datetime import datetime
+import pathlib
+import unittest
+
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
-import pathlib
+
+from pdm_utils.classes import cds, trna, tmrna, source
+from pdm_utils.classes import genome
+from pdm_utils.constants import constants
 
 class TestGenomeClass1(unittest.TestCase):
 
-
     def setUp(self):
         self.gnm = genome.Genome()
-
-
 
         self.cds1 = cds.Cds()
         self.cds1.description = ""
@@ -40,6 +36,12 @@ class TestGenomeClass1(unittest.TestCase):
         self.trna2 = trna.TrnaFeature()
         self.trna3 = trna.TrnaFeature()
         self.trna4 = trna.TrnaFeature()
+
+        self.tmrna1 = tmrna.TmrnaFeature()
+        self.tmrna2 = tmrna.TmrnaFeature()
+        self.tmrna3 = tmrna.TmrnaFeature()
+
+        self.source1 = source.Source()
 
     def test_set_filename_1(self):
         """Confirm file path is split appropriately."""
@@ -162,6 +164,17 @@ class TestGenomeClass1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.gnm._trna_features_tally, 4)
 
+
+
+
+    def test_set_tmrna_features_1(self):
+        """Check that tmRNA feature list is set and length is computed."""
+        features_list = [0,1,2,3]
+        self.gnm.set_tmrna_features(features_list)
+        with self.subTest():
+            self.assertEqual(len(self.gnm.tmrna_features), 4)
+        with self.subTest():
+            self.assertEqual(self.gnm._tmrna_features_tally, 4)
 
 
 
@@ -857,16 +870,152 @@ class TestGenomeClass1(unittest.TestCase):
         self.cds2.locus_tag = "L5_2"
         self.cds3.locus_tag = "L5_3"
         self.gnm.cds_features = [self.cds1, self.cds2, self.cds3]
+
+        self.trna1.locus_tag = "L5_4"
+        self.gnm.trna_features = [self.trna1]
+
+        self.tmrna1.locus_tag = "L5_5"
+        self.tmrna2.locus_tag = "L5_6"
+        self.gnm.tmrna_features = [self.tmrna1, self.tmrna2]
+
         not_empty = 0
-        for cds_ftr in self.gnm.cds_features:
-            if cds_ftr.locus_tag != "":
+        for ftr in self.gnm.cds_features:
+            if ftr.locus_tag != "":
                 not_empty += 1
+        for ftr in self.gnm.trna_features:
+            if ftr.locus_tag != "":
+                not_empty += 1
+        for ftr in self.gnm.tmrna_features:
+            if ftr.locus_tag != "":
+                not_empty += 1
+
         self.gnm.clear_locus_tags()
         empty = 0
-        for cds_ftr in self.gnm.cds_features:
-            if cds_ftr.locus_tag == "":
+        for ftr in self.gnm.cds_features:
+            if ftr.locus_tag == "":
                 empty += 1
+        for ftr in self.gnm.trna_features:
+            if ftr.locus_tag == "":
+                empty += 1
+        for ftr in self.gnm.tmrna_features:
+            if ftr.locus_tag == "":
+                empty += 1
+
         self.assertEqual(not_empty, empty)
+
+
+
+
+    def test_set_feature_genome_ids_1(self):
+        """Verify that the genome_id of CDS, tRNA, tmRNA, and Source features
+        are all set."""
+        id1 = "L5"
+        id2 = "Trixie"
+        self.cds1.genome_id = id1
+        self.cds2.genome_id = id1
+        self.gnm.cds_features = [self.cds1, self.cds2]
+
+        self.trna1.genome_id = id1
+        self.trna2.genome_id = id1
+        self.gnm.trna_features = [self.trna1, self.trna2]
+
+        self.tmrna1.genome_id = id1
+        self.tmrna2.genome_id = id1
+        self.gnm.tmrna_features = [self.tmrna1, self.tmrna2]
+
+        self.source1.genome_id = id1
+        self.gnm.source_features = [self.source1]
+
+        self.gnm.set_feature_genome_ids(use_cds=True, use_trna=True,
+                                        use_tmrna=True, use_source=True,
+                                        value=id2)
+
+        for ftr in self.gnm.cds_features:
+            with self.subTest():
+                self.assertEqual(ftr.genome_id, id2)
+        for ftr in self.gnm.trna_features:
+            with self.subTest():
+                self.assertEqual(ftr.genome_id, id2)
+        for ftr in self.gnm.tmrna_features:
+            with self.subTest():
+                self.assertEqual(ftr.genome_id, id2)
+        for ftr in self.gnm.source_features:
+            with self.subTest():
+                self.assertEqual(ftr.genome_id, id2)
+
+    def test_set_feature_genome_ids_2(self):
+        """Verify that the genome_id of only CDS features are set."""
+        id1 = "L5"
+        id2 = "Trixie"
+        self.cds1.genome_id = id1
+        self.cds2.genome_id = id1
+        self.gnm.cds_features = [self.cds1, self.cds2]
+
+        self.trna1.genome_id = id1
+        self.trna2.genome_id = id1
+        self.gnm.trna_features = [self.trna1, self.trna2]
+
+        self.tmrna1.genome_id = id1
+        self.tmrna2.genome_id = id1
+        self.gnm.tmrna_features = [self.tmrna1, self.tmrna2]
+
+        self.source1.genome_id = id1
+        self.gnm.source_features = [self.source1]
+
+        self.gnm.set_feature_genome_ids(use_cds=True, use_trna=False,
+                                        use_tmrna=False, use_source=False,
+                                        value=id2)
+
+        for ftr in self.gnm.cds_features:
+            with self.subTest():
+                self.assertEqual(ftr.genome_id, id2)
+        for ftr in self.gnm.trna_features:
+            with self.subTest():
+                self.assertEqual(ftr.genome_id, id1)
+        for ftr in self.gnm.tmrna_features:
+            with self.subTest():
+                self.assertEqual(ftr.genome_id, id1)
+        for ftr in self.gnm.source_features:
+            with self.subTest():
+                self.assertEqual(ftr.genome_id, id1)
+
+    def test_set_feature_genome_ids_3(self):
+        """Verify that the genome_id of only CDS features are set without
+        providing a value."""
+        id1 = "L5"
+        id2 = "Trixie"
+        # Set genome id to 'Trixie' and set all feature.genome_ids to 'L5'.
+        self.gnm.id = id2
+        self.cds1.genome_id = id1
+        self.cds2.genome_id = id1
+        self.gnm.cds_features = [self.cds1, self.cds2]
+
+        self.trna1.genome_id = id1
+        self.trna2.genome_id = id1
+        self.gnm.trna_features = [self.trna1, self.trna2]
+
+        self.tmrna1.genome_id = id1
+        self.tmrna2.genome_id = id1
+        self.gnm.tmrna_features = [self.tmrna1, self.tmrna2]
+
+        self.source1.genome_id = id1
+        self.gnm.source_features = [self.source1]
+
+        self.gnm.set_feature_genome_ids(use_cds=True, use_trna=False,
+                                        use_tmrna=False, use_source=False)
+
+        for ftr in self.gnm.cds_features:
+            with self.subTest():
+                self.assertEqual(ftr.genome_id, id2)
+        for ftr in self.gnm.trna_features:
+            with self.subTest():
+                self.assertEqual(ftr.genome_id, id1)
+        for ftr in self.gnm.tmrna_features:
+            with self.subTest():
+                self.assertEqual(ftr.genome_id, id1)
+        for ftr in self.gnm.source_features:
+            with self.subTest():
+                self.assertEqual(ftr.genome_id, id1)
 
 
 
@@ -1112,7 +1261,7 @@ class TestGenomeClass1(unittest.TestCase):
         self.cds2.start = 20
         self.cds2.stop = 70
         self.gnm.cds_features = [self.cds1, self.cds2]
-        self.gnm.check_feature_coordinates(cds_ftr=True,eval_id="eval_id")
+        self.gnm.check_feature_coordinates(use_cds=True,eval_id="eval_id")
         with self.subTest():
             self.assertEqual(self.gnm.evaluations[0].status, "correct")
         with self.subTest():
@@ -1128,7 +1277,7 @@ class TestGenomeClass1(unittest.TestCase):
         self.cds2.start = 5
         self.cds2.stop = 50
         self.gnm.cds_features = [self.cds1, self.cds2]
-        self.gnm.check_feature_coordinates(cds_ftr=True)
+        self.gnm.check_feature_coordinates(use_cds=True)
         with self.subTest():
             self.assertEqual(self.gnm.evaluations[0].status, "error")
         with self.subTest():
@@ -1144,7 +1293,7 @@ class TestGenomeClass1(unittest.TestCase):
         self.cds2.start = 5
         self.cds2.stop = 50
         self.gnm.cds_features = [self.cds1, self.cds2]
-        self.gnm.check_feature_coordinates(cds_ftr=True)
+        self.gnm.check_feature_coordinates(use_cds=True)
         self.assertEqual(self.gnm.evaluations[0].status, "error")
 
     def test_check_feature_coordinates_4(self):
@@ -1157,7 +1306,7 @@ class TestGenomeClass1(unittest.TestCase):
         self.cds2.start = 5
         self.cds2.stop = 50
         self.gnm.cds_features = [self.cds1, self.cds2]
-        self.gnm.check_feature_coordinates(cds_ftr=True, strand=True)
+        self.gnm.check_feature_coordinates(use_cds=True, strand=True)
         self.assertEqual(self.gnm.evaluations[0].status, "correct")
 
     def test_check_feature_coordinates_5(self):
@@ -1170,7 +1319,7 @@ class TestGenomeClass1(unittest.TestCase):
         self.cds2.start = 5
         self.cds2.stop = 50
         self.gnm.cds_features = [self.cds1, self.cds2]
-        self.gnm.check_feature_coordinates(cds_ftr=True)
+        self.gnm.check_feature_coordinates(use_cds=True)
         self.assertEqual(self.gnm.evaluations[0].status, "error")
 
 
@@ -1184,7 +1333,7 @@ class TestGenomeClass1(unittest.TestCase):
         self.cds2.start = 10
         self.cds2.stop = 50
         self.gnm.cds_features = [self.cds1, self.cds2]
-        self.gnm.check_feature_coordinates(cds_ftr=True)
+        self.gnm.check_feature_coordinates(use_cds=True)
         self.assertEqual(self.gnm.evaluations[0].status, "correct")
 
     def test_check_feature_coordinates_7(self):
@@ -1197,7 +1346,7 @@ class TestGenomeClass1(unittest.TestCase):
         self.cds2.start = 5
         self.cds2.stop = 50
         self.gnm.cds_features = [self.cds1, self.cds2]
-        self.gnm.check_feature_coordinates(cds_ftr=True)
+        self.gnm.check_feature_coordinates(use_cds=True)
         self.assertEqual(self.gnm.evaluations[0].status, "error")
 
     def test_check_feature_coordinates_8(self):
@@ -1210,7 +1359,7 @@ class TestGenomeClass1(unittest.TestCase):
         self.cds2.start = 5
         self.cds2.stop = 50
         self.gnm.cds_features = [self.cds1, self.cds2]
-        self.gnm.check_feature_coordinates(cds_ftr=True)
+        self.gnm.check_feature_coordinates(use_cds=True)
         self.assertEqual(self.gnm.evaluations[0].status, "correct")
 
     def test_check_feature_coordinates_9(self):
@@ -1223,7 +1372,7 @@ class TestGenomeClass1(unittest.TestCase):
         self.cds2.start = 5
         self.cds2.stop = 50
         self.gnm.cds_features = [self.cds1, self.cds2]
-        self.gnm.check_feature_coordinates(cds_ftr=True)
+        self.gnm.check_feature_coordinates(use_cds=True)
         self.assertEqual(self.gnm.evaluations[0].status, "error")
 
     def test_check_feature_coordinates_10(self):
@@ -1240,10 +1389,24 @@ class TestGenomeClass1(unittest.TestCase):
         self.trna1.orientation = "F"
         self.gnm.cds_features = [self.cds1, self.cds2]
         self.gnm.trna_features = [self.trna1]
-        self.gnm.check_feature_coordinates(cds_ftr=True, trna_ftr=True)
+        self.gnm.check_feature_coordinates(use_cds=True, use_trna=True)
         self.assertEqual(self.gnm.evaluations[0].status, "error")
 
     def test_check_feature_coordinates_11(self):
+        """Verify an error is produced by a tRNA and tmRNA feature
+        when they have the same coordinates."""
+        self.tmrna1.orientation = "F"
+        self.tmrna1.start = 5
+        self.tmrna1.stop = 20
+        self.trna1.start = 5
+        self.trna1.stop = 20
+        self.trna1.orientation = "F"
+        self.gnm.trna_features = [self.trna1]
+        self.gnm.tmrna_features = [self.tmrna1]
+        self.gnm.check_feature_coordinates(use_tmrna=True, use_trna=True)
+        self.assertEqual(self.gnm.evaluations[0].status, "error")
+
+    def test_check_feature_coordinates_12(self):
         """Verify no error is produced by a CDS and tRNA feature
         when they have the same coordinates when CDS is false."""
         self.cds1.orientation = "F"
@@ -1257,10 +1420,10 @@ class TestGenomeClass1(unittest.TestCase):
         self.trna1.orientation = "F"
         self.gnm.cds_features = [self.cds1, self.cds2]
         self.gnm.trna_features = [self.trna1]
-        self.gnm.check_feature_coordinates(trna_ftr=True)
+        self.gnm.check_feature_coordinates(use_trna=True)
         self.assertEqual(self.gnm.evaluations[0].status, "correct")
 
-    def test_check_feature_coordinates_12(self):
+    def test_check_feature_coordinates_13(self):
         """Verify an error is produced by a CDS feature stored in the
         CDS features list and a CDS feature stored in a supplementary list
         when they have the same coordinates."""
@@ -1274,16 +1437,16 @@ class TestGenomeClass1(unittest.TestCase):
         self.cds3.start = 5
         self.cds3.stop = 20
         self.gnm.cds_features = [self.cds1, self.cds2]
-        self.gnm.check_feature_coordinates(cds_ftr=True, other=[self.cds3])
+        self.gnm.check_feature_coordinates(use_cds=True, other=[self.cds3])
         self.assertEqual(self.gnm.evaluations[0].status, "error")
 
-    def test_check_feature_coordinates_13(self):
+    def test_check_feature_coordinates_14(self):
         """Verify no error is produced when empty lists are passed through."""
-        self.gnm.check_feature_coordinates(cds_ftr=True, trna_ftr=True,
-                                           tmrna_ftr=True, other=[])
+        self.gnm.check_feature_coordinates(use_cds=True, use_trna=True,
+                                           use_tmrna=True, other=[])
         self.assertEqual(self.gnm.evaluations[0].status, "correct")
 
-    def test_check_feature_coordinates_14(self):
+    def test_check_feature_coordinates_15(self):
         """Verify no error is produced by two CDS features with same orientation
         when one wraps around the end of the genome."""
         # For wrap-around genes, the 'start' coordinate is larger than
@@ -1295,8 +1458,10 @@ class TestGenomeClass1(unittest.TestCase):
         self.cds2.start = 5
         self.cds2.stop = 50
         self.gnm.cds_features = [self.cds1, self.cds2]
-        self.gnm.check_feature_coordinates(cds_ftr=True)
+        self.gnm.check_feature_coordinates(use_cds=True)
         self.assertEqual(self.gnm.evaluations[0].status, "correct")
+
+
 
 
 class TestGenomeClass2(unittest.TestCase):
@@ -1318,45 +1483,56 @@ class TestGenomeClass2(unittest.TestCase):
         self.src1 = source.Source()
         self.src2 = source.Source()
 
+        self.tmrna1 = tmrna.TmrnaFeature()
+        self.tmrna2 = tmrna.TmrnaFeature()
 
-        #1
+        # 1
         self.trna3.start = 10
         self.trna3.stop = 15
 
-        #2
+        # 2
         self.trna2.start = 10
         self.trna2.stop = 17
 
-        #3
+        # 3
         self.cds4.start = 10
         self.cds4.stop = 20
 
-        #4
-        self.cds3.start = 18
+        # 4
+        self.cds3.start = 15
         self.cds3.stop = 30
 
-        #5
-        self.cds2.start = 18
+        # 5
+        self.cds2.start = 15
         self.cds2.stop = 40
 
-        #6
+        # 6
+        self.tmrna1.start = 17
+        self.tmrna1.stop = 18
+
+        # 7
         self.src2.start = 19
         self.src2.stop = 35
 
-        #7
+        # 8
         self.trna1.start = 100
         self.trna1.stop = 200
 
-        #8
+        # 9
         self.src1.start = 101
         self.src1.stop = 300
 
-        #9 Wrap-around feature.
+        # 10
+        self.tmrna2.start = 200
+        self.tmrna2.stop = 205
+
+        # 11 Wrap-around feature.
         self.cds1.start = 400
         self.cds1.stop = 3
 
         self.gnm.cds_features = [self.cds1, self.cds2, self.cds3, self.cds4]
         self.gnm.trna_features = [self.trna1, self.trna2, self.trna3]
+        self.gnm.tmrna_features = [self.tmrna1, self.tmrna2]
         self.gnm.source_features = [self.src1, self.src2]
 
 
@@ -1382,7 +1558,7 @@ class TestGenomeClass2(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.trna3.id, "L5_1")
 
-    def test_set_feature_ids_2(self):
+    def test_set_feature_ids_3(self):
         """Verify that source features are sorted in correct order."""
         self.gnm.set_feature_ids(use_source=True)
         with self.subTest():
@@ -1391,17 +1567,26 @@ class TestGenomeClass2(unittest.TestCase):
             self.assertEqual(self.src1.id, "L5_2")
 
     def test_set_feature_ids_4(self):
-        """Verify that CDS, tRNA, and source features are sorted
-        in correct order."""
-        self.gnm.set_feature_ids(use_cds=True, use_trna=True, use_source=True)
+        """Verify that tmRNA features are sorted in correct order."""
+        self.gnm.set_feature_ids(use_tmrna=True)
         with self.subTest():
-            self.assertEqual(self.trna1.id, "L5_7")
+            self.assertEqual(self.tmrna1.id, "L5_1")
+        with self.subTest():
+            self.assertEqual(self.tmrna2.id, "L5_2")
+
+    def test_set_feature_ids_5(self):
+        """Verify that CDS, tRNA, tmrna, and source features are sorted
+        in correct order."""
+        self.gnm.set_feature_ids(use_cds=True, use_trna=True, use_tmrna=True,
+                                 use_source=True)
+        with self.subTest():
+            self.assertEqual(self.trna1.id, "L5_8")
         with self.subTest():
             self.assertEqual(self.trna2.id, "L5_2")
         with self.subTest():
             self.assertEqual(self.trna3.id, "L5_1")
         with self.subTest():
-            self.assertEqual(self.cds1.id, "L5_9")
+            self.assertEqual(self.cds1.id, "L5_11")
         with self.subTest():
             self.assertEqual(self.cds2.id, "L5_5")
         with self.subTest():
@@ -1409,26 +1594,31 @@ class TestGenomeClass2(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.cds4.id, "L5_3")
         with self.subTest():
-            self.assertEqual(self.src1.id, "L5_8")
+            self.assertEqual(self.src1.id, "L5_9")
         with self.subTest():
-            self.assertEqual(self.src2.id, "L5_6")
+            self.assertEqual(self.src2.id, "L5_7")
+        with self.subTest():
+            self.assertEqual(self.tmrna1.id, "L5_6")
+        with self.subTest():
+            self.assertEqual(self.tmrna2.id, "L5_10")
 
-    def test_set_feature_ids_5(self):
-        """Verify that CDS and tRNA features are sorted in correct order
-        with type delimiter added."""
+    def test_set_feature_ids_6(self):
+        """Verify that CDS, tRNA, tmRNA, and source features are sorted
+        in correct order with type delimiter added."""
         self.gnm.cds_features = [self.cds4]
         self.gnm.trna_features = [self.trna3]
+        self.gnm.tmrna_features = [self.tmrna1]
         self.gnm.source_features = [self.src2]
-        self.gnm.set_feature_ids(use_type=True, use_cds=True,
-                                 use_trna=True, use_source=True)
+        self.gnm.set_feature_ids(use_type=True, use_cds=True, use_trna=True,
+                                 use_tmrna=True, use_source=True)
         with self.subTest():
             self.assertEqual(self.trna3.id, "L5_TRNA_1")
         with self.subTest():
             self.assertEqual(self.cds4.id, "L5_CDS_2")
         with self.subTest():
-            self.assertEqual(self.src2.id, "L5_SRC_3")
-
-
+            self.assertEqual(self.tmrna1.id, "L5_TMRNA_3")
+        with self.subTest():
+            self.assertEqual(self.src2.id, "L5_SRC_4")
 
 
 if __name__ == '__main__':
