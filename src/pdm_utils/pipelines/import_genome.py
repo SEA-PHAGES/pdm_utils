@@ -794,24 +794,7 @@ def prepare_bundle(filepath=pathlib.Path(), ticket_dict={}, engine=None,
         # in the database), the genome ID needs to be changed.
         # id_conversion_dict key = incorrect spelling; value = correct spelling
         if ff_gnm.id in id_conversion_dict.keys():
-
-            # Treat the new value as a name, which could have '_Draft' suffix,
-            # then use set_id() to remove suffix.
-            new_name = id_conversion_dict[ff_gnm.id]
-            ff_gnm.name = new_name
-            ff_gnm.set_id(value=new_name)
-
-            # Need to recompute the feature ids using the new genome id.
-            ff_gnm.set_feature_ids(use_type=True, use_cds=True)
-            ff_gnm.set_feature_ids(use_type=True, use_source=True)
-
-            # TODO test tRNA and tmRNA feature ids have been set.
-            ff_gnm.set_feature_ids(use_type=True, use_trna=True)
-            ff_gnm.set_feature_ids(use_type=True, use_tmrna=True)
-
-            # TODO test that trna and tmrna genome_ids have been changed.
-            ff_gnm.set_feature_genome_ids(use_cds=True, use_trna=True,
-                                          use_tmrna=True, use_source=True)
+            ff_gnm.update_name_and_id(id_conversion_dict[ff_gnm.id])
 
         bndl.genome_dict[ff_gnm.type] = ff_gnm
 
@@ -982,17 +965,15 @@ def review_bundled_objects(bndl, interactive=False):
             # Genome-level evaluations.
             # Instead of passing all genomes from the genome_dict at one time,
             # it makes more sense to evaluate only one genome.evaluations list
-            # at the same time as its cds_features.evaluations,
-            # source.evaluations, etc.
+            # at the same time as the evaluations for its cds, tRNA, tmRNA,
+            # and source features.
             review_object_list([gnm], "Genome", ["id", "type"],
                                interactive=interactive)
 
-            # CDS feature check.
             review_object_list(gnm.cds_features, "CDS feature",
                                ["id", "start", "stop", "orientation"],
                                interactive=interactive)
 
-            # Source feature check.
             review_object_list(gnm.source_features, "Source feature",
                                ["id"], interactive=interactive)
 
@@ -1481,11 +1462,9 @@ def check_genome(gnm, tkt_type, eval_flags, phage_id_set=set(),
                                     eval_def=EDD["GNM_013"])
 
     if eval_flags["check_coords"]:
-        # TODO test trna and tmrna after set.
         gnm.check_feature_coordinates(use_cds=True, use_trna=True, use_tmrna=True,
                                       strand=False, eval_id="GNM_030",
                                       eval_def=EDD["GNM_030"], fail="warning")
-
 
     check_id = basic.edit_suffix(gnm.name, "add", suffix=constants.NAME_SUFFIX)
     gnm.check_attribute("id", {check_id}, expect=False,

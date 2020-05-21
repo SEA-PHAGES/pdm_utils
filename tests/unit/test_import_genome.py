@@ -576,6 +576,34 @@ class TestImportGenome4(unittest.TestCase):
         self.cds2.coordinate_format = "0_half_open"
         self.cds2.orientation = "F"
 
+        self.trna1 = trna.TrnaFeature()
+        self.trna1.id = "L5_3"
+        self.trna1.start = 300
+        self.trna1.stop = 400
+        self.trna1.coordinate_format = "0_half_open"
+        self.trna1.orientation = "F"
+
+        self.trna2 = trna.TrnaFeature()
+        self.trna2.id = "L5_4"
+        self.trna2.start = 500
+        self.trna2.stop = 600
+        self.trna2.coordinate_format = "0_half_open"
+        self.trna2.orientation = "F"
+
+        self.tmrna1 = tmrna.TmrnaFeature()
+        self.tmrna1.id = "L5_4"
+        self.tmrna1.start = 700
+        self.tmrna1.stop = 800
+        self.tmrna1.coordinate_format = "0_half_open"
+        self.tmrna1.orientation = "F"
+
+        self.tmrna2 = tmrna.TmrnaFeature()
+        self.tmrna2.id = "L5_5"
+        self.tmrna2.start = 900
+        self.tmrna2.stop = 1000
+        self.tmrna2.coordinate_format = "0_half_open"
+        self.tmrna2.orientation = "F"
+
         self.gnm = genome.Genome()
         self.gnm.type = "flat_file"
         self.gnm.id = "Trixie"
@@ -605,6 +633,8 @@ class TestImportGenome4(unittest.TestCase):
         self.gnm._organism_host_genus = "Mycobacterium"
         self.gnm.authors = "Doe,J., Hatfull,G.F., John;R., Smith; Jones,B."
         self.gnm.cds_features = [self.cds1, self.cds2]
+        self.gnm.trna_features = [self.trna1, self.trna2]
+        self.gnm.tmrna_features = [self.tmrna1, self.tmrna2]
 
         self.id_set = set(["L5", "RedRock"])
         self.seq_set = set([Seq("ATGC", IUPAC.ambiguous_dna),
@@ -1005,7 +1035,7 @@ class TestImportGenome4(unittest.TestCase):
     def test_check_genome_29(self):
         """Verify correct number of errors are produced using:
         'final' annotation_status, and
-        duplicated feature coordinates."""
+        duplicated CDS coordinates."""
         self.tkt.type = "replace"
         self.gnm.accession = "ABC123"
         self.gnm.annotation_status = "final"
@@ -1013,8 +1043,12 @@ class TestImportGenome4(unittest.TestCase):
         self.gnm.name = "Trixie"
         self.gnm.seq = Seq("ATGC", IUPAC.ambiguous_dna)
         self.id_set.add("Trixie")
+        self.cds1.start = 10
+        self.cds1.stop = 20
+        self.cds1.orientation = "F"
         self.cds2.start = 10
         self.cds2.stop = 20
+        self.cds2.orientation = "R"
         import_genome.check_genome(
             self.gnm, self.tkt.type, self.tkt.eval_flags,
             self.id_set, self.seq_set, self.host_set,
@@ -1023,6 +1057,54 @@ class TestImportGenome4(unittest.TestCase):
         self.assertEqual(count, 1)
 
     def test_check_genome_30(self):
+        """Verify correct number of errors are produced using:
+        'final' annotation_status, and
+        duplicated CDS and tRNA coordinates."""
+        self.tkt.type = "replace"
+        self.gnm.accession = "ABC123"
+        self.gnm.annotation_status = "final"
+        self.gnm._cds_descriptions_tally = 1
+        self.gnm.name = "Trixie"
+        self.gnm.seq = Seq("ATGC", IUPAC.ambiguous_dna)
+        self.id_set.add("Trixie")
+        self.cds1.start = 10
+        self.cds1.stop = 20
+        self.cds1.orientation = "F"
+        self.trna1.start = 10
+        self.trna1.stop = 20
+        self.trna1.orientation = "R"
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        count = count_status(self.gnm, "error", "warning")
+        self.assertEqual(count, 1)
+
+    def test_check_genome_31(self):
+        """Verify correct number of errors are produced using:
+        'final' annotation_status, and
+        duplicated tRNA and tmRNA coordinates."""
+        self.tkt.type = "replace"
+        self.gnm.accession = "ABC123"
+        self.gnm.annotation_status = "final"
+        self.gnm._cds_descriptions_tally = 1
+        self.gnm.name = "Trixie"
+        self.gnm.seq = Seq("ATGC", IUPAC.ambiguous_dna)
+        self.id_set.add("Trixie")
+        self.tmrna1.start = 10
+        self.tmrna1.stop = 20
+        self.tmrna1.orientation = "F"
+        self.trna1.start = 10
+        self.trna1.stop = 20
+        self.trna1.orientation = "R"
+        import_genome.check_genome(
+            self.gnm, self.tkt.type, self.tkt.eval_flags,
+            self.id_set, self.seq_set, self.host_set,
+            self.cluster_set, self.subcluster_set, self.accession_set)
+        count = count_status(self.gnm, "error", "warning")
+        self.assertEqual(count, 1)
+
+    def test_check_genome_32(self):
         """Verify correct number of errors are produced using:
         'final' annotation_status, and
         'name' contains '_Draft' suffix."""
@@ -1040,7 +1122,7 @@ class TestImportGenome4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_31(self):
+    def test_check_genome_33(self):
         """Verify correct number of errors are produced using:
         'final' annotation_status, and
         '_cds_descriptions_tally' == 0."""
@@ -1058,7 +1140,7 @@ class TestImportGenome4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_32(self):
+    def test_check_genome_34(self):
         """Verify correct number of errors are produced using:
         ticket type = 'add', id contains '_Draft' suffix.
         'annotation_status' = 'draft',
@@ -1076,7 +1158,7 @@ class TestImportGenome4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_33(self):
+    def test_check_genome_35(self):
         """Verify correct number of errors are produced using:
         invalid 'annotation_status'."""
         self.gnm.annotation_status = "invalid"
@@ -1087,7 +1169,7 @@ class TestImportGenome4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_34(self):
+    def test_check_genome_36(self):
         """Verify correct number of errors are produced using:
         invalid 'annotation_author'."""
         self.gnm.annotation_author = -1
@@ -1099,7 +1181,7 @@ class TestImportGenome4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_35(self):
+    def test_check_genome_37(self):
         """Verify correct number of errors are produced using:
         invalid 'retrieve_record'."""
         self.gnm.retrieve_record = -1
@@ -1110,7 +1192,7 @@ class TestImportGenome4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_36(self):
+    def test_check_genome_38(self):
         """Verify correct number of errors are produced using:
         'cluster' not in cluster_set."""
         self.gnm.cluster = "Z"
@@ -1123,7 +1205,7 @@ class TestImportGenome4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_37(self):
+    def test_check_genome_39(self):
         """Verify correct number of errors are produced using:
         'subcluster' not in subcluster_set."""
         self.gnm.cluster = "Z"
@@ -1136,7 +1218,7 @@ class TestImportGenome4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_38(self):
+    def test_check_genome_40(self):
         """Verify correct number of errors are produced using:
         'subcluster' = 'none'."""
         self.gnm.subcluster = "none"
@@ -1147,7 +1229,7 @@ class TestImportGenome4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 0)
 
-    def test_check_genome_39(self):
+    def test_check_genome_41(self):
         """Verify correct number of errors are produced using:
         invalid 'translation_table'."""
         self.gnm.translation_table = 1
@@ -1158,7 +1240,7 @@ class TestImportGenome4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_40(self):
+    def test_check_genome_42(self):
         """Verify correct number of errors are produced using:
         'host_genus' not in host_set."""
         self.host_set = {"Gordonia"}
@@ -1169,7 +1251,7 @@ class TestImportGenome4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_41(self):
+    def test_check_genome_43(self):
         """Verify correct number of errors are produced using:
         'cluster' structured incorrectly."""
         self.gnm.cluster = "Z1"
@@ -1183,7 +1265,7 @@ class TestImportGenome4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 2)
 
-    def test_check_genome_42(self):
+    def test_check_genome_44(self):
         """Verify correct number of errors are produced using:
         'subcluster' structured incorrectly."""
         self.gnm.cluster = "Z"
@@ -1197,7 +1279,7 @@ class TestImportGenome4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 2)
 
-    def test_check_genome_43(self):
+    def test_check_genome_45(self):
         """Verify correct number of errors are produced using:
         incompatible 'cluster' and 'subcluster'."""
         self.gnm.cluster = "Z"
@@ -1211,7 +1293,7 @@ class TestImportGenome4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_44(self):
+    def test_check_genome_46(self):
         """Verify correct number of errors are produced using:
         invalid 'date'."""
         self.gnm.date = constants.EMPTY_DATE
@@ -1222,7 +1304,7 @@ class TestImportGenome4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_45(self):
+    def test_check_genome_47(self):
         """Verify correct number of errors are produced using:
         'gc' < 0."""
         self.gnm.gc = -1
@@ -1233,7 +1315,7 @@ class TestImportGenome4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_46(self):
+    def test_check_genome_48(self):
         """Verify correct number of errors are produced using:
         'gc' > 100."""
         self.gnm.gc = 101
@@ -1244,7 +1326,7 @@ class TestImportGenome4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_47(self):
+    def test_check_genome_49(self):
         """Verify correct number of errors are produced using:
         'length' = 0."""
         self.gnm.length = 0
@@ -1255,7 +1337,7 @@ class TestImportGenome4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_48(self):
+    def test_check_genome_50(self):
         """Verify correct number of errors are produced using:
         '_cds_features_tally' = 0."""
         self.gnm._cds_features_tally = 0
@@ -1266,7 +1348,7 @@ class TestImportGenome4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_49(self):
+    def test_check_genome_51(self):
         """Verify correct number of errors are produced using:
         invalid nucleotides."""
         self.gnm.seq = Seq("CCCCC-C", IUPAC.ambiguous_dna)
@@ -1277,7 +1359,7 @@ class TestImportGenome4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_50(self):
+    def test_check_genome_52(self):
         """Verify correct number of errors are produced using:
         incompatible 'id' and '_description_name'."""
         self.gnm._description_name = "L5"
@@ -1288,7 +1370,7 @@ class TestImportGenome4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_51(self):
+    def test_check_genome_53(self):
         """Verify correct number of errors are produced using:
         incompatible 'id' and '_source_name'."""
         self.gnm._source_name = "L5"
@@ -1299,7 +1381,7 @@ class TestImportGenome4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_52(self):
+    def test_check_genome_54(self):
         """Verify correct number of errors are produced using:
         incompatible 'id' and '_organism_name'."""
         self.gnm._organism_name = "L5"
@@ -1310,7 +1392,7 @@ class TestImportGenome4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_53(self):
+    def test_check_genome_55(self):
         """Verify correct number of errors are produced using:
         incompatible 'host_genus' and '_description_host_genus'."""
         self.gnm._description_host_genus = "Gordonia"
@@ -1321,7 +1403,7 @@ class TestImportGenome4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_54(self):
+    def test_check_genome_56(self):
         """Verify correct number of errors are produced using:
         incompatible 'host_genus' and '_source_host_genus'."""
         self.gnm._source_host_genus = "Gordonia"
@@ -1332,7 +1414,7 @@ class TestImportGenome4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_55(self):
+    def test_check_genome_57(self):
         """Verify correct number of errors are produced using:
         incompatible 'host_genus' and '_organism_host_genus'."""
         self.gnm._organism_host_genus = "Gordonia"
@@ -1343,7 +1425,7 @@ class TestImportGenome4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_56(self):
+    def test_check_genome_58(self):
         """Verify correct number of errors are produced using:
         'annotation_author' = 1 and missing author."""
         self.gnm.authors = "Doe,J., Hatful,G.F., John;R., Smith;."
@@ -1354,7 +1436,7 @@ class TestImportGenome4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_57(self):
+    def test_check_genome_59(self):
         """Verify correct number of errors are produced using:
         'annotation_author' = 1 and invalid 'LASTNAME 'author."""
         self.gnm.authors = "Doe,J., Hatfull,G.F., LASTNAME, John;R., Smith;."
@@ -1365,7 +1447,7 @@ class TestImportGenome4(unittest.TestCase):
         count = count_status(self.gnm, "error", "warning")
         self.assertEqual(count, 1)
 
-    def test_check_genome_58(self):
+    def test_check_genome_60(self):
         """Verify correct number of errors are produced using:
         'annotation_author' = 0 and invalid author."""
         self.gnm.annotation_author = 0
@@ -1683,12 +1765,13 @@ class TestImportGenome6(unittest.TestCase):
     def test_run_checks_4(self):
         """Verify run_checks works using a bundle with:
         'add' ticket, 'flat_file' genome with two CDS features,
-        two Source features, and two tRNA features."""
+        two Source features, two tRNA features, and two tmRNA features."""
         self.tkt.type = "add"
         self.bndl.ticket = self.tkt
         self.gnm1.cds_features = [self.cds1, self.cds2]
         self.gnm1.source_features = [self.src1, self.src2]
         self.gnm1.trna_features = [self.trna1, self.trna2]
+        self.gnm1.tmrna_features = [self.tmrna1, self.tmrna2]
         self.bndl.genome_dict["flat_file"] = self.gnm1
         import_genome.run_checks(
                 self.bndl,
@@ -1711,6 +1794,14 @@ class TestImportGenome6(unittest.TestCase):
             self.assertTrue(len(self.src1.evaluations) > 0)
         with self.subTest():
             self.assertTrue(len(self.src2.evaluations) > 0)
+        with self.subTest():
+            self.assertTrue(len(self.trna1.evaluations) > 0)
+        with self.subTest():
+            self.assertTrue(len(self.trna1.evaluations) > 0)
+        with self.subTest():
+            self.assertTrue(len(self.tmrna1.evaluations) > 0)
+        with self.subTest():
+            self.assertTrue(len(self.tmrna2.evaluations) > 0)
 
 
     def test_run_checks_5(self):
@@ -2209,17 +2300,6 @@ class TestImportGenome8(unittest.TestCase):
                                    host_genus="Mycobacterium")
         count = count_status(self.src1, "error")
         self.assertEqual(count, 0)
-
-    # TODO this may no longer be needed, if host_genus synonyms are not used.
-    # def test_check_source_12(self):
-    #     """Verify correct number of errors with permissible synonym
-    #     in organism host genus but not in lab host host genus."""
-    #     self.src1._organism_host_genus = "Mycobacterio"
-    #     self.src1._lab_host_host_genus = "Mycobacterio"
-    #     import_genome.check_source(self.src1, self.eval_flags,
-    #                                host_genus="Mycobacterium")
-    #     count = count_status(self.src1, "error", "warning")
-    #     self.assertEqual(count, 1)
 
 
 

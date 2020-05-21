@@ -11,7 +11,9 @@ from unittest.mock import patch
 
 import sqlalchemy
 
-from pdm_utils.classes import bundle, genome, genomepair, ticket, evaluation, cds, source
+from pdm_utils.classes import bundle, ticket, evaluation
+from pdm_utils.classes import cds, trna, tmrna, source
+from pdm_utils.classes import genome, genomepair
 from pdm_utils.constants import constants
 from pdm_utils.functions import basic, eval_modes, mysqldb
 from pdm_utils.pipelines import import_genome
@@ -1734,6 +1736,15 @@ class TestImportGenome7(unittest.TestCase):
         self.src2 = source.Source()
         self.src3 = source.Source()
 
+        self.trna1 = trna.TrnaFeature()
+        self.trna2 = trna.TrnaFeature()
+        self.trna3 = trna.TrnaFeature()
+
+        self.tmrna1 = tmrna.TmrnaFeature()
+        self.tmrna2 = tmrna.TmrnaFeature()
+        self.tmrna3 = tmrna.TmrnaFeature()
+
+
         self.gnm1 = genome.Genome()
         self.gnm2 = genome.Genome()
         self.gnm3 = genome.Genome()
@@ -2229,6 +2240,50 @@ class TestImportGenome7(unittest.TestCase):
     @patch("pdm_utils.functions.basic.ask_yes_no")
     def test_review_bundled_objects_8(self, ask_mock):
         """Verify results when bundle has:
+        one genome with three tRNA features, two with one warning evaluation."""
+        ask_mock.side_effect = [True, False]
+        self.trna1.evaluations = [self.eval_warning1]
+        self.trna2.evaluations = [self.eval_correct1]
+        self.trna3.evaluations = [self.eval_warning2]
+        self.gnm1.trna_features = [self.trna1, self.trna2, self.trna3]
+        self.bndl.genome_dict["gnm1"] = self.gnm1
+        import_genome.review_bundled_objects(self.bndl, interactive=True)
+        evl_list1 = self.bndl.genome_dict["gnm1"].trna_features[0].evaluations
+        evl_list2 = self.bndl.genome_dict["gnm1"].trna_features[1].evaluations
+        evl_list3 = self.bndl.genome_dict["gnm1"].trna_features[2].evaluations
+        with self.subTest():
+            self.assertEqual(evl_list1[0].status, "warning")
+        with self.subTest():
+            self.assertEqual(evl_list2[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(evl_list3[0].status, "error")
+
+
+    @patch("pdm_utils.functions.basic.ask_yes_no")
+    def test_review_bundled_objects_9(self, ask_mock):
+        """Verify results when bundle has:
+        one genome with three tmRNA features, two with one warning evaluation."""
+        ask_mock.side_effect = [True, False]
+        self.tmrna1.evaluations = [self.eval_warning1]
+        self.tmrna2.evaluations = [self.eval_correct1]
+        self.tmrna3.evaluations = [self.eval_warning2]
+        self.gnm1.tmrna_features = [self.tmrna1, self.tmrna2, self.tmrna3]
+        self.bndl.genome_dict["gnm1"] = self.gnm1
+        import_genome.review_bundled_objects(self.bndl, interactive=True)
+        evl_list1 = self.bndl.genome_dict["gnm1"].tmrna_features[0].evaluations
+        evl_list2 = self.bndl.genome_dict["gnm1"].tmrna_features[1].evaluations
+        evl_list3 = self.bndl.genome_dict["gnm1"].tmrna_features[2].evaluations
+        with self.subTest():
+            self.assertEqual(evl_list1[0].status, "warning")
+        with self.subTest():
+            self.assertEqual(evl_list2[0].status, "correct")
+        with self.subTest():
+            self.assertEqual(evl_list3[0].status, "error")
+
+
+    @patch("pdm_utils.functions.basic.ask_yes_no")
+    def test_review_bundled_objects_10(self, ask_mock):
+        """Verify results when bundle has:
         three genome_pairs, two with one warning evaluation."""
         ask_mock.side_effect = [False, True]
         self.genome_pair1.evaluations = [self.eval_warning1]
@@ -2250,7 +2305,7 @@ class TestImportGenome7(unittest.TestCase):
 
 
     @patch("pdm_utils.functions.basic.ask_yes_no")
-    def test_review_bundled_objects_9(self, ask_mock):
+    def test_review_bundled_objects_11(self, ask_mock):
         """Verify results when bundle has:
         one ticket with four evaluations, three that are errors,
         three CDS features, each with one error evaluation, and
@@ -2556,8 +2611,6 @@ class TestImportGenomeClass9(unittest.TestCase):
             self.assertEqual(len(lines1), 2)
         with self.subTest():
             self.assertEqual(len(lines2), 1)
-
-
 
 
 

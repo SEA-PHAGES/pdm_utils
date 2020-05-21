@@ -459,6 +459,27 @@ class Genome:
 
             sorted_list[index].id = self.id + delimiter + str(index + 1)
 
+
+    def update_name_and_id(self, value):
+        """Update the genome name and id in all locations in a Genome object.
+
+        :param gnm: A pdm_utils Genome object.
+        :type gnm: Genome
+        :param value: Value used to update the Genome id and name.
+        :type value: str
+        """
+        # Treat the new value as a name, which could have '_Draft' suffix,
+        # then use set_id() to remove suffix.
+        self.name = value
+        self.set_id(value=value)
+        self.set_feature_ids(use_type=True, use_cds=True)
+        self.set_feature_ids(use_type=True, use_source=True)
+        self.set_feature_ids(use_type=True, use_trna=True)
+        self.set_feature_ids(use_type=True, use_tmrna=True)
+        self.set_feature_genome_ids(use_cds=True, use_trna=True,
+                                      use_tmrna=True, use_source=True)
+
+
     # TODO add parameters to specify which feature types
     # (e.g. cds=True, trna=True, ...).
     def clear_locus_tags(self):

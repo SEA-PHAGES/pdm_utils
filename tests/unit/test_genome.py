@@ -1621,5 +1621,52 @@ class TestGenomeClass2(unittest.TestCase):
             self.assertEqual(self.src2.id, "L5_SRC_4")
 
 
+
+
+    def test_update_name_and_id_1(self):
+        """Verify that name and id is updated at all locations in a Genome."""
+        old = "Old"
+        new = "New"
+        new_draft = new + "_Draft"
+        self.gnm.id = old
+        self.gnm.name = old + "_Draft"
+        self.cds4.genome_id = old
+        self.cds4.id = old + "_CDS_1"
+        self.trna3.genome_id = old
+        self.trna3.id = old + "_TRNA_1"
+        self.tmrna1.genome_id = old
+        self.tmrna1.id = old + "_TMRNA_1"
+        self.src2.genome_id = old
+        self.src2.id = old + "_SRC_1"
+        self.gnm.cds_features = [self.cds4]
+        self.gnm.trna_features = [self.trna3]
+        self.gnm.tmrna_features = [self.tmrna1]
+        self.gnm.source_features = [self.src2]
+        self.gnm.update_name_and_id(new_draft)
+
+        with self.subTest():
+            self.assertEqual(self.gnm.name, new_draft)
+        with self.subTest():
+            self.assertEqual(self.gnm.id, new)
+        with self.subTest():
+            self.assertEqual(self.trna3.genome_id, new)
+        with self.subTest():
+            self.assertEqual(self.cds4.genome_id, new)
+        with self.subTest():
+            self.assertEqual(self.tmrna1.genome_id, new)
+        with self.subTest():
+            self.assertEqual(self.src2.genome_id, new)
+        with self.subTest():
+            self.assertEqual(self.trna3.id, "New_TRNA_1")
+        with self.subTest():
+            self.assertEqual(self.cds4.id, "New_CDS_1")
+        with self.subTest():
+            self.assertEqual(self.tmrna1.id, "New_TMRNA_1")
+        with self.subTest():
+            self.assertEqual(self.src2.id, "New_SRC_1")
+
+
+
+
 if __name__ == '__main__':
     unittest.main()
