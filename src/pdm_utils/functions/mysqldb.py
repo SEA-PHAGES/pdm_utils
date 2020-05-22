@@ -602,7 +602,6 @@ def create_gene_table_insert(cds_ftr):
     return statement
 
 
-# TODO Christian review
 def create_trna_table_insert(trna_ftr):
     """
     Create a MySQL trna table INSERT statement.
@@ -629,13 +628,6 @@ def create_trna_table_insert(trna_ftr):
     source = mysqldb_basic.convert_for_sql(
         trna_ftr.use, check_set={None}, single=False)
 
-    # statement = f"""INSERT INTO trna (GeneID, PhageID, Start, Stop, Length,
-    #                 Name, Orientation, Note, LocusTag, AminoAcid, Anticodon,
-    #                 Structure, Source) VALUES ("{geneid}", "{phageid}",
-    #                 {start}, {stop}, {length}, "{name}", "{orientation}",
-    #                 {note}, {locus_tag}, "{amino_acid}", "{anticodon}",
-    #                 {structure}, {source})"""
-
     statement = ("""INSERT INTO trna """
                  """(GeneID, PhageID, Start, Stop, Length, """
                  """Name, Orientation, Note, LocusTag, AminoAcid, Anticodon, """
@@ -647,7 +639,6 @@ def create_trna_table_insert(trna_ftr):
     return statement
 
 
-# TODO Christian review
 def create_tmrna_table_insert(tmrna_ftr):
     """
 
@@ -664,12 +655,6 @@ def create_tmrna_table_insert(tmrna_ftr):
         tmrna_ftr.note, check_set={""}, single=False)
     peptide_tag = mysqldb_basic.convert_for_sql(
         tmrna_ftr.peptide_tag, check_set={""}, single=False)
-
-    # statement = f"""INSERT INTO tmrna (GeneID, PhageID, Start, Stop, Length,
-    #                 Name, Orientation, Note, LocusTag, PeptideTag) VALUES (
-    #                 "{geneid}", "{phageid}", {start}, {stop}, {length},
-    #                 "{name}", "{orientation}", {note}, {locus_tag},
-    #                 {peptide_tag})"""
 
     statement = ("""INSERT INTO tmrna """
                  """(GeneID, PhageID, Start, Stop, Length, """
@@ -700,19 +685,19 @@ def create_phage_table_insert(gnm):
 
     # gnm.seq is a BioPython Seq object.
     # It is coerced to string by default.
-    statement = ("INSERT INTO phage "
-                 "(PhageID, Accession, Name, HostGenus, Sequence, "
-                 "Length, GC, Status, DateLastModified, "
-                 "RetrieveRecord, AnnotationAuthor, "
-                 "Cluster, Subcluster) "
-                 "VALUES "
-                 f"('{gnm.id}', '{gnm.accession}', '{gnm.name}', "
-                 f"'{gnm.host_genus}', '{gnm.seq}', "
-                 f"{gnm.length}, {gnm.gc}, '{gnm.annotation_status}', "
-                 f"'{gnm.date}', {gnm.retrieve_record}, "
-                 f"{gnm.annotation_author}, "
-                 f"{cluster}, {subcluster});"
-                 )
+    statement = ("""INSERT INTO phage """
+                 """(PhageID, Accession, Name, HostGenus, Sequence, """
+                 """Length, GC, Status, DateLastModified, RetrieveRecord, """
+                 """AnnotationAuthor, Cluster, Subcluster) """
+                 """VALUES """
+                 """('{}', '{}', '{}', '{}', '{}', {}, {}, '{}', """
+                 """'{}', {}, {}, {}, {});""")
+    statement = statement.format(
+                    gnm.id, gnm.accession, gnm.name, gnm.host_genus, gnm.seq,
+                    gnm.length, gnm.gc, gnm.annotation_status, gnm.date,
+                    gnm.retrieve_record, gnm.annotation_author, cluster,
+                    subcluster)
+
     return statement
 
 
