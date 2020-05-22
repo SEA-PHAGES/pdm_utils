@@ -393,6 +393,22 @@ def get_alice_cds_124_seqfeature():
 
 # Alice tmrna_169
 # Example tmRNA feature.
+def get_alice_tmrna_169_draft_data_in_db():
+    """Returns mock data from trna table for 'draft' Alice tmRNA 169."""
+    dict = {
+        "GeneID": "Alice_TMRNA_1",
+        "PhageID": "Alice",
+        "Start": 95923,
+        "Stop": 96358,
+        "Length": 435,
+        "Name": "169",
+        "Orientation": "F",
+        "Note": "Peptide tag: ATDTDATVTDAEIEAFFAEEAAALV*",
+        "LocusTag": "NULL",
+        "PeptideTag": "ATDTDATVTDAEIEAFFAEEAAALV*"
+        }
+    return dict
+
 
 def get_alice_tmrna_169_qualifier_dict():
     """Returns data to construct Alice tmRNA 169 flat file feature."""
@@ -412,6 +428,25 @@ def get_alice_tmrna_169():
 
 # Alice trna_170
 # Example tRNA feature.
+def get_alice_trna_170_draft_data_in_db():
+    """Returns mock data from trna table for 'draft' Alice tRNA 170."""
+    dict = {
+        "GeneID": "Alice_TRNA_1",
+        "PhageID": "Alice",
+        "Start": 96431,
+        "Stop": 96507,
+        "Length": 76,
+        "Name": "170",
+        "Orientation": "F",
+        "Note": "tRNA-Gln(ttg)",
+        "LocusTag": "NULL",
+        "AminoAcid": "Gln",
+        "Anticodon": "ttg",
+        "Structure": "NULL",
+        "Source": "NULL",
+        }
+    return dict
+
 
 def get_alice_trna_170_qualifier_dict():
     """Returns data to construct Alice tRNA 170 flat file feature."""
@@ -568,7 +603,7 @@ def get_trixie_trna_data():
     return dict
 
 def get_trixie_tmrna_data():
-    """Mock tmrna table data for Trixie.
+    """Mock tmRNA table data for Trixie.
 
     Data is not accurate, but serves as simple test data."""
     dict = {

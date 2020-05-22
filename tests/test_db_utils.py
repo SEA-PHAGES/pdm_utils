@@ -357,6 +357,48 @@ def process_gene_table_data(list_of_sql_results):
         if data_dict["PhamID"] is None:
             data_dict["PhamID"]  = "NULL"
 
+
+def process_trna_table_data(list_of_sql_results):
+    """Converts datatype for data retrieved from a few fields
+    in the trna table."""
+    for x in range(len(list_of_sql_results)):
+        data_dict = list_of_sql_results[x]
+
+        if data_dict["Note"] is None:
+            data_dict["Note"] = "NULL"
+        else:
+            data_dict["Note"] = data_dict["Note"].decode("utf-8")
+
+        if data_dict["LocusTag"] is None:
+            data_dict["LocusTag"] = "NULL"
+
+        if data_dict["Structure"] is None:
+            data_dict["Structure"] = "NULL"
+        else:
+            data_dict["Structure"] = data_dict["Structure"].decode("utf-8")
+
+        if data_dict["Source"] is None:
+            data_dict["Source"] = "NULL"
+
+
+def process_tmrna_table_data(list_of_sql_results):
+    """Converts datatype for data retrieved from a few fields
+    in the tmrna table."""
+    for x in range(len(list_of_sql_results)):
+        data_dict = list_of_sql_results[x]
+
+        if data_dict["Note"] is None:
+            data_dict["Note"] = "NULL"
+        else:
+            data_dict["Note"] = data_dict["Note"].decode("utf-8")
+
+        if data_dict["LocusTag"] is None:
+            data_dict["LocusTag"] = "NULL"
+
+        if data_dict["PeptideTag"] is None:
+            data_dict["Structure"] = "NULL"
+
+
 def process_domain_table_data(list_of_sql_results):
     """Converts datatype for data retrieved from a few fields
     in the domain table."""
