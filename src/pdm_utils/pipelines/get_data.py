@@ -163,7 +163,6 @@ def main(unparsed_args_list):
         if force:
             gnm.date = constants.EMPTY_DATE
         mysqldb_genome_dict[gnm.id] = gnm
-        #HERE
 
     # Get data from PhagesDB
     if (args.updates or args.final or args.draft) is True:

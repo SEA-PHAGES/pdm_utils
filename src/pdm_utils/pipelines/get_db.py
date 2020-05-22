@@ -28,9 +28,10 @@ def main(unparsed_args_list):
     """
     args = parse_args(unparsed_args_list)
 
-    # Set all values to get rid of args object and to set additional values.
+    # Set values that are shared between all three options.
     database = args.database
     option = args.option
+
     install = True
     schema_version = None
     db_filepath = None
@@ -41,6 +42,8 @@ def main(unparsed_args_list):
         schema_version = args.schema_version
     else:
         # option must be "server"
+        server_url = args.url
+        version_file = args.version
         output_folder = basic.set_path(args.output_folder, kind="dir", expect=True)
         download = True
         remove = True
@@ -54,12 +57,16 @@ def main(unparsed_args_list):
             print("Unable to create results folder.")
             sys.exit(1)
         else:
-            version_filepath, status1 = prepare_download(results_path,
-                                            constants.DB_WEBSITE,
-                                            args.database, "version")
-            db_filepath, status2 = prepare_download(results_path,
-                                            constants.DB_WEBSITE,
-                                            args.database, "sql")
+            # Only look for version file is selected.
+            if version_file:
+                version_filepath, status1 = prepare_download(results_path,
+                                                server_url, database,
+                                                "version")
+            else:
+                status1 = True
+
+            db_filepath, status2 = prepare_download(results_path, server_url,
+                                                    database, "sql")
         if (status1 == False or status2 == False):
             print("Unable to download data from server.")
             sys.exit(1)
@@ -152,6 +159,8 @@ def parse_args(unparsed_args_list):
     database_help = "Name of the MySQL database."
     option_help = "Source of data to create database."
     server_help = "Download database from server."
+    url_help = "Server URL from which to retrieve files."
+    version_help = "Indicates that a .version file should be downloaded."
     output_folder_help = (
         "Path to the folder to create the folder for downloading "
         f"the database. Default is {DEFAULT_OUTPUT_FOLDER}")
@@ -168,6 +177,10 @@ def parse_args(unparsed_args_list):
     subparsers = parser.add_subparsers(dest="option", help=option_help)
 
     parser_a = subparsers.add_parser("server", help=server_help)
+    parser_a.add_argument("-u", "--url", type=str,
+        default=constants.DB_WEBSITE, help=url_help)
+    parser_a.add_argument("-v", "--version", action="store_true",
+        default=False, help=version_help)
     parser_a.add_argument("-o", "--output_folder", type=pathlib.Path,
         default=pathlib.Path(DEFAULT_OUTPUT_FOLDER), help=output_folder_help)
     parser_a.add_argument("-d", "--download_only", action="store_true",

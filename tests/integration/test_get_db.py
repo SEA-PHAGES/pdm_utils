@@ -7,6 +7,7 @@ import unittest
 from unittest.mock import patch
 
 from pdm_utils import run
+from pdm_utils.constants import constants
 from pdm_utils.pipelines import get_db
 
 # Import helper functions to build mock database
@@ -16,11 +17,16 @@ if str(test_dir) not in set(sys.path):
     sys.path.append(str(test_dir))
 import test_db_utils
 
-pipeline = "get_db"
+PIPELINE = "get_db"
 DB = test_db_utils.DB
 USER = test_db_utils.USER
 PWD = test_db_utils.PWD
-DB2 = "Actinobacteriophage"
+
+# TODO: There are two test files staged on the server for testing purposes.
+# pdm_test_db.sql and pdm_test_db.version. If get_db pipeline is revamped
+# to utilize urllib3, these two test files could be removed, and the tests
+# would only need to confirm the download request status attribute = 200.
+DB2 = "pdm_test_db"
 
 # Create the main test directory in which all files will be
 # created and managed. Gets created once for all tests.
@@ -41,21 +47,24 @@ if exists:
 output_path = Path(test_root_dir, "output")
 results_path = Path(output_path, get_db.RESULTS_FOLDER)
 
-def get_unparsed_args(db=DB, option=None, download=False, output_folder=None):
+def get_unparsed_args(db=DB, option=None, download=False, output_folder=None,
+                      version=False, url=""):
     """Returns list of command line arguments to convert database."""
-    unparsed_args = ["run.py", pipeline, db, option]
+    unparsed_args = ["run.py", PIPELINE, db, option]
     if option == "file":
         unparsed_args.extend([str(test_db_utils.TEST_DB_FILEPATH)])
     elif option == "server":
         if download:
             unparsed_args.extend(["-d"])
+        if version:
+            unparsed_args.extend(["-v"])
+        if url != "":
+            unparsed_args.extend(["-u", url])
         if output_folder is not None:
             unparsed_args.extend(["-o", str(output_folder)])
     else:
         pass
     return unparsed_args
-
-
 
 
 class TestGetDb(unittest.TestCase):
@@ -97,16 +106,17 @@ class TestGetDb(unittest.TestCase):
 
     @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_main_3(self, getpass_mock):
-        """Verify database is downloaded and installed from server."""
+        """Verify database sql and version files are downloaded from server."""
         getpass_mock.side_effect = [USER, PWD]
-        # Since the entire Actinobacteriophage database is being downloaded,
+        # If the entire Actinobacteriophage database is being downloaded for testing,
         # be sure to only download the SQL file and do NOT install it,
         # else it will overwrite the existing Actinobacteriophage database.
         # Since the pdm_anon user is calling this pipeline, and since
         # this user should not have MySQL privileges to do anything other
         # than select data from Actinobacteriophage, this shouldn't be a problem.
         unparsed_args = get_unparsed_args(db=DB2, option="server",
-                                          download=True, output_folder=output_path)
+                                          download=True, version=True,
+                                          output_folder=output_path)
         run.main(unparsed_args)
         file1 = Path(results_path, f"{DB2}.sql")
         file2 = Path(results_path, f"{DB2}.version")
@@ -118,6 +128,30 @@ class TestGetDb(unittest.TestCase):
 
     @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_main_4(self, getpass_mock):
+        """Verify database sql file, but not version file, is downloaded
+        from server using url option."""
+        getpass_mock.side_effect = [USER, PWD]
+        # If the entire Actinobacteriophage database is being downloaded for testing,
+        # be sure to only download the SQL file and do NOT install it,
+        # else it will overwrite the existing Actinobacteriophage database.
+        # Since the pdm_anon user is calling this pipeline, and since
+        # this user should not have MySQL privileges to do anything other
+        # than select data from Actinobacteriophage, this shouldn't be a problem.
+        unparsed_args = get_unparsed_args(db=DB2, option="server",
+                                          download=True,
+                                          url=constants.DB_WEBSITE,
+                                          output_folder=output_path)
+        run.main(unparsed_args)
+        file1 = Path(results_path, f"{DB2}.sql")
+        file2 = Path(results_path, f"{DB2}.version")
+        with self.subTest():
+            self.assertTrue(file1.exists())
+        with self.subTest():
+            self.assertFalse(file2.exists())
+
+
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
+    def test_main_5(self, getpass_mock):
         """Verify database is installed from file and overwrites
         existing database."""
         getpass_mock.side_effect = [USER, PWD]
