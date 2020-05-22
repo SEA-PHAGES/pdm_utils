@@ -1153,40 +1153,6 @@ class TestCdsClass(unittest.TestCase):
 
 
 
-    def test_set_seqfeature_1(self):
-        """Verify seqfeature is set correctly with no changes."""
-        self.feature.start = 2
-        self.feature.stop = 5
-        self.feature.orientation = 1
-        self.feature.coordinate_format = "0_half_open"
-        self.feature.set_seqfeature()
-        with self.subTest():
-            self.assertEqual(self.feature.seqfeature.strand, 1)
-        with self.subTest():
-            self.assertEqual(
-                self.feature.seqfeature.location.start.position, 2)
-        with self.subTest():
-            self.assertEqual(
-                self.feature.seqfeature.location.end.position, 5)
-
-    def test_set_seqfeature_2(self):
-        """Verify seqfeature is set correctly with start coordinate and
-        strand reformatted."""
-        self.feature.start = 2
-        self.feature.stop = 5
-        self.feature.orientation = "F"
-        self.feature.coordinate_format = "1_closed"
-        self.feature.set_seqfeature()
-        with self.subTest():
-            self.assertEqual(self.feature.seqfeature.strand, 1)
-        with self.subTest():
-            self.assertEqual(
-                self.feature.seqfeature.location.start.position, 1)
-        with self.subTest():
-            self.assertEqual(
-                self.feature.seqfeature.location.end.position, 5)
-
-
 
 
     def test_set_num_1(self):

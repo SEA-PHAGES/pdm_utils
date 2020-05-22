@@ -582,7 +582,7 @@ def get_genome_seqrecords(alchemist, values=[], verbose=False):
 
     seqrecords = []
     for gnm in genomes:
-        process_cds_features(gnm)
+        sort_cds_features(gnm)
         if verbose:
             print(f"Converting {gnm.name}...")
         seqrecords.append(flat_files.genome_to_seqrecord(gnm))
@@ -617,7 +617,7 @@ def get_cds_seqrecords(alchemist, values=[], nucleotide=False, verbose=False):
         cds.genome_length = genomes_dict[cds.genome_id].length
         cds.set_seqfeature()
 
-        record = cds_to_seqrecord(cds, genomes_dict[cds.genome_id])
+        record = flat_files.cds_to_seqrecord(cds, genomes_dict[cds.genome_id])
         seqrecords.append(record)
 
     return seqrecords
@@ -814,7 +814,7 @@ def decode_results(results, columns, verbose=False):
                 if not result[column.name] is None:
                     result[column.name] = result[column.name].decode("utf-8")
 
-def process_cds_features(phage_genome):
+def sort_cds_features(phage_genome):
     """Function that sorts and processes the Cds objects of a Genome object.
 
     :param phage_genome: Genome object containing Cds objects.
@@ -829,8 +829,6 @@ def process_cds_features(phage_genome):
             raise TypeError
         print("Genome cds features unable to be sorted")
         pass
-    for cds_feature in phage_genome.cds_features:
-        cds_feature.set_seqfeature()
 
 #----------------------------------------------------------------------------
 #TODO Travis
@@ -865,83 +863,6 @@ def parse_feature_data(alchemist, values=[], limit=8000):
         cds_list.append(cds_ftr)
 
     return cds_list
-
-#Similar to genome_to_seqrecord()
-#Move to flat_files.py?
-def cds_to_seqrecord(cds, parent_genome):
-    """Creates a SeqRecord object from a Cds and its parent Genome.
-
-    :param cds: A populated Cds object.
-    :type cds: Cds
-    :param phage_genome: Populated parent Genome object of the Cds object.
-    :returns: Filled Biopython SeqRecord object.
-    :rtype: SeqRecord
-    """
-    record = SeqRecord(cds.translation)
-    record.seq.alphabet = IUPAC.IUPACAmbiguousDNA()
-    record.name = cds.id
-    if cds.locus_tag != "":
-        record.id = cds.locus_tag
-
-    cds.set_seqfeature()
-    record.features = [cds.seqfeature]
-
-    record.description = (f"{cds.description} "
-                          f"[{parent_genome.host_genus} phage {cds.genome_id}]")
-    record.annotations = get_cds_seqrecord_annotations(cds, parent_genome)
-
-    return record
-
-#Similar to get_seqrecord_annotations():
-#Move to flat_files.py?
-def get_cds_seqrecord_annotations(cds, parent_genome):
-    """Function that creates a Cds SeqRecord annotations attribute dict.
-    :param cds: A populated Cds object.
-    :type cds: Cds
-    :param phage_genome: Populated parent Genome object of the Cds object.
-    :type phage_genome: Genome
-    :returns: Formatted SeqRecord annotations dictionary.
-    :rtype: dict{str}
-    """
-    annotations = {"molecule type": "DNA",
-                   "topology" : "linear",
-                   "data_file_division" : "PHG",
-                   "date" : "",
-                   "accessions" : [],
-                   "sequence_version" : "",
-                   "keyword" : [],
-                   "source" : "",
-                   "organism" : "",
-                   "taxonomy" : [],
-                   "comment" : ()}
-
-    annotations["date"] = parent_genome.date
-    annotations["organism"] = (f"{parent_genome.host_genus} phage "
-                               f"{cds.genome_id}")
-    annotations["source"] = f"Accession {parent_genome.accession}"
-
-    annotations["taxonomy"].append("Viruses")
-    annotations["taxonomy"].append("dsDNA Viruses")
-    annotations["taxonomy"].append("Caudovirales")
-
-    annotations["comment"] = get_cds_seqrecord_annotations_comments(cds)
-
-    return annotations
-
-#Similar to get_seqrecord_annotatoions():
-#Move to flat_files.py?
-def get_cds_seqrecord_annotations_comments(cds):
-    """Function that creates a Cds SeqRecord comments attribute tuple.
-
-    :param cds:
-    :type cds:
-    """
-    pham_comment =\
-           f"Pham: {cds.pham_id}"
-    auto_generated_comment =\
-            "Auto-generated genome record from a MySQL database"
-
-    return (pham_comment, auto_generated_comment)
 
 def append_database_version(genome_seqrecord, version_data):
     """Function that appends the database version to the SeqRecord comments.

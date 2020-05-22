@@ -524,15 +524,13 @@ class Cds:
             self.seq = Seq("", IUPAC.ambiguous_dna)
 
 
-    # TODO Owen unittest for added steps.
-    def set_seqfeature(self):
+    def set_seqfeature(self, type="CDS"):
         """Set the 'seqfeature' attribute.
 
         The 'seqfeature' attribute stores a Biopython SeqFeature object,
         which contains methods valuable to extracting sequence data
         relevant to the feature.
         """
-
         # SeqFeature methods rely on coordinates in 0-based half-open
         # format and orientation to be numeric.
         new_start, new_stop = \
@@ -541,19 +539,26 @@ class Cds:
                                        self.coordinate_format,
                                        "0_half_open")
 
-        new_strand = basic.reformat_strand(self.orientation, "numeric")
-        if self.start <= self.stop:
-            self.seqfeature = SeqFeature(FeatureLocation(new_start, new_stop),
-                                     strand=new_strand, type="CDS")
-        else:
-            self.seqfeature = SeqFeature(CompoundLocation
-                    ([FeatureLocation(new_start, self.genome_length),
-                    FeatureLocation(0, new_stop)]),
-                    strand=new_strand, type="CDS")
-        self.seqfeature.qualifiers = self.get_qualifiers()
+        strand = basic.reformat_strand(self.orientation, "numeric")
 
-    # TODO Owen unittest.
-    def get_qualifiers(self):
+        self.seqfeature = self.create_seqfeature(type, new_start, new_stop, 
+                                                                  strand)
+
+    def create_seqfeature(self, type, start, stop, strand):
+        if start <= stop:
+            seqfeature = SeqFeature(FeatureLocation(start, stop),
+                                            strand=strand, type=type)
+        else:
+            seqfeature = SeqFeature(CompoundLocation
+                                  ([FeatureLocation(start, self.genome_length),
+                                    FeatureLocation(0, stop)]),
+                                            strand=strand, type=type)
+
+        seqfeature.qualifiers = self.get_qualifiers(type)
+
+        return seqfeature
+
+    def get_qualifiers(self, type):
         """Helper function that uses cds data to populate
         the qualifiers SeqFeature attribute
 
@@ -562,18 +567,27 @@ class Cds:
             formating of BioPython's SeqFeature qualifiers
             attribute.
         """
-
         qualifiers = OrderedDict()
-        qualifiers["gene"] = [self.name]
-        if self.locus_tag != "":
-            qualifiers["locus_tag"] = [self.locus_tag]
-        qualifiers["note"] = ["gp{}".format(self.name)]
-        qualifiers["codon_start"] = ["1"]
-        qualifiers["transl_table"] = ["11"]
-        if self.raw_description != "":
-            qualifiers["product"] = [self.raw_description]
-        qualifiers["id"] = [self.id]
-        qualifiers["translation"] = [self.translation]
+        if type == "CDS":
+            qualifiers["gene"] = [self.name]
+            if self.locus_tag != "":
+                qualifiers["locus_tag"] = [self.locus_tag]
+            qualifiers["codon_start"] = ["1"]
+            qualifiers["transl_table"] = self.translation_table
+            if self.description != "":
+                product = "Hypothetical Protein"
+            else:
+                product = self.description
+
+            qualifiers["product"] = [product]
+            qualifiers["translation"] = [self.translation]
+
+        elif type == "Protein":
+            qualifiers["product"] = [product]
+
+        elif type == "gene":
+           qualifiers["gene"] = [self.name] 
+           qualifiers["locus_tag"] = [self.locus_tag]
 
         return qualifiers
 
