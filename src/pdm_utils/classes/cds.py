@@ -568,23 +568,22 @@ class Cds:
             attribute.
         """
         qualifiers = OrderedDict()
+        if self.description != "":
+            product = "Hypothetical Protein"
+        else:
+            product = self.description
+
         if type == "CDS":
             qualifiers["gene"] = [self.name]
             if self.locus_tag != "":
                 qualifiers["locus_tag"] = [self.locus_tag]
             qualifiers["codon_start"] = ["1"]
-            qualifiers["transl_table"] = self.translation_table
-            if self.description != "":
-                product = "Hypothetical Protein"
-            else:
-                product = self.description
-
+            qualifiers["transl_table"] = self.translation_table 
             qualifiers["product"] = [product]
             qualifiers["translation"] = [self.translation]
 
         elif type == "Protein":
             qualifiers["product"] = [product]
-
         elif type == "gene":
            qualifiers["gene"] = [self.name] 
            qualifiers["locus_tag"] = [self.locus_tag]

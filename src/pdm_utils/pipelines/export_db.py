@@ -86,9 +86,11 @@ def main(unparsed_args_list):
     if args.pipeline != "sql":
         mysqldb.check_schema_compatibility(alchemist.engine, "export")
 
-    values = []
+    values = None
     if args.pipeline in FILTERABLE_PIPELINES:
         values = parse_value_input(args.input)
+        if not values:
+            values = None
 
     if not args.pipeline in PIPELINES:
         print("ABORTED EXPORT: Unknown pipeline option discrepency.\n"
@@ -267,7 +269,7 @@ def parse_export(unparsed_args_list):
     return parsed_args
 
 def execute_export(alchemist, folder_path, folder_name, pipeline,
-                        values=[], verbose=False, table=DEFAULT_TABLE,
+                        values=None, verbose=False, table=DEFAULT_TABLE,
                         filters="", groups=[], sort=[],
                         include_columns=[], exclude_columns=[],
                         sequence_columns=False, raw_bytes=False,
@@ -314,10 +316,18 @@ def execute_export(alchemist, folder_path, folder_name, pipeline,
                                       exclude_columns=exclude_columns,
                                       sequence_columns=sequence_columns)
 
-    if pipeline in FILTERABLE_PIPELINES:
-        if verbose:
-            print("Processing columns for sorting...")
-        db_filter = apply_filters(alchemist, table, filters, verbose=verbose)
+    if pipeline in FILTERABLE_PIPELINES: 
+        db_filter = apply_filters(alchemist, table, filters, values=values,
+                                                             verbose=verbose) 
+        if sort:
+            if verbose:
+                print("Processing columns for sorting...")
+            try:
+                db_filter.sort(sort)
+            except:
+                print("Please check your syntax for sorting columns:\n"
+                      f"{', '.join(sort)}")
+                exit(1)
 
     if verbose:
         print("Creating export folder...")
@@ -338,6 +348,7 @@ def execute_export(alchemist, folder_path, folder_name, pipeline,
         if verbose:
             print("Prepared query and path structure, beginning export...")
 
+        values = db_filter.values
         for mapped_path in conditionals_map.keys():
             db_filter.reset()
             db_filter.values = values
@@ -410,7 +421,6 @@ def execute_csv_export(db_filter, export_path, folder_path, columns, csv_name,
     else:
         if verbose:
             print(f"...Writing csv {csv_name}.csv in '{export_path.name}'...")
-            print("......Database entries retrieved: {len(results)}")
 
         file_path = export_path.joinpath(f"{csv_name}.csv")
         basic.export_data_dict(results, file_path, headers,
@@ -447,8 +457,6 @@ def execute_ffx_export(alchemist, export_path, folder_path, values,
     if verbose:
         print(f"Retrieving {export_path.name} data...")
 
-    if verbose:
-        print(f"...Database entries retrieved: {len(values)}")
     seqrecords = []
     if table == "phage":
         seqrecords = get_genome_seqrecords(alchemist, values=values,
@@ -647,6 +655,17 @@ def apply_filters(alchemist, table, filters, values=None,
         print("Please check your syntax for the conditional string: "
              f"{filters}")
         exit(1)
+
+    db_filter.update()
+    db_filter._filters = []
+    db_filter._or_index = -1 
+
+    if filters:
+        if db_filter.hits() == 0:
+            print("Filters yielded no database hits.")
+            sys.exit(1)
+        if verbose: 
+            print(f"Database hits from applied filters: {db_filter.hits()}")
 
     return db_filter
 

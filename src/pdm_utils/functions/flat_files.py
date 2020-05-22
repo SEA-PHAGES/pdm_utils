@@ -627,6 +627,8 @@ def cds_to_seqrecord(cds, parent_genome, regions=[]):
     record.name = cds.id
     if cds.locus_tag != "":
         record.id = cds.locus_tag
+    
+    cds.set_seqfeature()
 
     source = f"{parent_genome.host_genus} phage {cds.genome_id}"
     source_feature = cds.create_seqfeature("source", 0,
@@ -638,8 +640,18 @@ def cds_to_seqrecord(cds, parent_genome, regions=[]):
                                                     cds.translation_length, 1))
 
 
-    record.features.append(cds.create_seqfeature("CDS", 0, 
-                                                    cds.translation_length, 1))
+    cds_feature = cds.create_seqfeature("CDS", 0, cds.translation_length, 1)
+    cds_feature.qualifiers.pop("codon_start")
+    cds_feature.qualifiers.pop("product")
+    cds_feature.qualifiers.pop("translation")
+
+    coded_by = (f"{parent_genome.accession}:"
+            f"{cds.seqfeature.location.start}..{cds.seqfeature.location.end}")
+    if cds.seqfeature.strand == -1:
+        coded_by = f"complement({coded_by})"
+    
+    cds_feature.qualifiers["coded by"] = [coded_by]
+    record.features.append(cds_feature)
 
     for region in regions:
         region_feature = cds.create_seqfeature("Region", region.query_start, 
@@ -716,12 +728,13 @@ def get_genome_seqrecord_annotations(phage_genome):
             "date" : "",\
             "accessions" : [],\
             "sequence_version" : "1",\
-            "keyword" : [],\
+            "keywords" : [],\
             "source" : "",\
             "organism" : "",\
             "taxonomy" : [],\
             "comment": ()}
     annotations["date"] = phage_genome.date
+    annotations["keywords"] = ["complete_genome"]
     annotations["source"] =\
             f"{phage_genome.host_genus} phage {phage_genome.id}"
     annotations["organism"] =\
@@ -779,7 +792,7 @@ def get_cds_seqrecord_annotations(cds, parent_genome):
                    "date" : "",
                    "accessions" : [],
                    "sequence_version" : "",
-                   "keyword" : [],
+                   "keywords" : [],
                    "source" : "",
                    "organism" : "",
                    "taxonomy" : [],
