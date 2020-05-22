@@ -32,14 +32,14 @@ class TestGenomeClass1(unittest.TestCase):
         self.cds3 = cds.Cds()
         self.cds4 = cds.Cds()
 
-        self.trna1 = trna.TrnaFeature()
-        self.trna2 = trna.TrnaFeature()
-        self.trna3 = trna.TrnaFeature()
-        self.trna4 = trna.TrnaFeature()
+        self.trna1 = trna.Trna()
+        self.trna2 = trna.Trna()
+        self.trna3 = trna.Trna()
+        self.trna4 = trna.Trna()
 
-        self.tmrna1 = tmrna.TmrnaFeature()
-        self.tmrna2 = tmrna.TmrnaFeature()
-        self.tmrna3 = tmrna.TmrnaFeature()
+        self.tmrna1 = tmrna.Tmrna()
+        self.tmrna2 = tmrna.Tmrna()
+        self.tmrna3 = tmrna.Tmrna()
 
         self.source1 = source.Source()
 
@@ -1475,16 +1475,16 @@ class TestGenomeClass2(unittest.TestCase):
         self.cds3 = cds.Cds()
         self.cds4 = cds.Cds()
 
-        self.trna1 = trna.TrnaFeature()
-        self.trna2 = trna.TrnaFeature()
-        self.trna3 = trna.TrnaFeature()
-        self.trna4 = trna.TrnaFeature()
+        self.trna1 = trna.Trna()
+        self.trna2 = trna.Trna()
+        self.trna3 = trna.Trna()
+        self.trna4 = trna.Trna()
 
         self.src1 = source.Source()
         self.src2 = source.Source()
 
-        self.tmrna1 = tmrna.TmrnaFeature()
-        self.tmrna2 = tmrna.TmrnaFeature()
+        self.tmrna1 = tmrna.Tmrna()
+        self.tmrna2 = tmrna.Tmrna()
 
         # 1
         self.trna3.start = 10

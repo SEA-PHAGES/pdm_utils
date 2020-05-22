@@ -189,18 +189,18 @@ class TestBundleClass2(unittest.TestCase):
         self.cds3 = cds.Cds()
         self.cds3.id = "L5_CDS_3"
 
-        self.trna1 = trna.TrnaFeature()
+        self.trna1 = trna.Trna()
         self.trna1.id = "L5_TRNA_1"
-        self.trna2 = trna.TrnaFeature()
+        self.trna2 = trna.Trna()
         self.trna2.id = "L5_TRNA_2"
-        self.trna3 = trna.TrnaFeature()
+        self.trna3 = trna.Trna()
         self.trna3.id = "L5_TRNA_3"
 
-        self.tmrna1 = tmrna.TmrnaFeature()
+        self.tmrna1 = tmrna.Tmrna()
         self.tmrna1.id = "L5_TMRNA_1"
-        self.tmrna2 = tmrna.TmrnaFeature()
+        self.tmrna2 = tmrna.Tmrna()
         self.tmrna2.id = "L5_TMRNA_2"
-        self.tmrna3 = tmrna.TmrnaFeature()
+        self.tmrna3 = tmrna.Tmrna()
         self.tmrna3.id = "L5_TMRNA_3"
 
         self.genome1 = genome.Genome()

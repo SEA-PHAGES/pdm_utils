@@ -576,28 +576,28 @@ class TestImportGenome4(unittest.TestCase):
         self.cds2.coordinate_format = "0_half_open"
         self.cds2.orientation = "F"
 
-        self.trna1 = trna.TrnaFeature()
+        self.trna1 = trna.Trna()
         self.trna1.id = "L5_3"
         self.trna1.start = 300
         self.trna1.stop = 400
         self.trna1.coordinate_format = "0_half_open"
         self.trna1.orientation = "F"
 
-        self.trna2 = trna.TrnaFeature()
+        self.trna2 = trna.Trna()
         self.trna2.id = "L5_4"
         self.trna2.start = 500
         self.trna2.stop = 600
         self.trna2.coordinate_format = "0_half_open"
         self.trna2.orientation = "F"
 
-        self.tmrna1 = tmrna.TmrnaFeature()
+        self.tmrna1 = tmrna.Tmrna()
         self.tmrna1.id = "L5_4"
         self.tmrna1.start = 700
         self.tmrna1.stop = 800
         self.tmrna1.coordinate_format = "0_half_open"
         self.tmrna1.orientation = "F"
 
-        self.tmrna2 = tmrna.TmrnaFeature()
+        self.tmrna2 = tmrna.Tmrna()
         self.tmrna2.id = "L5_5"
         self.tmrna2.start = 900
         self.tmrna2.stop = 1000
@@ -1659,11 +1659,11 @@ class TestImportGenome6(unittest.TestCase):
         self.cds2 = cds.Cds()
 
         # Replaced trna1 and trna2 with TrnaFeatures instead of Cds
-        self.trna1 = trna.TrnaFeature()
-        self.trna2 = trna.TrnaFeature()
+        self.trna1 = trna.Trna()
+        self.trna2 = trna.Trna()
 
-        self.tmrna1 = tmrna.TmrnaFeature()
-        self.tmrna2 = tmrna.TmrnaFeature()
+        self.tmrna1 = tmrna.Tmrna()
+        self.tmrna2 = tmrna.Tmrna()
 
         self.src1 = source.Source()
         self.src2 = source.Source()

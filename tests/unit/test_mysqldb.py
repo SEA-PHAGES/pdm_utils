@@ -372,7 +372,7 @@ class TestMysqldbFunctions2(unittest.TestCase):
 
         self.cds_features = [self.cds1, self.cds2]
 
-        self.trna1 = trna.TrnaFeature()
+        self.trna1 = trna.Trna()
         self.trna1.id = "Trixie_1"
         self.trna1.genome_id = "Trixie"
         self.trna1.name = "1"
@@ -387,7 +387,7 @@ class TestMysqldbFunctions2(unittest.TestCase):
         self.trna1.structure = "random"
         self.trna1.use = "aragorn"
 
-        self.trna2 = trna.TrnaFeature()
+        self.trna2 = trna.Trna()
         self.trna2.id = "Trixie_1"
         self.trna2.genome_id = "Trixie"
         self.trna2.name = "1"
@@ -404,7 +404,7 @@ class TestMysqldbFunctions2(unittest.TestCase):
 
         self.trna_features = [self.trna1, self.trna2]
 
-        self.tmrna1 = tmrna.TmrnaFeature()
+        self.tmrna1 = tmrna.Tmrna()
         self.tmrna1.id = "Trixie_1"
         self.tmrna1.genome_id = "Trixie"
         self.tmrna1.name = "1"
@@ -416,7 +416,7 @@ class TestMysqldbFunctions2(unittest.TestCase):
         self.tmrna1.note = "misc"
         self.tmrna1.peptide_tag = "random"
 
-        self.tmrna2 = tmrna.TmrnaFeature()
+        self.tmrna2 = tmrna.Tmrna()
         self.tmrna2.id = "Trixie_1"
         self.tmrna2.genome_id = "Trixie"
         self.tmrna2.name = "1"

@@ -1746,10 +1746,10 @@ def compare_genomes(genome_pair, eval_flags):
 
 # TODO unit test.
 def check_trna(trna_ftr, eval_flags):
-    """Check a TrnaFeature object for errors.
+    """Check a Trna object for errors.
 
-    :param trna_ftr: A pdm_utils TrnaFeature object.
-    :type trna_ftr: TrnaFeature
+    :param trna_ftr: A pdm_utils Trna object.
+    :type trna_ftr: Trna
     :param eval_flags: Dictionary of boolean evaluation flags.
     :type eval_flags: dicts
     """
@@ -1818,10 +1818,10 @@ def check_trna(trna_ftr, eval_flags):
 
 
 def check_tmrna(tmrna_ftr, eval_flags):
-    """Check a TmrnaFeature object for errors.
+    """Check a Tmrna object for errors.
 
     :param tmrna_ftr: A pdm_utils Cds object.
-    :type tmrna_ftr: TmrnaFeature
+    :type tmrna_ftr: Tmrna
     :param eval_flags: Dictionary of boolean evaluation flags.
     :type eval_flags: dicts
     """

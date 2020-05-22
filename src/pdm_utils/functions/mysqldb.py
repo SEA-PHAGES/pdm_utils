@@ -206,16 +206,16 @@ def parse_gene_table_data(data_dict, trans_table=11):
 
 # TODO Christian review
 def parse_trna_table_data(data_dict):
-    """Parse a MySQL database dictionary to create a TrnaFeature object.
+    """Parse a MySQL database dictionary to create a Trna object.
 
     :param data_dict:
         Dictionary of data retrieved from the gene table.
     :type data_dict: dict
-    :returns: A pdm_utils TrnaFeature object.
-    :rtype: TrnaFeature
+    :returns: A pdm_utils Trna object.
+    :rtype: Trna
     """
 
-    ftr = trna.TrnaFeature()
+    ftr = trna.Trna()
     ftr.type = "tRNA"
 
     try:
@@ -294,16 +294,16 @@ def parse_trna_table_data(data_dict):
 
 # TODO Christian review
 def parse_tmrna_table_data(data_dict):
-    """Parse a MySQL database dictionary to create a TmrnaFeature object.
+    """Parse a MySQL database dictionary to create a Tmrna object.
 
     :param data_dict:
         Dictionary of data retrieved from the gene table.
     :type data_dict: dict
-    :returns: A pdm_utils TmrnaFeature object.
-    :rtype: TmrnaFeature
+    :returns: A pdm_utils Tmrna object.
+    :rtype: Tmrna
     """
 
-    ftr = tmrna.TmrnaFeature()
+    ftr = tmrna.Tmrna()
     ftr.type = "tmRNA"
 
     try:
@@ -431,14 +431,14 @@ def parse_genome_data(engine, phage_id_list=None, phage_query=None,
     :param trna_query:
         This parameter is passed directly to the 'parse_feature_data' function
         to retrieve data from the trna table.
-        If not None, pdm_utils TrnaFeature objects for all of the phage's
+        If not None, pdm_utils Trna objects for all of the phage's
         tRNA features in the trna table will be constructed
         and added to the Genome object.
     :type trna_query: str
     :param tmrna_query:
         This parameter is passed directly to the 'parse_feature_data' function
         to retrieve data from the tmrna table.
-        If not None, pdm_utils TmrnaFeature objects for all of the phage's
+        If not None, pdm_utils Tmrna objects for all of the phage's
         tmRNA features in the tmrna table will be constructed
         and added to the Genome object.
     :type tmrna_query: str
@@ -606,8 +606,8 @@ def create_gene_table_insert(cds_ftr):
 def create_trna_table_insert(trna_ftr):
     """
     Create a MySQL trna table INSERT statement.
-    :param trna_ftr: a pdm_utils TrnaFeature object
-    :type trna_ftr: TrnaFeature
+    :param trna_ftr: a pdm_utils Trna object
+    :type trna_ftr: Trna
     :returns: a MySQL statement to INSERT a new row in the 'trna' table
     with all of trna_ftr's relevant data
     :rtype: str

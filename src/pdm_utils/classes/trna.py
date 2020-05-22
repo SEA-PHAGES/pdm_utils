@@ -41,7 +41,7 @@ NOTE_STANDARD_REGEX = re.compile("tRNA-(\w+)\s?\((\w+)\)")
 NOTE_SPECIAL_REGEX = re.compile("tRNA-\?\((\w+)\|(\w+)\)\s?\((\w+)\)")
 
 
-class TrnaFeature:
+class Trna:
     def __init__(self):
         """
         Constructor method for a tRNA object.

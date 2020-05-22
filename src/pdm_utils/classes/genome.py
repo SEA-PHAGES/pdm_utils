@@ -268,7 +268,7 @@ class Genome:
 
     def set_tmrna_features(self, value):
         """Set and tally the tmRNA features.
-        :param value: list of TmrnaFeature objects.
+        :param value: list of Tmrna objects.
         :type value: list
         """
         self.tmrna_features = value     # Should be a list
@@ -448,9 +448,9 @@ class Genome:
                     delimiter = "_CDS_"
                 elif isinstance(sorted_list[index], source.Source):
                     delimiter = "_SRC_"
-                elif isinstance(sorted_list[index], trna.TrnaFeature):
+                elif isinstance(sorted_list[index], trna.Trna):
                     delimiter = "_TRNA_"
-                elif isinstance(sorted_list[index], tmrna.TmrnaFeature):
+                elif isinstance(sorted_list[index], tmrna.Tmrna):
                     delimiter = "_TMRNA_"
                 else:
                     delimiter = "_"

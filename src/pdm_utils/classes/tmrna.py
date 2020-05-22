@@ -18,7 +18,7 @@ from pdm_utils.functions import basic
 NOTE_STANDARD_REGEX = re.compile("Peptide tag: ([\w|*]*)")
 
 
-class TmrnaFeature:
+class Tmrna:
     def __init__(self):
         """
         Constructor method for a tmRNA object.

@@ -198,13 +198,13 @@ def parse_cds_seqfeature(seqfeature):
 def parse_trna_seqfeature(seqfeature):
     """
     Parse data from a Biopython tRNA SeqFeature object into a
-    TrnaFeature object.
+    Trna object.
     :param seqfeature: Biopython SeqFeature
     :type seqfeature: SeqFeature
-    :returns: a pdm_utils TrnaFeature object
-    :rtype: TrnaFeature
+    :returns: a pdm_utils Trna object
+    :rtype: Trna
     """
-    trna_ftr = trna.TrnaFeature()
+    trna_ftr = trna.Trna()
     trna_ftr.seqfeature = seqfeature
 
     try:
@@ -252,13 +252,13 @@ def parse_trna_seqfeature(seqfeature):
 def parse_tmrna_seqfeature(seqfeature):
     """
     Parses data from a BioPython tmRNA SeqFeature object into a
-    TmrnaFeature object.
+    Tmrna object.
     :param seqfeature: BioPython SeqFeature
     :type seqfeature: SeqFeature
-    :return: pdm_utils TmrnaFeature object
-    :rtype: TmrnaFeature
+    :return: pdm_utils Tmrna object
+    :rtype: Tmrna
     """
-    tmrna_ftr = tmrna.TmrnaFeature()
+    tmrna_ftr = tmrna.Tmrna()
     tmrna_ftr.seqfeature = seqfeature
 
     try:

@@ -1,4 +1,4 @@
-""" Unit tests for the TrnaFeature class."""
+""" Unit tests for the Trna class."""
 
 
 from pathlib import Path
@@ -19,10 +19,10 @@ if str(test_dir) not in set(sys.path):
 import test_data_utils
 
 
-class TestCdsClass(unittest.TestCase):
+class TestTrnaClass(unittest.TestCase):
 
     def setUp(self):
-        self.feature = trna.TrnaFeature()
+        self.feature = trna.Trna()
         self.seq1 = Seq("AATTCGAGCT")
         self.seqfeature1 = test_data_utils.create_1_part_seqfeature(
                                 1, 5, 1, "CDS")

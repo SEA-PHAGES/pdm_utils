@@ -314,7 +314,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
             self.assertEqual(len(cds_list), 4)
 
     def test_parse_feature_data_4(self):
-        """Verify that a TrnaFeature object is constructed correctly for a
+        """Verify that a Trna object is constructed correctly for a
         valid PhageID."""
         ftr_list = mysqldb.parse_feature_data(self.engine, "trna",
                                               column="PhageID",
@@ -328,7 +328,7 @@ class TestMysqldbFunctions1(unittest.TestCase):
             self.assertEqual(ftr_list[0].genome_id, "Trixie")
 
     def test_parse_feature_data_5(self):
-        """Verify that a TmrnaFeature object is constructed correctly for a
+        """Verify that a Tmrna object is constructed correctly for a
         valid PhageID."""
         ftr_list = mysqldb.parse_feature_data(self.engine, "tmrna",
                                               column="PhageID",
@@ -588,7 +588,7 @@ class TestMysqldbFunctions3(unittest.TestCase):
         # Note: even though this function returns a string and doesn't
         # actually utilize a MySQL database, this test ensures
         # that the returned statement will function properly in MySQL.
-        trna1 = trna.TrnaFeature()
+        trna1 = trna.Trna()
         trna1.id = "Trixie_1"
         trna1.genome_id = "Trixie"
         trna1.name = "1"
@@ -649,7 +649,7 @@ class TestMysqldbFunctions3(unittest.TestCase):
         # Note: even though this function returns a string and doesn't
         # actually utilize a MySQL database, this test ensures
         # that the returned statement will function properly in MySQL.
-        trna1 = trna.TrnaFeature()
+        trna1 = trna.Trna()
         trna1.id = "Trixie_1"
         trna1.genome_id = "Trixie"
         trna1.name = "1"
@@ -697,7 +697,7 @@ class TestMysqldbFunctions3(unittest.TestCase):
         # Note: even though this function returns a string and doesn't
         # actually utilize a MySQL database, this test ensures
         # that the returned statement will function properly in MySQL.
-        tmrna1 = tmrna.TmrnaFeature()
+        tmrna1 = tmrna.Tmrna()
         tmrna1.id = "Trixie_1"
         tmrna1.genome_id = "Trixie"
         tmrna1.name = "1"
@@ -748,7 +748,7 @@ class TestMysqldbFunctions3(unittest.TestCase):
         # Note: even though this function returns a string and doesn't
         # actually utilize a MySQL database, this test ensures
         # that the returned statement will function properly in MySQL.
-        tmrna1 = tmrna.TmrnaFeature()
+        tmrna1 = tmrna.Tmrna()
         tmrna1.id = "Trixie_1"
         tmrna1.genome_id = "Trixie"
         tmrna1.name = "1"
