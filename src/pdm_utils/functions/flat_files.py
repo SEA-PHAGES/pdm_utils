@@ -680,6 +680,10 @@ def get_genome_seqrecord_features(phage_genome):
         phage_cds.set_seqfeature(type="CDS")
         features.append(phage_cds.seqfeature)
 
+    for phage_trna in phage_genome.trna_features:
+        phage_trna.set_seqfeature()
+        features.append(phage_trna.seqfeature) 
+
     return features
 
 def get_genome_seqrecord_description(phage_genome):

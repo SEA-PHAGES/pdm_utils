@@ -35,6 +35,7 @@ DEFAULT_TABLE = "phage"
 
 PHAGE_QUERY = "SELECT * FROM phage"
 GENE_QUERY = "SELECT * FROM gene"
+TRNA_QUERY = "SELECT * FROM trna"
 
 # Valid Biopython formats that crash the script due to specific values in
 # some genomes that can probably be fixed relatively easily and implemented.
@@ -587,7 +588,8 @@ def get_genome_seqrecords(alchemist, values=[], verbose=False):
     genomes = mysqldb.parse_genome_data(alchemist.engine,
                                         phage_id_list=values,
                                         phage_query=PHAGE_QUERY,
-                                        gene_query=GENE_QUERY)
+                                        gene_query=GENE_QUERY,
+                                        trna_query=TRNA_QUERY)
 
     seqrecords = []
     for gnm in genomes:
