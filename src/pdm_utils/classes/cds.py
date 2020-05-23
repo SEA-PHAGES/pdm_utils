@@ -568,7 +568,7 @@ class Cds:
             attribute.
         """
         qualifiers = OrderedDict()
-        if self.description != "":
+        if self.description == "":
             product = "Hypothetical Protein"
         else:
             product = self.description

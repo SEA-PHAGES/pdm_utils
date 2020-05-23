@@ -611,7 +611,7 @@ def genome_to_seqrecord(phage_genome):
 
     return record
 
-def cds_to_seqrecord(cds, parent_genome, regions=[]):
+def cds_to_seqrecord(cds, parent_genome, gene_domains=[]):
     """Creates a SeqRecord object from a Cds and its parent Genome.
 
     :param cds: A populated Cds object.
@@ -641,27 +641,15 @@ def cds_to_seqrecord(cds, parent_genome, regions=[]):
 
 
     cds_feature = cds.create_seqfeature("CDS", 0, cds.translation_length, 1)
-    cds_feature.qualifiers.pop("codon_start")
-    cds_feature.qualifiers.pop("product")
-    cds_feature.qualifiers.pop("translation")
-
-    coded_by = (f"{parent_genome.accession}:"
-            f"{cds.seqfeature.location.start}..{cds.seqfeature.location.end}")
-    if cds.seqfeature.strand == -1:
-        coded_by = f"complement({coded_by})"
-    
-    cds_feature.qualifiers["coded by"] = [coded_by]
+    format_cds_seqrecord_CDS_feature(cds_feature, cds, parent_genome)
     record.features.append(cds_feature)
 
-    for region in regions:
-        region_feature = cds.create_seqfeature("Region", region.query_start, 
-                                                         region.query_stop, 1) 
-        region_feature.qualifiers["region_name"] = [region.name]
-        region_feature.qualifiers["note"] = [region.description]
-        region_feature.qualifiers["db_xref"]  = [region.domain_id]
+    region_features = get_cds_seqrecord_regions(gene_domains, cds) 
+    for region_feature in region_features:
         record.features.append(region_feature)
 
-    record.description = (f"{cds.description} [{source}]")
+    record.description = (f"{cds.seqfeature.qualifiers['product'][0]} "
+                          f"[{source}]")
     record.annotations = get_cds_seqrecord_annotations(cds, parent_genome)
 
     return record
@@ -778,6 +766,33 @@ def get_genome_seqrecord_annotations_comments(phage_genome):
     return (cluster_comment, auto_generated_comment,\
             annotation_status_comment, retrieval_value)
 
+def get_cds_seqrecord_regions(gene_domains, cds):
+    region_features = []
+    for gene_domain in gene_domains:
+            region_feature = cds.create_seqfeature("Region", 
+                                                    gene_domain.QueryStart, 
+                                                    gene_domain.QueryEnd, 1) 
+            region_feature.qualifiers["region_name"] = [gene_domain.domain.Name]
+            region_feature.qualifiers["note"] = [
+                                    gene_domain.domain.Description.decode("utf-8")]
+            region_feature.qualifiers["db_xref"]  = ["CDD:"
+                                    f"{gene_domain.domain.DomainID}"]
+            region_features.append(region_feature)
+
+    return region_features
+
+def format_cds_seqrecord_CDS_feature(cds_feature, cds, parent_genome):
+    cds_feature.qualifiers.pop("codon_start")
+    cds_feature.qualifiers.pop("product")
+    cds_feature.qualifiers.pop("translation")
+
+    coded_by = (f"{parent_genome.accession}:"
+            f"{cds.seqfeature.location.start}..{cds.seqfeature.location.end}")
+    if cds.seqfeature.strand == -1:
+        coded_by = f"complement({coded_by})"
+    
+    cds_feature.qualifiers["coded by"] = [coded_by]
+
 def get_cds_seqrecord_annotations(cds, parent_genome):
     """Function that creates a Cds SeqRecord annotations attribute dict.
     :param cds: A populated Cds object.
@@ -820,7 +835,7 @@ def get_cds_seqrecord_annotations_comments(cds):
     pham_comment =\
            f"Pham: {cds.pham_id}"
     auto_generated_comment =\
-            "Auto-generated genome record from a MySQL database"
+            "Auto-generated CDS record from a MySQL database"
 
     return (pham_comment, auto_generated_comment)
 

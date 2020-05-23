@@ -18,6 +18,7 @@ from sqlalchemy.sql.elements import Null
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.classes.filter import Filter
 from pdm_utils.functions import basic
+from pdm_utils.functions import cartography
 from pdm_utils.functions import flat_files
 from pdm_utils.functions import mysqldb
 from pdm_utils.functions import mysqldb_basic
@@ -608,8 +609,8 @@ def get_cds_seqrecords(alchemist, values=[], nucleotide=False, verbose=False):
                 print(f"...Retrieving parent genome for {cds.id}...")
             phage_id_obj = querying.get_column(alchemist.metadata,
                                                "phage.PhageID")
-            phage_obj = phage_id_obj.table
 
+            phage_obj = phage_id_obj.table
             parent_genome_query = querying.build_select(
                                                 alchemist.graph,
                                                 phage_obj,
@@ -625,7 +626,12 @@ def get_cds_seqrecords(alchemist, values=[], nucleotide=False, verbose=False):
         cds.genome_length = genomes_dict[cds.genome_id].length
         cds.set_seqfeature()
 
-        record = flat_files.cds_to_seqrecord(cds, genomes_dict[cds.genome_id])
+        gene_domain = cartography.get_map(alchemist.mapper, "gene_domain")
+        gene_domains = alchemist.session.query(gene_domain)\
+                                                .filter_by(GeneID=cds.id).all()
+
+        record = flat_files.cds_to_seqrecord(cds, genomes_dict[cds.genome_id],
+                                                gene_domains=gene_domains)
         seqrecords.append(record)
 
     return seqrecords
