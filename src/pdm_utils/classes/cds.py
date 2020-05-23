@@ -524,6 +524,13 @@ class Cds:
             self.seq = Seq("", IUPAC.ambiguous_dna)
 
 
+
+#Needs unittests, however:
+#Seqfeature retrieval and generation is clunky probably requires some
+#over arching seqfeature generation.
+#This cannot be in flat_files due to the need to import Cds which would
+#create circular dependancies.
+#May delay unittests until structure is revamped
     def set_seqfeature(self, type="CDS"):
         """Set the 'seqfeature' attribute.
 

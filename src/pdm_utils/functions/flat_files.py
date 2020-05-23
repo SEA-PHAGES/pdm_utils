@@ -611,6 +611,11 @@ def genome_to_seqrecord(phage_genome):
 
     return record
 
+
+#Needs unittests, however:
+#Seqfeature retrieval and generation is clunky probably requires some
+#over arching seqfeature generation.
+#May delay unittests until structure is revamped
 def cds_to_seqrecord(cds, parent_genome, gene_domains=[]):
     """Creates a SeqRecord object from a Cds and its parent Genome.
 
