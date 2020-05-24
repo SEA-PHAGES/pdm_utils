@@ -16,11 +16,17 @@ The argument 'Actinobacteriophage' indicates the name of the database to downloa
     This will overwrite an existing Actinobacteriophage database, if it exists.
 
 
+To download and install a database from a non-standard server, specify the URL::
+
+    > python3 -m pdm_utils get_db Actinobacteriophage server -u http://custom/server/website
+
+
+
 Databases can be downloaded and installed in two steps, which can be used to install a database under a new name:
 
-    1. First download the database from the Hatfull server using the '-d' flag. This will save the database to your local computer as a SQL file (e.g. Actinobacteriophage.sql) without installing it in MySQL. Also specify where the file should be downloaded using the '-o' flag (if omitted, the default is the /tmp/ directory)::
+    1. First download the database sql and version files from the Hatfull server using the '-d' and '-v' flags. This will save the database to your local computer as a SQL file (e.g. Actinobacteriophage.sql) without installing it in MySQL. Also specify where the file should be downloaded using the '-o' flag (if omitted, the default is the /tmp/ directory)::
 
-        > python3 -m pdm_utils get_db Actinobacteriophage server -o ./ -d
+        > python3 -m pdm_utils get_db Actinobacteriophage server -o ./ -d -v
 
 
     2. Next, indicate the new name of the database to be created (e.g. NewDB), indicate that a local file will be used with 'file' , and indicate the path to the downloaded SQL file::

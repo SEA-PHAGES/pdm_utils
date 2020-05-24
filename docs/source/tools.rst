@@ -1,3 +1,6 @@
+.. _toolkit:
+
+
 Primary tools
 ================
 Below is a description of command line tools that the ``pdm_utils`` package

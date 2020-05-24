@@ -1,3 +1,6 @@
+.. _custom_dbs:
+
+
 Create customized phage genomics databases
 ==========================================
 Below is a description of how the ``pdm_utils`` package can be used to
