@@ -10,6 +10,8 @@ from pdm_utils.functions import server
 def main(unparsed_args_list):
     """Run the push_db pipeline."""
     args = parse_args(unparsed_args_list)
+    server_host = args.server_host
+    remote_dir = args.remote_directory
 
     file_list = []
     if args.directory is not None:
@@ -29,7 +31,7 @@ def main(unparsed_args_list):
 
     if status == True:
         server.set_log_file(str(args.log_file))
-        transport = server.get_transport(constants.DB_HOST)
+        transport = server.get_transport(server_host)
         if transport is None:
             status = False
 
@@ -43,8 +45,7 @@ def main(unparsed_args_list):
     if status == True:
         for local_filepath in file_list:
             print(f"Uploading {local_filepath.name}...")
-            remote_filepath = pathlib.Path(constants.DB_HOST_DIR,
-                                           local_filepath.name)
+            remote_filepath = pathlib.Path(remote_dir, local_filepath.name)
             result = server.upload_file(sftp, str(local_filepath),
                                         str(remote_filepath))
             if result:
@@ -68,6 +69,8 @@ def parse_args(unparsed_args_list):
     directory_help = "Path to the folder containing files for upload."
     file_help = "Path to the file for upload."
     log_file_help = "Path to the file to log paramiko output."
+    server_host_help = "Server host name."
+    remote_directory_help = "Server directory to upload files."
 
     parser = argparse.ArgumentParser(description=push_db_help)
     parser.add_argument("-d", "--directory", type=pathlib.Path,
@@ -76,6 +79,11 @@ def parse_args(unparsed_args_list):
         help=file_help)
     parser.add_argument("-l", "--log_file", type=pathlib.Path,
         default=pathlib.Path("/tmp/paramiko.log"), help=log_file_help)
+    parser_a.add_argument("-s", "--server_host", type=str,
+        default=constants.DB_HOST, help=server_host_help)
+    parser_a.add_argument("-rd", "--remote_directory", type=str,
+        default=constants.DB_HOST_DIR, help=remote_directory_help)
+
 
     # Assumed command line arg structure:
     # python3 -m pdm_utils.run <pipeline> <additional args...>
