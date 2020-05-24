@@ -18,6 +18,7 @@ from sqlalchemy.sql.elements import Null
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.classes.filter import Filter
 from pdm_utils.functions import basic
+from pdm_utils.functions import cartography
 from pdm_utils.functions import flat_files
 from pdm_utils.functions import mysqldb
 from pdm_utils.functions import mysqldb_basic
@@ -34,6 +35,7 @@ DEFAULT_TABLE = "phage"
 
 PHAGE_QUERY = "SELECT * FROM phage"
 GENE_QUERY = "SELECT * FROM gene"
+TRNA_QUERY = "SELECT * FROM trna"
 
 # Valid Biopython formats that crash the script due to specific values in
 # some genomes that can probably be fixed relatively easily and implemented.
@@ -86,9 +88,11 @@ def main(unparsed_args_list):
     if args.pipeline != "sql":
         mysqldb.check_schema_compatibility(alchemist.engine, "export")
 
-    values = []
+    values = None
     if args.pipeline in FILTERABLE_PIPELINES:
         values = parse_value_input(args.input)
+        if not values:
+            values = None
 
     if not args.pipeline in PIPELINES:
         print("ABORTED EXPORT: Unknown pipeline option discrepency.\n"
@@ -267,7 +271,7 @@ def parse_export(unparsed_args_list):
     return parsed_args
 
 def execute_export(alchemist, folder_path, folder_name, pipeline,
-                        values=[], verbose=False, table=DEFAULT_TABLE,
+                        values=None, verbose=False, table=DEFAULT_TABLE,
                         filters="", groups=[], sort=[],
                         include_columns=[], exclude_columns=[],
                         sequence_columns=False, raw_bytes=False,
@@ -314,10 +318,18 @@ def execute_export(alchemist, folder_path, folder_name, pipeline,
                                       exclude_columns=exclude_columns,
                                       sequence_columns=sequence_columns)
 
-    if pipeline in FILTERABLE_PIPELINES:
-        if verbose:
-            print("Processing columns for sorting...")
-        db_filter = apply_filters(alchemist, table, filters, verbose=verbose)
+    if pipeline in FILTERABLE_PIPELINES: 
+        db_filter = apply_filters(alchemist, table, filters, values=values,
+                                                             verbose=verbose) 
+        if sort:
+            if verbose:
+                print("Processing columns for sorting...")
+            try:
+                db_filter.sort(sort)
+            except:
+                print("Please check your syntax for sorting columns:\n"
+                      f"{', '.join(sort)}")
+                exit(1)
 
     if verbose:
         print("Creating export folder...")
@@ -338,6 +350,7 @@ def execute_export(alchemist, folder_path, folder_name, pipeline,
         if verbose:
             print("Prepared query and path structure, beginning export...")
 
+        values = db_filter.values
         for mapped_path in conditionals_map.keys():
             db_filter.reset()
             db_filter.values = values
@@ -410,7 +423,6 @@ def execute_csv_export(db_filter, export_path, folder_path, columns, csv_name,
     else:
         if verbose:
             print(f"...Writing csv {csv_name}.csv in '{export_path.name}'...")
-            print("......Database entries retrieved: {len(results)}")
 
         file_path = export_path.joinpath(f"{csv_name}.csv")
         basic.export_data_dict(results, file_path, headers,
@@ -447,8 +459,6 @@ def execute_ffx_export(alchemist, export_path, folder_path, values,
     if verbose:
         print(f"Retrieving {export_path.name} data...")
 
-    if verbose:
-        print(f"...Database entries retrieved: {len(values)}")
     seqrecords = []
     if table == "phage":
         seqrecords = get_genome_seqrecords(alchemist, values=values,
@@ -578,11 +588,12 @@ def get_genome_seqrecords(alchemist, values=[], verbose=False):
     genomes = mysqldb.parse_genome_data(alchemist.engine,
                                         phage_id_list=values,
                                         phage_query=PHAGE_QUERY,
-                                        gene_query=GENE_QUERY)
+                                        gene_query=GENE_QUERY,
+                                        trna_query=TRNA_QUERY)
 
     seqrecords = []
     for gnm in genomes:
-        process_cds_features(gnm)
+        sort_cds_features(gnm)
         if verbose:
             print(f"Converting {gnm.name}...")
         seqrecords.append(flat_files.genome_to_seqrecord(gnm))
@@ -600,8 +611,8 @@ def get_cds_seqrecords(alchemist, values=[], nucleotide=False, verbose=False):
                 print(f"...Retrieving parent genome for {cds.id}...")
             phage_id_obj = querying.get_column(alchemist.metadata,
                                                "phage.PhageID")
-            phage_obj = phage_id_obj.table
 
+            phage_obj = phage_id_obj.table
             parent_genome_query = querying.build_select(
                                                 alchemist.graph,
                                                 phage_obj,
@@ -617,7 +628,12 @@ def get_cds_seqrecords(alchemist, values=[], nucleotide=False, verbose=False):
         cds.genome_length = genomes_dict[cds.genome_id].length
         cds.set_seqfeature()
 
-        record = cds_to_seqrecord(cds, genomes_dict[cds.genome_id])
+        gene_domain = cartography.get_map(alchemist.mapper, "gene_domain")
+        gene_domains = alchemist.session.query(gene_domain)\
+                                                .filter_by(GeneID=cds.id).all()
+
+        record = flat_files.cds_to_seqrecord(cds, genomes_dict[cds.genome_id],
+                                                gene_domains=gene_domains)
         seqrecords.append(record)
 
     return seqrecords
@@ -647,6 +663,17 @@ def apply_filters(alchemist, table, filters, values=None,
         print("Please check your syntax for the conditional string: "
              f"{filters}")
         exit(1)
+
+    db_filter.update()
+    db_filter._filters = []
+    db_filter._or_index = -1 
+
+    if filters:
+        if db_filter.hits() == 0:
+            print("Filters yielded no database hits.")
+            sys.exit(1)
+        if verbose: 
+            print(f"Database hits from applied filters: {db_filter.hits()}")
 
     return db_filter
 
@@ -814,7 +841,7 @@ def decode_results(results, columns, verbose=False):
                 if not result[column.name] is None:
                     result[column.name] = result[column.name].decode("utf-8")
 
-def process_cds_features(phage_genome):
+def sort_cds_features(phage_genome):
     """Function that sorts and processes the Cds objects of a Genome object.
 
     :param phage_genome: Genome object containing Cds objects.
@@ -829,8 +856,6 @@ def process_cds_features(phage_genome):
             raise TypeError
         print("Genome cds features unable to be sorted")
         pass
-    for cds_feature in phage_genome.cds_features:
-        cds_feature.set_seqfeature()
 
 #----------------------------------------------------------------------------
 #TODO Travis
@@ -865,83 +890,6 @@ def parse_feature_data(alchemist, values=[], limit=8000):
         cds_list.append(cds_ftr)
 
     return cds_list
-
-#Similar to genome_to_seqrecord()
-#Move to flat_files.py?
-def cds_to_seqrecord(cds, parent_genome):
-    """Creates a SeqRecord object from a Cds and its parent Genome.
-
-    :param cds: A populated Cds object.
-    :type cds: Cds
-    :param phage_genome: Populated parent Genome object of the Cds object.
-    :returns: Filled Biopython SeqRecord object.
-    :rtype: SeqRecord
-    """
-    record = SeqRecord(cds.translation)
-    record.seq.alphabet = IUPAC.IUPACAmbiguousDNA()
-    record.name = cds.id
-    if cds.locus_tag != "":
-        record.id = cds.locus_tag
-
-    cds.set_seqfeature()
-    record.features = [cds.seqfeature]
-
-    record.description = (f"{cds.description} "
-                          f"[{parent_genome.host_genus} phage {cds.genome_id}]")
-    record.annotations = get_cds_seqrecord_annotations(cds, parent_genome)
-
-    return record
-
-#Similar to get_seqrecord_annotations():
-#Move to flat_files.py?
-def get_cds_seqrecord_annotations(cds, parent_genome):
-    """Function that creates a Cds SeqRecord annotations attribute dict.
-    :param cds: A populated Cds object.
-    :type cds: Cds
-    :param phage_genome: Populated parent Genome object of the Cds object.
-    :type phage_genome: Genome
-    :returns: Formatted SeqRecord annotations dictionary.
-    :rtype: dict{str}
-    """
-    annotations = {"molecule type": "DNA",
-                   "topology" : "linear",
-                   "data_file_division" : "PHG",
-                   "date" : "",
-                   "accessions" : [],
-                   "sequence_version" : "",
-                   "keyword" : [],
-                   "source" : "",
-                   "organism" : "",
-                   "taxonomy" : [],
-                   "comment" : ()}
-
-    annotations["date"] = parent_genome.date
-    annotations["organism"] = (f"{parent_genome.host_genus} phage "
-                               f"{cds.genome_id}")
-    annotations["source"] = f"Accession {parent_genome.accession}"
-
-    annotations["taxonomy"].append("Viruses")
-    annotations["taxonomy"].append("dsDNA Viruses")
-    annotations["taxonomy"].append("Caudovirales")
-
-    annotations["comment"] = get_cds_seqrecord_annotations_comments(cds)
-
-    return annotations
-
-#Similar to get_seqrecord_annotatoions():
-#Move to flat_files.py?
-def get_cds_seqrecord_annotations_comments(cds):
-    """Function that creates a Cds SeqRecord comments attribute tuple.
-
-    :param cds:
-    :type cds:
-    """
-    pham_comment =\
-           f"Pham: {cds.pham_id}"
-    auto_generated_comment =\
-            "Auto-generated genome record from a MySQL database"
-
-    return (pham_comment, auto_generated_comment)
 
 def append_database_version(genome_seqrecord, version_data):
     """Function that appends the database version to the SeqRecord comments.
