@@ -1,3 +1,6 @@
+.. _package_overview:
+
+
 pdm\_utils package
 ==================
 
