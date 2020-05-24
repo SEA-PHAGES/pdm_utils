@@ -3,7 +3,10 @@
 Back-end ORM
 ============
 
-A collection of classes represent a 'back-end' ORM that is used to parse, evaluate, and exchange data between different data sources, including GenBank, PhagesDB, and MySQL. The objects leverage the highly-refined and well-supported BioPython package to coordinate data exchange as well as perform biology-related tasks (sequence extraction, translation, etc.).
+A collection of customized classes represent the 'back-end' biology-centric ORM that is used to parse, evaluate, and exchange biological data between different data sources, including GenBank, PhagesDB, and MySQL. The objects leverage the highly-refined and well-supported :biopython:`BioPython package <>` to coordinate data exchange as well as perform biology-related tasks (sequence extraction, translation, etc.). In contrast to the SQLAlchemy 'front-end' ORM, this ORM is only compatible with the most current ``pdm_utils`` database schema.
+
+For information on how different classes in the bio-centric ORM map to different types of data sources, including the MySQL database, refer to the :ref:`bio-centric object relational mappings <attributemap>`.
+
 
 Genome data
 ***********
@@ -106,4 +109,11 @@ With the SeqFeature constructed, the 390 bp nucleotide sequence can be retrieved
 Trna and Tmrna data
 *******************
 
-Similar to CDS data, data from the *trna* and *tmrna* tables are retrieved and parsed into Trna and Tmrna objects, and stored in the Genome.trna_features and Genome.tmrna_features attributes, respectively, Each class contains a variety of methods to validate and manipulate this type of data.
+Similar to CDS data, data from the *trna* and *tmrna* tables are retrieved and parsed into Trna and Tmrna objects, and stored in the Genome.trna_features and Genome.tmrna_features attributes, respectively. Each class contains a variety of methods to validate and manipulate this type of data.
+
+
+
+Source data
+***********
+
+Similar to CDS data, data from source features in GenBank-formatted flat files are parsed into Source objects. There is no equivalent source table in the database, but the class contains a variety of methods to validate and manipulate this type of data from flat files.

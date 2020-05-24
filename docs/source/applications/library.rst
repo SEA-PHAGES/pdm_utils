@@ -1,3 +1,5 @@
+.. _library_tutorial:
+
 Library tutorial
 ================
 

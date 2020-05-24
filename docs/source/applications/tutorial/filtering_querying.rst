@@ -3,17 +3,12 @@
 Filtering and dynamic querying
 ==============================
 
-By combining the SQLAlchemy Core Metadata object with graphing tools from the NetworkX package, ``pdm_utils`` can support dynamic querying of the database and filtering of data.
-
-
-
-
-
+By combining the :sqlalchemy:`SQLAlchemy <>` Core Metadata object with graphing tools from the :networkx:`NetworkX package <>`, ``pdm_utils`` can support dynamic querying of the database and filtering of data.
 
 Dynamic MySQL joining and query construction
 ********************************************
 
-The Filter can dynamically accept a column and table inputs since it combines SQLAlchemy Metadata with a NetworkX graph. The graph describes the relationships and constraints between the tables of a database and allows for identifying the relational path between the tables. The graph thus acts as a guide for joining database tables during MySQL query construction. To create this graph, you can use a ``pdm_utils`` AlchemyHandler object connected to a MySQL database::
+The Filter can dynamically accept a column and table inputs since it combines SQLAlchemy Metadata with a :networkx:`NetworkX <>` graph. The graph describes the relationships and constraints between the tables of a database and allows for identifying the relational path between the tables. The graph thus acts as a guide for joining database tables during MySQL query construction. To create this graph, you can use a ``pdm_utils`` AlchemyHandler object connected to a MySQL database::
 
     >>> from pdm_utils.classes import alchemyhandler
     >>> alchemist = alchemyhandler.AlchemyHandler()

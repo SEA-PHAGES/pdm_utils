@@ -13,13 +13,6 @@ The ``pdm_utils`` source code is structured within a general hierarchical strate
     - The 'run' module' controls the command line toolkit. It is not intended to be called from other tools.
 
 
-Object attribute maps
----------------------
-
-.. toctree::
-
-   attribute maps <attribute_map>
-
 
 Subpackages
 -----------
@@ -42,10 +35,18 @@ Submodules
 
 
 
-.. Module contents
-.. ---------------
-..
-.. .. automodule:: pdm_utils
-..    :members:
-..    :undoc-members:
-..    :show-inheritance:
+Bio-centric object relational mapping
+-------------------------------------
+
+A subset of ``pdm_utils`` classes represents the 'back-end' bio-centric ORM that can be used to exchange data between different data sources and perform biology-related tasks with the data:
+
+.. toctree::
+
+  Bio-centric ORM <attribute_map>
+
+
+
+Tutorial
+--------
+
+Refer to the brief introductory :ref:`library tutorial <library_tutorial>` to coding with the ``pdm_utils`` library.

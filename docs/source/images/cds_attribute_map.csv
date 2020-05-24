@@ -1,22 +1,1 @@
-pdm_utils object.attribute,MySQL table.column,GenBank flat file BioPython object.attribute,PhagesDB API dictionary
-Cds.id,gene.GeneID,N/A,N/A
-Cds.name,gene.Name,SeqFeature.gene OR locus_tag OR user-selected,N/A
-Cds.genome_id,gene.PhageID,N/A,N/A
-Cds.start,gene.Start,SeqFeature.location.start OR end,N/A
-Cds.stop,gene.Stop,SeqFeature.location.start OR end,N/A
-Cds.coordinate_format,N/A,N/A,N/A
-Cds.orientation,gene.Orientation,SeqFeature.strand,N/A
-Cds.parts,N/A,SeqFeature.location.parts,N/A
-Cds.seq,N/A,N/A,N/A
-Cds.length,gene.Length,SeqFeature.location.start AND end,N/A
-Cds.translation,gene.Translation,"SeqFeature.qualifiers[""translation""][0]",N/A
-Cds.translation_length,N/A,"SeqFeature.qualifiers[""translation""][0]",N/A
-Cds.translation_table,N/A,"SeqFeature.qualifiers[""transl_table""][0]",N/A
-Cds.locus_tag,gene.LocusTag,"SeqFeature.qualifiers[""locus_tag""][0]",N/A
-Cds.description,gene.Notes,"SeqFeature.qualifiers[""product""] OR [""function""] OR [""note""]",N/A
-Cds.gene,N/A,"SeqFeature.qualifiers[""gene""][0]",N/A
-Cds.product,N/A,"SeqFeature.qualifiers[""product""][0]",N/A
-Cds.function,N/A,"SeqFeature.qualifiers[""function""][0]",N/A
-Cds.note,N/A,"SeqFeature.qualifiers[""note""][0]",N/A
-Cds.seqfeature,N/A,SeqFeature,N/A
-N/A,gene.DomainStatus,N/A,N/A
+pdm_utils object.attribute,MySQL table.column,GenBank flat file BioPython object.attribute,PhagesDB API dictionaryCds.id,gene.GeneID,N/A,N/ACds.name,gene.Name,SeqFeature qualifiers,N/ACds.genome_id,gene.PhageID,N/A,N/ACds.start,gene.Start,SeqFeature.location.start OR end,N/ACds.stop,gene.Stop,SeqFeature.location.start OR end,N/ACds.coordinate_format,N/A,N/A,N/ACds.orientation,gene.Orientation,SeqFeature.strand,N/ACds.parts,N/A,SeqFeature.location.parts,N/ACds.seq,N/A,N/A,N/ACds.length,gene.Length,SeqFeature.location.start AND end,N/ACds.translation,gene.Translation,"SeqFeature.qualifiers[""translation""][0]",N/ACds.translation_length,N/A,"SeqFeature.qualifiers[""translation""][0]",N/ACds.translation_table,N/A,"SeqFeature.qualifiers[""transl_table""][0]",N/ACds.locus_tag,gene.LocusTag,"SeqFeature.qualifiers[""locus_tag""][0]",N/ACds.description,gene.Notes,"SeqFeature.qualifiers[""product""] OR [""function""] OR [""note""]",N/ACds.gene,N/A,"SeqFeature.qualifiers[""gene""][0]",N/ACds.product,N/A,"SeqFeature.qualifiers[""product""][0]",N/ACds.function,N/A,"SeqFeature.qualifiers[""function""][0]",N/ACds.note,N/A,"SeqFeature.qualifiers[""note""][0]",N/ACds.seqfeature,N/A,SeqFeature,N/AN/A,gene.DomainStatus,N/A,N/A
