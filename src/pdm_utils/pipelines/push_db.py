@@ -79,9 +79,9 @@ def parse_args(unparsed_args_list):
         help=file_help)
     parser.add_argument("-l", "--log_file", type=pathlib.Path,
         default=pathlib.Path("/tmp/paramiko.log"), help=log_file_help)
-    parser_a.add_argument("-s", "--server_host", type=str,
+    parser.add_argument("-s", "--server_host", type=str,
         default=constants.DB_HOST, help=server_host_help)
-    parser_a.add_argument("-rd", "--remote_directory", type=str,
+    parser.add_argument("-rd", "--remote_directory", type=str,
         default=constants.DB_HOST_DIR, help=remote_directory_help)
 
 
