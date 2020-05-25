@@ -21,6 +21,8 @@ contains to analyze and manipulate data within a MySQL database:
    import <./tools/import>
    phamerate <./tools/phamerate>
    push <./tools/push>
+   resubmit <./tools/resubmit>
+   review <./tools/review>
    update <./tools/update>
 
 

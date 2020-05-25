@@ -58,7 +58,9 @@ Follow the steps below to push a new version of the ``pdm_utils`` package to PyP
 
     12. Build a new user guide on ReadTheDocs that reflects the new version.
 
-    13. Commit all changes to git and push to GitHub.
+    13. Commit all changes to git and push to GitHub::
+
+        > git commit -m 'incremented package version to <version number>'
 
     14. Tag the commit with the new package version and push tags to GitHub::
 
