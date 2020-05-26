@@ -1,9 +1,9 @@
 .. _mysql_connection:
 
-Direct connection to MySQL
+Set up connection to MySQL
 ==========================
 
-The primary tool to connect to MySQL and access databases is the ``pdm_utils`` AlchemyHandler. It stores login credentials, manages connections, and stores different types of information about the database.
+The primary tool to connect to MySQL and access databases is the ``pdm_utils`` AlchemyHandler. It stores login credentials, manages connections, and stores different types of information about the database and MySQL environment.
 
 Create an AlchemyHandler object::
 
@@ -30,6 +30,9 @@ or indirectly using the connect() method::
 
     >>> alchemist.connect(ask_database=True)
     MySQL database:
+
+Engine
+------
 
 If login credentials are valid, a SQLAlchemy engine is created and stored in the engine attribute. The engine object provides the core interface between Python and MySQL. It stores information about the database of interest, manages connections, and contains methods to directly interact with the database. With the engine, the database can be queried using pure SQL syntax::
 
@@ -60,3 +63,25 @@ The ``pdm_utils`` 'mysqldb_basic' module provides several functions that rely on
     >>> columns = mysqldb_basic.get_columns(engine, alchemist.database, 'phage')
     >>> columns
     {'Length', 'Notes', 'Subcluster', 'Sequence', 'HostGenus', 'DateLastModified', 'RetrieveRecord', 'Cluster', 'Accession', 'AnnotationAuthor', 'GC', 'Status', 'Name', 'PhageID'}
+
+
+
+
+Metadata
+--------
+
+
+
+
+Database graph
+--------------
+
+
+
+
+Mapper
+------
+
+
+Session
+-------
