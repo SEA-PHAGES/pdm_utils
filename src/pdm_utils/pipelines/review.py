@@ -1,3 +1,5 @@
+"""Pipeline to review discrepant or outdated cds product annotations. """
+
 import argparse
 import sys
 import time

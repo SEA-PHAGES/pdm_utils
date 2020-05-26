@@ -156,7 +156,7 @@ Csv or SeqIO option to filter data retrieved from the database.::
 
     > python3 pdm_utils export Actinobacteriophage csv --where "domain.Description LIKE %helix-turn-helix% OR gene.Notes = 'helix-turn-helix DNA binding protein'"
 
-The command-line flat **-f** or **--where** followed by a MySQL-formatted WHERE expression clauses separated by ANDs and ORs.
+The command-line flag **-f** or **--where** followed by a MySQL-formatted WHERE expression clauses separated by ANDs and ORs.
 Clauses can be expressed with the following format *table*.\ *column* *[operator]* *value* and can be using columns from different tables than the one selected for export (see *Changing the table*)
 
 Grouping export
