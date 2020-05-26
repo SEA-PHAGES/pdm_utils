@@ -190,7 +190,7 @@ def main(unparsed_args_list):
         get_final_data(working_path, matched_genomes)
     if args.genbank is True:
         get_genbank_data(working_path, mysqldb_genome_dict,
-                         ncbi_cred_dict, args.genbank_results)
+                         ncbi_cred_dict, args.genbank_results, force=force)
     if args.draft is True:
         if force:
             # Add all draft genomes currently in database to the list of
@@ -486,7 +486,7 @@ def set_phagesdb_gnm_file(gnm):
 
 # TODO unittest.
 def get_genbank_data(output_folder, genome_dict, ncbi_cred_dict={},
-                     genbank_results=False):
+                     genbank_results=False, force=False):
     """Run sub-pipeline to retrieve genomes from GenBank."""
     # Flow of the NCBI record retrieval process:
     # 1 Create list of phages to check for updates at NCBI (completed above)
@@ -503,7 +503,7 @@ def get_genbank_data(output_folder, genome_dict, ncbi_cred_dict={},
     ncbi_results_list = []
 
     # Iterate through each phage in the MySQL database
-    tup1 = sort_by_accession(genome_dict)
+    tup1 = sort_by_accession(genome_dict, force=force)
     ncbi_results_list.extend(tup1[0])
     accession_dict = tup1[1]
 
@@ -580,7 +580,7 @@ def print_genbank_tallies(tallies):
 
 
 # TODO unittest.
-def sort_by_accession(genome_dict):
+def sort_by_accession(genome_dict, force=False):
     """Sort genome objects based on their accession status.
 
     Only retain data if genome is set to be automatically updated,
@@ -596,7 +596,7 @@ def sort_by_accession(genome_dict):
     for key in genome_dict.keys():
         status = None
         gnm = genome_dict[key]
-        if gnm.retrieve_record != 1:
+        if gnm.retrieve_record != 1 and force == False:
             status = NOT_AUTO
         elif gnm.accession in check_set:
             status = NO_ACC
@@ -817,6 +817,14 @@ def create_accession_sets(genome_dict):
         if gnm.accession != "":
             l.append(gnm.accession)
     unique, duplicated = basic.identify_unique_items(l)
+
+    if len(duplicated) > 0:
+        print("There are duplicated accessions. Some data will not be "
+             "retrieved from GenBank:")
+        for duplicate in duplicated:
+            print(duplicate)
+        input("\n\nPress ENTER to continue.")
+
     return unique, duplicated
 
 
