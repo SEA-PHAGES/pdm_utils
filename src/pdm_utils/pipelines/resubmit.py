@@ -1,3 +1,4 @@
+"""Pipeline to automate product annotation resubmissions to GenBank. """
 import argparse
 import os
 import sys
