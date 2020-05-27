@@ -1,12 +1,14 @@
 """Misc. base/simple functions. These should not require import of other
 modules in this package to prevent circular imports."""
 
-from pdm_utils.constants import constants
-import sys
-import os
+import configparser
 import csv
 import getpass
+import os
 from pathlib import Path
+import sys
+
+from pdm_utils.constants import constants
 
 
 def find_expression(expression, list_of_items):
@@ -1155,31 +1157,6 @@ def select_option(prompt, valid_response_set):
         else:
             print("Invalid response.")
     return response
-
-
-# TODO could probably improve using configparser module.
-# TODO unittest
-def parse_config_file(path, delimiter="="):
-    """Parse a file to return configuration settings."""
-
-    config_dict = {}
-    duplicate_config_keys = set()
-    with open(path, "r") as fh:
-        config_data = fh.readlines()
-    config_data = [i.strip() for i in config_data]
-    config_data = [i.split(delimiter) for i in config_data]
-
-    for row in config_data:
-        if row[0] not in config_dict.keys():
-            config_dict[row[0]] = row[1]
-        else:
-            duplicate_config_keys.add(row[0])
-
-    if len(duplicate_config_keys) > 0:
-        config_dict = None
-        print("There are duplicate config keys in the file. "
-              "Unable to parse config settings.")
-    return config_dict
 
 
 # TODO unittest.

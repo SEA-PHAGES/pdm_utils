@@ -10,6 +10,7 @@ import sys
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.constants import constants, db_schema_0
 from pdm_utils.functions import basic, mysqldb, mysqldb_basic
+from pdm_utils.functions import configfile
 from pdm_utils.pipelines import convert_db
 
 DEFAULT_OUTPUT_FOLDER = "/tmp/"
@@ -31,6 +32,14 @@ def main(unparsed_args_list):
     # Set values that are shared between all three options.
     database = args.database
     option = args.option
+
+    # Create config object with data obtained from file and/or defaults.
+    if args.config_file is not None:
+        config = configfile.build_complete_config(args.config_file)
+    else:
+        config = configfile.default_config()
+
+    mysql_creds = configfile.reformat_data(config["mysql"], "", None)
 
     install = True
     schema_version = None
@@ -74,7 +83,9 @@ def main(unparsed_args_list):
     # If downloading from server, user may have selected to not
     # install the database file.
     if install == True:
-        install_db(database, db_filepath=db_filepath, schema_version=schema_version)
+        install_db(database, username=mysql_creds["user"],
+                   password=mysql_creds["password"], db_filepath=db_filepath,
+                   schema_version=schema_version)
 
     # The output folder was only created for downloading from server.
     if option == "server":
@@ -83,12 +94,11 @@ def main(unparsed_args_list):
             shutil.rmtree(results_path)
 
 # TODO test.
-def install_db(database, db_filepath=None, schema_version=None):
+def install_db(database, username=None, password=None, db_filepath=None, schema_version=None):
     """Install database. If database already exists, it is first removed."""
     # No need to specify database yet, since it needs to first check if the
     # database exists.
-
-    alchemist1 = AlchemyHandler(database="")
+    alchemist1 = AlchemyHandler(database="", username=username, password=password)
     alchemist1.connect(pipeline=True)
     engine1 = alchemist1.engine
     result = mysqldb_basic.drop_create_db(engine1, database)
@@ -171,9 +181,13 @@ def parse_args(unparsed_args_list):
     new_help = "Create a new empty database."
     schema_version_help = (
         "Database schema version to which the database should be converted.")
+    config_file_help = "Path to the file containing user-specific login data."
 
     parser = argparse.ArgumentParser(description=get_db_help)
     parser.add_argument("database", type=str, help=database_help)
+    parser.add_argument("-c", "--config_file", type=pathlib.Path,
+                        help=config_file_help, default=None)
+
     subparsers = parser.add_subparsers(dest="option", help=option_help)
 
     parser_a = subparsers.add_parser("server", help=server_help)

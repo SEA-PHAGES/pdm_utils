@@ -14,6 +14,7 @@ from pdm_utils.classes import genomepair
 from pdm_utils.classes import ticket
 from pdm_utils.constants import constants
 from pdm_utils.functions import basic
+from pdm_utils.functions import configfile
 from pdm_utils.functions import ncbi
 from pdm_utils.functions import mysqldb
 from pdm_utils.functions import phagesdb
@@ -74,9 +75,9 @@ def parse_args(unparsed_args_list):
     final_help = "Retrieve manually-annotated 'final' genomes from PhagesDB."
     genbank_help = "Retrieve annotated genomes from GenBank."
     all_help = "Retrieve all types of new data."
-    ncbi_cred_file_help = "Path to the file containing NCBI credentials."
     genbank_results_help = "Store results of Genbank record retrieval."
     force_download_help = "Retrieve genomes regardless of date in database."
+    config_file_help = "Path to the file containing user-specific login data."
 
     parser = argparse.ArgumentParser(description=retrieve_help)
     parser.add_argument("database", type=str, help=database_help)
@@ -92,13 +93,12 @@ def parse_args(unparsed_args_list):
         default=False, help=genbank_help)
     parser.add_argument("-a", "--all_data", action="store_true",
         default=False, help=all_help)
-    parser.add_argument("-c", "--ncbi_credentials_file", type=pathlib.Path,
-        help=ncbi_cred_file_help)
     parser.add_argument("-gr", "--genbank_results", action="store_true",
         default=False, help=genbank_results_help)
-
     parser.add_argument("-fd", "--force_download", action="store_true",
         default=False, help=force_download_help)
+    parser.add_argument("-c", "--config_file", type=pathlib.Path,
+                        help=config_file_help, default=None)
 
     # Assumed command line arg structure:
     # python3 -m pdm_utils.run <pipeline> <additional args...>
@@ -118,7 +118,6 @@ def parse_args(unparsed_args_list):
         args.genbank = True
 
     if args.genbank == False:
-        args.ncbi_credentials_file = None
         args.genbank_results = False
 
     return args
@@ -139,11 +138,20 @@ def main(unparsed_args_list):
         print(f"Invalid working directory '{working_dir}'")
         sys.exit(1)
 
-    ncbi_cred_dict = ncbi.get_ncbi_creds(args.ncbi_credentials_file)
+    # Create config object with data obtained from file and/or defaults.
+    if args.config_file is not None:
+        config = configfile.build_complete_config(args.config_file)
+    else:
+        config = configfile.default_config()
+
+    ncbi_creds = configfile.reformat_data(config["ncbi"], "", None)
+    mysql_creds = configfile.reformat_data(config["mysql"], "", None)
 
     # Verify database connection and schema compatibility.
     print("Preparing genome data sets from the MySQL database...")
-    alchemist = AlchemyHandler(database=args.database)
+    alchemist = AlchemyHandler(database=args.database,
+                               username=mysql_creds["user"],
+                               password=mysql_creds["password"])
     alchemist.connect(pipeline=True)
     engine = alchemist.engine
     mysqldb.check_schema_compatibility(engine, "the get_data pipeline")
@@ -190,7 +198,7 @@ def main(unparsed_args_list):
         get_final_data(working_path, matched_genomes)
     if args.genbank is True:
         get_genbank_data(working_path, mysqldb_genome_dict,
-                         ncbi_cred_dict, args.genbank_results, force=force)
+                         ncbi_creds, args.genbank_results, force=force)
     if args.draft is True:
         if force:
             # Add all draft genomes currently in database to the list of

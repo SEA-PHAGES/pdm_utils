@@ -1,6 +1,7 @@
 """Pipeline to retrieve GenBank records using accessions stored in the MySQL database."""
 
 import argparse
+import configparser
 from datetime import date
 import os
 import pathlib
@@ -11,6 +12,7 @@ from Bio import SeqIO
 from pdm_utils.classes.filter import Filter
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.functions import basic
+from pdm_utils.functions import configfile
 from pdm_utils.functions import ncbi
 from pdm_utils.functions import mysqldb
 from pdm_utils.functions import mysqldb_basic
@@ -31,7 +33,7 @@ def parse_args(unparsed_args_list):
         "accessions stored in a MySQL database.")
     database_help = "Name of the MySQL database."
     output_folder_help = "Path to the directory where records will be stored."
-    ncbi_cred_file_help = "Path to the file containing NCBI credentials."
+    config_file_help = "Path to the file containing user-specific login data."
     filters_help = (
         "Indicates which genomes to retrieve, "
         "with each conditional formatted as 'table.Field=value'.")
@@ -41,8 +43,8 @@ def parse_args(unparsed_args_list):
     parser.add_argument("-o", "--output_folder", type=pathlib.Path,
                         default=pathlib.Path(DEFAULT_OUTPUT_FOLDER),
                         help=output_folder_help)
-    parser.add_argument("-c", "--ncbi_credentials_file", type=pathlib.Path,
-                        help=ncbi_cred_file_help)
+    parser.add_argument("-c", "--config_file", type=pathlib.Path,
+                        help=config_file_help, default=None)
     parser.add_argument("-f", "--filters", nargs="?",
                         type=parsing.parse_cmd_string, help=filters_help,
                         default=[])
@@ -54,17 +56,25 @@ def parse_args(unparsed_args_list):
     return args
 
 
-
 # TODO unittest.
 def main(unparsed_args_list):
     """Run main get_gb_records pipeline."""
     # Parse command line arguments
     args = parse_args(unparsed_args_list)
 
+    # Create config object with data obtained from file and/or defaults.
+    if args.config_file is not None:
+        config = configfile.build_complete_config(args.config_file)
+    else:
+        config = configfile.default_config()
+
+    ncbi_creds = configfile.reformat_data(config["ncbi"], "", None)
+    mysql_creds = configfile.reformat_data(config["mysql"], "", None)
+
+
     # Filters input: phage.Status=draft AND phage.HostGenus=Mycobacterium
     # Args structure: [['phage.Status=draft'], ['phage.HostGenus=Mycobacterium']]
     filters = args.filters
-    ncbi_cred_dict = ncbi.get_ncbi_creds(args.ncbi_credentials_file)
     output_folder = basic.set_path(args.output_folder, kind="dir",
                                         expect=True)
     working_dir = pathlib.Path(RESULTS_FOLDER)
@@ -76,7 +86,9 @@ def main(unparsed_args_list):
 
     # Verify database connection and schema compatibility.
     print("Connecting to the MySQL database...")
-    alchemist = AlchemyHandler(database=args.database)
+    alchemist = AlchemyHandler(database=args.database,
+                               username=mysql_creds["user"],
+                               password=mysql_creds["password"])
     alchemist.connect(pipeline=True)
     engine = alchemist.engine
     mysqldb.check_schema_compatibility(engine, "the get_gb_records pipeline")
@@ -113,7 +125,7 @@ def main(unparsed_args_list):
     acc_id_dict = get_acc_id_dict(id_acc_dict)
     engine.dispose()
     if len(acc_id_dict.keys()) > 0:
-        get_data(working_path, acc_id_dict, ncbi_cred_dict)
+        get_data(working_path, acc_id_dict, ncbi_creds)
     else:
         print("There are no records to retrieve.")
 

@@ -53,6 +53,7 @@ from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.classes.filter import Filter
 from pdm_utils.constants import constants
 from pdm_utils.functions import basic
+from pdm_utils.functions import configfile
 from pdm_utils.functions import flat_files
 from pdm_utils.functions import mysqldb
 from pdm_utils.functions import mysqldb_basic
@@ -353,8 +354,17 @@ def main(unparsed_args_list):
     args = parse_args(unparsed_args_list)
     database = args.database
     save_records = args.save_records
-    ncbi_credentials_file = args.ncbi_credentials_file
     interactive = args.interactive
+
+    # Create config object with data obtained from file and/or defaults.
+    if args.config_file is not None:
+        config = configfile.build_complete_config(args.config_file)
+    else:
+        config = configfile.default_config()
+
+    ncbi_creds = configfile.reformat_data(config["ncbi"], "", None)
+    mysql_creds = configfile.reformat_data(config["mysql"], "", None)
+
 
     # Filters input: phage.Status=draft AND phage.HostGenus=Mycobacterium
     # Args structure: [['phage.Status=draft'], ['phage.HostGenus=Mycobacterium']]
@@ -379,7 +389,9 @@ def main(unparsed_args_list):
 
     # Verify database connection and schema compatibility.
     print("Connecting to the MySQL database...")
-    alchemist = AlchemyHandler(database=database)
+    alchemist = AlchemyHandler(database=database,
+                               username=mysql_creds["user"],
+                               password=mysql_creds["password"])
     alchemist.connect(pipeline=True)
     alchemist.build_metadata()
     engine = alchemist.engine
@@ -419,7 +431,7 @@ def main(unparsed_args_list):
 
     # Retrieve and parse GenBank records if selected by user
     if "genbank" in valid_dbs:
-        gbk_genome_dict = process_gbk_data(working_path, ncbi_credentials_file,
+        gbk_genome_dict = process_gbk_data(working_path, ncbi_creds,
                                 mysql_accessions, interactive, save_records)
         # gbk_genome_dict: Key = accession; #Value = genome data
     else:
@@ -462,7 +474,6 @@ def parse_args(unparsed_args_list):
         "GenBank databases for inconsistencies.")
     database_help = "Name of the MySQL database from which to compare data."
     output_folder_help = "Path to the folder to store results."
-    ncbi_cred_file_help = "Path to the file containing NCBI credentials."
     phagesdb_help = "Indicates that PhagesDB data should be compared."
     genbank_help = "Indicates that GenBank data should be compared."
     save_records_help = (
@@ -472,6 +483,7 @@ def parse_args(unparsed_args_list):
         "with each conditional formatted as 'table.Field=value'.")
     interactive_help = (
         "Indicates whether evaluation is paused when errors are encountered.")
+    config_file_help = "Path to the file containing user-specific login data."
 
     parser = argparse.ArgumentParser(description=compare_help)
     parser.add_argument("database", type=str, help=database_help)
@@ -482,8 +494,6 @@ def parse_args(unparsed_args_list):
         default=False, help=phagesdb_help)
     parser.add_argument("-g", "--genbank", action="store_true",
         default=False, help=genbank_help)
-    parser.add_argument("-c", "--ncbi_credentials_file", type=pathlib.Path,
-        help=ncbi_cred_file_help)
     parser.add_argument("-f", "--filters", nargs="?",
                         type=parsing.parse_cmd_string, help=filters_help,
                         default=[])
@@ -491,6 +501,9 @@ def parse_args(unparsed_args_list):
         default=False, help=save_records_help)
     parser.add_argument("-i", "--interactive", action="store_true",
         default=False, help=interactive_help)
+    parser.add_argument("-c", "--config_file", type=pathlib.Path,
+                        help=config_file_help, default=None)
+
 
     # Assumed command line arg structure:
     # python3 -m pdm_utils <pipeline> <additional args...>
@@ -846,15 +859,14 @@ def check_pdb_gnms(gnm_dict):
             gnm.compute_nucleotide_errors(constants.DNA_ALPHABET)
 
 # TODO refactor and test.
-def process_gbk_data(working_path, creds_file, accessions, interactive, save):
+def process_gbk_data(working_path, ncbi_creds, accessions, interactive, save):
     """Retrieve and process GenBank data."""
 
     if save == True:
         output_path = pathlib.Path(working_path, RECORD_FOLDER, GENBANK_OUTPUT)
         output_path.mkdir()
 
-    creds = ncbi.get_ncbi_creds(creds_file)
-    records, retrieval_errors = get_genbank_data(creds, accessions)
+    records, retrieval_errors = get_genbank_data(ncbi_creds, accessions)
 
     #Report the accessions that could not be retrieved.
     output_to_file(retrieval_errors, pathlib.Path(working_path, ERROR_FOLDER),
