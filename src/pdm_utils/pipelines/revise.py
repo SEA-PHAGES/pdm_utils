@@ -17,9 +17,9 @@ from pdm_utils.pipelines import export_db
 #-----------------------------------------------------------------------------
 #GLOBAL VARIABLES
 
-DEFAULT_FOLDER_NAME = f"{time.strftime('%Y%m%d')}_resubmit"
+DEFAULT_FOLDER_NAME = f"{time.strftime('%Y%m%d')}_revise"
 DEFAULT_FOLDER_PATH = Path.cwd()
-CSV_NAME = "resubmit.csv"
+CSV_NAME = "revise.csv"
 
 RESUBMIT_HEADER = ["Phage", "Accession Number", "Locus Tag", 
                    "Start", "Stop", "Product"]
@@ -35,26 +35,26 @@ BASE_CONDITIONALS = ("phage.Status = final AND "
 #MAIN FUNCTIONS
 
 def main(unparsed_args_list):
-    """Uses parsed args to run the entirety of the resubmit pipeline.
+    """Uses parsed args to run the entirety of the revise pipeline.
 
     :param unparsed_args_list: Input a list of command line args.
     :type unparsed_args_list: list[str]
     """
-    args = parse_resubmit(unparsed_args_list)
+    args = parse_revise(unparsed_args_list)
    
     alchemist = AlchemyHandler(database=args.database)
     alchemist.connect(ask_database=True, pipeline=True)
 
     revisions_data_dicts = basic.retrieve_data_dict(args.revisions_file)
 
-    execute_resubmit(alchemist, revisions_data_dicts, args.folder_path, 
+    execute_revise(alchemist, revisions_data_dicts, args.folder_path, 
                                                       args.folder_name,
                                                       filters=args.filters,
                                                       groups=args.groups,
                                                       verbose=args.verbose)
 
-def parse_resubmit(unparsed_args_list):
-    """Parses resubmit arguments and stores them with an argparse object.
+def parse_revise(unparsed_args_list):
+    """Parses revise arguments and stores them with an argparse object.
 
     :param unparsed_args_list: Input a list of command line args.
     :type unparsed_args_list: list[str]
@@ -117,7 +117,7 @@ def parse_resubmit(unparsed_args_list):
                                 dest="groups")
     
     date = time.strftime("%Y%m%d")
-    default_folder_name = f"{date}_pham_resubmit"
+    default_folder_name = f"{date}_pham_revise"
     default_folder_path = Path.cwd()
 
     parser.set_defaults(folder_name=DEFAULT_FOLDER_NAME,
@@ -127,10 +127,10 @@ def parse_resubmit(unparsed_args_list):
     parsed_args = parser.parse_args(unparsed_args_list[2:])
     return parsed_args
 
-def execute_resubmit(alchemist, revisions_data_dicts, folder_path, folder_name,
+def execute_revise(alchemist, revisions_data_dicts, folder_path, folder_name,
                                                      filters="", groups=[],
                                                      verbose=False):
-    """Executes the entirety of the genbank resubmit pipeline.
+    """Executes the entirety of the genbank revise pipeline.
 
     :param alchemist: A connected and fully built AlchemyHandler object.
     :type alchemist: AlchemyHandler
@@ -154,7 +154,7 @@ def execute_resubmit(alchemist, revisions_data_dicts, folder_path, folder_name,
             print("Please check your syntax for the conditional string:\n"
                  f"{filters}")
     
-    resubmit_columns = db_filter.get_columns(RESUBMIT_COLUMNS)
+    revise_columns = db_filter.get_columns(RESUBMIT_COLUMNS)
     
     phams = []
     for data_dict in revisions_data_dicts:
@@ -191,7 +191,7 @@ def execute_resubmit(alchemist, revisions_data_dicts, folder_path, folder_name,
             conditionals.append(querying.build_where_clause(alchemist.graph,
                                     f"gene.Notes!={final_call}"))
 
-            query = querying.build_select(alchemist.graph, resubmit_columns, 
+            query = querying.build_select(alchemist.graph, revise_columns, 
                                                            where=conditionals)
 
             results = querying.execute(alchemist.engine, query, 
@@ -199,7 +199,7 @@ def execute_resubmit(alchemist, revisions_data_dicts, folder_path, folder_name,
                                                     values=[data_dict["Pham"]])
 
             for result in results:
-                format_resubmit_data(result, data_dict["Final Call"]) 
+                format_revise_data(result, data_dict["Final Call"]) 
                 export_dicts.append(result)
 
         if not export_dicts:
@@ -223,12 +223,12 @@ def execute_resubmit(alchemist, revisions_data_dicts, folder_path, folder_name,
 #-----------------------------------------------------------------------------
 #RESUBMIT-SPECIFIC HELPER FUNCTIONS
 
-def format_resubmit_data(row_dict, product): 
-    """Function to format resubmit dictionary keys.
+def format_revise_data(row_dict, product): 
+    """Function to format revise dictionary keys.
 
-    :param row_dict: Data dictionary for a resubmit file.
+    :param row_dict: Data dictionary for a revise file.
     :type row_dict: dict
-    :param product: Gene product to append to the resubmit data dictionary.
+    :param product: Gene product to append to the revise data dictionary.
     :type product: str
     """
     row_dict["Phage"] = row_dict.pop("PhageID")

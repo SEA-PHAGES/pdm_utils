@@ -3,9 +3,9 @@ from unittest.mock import Mock
 from unittest.mock import patch
 from unittest.mock import PropertyMock
 
-from pdm_utils.pipelines import resubmit
+from pdm_utils.pipelines import revise
 
-class TestResubmitMain(unittest.TestCase):
+class TestReviseMain(unittest.TestCase):
     def setUp(self):
         self.mock_args = Mock()
         self.test_args_list = ["test", "args", "list"]
@@ -37,25 +37,25 @@ class TestResubmitMain(unittest.TestCase):
         type(self.mock_args).verbose = PropertyMock(
                                     return_value=self.mock_verbose)
 
-    @patch("pdm_utils.pipelines.resubmit.execute_resubmit")
-    @patch("pdm_utils.pipelines.resubmit.basic.retrieve_data_dict")
-    @patch("pdm_utils.pipelines.resubmit.AlchemyHandler")
-    @patch("pdm_utils.pipelines.resubmit.parse_resubmit")
-    def test_main_1(self, parse_resubmit_mock, alchemyhandler_mock,
-                            retrieve_data_dict_mock, execute_resubmit_mock):
+    @patch("pdm_utils.pipelines.revise.execute_revise")
+    @patch("pdm_utils.pipelines.revise.basic.retrieve_data_dict")
+    @patch("pdm_utils.pipelines.revise.AlchemyHandler")
+    @patch("pdm_utils.pipelines.revise.parse_revise")
+    def test_main_1(self, parse_revise_mock, alchemyhandler_mock,
+                            retrieve_data_dict_mock, execute_revise_mock):
         """Verfiy function structure of main().
         """
-        parse_resubmit_mock.return_value = self.mock_args
+        parse_revise_mock.return_value = self.mock_args
         alchemyhandler_mock.return_value = self.mock_alchemist
         retrieve_data_dict_mock.return_value = self.mock_revisions_data_dicts
 
-        resubmit.main(self.test_args_list)
+        revise.main(self.test_args_list)
 
-        parse_resubmit_mock.assert_called_with(self.test_args_list)
+        parse_revise_mock.assert_called_with(self.test_args_list)
         alchemyhandler_mock.assert_called_with(database=self.mock_database)
         retrieve_data_dict_mock.assert_called_with(self.mock_revisions_file)
 
-        execute_resubmit_mock.assert_called_with(
+        execute_revise_mock.assert_called_with(
                             self.mock_alchemist, self.mock_revisions_data_dicts,
                             self.mock_folder_path, self.mock_folder_name,
                             filters=self.mock_filters, groups=self.mock_groups,
