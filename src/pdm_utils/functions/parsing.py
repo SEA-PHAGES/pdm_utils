@@ -143,7 +143,7 @@ def parse_filter(unparsed_filter):
     """
     filter_format = re.compile(" *\w+\.\w+ *([=<>!]+ *| +LIKE +| +IS NOT +) *"
                                "([\w\W]+|'[ \w\W]+') *")
-    quote_value_format = re.compile("'[ \w\W]+'")
+    quote_value_format = re.compile("'[ \w\W]*'")
 
     if re.match(filter_format, unparsed_filter) != None:
         operators = re.compile("( *[=<>!]+ *| +LIKE +| +IS NOT +)")
