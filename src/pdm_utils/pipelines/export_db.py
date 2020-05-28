@@ -509,7 +509,14 @@ def write_seqrecord(seqrecord_list, file_format, export_path, concatenate=False,
         file_name = f"{record_name}.{file_format}"
         file_path = export_path.joinpath(file_name)
         file_handle = file_path.open(mode='w')
-        SeqIO.write(record_dictionary[record_name], file_handle, file_format)
+        records = record_dictionary[record_name]
+        if isinstance(records, list):
+            for record in records:
+                SeqIO.write(record, file_handle, file_format)
+                file_handle.write("\n")
+        else:
+            SeqIO.write(record_dictionary[record_name], file_handle, file_format)
+
         file_handle.close()
 
 def write_database(alchemist, version, export_path):
