@@ -16,7 +16,7 @@ from pdm_utils.pipelines import get_gb_records
 from pdm_utils.pipelines import import_genome
 from pdm_utils.pipelines import phamerate
 from pdm_utils.pipelines import push_db
-from pdm_utils.pipelines import resubmit
+from pdm_utils.pipelines import revise
 from pdm_utils.pipelines import review
 from pdm_utils.pipelines import update_field
 
