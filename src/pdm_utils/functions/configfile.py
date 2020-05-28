@@ -8,7 +8,8 @@ from pdm_utils.functions import basic
 def default_sections_keys():
     dict = {"mysql": {"user", "password"},
             "mysqldump": {"user", "password"},
-            "ncbi": {"ncbi_api_key", "ncbi_email", "ncbi_tool"}
+            "ncbi": {"ncbi_api_key", "ncbi_email", "ncbi_tool"},
+            "upload_server": {"host", "dest", "user", "password"}
             }
     return dict
 

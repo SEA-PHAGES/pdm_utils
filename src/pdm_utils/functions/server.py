@@ -40,7 +40,7 @@ def get_transport(host):
 
 
 # TODO unittest (but manually tested).
-def setup_sftp_conn(transport, attempts=1):
+def setup_sftp_conn(transport, user=None, pwd=None, attempts=1):
     """Get credentials and setup connection to the server.
 
     :param transport: Paramiko Transport object directed towards a valid server.
@@ -58,9 +58,15 @@ def setup_sftp_conn(transport, attempts=1):
     # There may be a transport attribute that needs to be reset or
     # a new transport object may need to be generated after each failed
     # attempt.
+
+    # Only give one attempt if user and password is provided as parameter.
+    if user is not None and pwd is not None:
+        attempts = 1
+
     while (attempts > 0 and sftp is None):
-        user, pwd = basic.get_user_pwd(user_prompt="Server username: ",
-                                       pwd_prompt="Server password: ")
+        if user is None or pwd is None:
+            user, pwd = basic.get_user_pwd(user_prompt="Server username: ",
+                                           pwd_prompt="Server password: ")
         try:
             transport.connect(username=user, password=pwd)
             sftp = paramiko.SFTPClient.from_transport(transport)
