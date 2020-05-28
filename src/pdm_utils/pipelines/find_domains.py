@@ -15,6 +15,7 @@ import pdm_utils
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.constants import constants
 from pdm_utils.functions import basic
+from pdm_utils.functions import configfile
 from pdm_utils.functions import mysqldb
 from pdm_utils.functions import mysqldb_basic
 from pdm_utils.functions.basic import expand_path
@@ -77,19 +78,22 @@ def setup_argparser():
         "Uses rpsblast to search the NCBI conserved domain database "
         "for significant domain hits in all new proteins of a "
         "MySQL database.")
-    output_folder_help = \
-        "Directory where log data can be generated."
-    reset_help = \
-        "Clear all domain data in the database before finding domains."
-    cdd_help = \
-        f"Path to local NCBI Conserved Domain Database. Default is {DEFAULT_CDD}."
+    output_folder_help = (
+        "Directory where log data can be generated.")
+    reset_help = (
+        "Clear all domain data in the database before finding domains.")
+    cdd_help = (
+        "Path to local NCBI Conserved Domain Database. "
+        f"Default is {DEFAULT_CDD}.")
+    config_file_help = (
+        "Path to the file containing user-specific login data.")
 
 
     # Initialize parser and add arguments
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument("database", type=str,
                         help="name of database to phamerate")
-    parser.add_argument("-c", "--cdd", type=str, default=DEFAULT_CDD,
+    parser.add_argument("-d", "--cdd", type=str, default=DEFAULT_CDD,
                         help=cdd_help)
     parser.add_argument("-t","--threads", default=mp.cpu_count(), type=int,
                         help="number of concurrent CDD searches to run")
@@ -106,6 +110,9 @@ def setup_argparser():
                         help="number of translations to search at a time")
     parser.add_argument("-x", "--reset", action="store_true",
         default=False, help=reset_help)
+    parser.add_argument("-c", "--config_file", type=pathlib.Path,
+                       help=config_file_help, default=None)
+
     return parser
 
 
@@ -244,6 +251,15 @@ def main(argument_list):
     reset = args.reset
     batch_size = args.batch_size
 
+
+    # Create config object with data obtained from file and/or defaults.
+    if args.config_file is not None:
+        config = configfile.build_complete_config(args.config_file)
+    else:
+        config = configfile.default_parser(None)
+
+    mysql_creds = config["mysql"]
+
     # Set up directory.
     output_folder = basic.set_path(output_folder, kind="dir", expect=True)
     results_folder = pathlib.Path(RESULTS_FOLDER)
@@ -278,7 +294,9 @@ def main(argument_list):
         rpsblast = get_rpsblast_path(command)
 
     # Verify database connection and schema compatibility.
-    alchemist = AlchemyHandler(database=database)
+    alchemist = AlchemyHandler(database=database,
+                               username=mysql_creds["user"],
+                               password=mysql_creds["password"])
     alchemist.connect(pipeline=True)
     engine = alchemist.engine
     logger.info(f"Connected to database: {database}.")

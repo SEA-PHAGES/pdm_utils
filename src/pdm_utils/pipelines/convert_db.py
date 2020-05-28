@@ -1,9 +1,11 @@
 """Pipeline to upgrade or downgrade the schema of a MySQL database."""
 
 import argparse
+import pathlib
 import sys
 
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
+from pdm_utils.functions import configfile
 from pdm_utils.functions import mysqldb, mysqldb_basic
 from pdm_utils.constants import schema_conversions
 
@@ -40,8 +42,11 @@ def parse_args(unparsed_args_list):
     new_database_name_help = (
         "The new name of the converted database if different from "
         "the original database name.")
-    verbose_help = \
-        "Conversion progress will be printed."
+    verbose_help = (
+        "Conversion progress will be printed.")
+    config_file_help = (
+        "Path to the file containing user-specific login data.")
+
     parser = argparse.ArgumentParser(description=convert_help)
     parser.add_argument("database", type=str, help=database_help)
     parser.add_argument("-s", "--schema_version", type=int,
@@ -51,7 +56,8 @@ def parse_args(unparsed_args_list):
         help=new_database_name_help)
     parser.add_argument("-v", "--verbose", action="store_true",
         default=False, help=verbose_help)
-
+    parser.add_argument("-c", "--config_file", type=pathlib.Path,
+                        help=config_file_help, default=None)
 
     # Assumed command line arg structure:
     # python3 -m pdm_utils.run <pipeline> <additional args...>
@@ -65,8 +71,19 @@ def main(unparsed_args_list, engine1=None):
     """Run main conversion pipeline."""
     # Parse command line arguments
     args = parse_args(unparsed_args_list)
+
     if engine1 is None:
-        alchemist1 = AlchemyHandler(database=args.database)
+
+        # Create config object with data obtained from file and/or defaults.
+        if args.config_file is not None:
+            config = configfile.build_complete_config(args.config_file)
+        else:
+            config = configfile.default_parser(None)
+
+        mysql_creds = config["mysql"]
+        alchemist1 = AlchemyHandler(database=args.database,
+                                    username=mysql_creds["user"],
+                                    password=mysql_creds["password"])
         alchemist1.connect(pipeline=True)
         engine1 = alchemist1.engine
     target = args.schema_version

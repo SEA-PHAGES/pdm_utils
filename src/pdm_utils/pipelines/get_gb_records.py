@@ -66,11 +66,10 @@ def main(unparsed_args_list):
     if args.config_file is not None:
         config = configfile.build_complete_config(args.config_file)
     else:
-        config = configfile.default_config()
+        config = configfile.default_parser(None)
 
-    ncbi_creds = configfile.reformat_data(config["ncbi"], "", None)
-    mysql_creds = configfile.reformat_data(config["mysql"], "", None)
-
+    mysql_creds = config["mysql"]
+    ncbi_creds = config["ncbi"]
 
     # Filters input: phage.Status=draft AND phage.HostGenus=Mycobacterium
     # Args structure: [['phage.Status=draft'], ['phage.HostGenus=Mycobacterium']]

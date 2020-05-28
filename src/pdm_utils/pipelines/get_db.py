@@ -37,9 +37,9 @@ def main(unparsed_args_list):
     if args.config_file is not None:
         config = configfile.build_complete_config(args.config_file)
     else:
-        config = configfile.default_config()
+        config = configfile.default_parser(None)
 
-    mysql_creds = configfile.reformat_data(config["mysql"], "", None)
+    mysql_creds = config["mysql"]
 
     install = True
     schema_version = None
@@ -185,8 +185,6 @@ def parse_args(unparsed_args_list):
 
     parser = argparse.ArgumentParser(description=get_db_help)
     parser.add_argument("database", type=str, help=database_help)
-    parser.add_argument("-c", "--config_file", type=pathlib.Path,
-                        help=config_file_help, default=None)
 
     subparsers = parser.add_subparsers(dest="option", help=option_help)
 
@@ -207,6 +205,14 @@ def parse_args(unparsed_args_list):
     parser_c.add_argument("-s", "--schema_version", type=int,
         choices=list(convert_db.CHOICES), default=convert_db.CURRENT_VERSION,
         help=schema_version_help)
+
+    # Add config file option to all subparsers.
+    # It could be added after database, but then the optional argument is
+    # required to be placed before the required subparser option, which
+    # doesn't make sense.
+    for p in [parser_a, parser_b, parser_c]:
+        p.add_argument("-c", "--config_file", type=pathlib.Path,
+                       help=config_file_help, default=None)
 
     # Assumed command line arg structure:
     # python3 -m pdm_utils.run <pipeline> <additional args...>

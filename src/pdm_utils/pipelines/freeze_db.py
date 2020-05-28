@@ -32,9 +32,9 @@ def main(unparsed_args_list):
     if args.config_file is not None:
         config = configfile.build_complete_config(args.config_file)
     else:
-        config = configfile.default_config()
+        config = configfile.default_parser(None)
 
-    mysql_creds = configfile.reformat_data(config["mysql"], "", None)
+    mysql_creds = config["mysql"]
 
     # Verify database connection and schema compatibility.
     print("Connecting to the MySQL database...")

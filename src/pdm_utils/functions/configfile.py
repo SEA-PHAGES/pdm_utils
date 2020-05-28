@@ -46,19 +46,3 @@ def build_complete_config(file):
     parser = default_parser(None)
     parser = parse_config(file, parser)
     return parser
-
-
-
-
-
-# TODO this can be removed once the improvements above are implemented.
-# TODO test.
-def reformat_data(config_dict, old, new):
-    """Convert string value to another value."""
-    dict = {}
-    for key in config_dict.keys():
-        if config_dict[key] == old:
-            dict[key] = new
-        else:
-            dict[key] = config_dict[key]
-    return dict

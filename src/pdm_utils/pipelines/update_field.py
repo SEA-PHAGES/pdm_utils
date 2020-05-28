@@ -10,6 +10,7 @@ from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.classes.randomfieldupdatehandler import RandomFieldUpdateHandler
 from pdm_utils.functions import basic
 from pdm_utils.functions import cartography
+from pdm_utils.functions import configfile
 from pdm_utils.functions import mysqldb
 from pdm_utils.functions import mysqldb_basic
 from pdm_utils.functions import querying
@@ -22,7 +23,18 @@ def main(unparsed_args):
 
     # Verify database connection and schema compatibility.
     print("Connecting to the MySQL database...")
-    alchemist = AlchemyHandler(database=args.database)
+
+
+    # Create config object with data obtained from file and/or defaults.
+    if args.config_file is not None:
+        config = configfile.build_complete_config(args.config_file)
+    else:
+        config = configfile.default_parser(None)
+
+    mysql_creds = config["mysql"]
+    alchemist = AlchemyHandler(database=args.database,
+                               username=mysql_creds["user"],
+                               password=mysql_creds["password"])
     alchemist.connect(pipeline=True)
     engine = alchemist.engine
     mysqldb.check_schema_compatibility(engine, "the update pipeline")
@@ -132,11 +144,15 @@ def parse_args(unparsed_args_list):
             5. Conditional column value
         """
     version_help = "Increment database version by 1."
+    config_file_help = "Path to the file containing user-specific login data."
+
     parser = argparse.ArgumentParser(description=update_help)
     parser.add_argument("database", type=str, help=database_help)
     parser.add_argument("-f", "--ticket_table", type=pathlib.Path,
         help=ticket_table_help)
     parser.add_argument("-v", "--version", action="store_true",
         default=False, help=version_help)
+    parser.add_argument("-c", "--config_file", type=pathlib.Path,
+                        help=config_file_help, default=None)
     args = parser.parse_args(unparsed_args_list)
     return args
