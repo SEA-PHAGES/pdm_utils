@@ -1,8 +1,8 @@
 .. _toolkit:
 
 
-Primary tools
-================
+Database management pipelines
+=============================
 
 Below is a description of command line tools that the ``pdm_utils`` package
 contains to analyze and manipulate data within a MySQL database:
@@ -25,8 +25,8 @@ Most tools provide functionality without respect to SEA-PHAGES-specific assumpti
    import <./tools/import>
    phamerate <./tools/phamerate>
    push <./tools/push>
-   resubmit <./tools/resubmit>
    review <./tools/review>
+   revise <./tools/revise>
    update <./tools/update>
 
 
@@ -37,13 +37,8 @@ Most tools provide functionality without respect to SEA-PHAGES-specific assumpti
 
 The ``pdm_utils`` toolkit can be used to manage different database instances. However, some tools may only be relevant specifically to the primary instance, Actinobacteriophage.
 
-Supplementary information associated with different tools:
 
 .. toctree::
-    :maxdepth: 1
+   :hidden:
 
-    NCBI creds <./tools/input_files/ncbicreds>
-    Import tickets <./tools/input_files/ticket_import>
-    Update tickets <./tools/input_files/ticket_update>
-    Evaluation modes <./tools/input_files/eval_modes>
-    Flat files <./tools/input_files/flatfile>
+   supplementary files <./tools/supp_files>

@@ -70,6 +70,7 @@ extlinks = {
     'cdd': ('https://www.ncbi.nlm.nih.gov/cdd/%s', ''),
     'cdd_le': ('ftp://ftp.ncbi.nih.gov/pub/mmdb/cdd/little_endian/Cdd_LE.tar.gz%s',''),
     'conda_docs': ('https://conda.io/projects/conda/en/latest/%s', ''),
+    'configparser': ('https://docs.python.org/3/library/configparser.html/%s', ''),
     'dnamaster': ('http://cobamide2.bio.pitt.edu/%s', ''),
     'gbfff': ('https://www.ncbi.nlm.nih.gov/Sitemap/samplerecord.html%s', ''),
     'git': ('https://git-scm.com/%s', ''),

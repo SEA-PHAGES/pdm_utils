@@ -15,9 +15,9 @@ To retrieve all GenBank records relative to your database, indicate the name of 
     The current version of Actinobacteriophage contains thousands of accession numbers, so retrieving GenBank records for the entire database can be slow.
 
 
-This tool relies upon the NCBI E-utilities (using a Biopython wrapper), and NCBI requests that you provide information about yourself. The ``get_gb_records`` tool accepts a simple text file containing your information (:ref:`ncbicreds`) using the '-c' flag::
+This tool relies upon the NCBI E-utilities (using a Biopython wrapper), and NCBI requests that you provide information about yourself. The ``get_gb_records`` tool accepts a simple text file containing your information (:ref:`configfile`) using the '-c' flag::
 
-    > python3 -m pdm_utils get_gb_records Actinobacteriophage -o ./ -c ncbi_credentials.txt
+    > python3 -m pdm_utils get_gb_records Actinobacteriophage -o ./ -c config_file.txt
 
 
 The ``get_gb_records`` tool will determine which accessions from the MySQL database are valid, will retrieve all live records from GenBank, and store them locally in GenBank-formatted flat file format.

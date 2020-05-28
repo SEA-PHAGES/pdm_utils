@@ -12,7 +12,6 @@ Create an AlchemyHandler object::
 
 The AlchemyHandler can take credentials by setting its various attributes::
 
-
     >>> alchemist.username = "user123"
     >>> alchemist.password = "p@ssword"
 
@@ -70,10 +69,7 @@ The ``pdm_utils`` 'mysqldb_basic' module provides several functions that rely on
 Metadata
 --------
 
-A SQLAlchemy MetaData object can also be created from a AlchemyHandler object with a
-valid credentials and database.  A SQLAlchemy MetaData object allows for access to 
-SQLAlchemy Base Table and Object classes, where the Tables can be directly accessed 
-from the metadata object and the Columns from a Table::
+A SQLAlchemy MetaData object can also be created from a AlchemyHandler object with a valid credentials and database.  A SQLAlchemy MetaData object allows for access to SQLAlchemy Base Table and Object classes, where the Tables can be directly accessed from the metadata object and the Columns from a Table::
 
     >>> metadata = alchemist.metadata
     >>> phage = metadata.tables["phage"]
@@ -84,8 +80,7 @@ from the metadata object and the Columns from a Table::
     >>> type(PhageID)
     <class 'sqlalchemy.sql.schema.Column'>
 
-Table objects retrieved this way can be used to retrieve information about the 
-structure of a table in the database the AlchemyHandler is connected to::
+Table objects retrieved this way can be used to retrieve information about the structure of a table in the database the AlchemyHandler is connected to::
 
     >>> metadata = alchemist.metadata
     >>> list(metadata.tables)
@@ -102,10 +97,9 @@ structure of a table in the database the AlchemyHandler is connected to::
     >>> dict(primary_keys.columns).keys()
     dict_keys(['PhageID'])
 
-Column objects retrieved from Table objects can be used to retrieve information about 
-the characteristics of a Column within the table represented in the connected database::
+Column objects retrieved from Table objects can be used to retrieve information about the characteristics of a Column within the table represented in the connected database::
 
-    >>> PhageID = phage.columns.PhageID 
+    >>> PhageID = phage.columns.PhageID
     >>> PhageID.name
     'PhageID'
     >>> str(PhageID)
@@ -114,12 +108,11 @@ the characteristics of a Column within the table represented in the connected da
     >>> PhageID.type
     VARCHAR(length=25)
     >>> PhageID.nullable
-    False 
+    False
     >>> PhageID.primary_key
     True
 
-These Column and Table objects can be used to manually select, insert, or update data 
-in a more object-oriented way when paired with an Engine object::
+These Column and Table objects can be used to manually select, insert, or update data in a more object-oriented way when paired with an Engine object::
 
     >>> phage = alchemist.metadata.tables["phage"]
     >>> HostGenus = phage.columns.HostGenus
@@ -140,8 +133,7 @@ in a more object-oriented way when paired with an Engine object::
     >>> len(phages)
     90
 
-To query for information by indirect relationship conditionals, Tables and Columns can
-be used to join tables to select from::
+To query for information by indirect relationship conditionals, Tables and Columns can be used to join tables to select from::
 
     >>> phage = alchemist.metadata.tables["phage"]
     >>> gene = alchemist.metadata.tables["gene"]
@@ -162,10 +154,7 @@ be used to join tables to select from::
 Database graph
 --------------
 
-An AlchemyHandler also has the ability to generate and store a graphical representation
- of the SQLAlchemy MetaData object as a ``NetworkX`` Graph object.  The graph object 
- has access to the same Table and objects as the MetaData as well as similar basic 
- information::
+An AlchemyHandler also has the ability to generate and store a graphical representation of the SQLAlchemy MetaData object as a ``NetworkX`` Graph object.  The graph object  has access to the same Table and objects as the MetaData as well as similar basic information::
 
     >>> db_graph = alchemist.graph
     >>> list(db_graph.nodes)
@@ -176,9 +165,7 @@ An AlchemyHandler also has the ability to generate and store a graphical represe
     >>> phage.name
     'phage'
 
-The graph object also stores information about the relationships between two 
-tables, specifically the foreign key constraints between tables (and if joining
- two tables is possible)::
+The graph object also stores information about the relationships between two tables, specifically the foreign key constraints between tables (and if joining two tables is possible)::
 
     >>> from networkx import shortest_graph
     >>> db_graph = alchemist.graph
@@ -197,20 +184,15 @@ tables, specifically the foreign key constraints between tables (and if joining
 Mapper
 ------
 
-The AlchemyHandler provides support for using the SQLAlchemy ORM module and 
-SQLAlchemy ORM objects based on the schema of the connected database.  Access 
-to the SQLAlchemy ORM objects is possible though the Automap Base object 
-generated by the AlchemyHandler::
-    
+The AlchemyHandler provides support for using the SQLAlchemy ORM module and SQLAlchemy ORM objects based on the schema of the connected database.  Access to the SQLAlchemy ORM objects is possible though the Automap Base object generated by the AlchemyHandler::
+
     >>> mapper = alchemist.mapper
 
     >>> Phage = mapper.classes["phage"]
     >>> type(Phage)
     <class 'sqlalchemy.ext.declarative.api.DeclarativeMeta'>
 
-SQLAlchemy ORM objects have attributes that directly correspond to columns 
-in the table that they represent, and these columns can be used in a similar 
-way to the Base SQLAlchemy Column objects::
+SQLAlchemy ORM objects have attributes that directly correspond to columns in the table that they represent, and these columns can be used in a similar way to the Base SQLAlchemy Column objects::
 
     >>> mapper = alchemist.mapper
     >>> Phage = mapper.classes["phage"]
@@ -226,13 +208,7 @@ way to the Base SQLAlchemy Column objects::
 Session
 -------
 
-SQLAlchemy ORM objects are extremely powerful when used in combination with the
- SQLAlchemy session object.  The session object can be used with basic queries 
- to create objects that represent entries in the database that store information
- as attributes named after the columns in the table which the ORM object 
- represents.  In addition, the ORM object instances can be created, updated, 
- or deleted in a python environment, and the session object will manage and track the 
- changes::
+SQLAlchemy ORM objects are extremely powerful when used in combination with the SQLAlchemy session object.  The session object can be used with basic queries to create objects that represent entries in the database that store information as attributes named after the columns in the table which the ORM object represents.  In addition, the ORM object instances can be created, updated, or deleted in a python environment, and the session object will manage and track the changes::
 
     >>> session = alchemist.session
     >>> Phage = alchemist.mapper.classes["phage"]
@@ -240,7 +216,7 @@ SQLAlchemy ORM objects are extremely powerful when used in combination with the
     >>> phages = session.query(Phage).filter(Phage.Subcluster == 'A2')
     >>> len(phages)
     90
-    
+
     >>> phage[0].PhageID
     '20ES'
     >>> phage[0].HostGenus

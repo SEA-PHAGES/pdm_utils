@@ -1,0 +1,17 @@
+[ncbi]
+ncbi_email=jane@acme.com
+ncbi_api_key=123456789
+ncbi_tool=DataRetrievalTool
+
+[mysql]
+user=janedoe
+password=random
+
+[upload_server]
+host=abc.def.com
+dest=/path/to/folder/
+user=janedoe
+password=random
+
+[download_server]
+url=http://abc.def.com/
