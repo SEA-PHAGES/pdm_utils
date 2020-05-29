@@ -3,12 +3,14 @@ Build the PyPI package
 
 Follow the steps below to push a new version of the ``pdm_utils`` package to PyPI:
 
-    1. Clear contents in the following directories:
-        - build/
-        - dist/
+    1. If a package has been built on the machine previously:
 
-    2. Remove the following directory:
-        - src/pdm_utils.egg-info
+        - Clear contents in the following directories:
+            - build/
+            - dist/
+
+        - Remove the following directory:
+            - src/pdm_utils.egg-info
 
     3. Run the test suite and confirm there are no broken tests.
 
