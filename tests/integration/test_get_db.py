@@ -90,11 +90,12 @@ class TestGetDb(unittest.TestCase):
         version_data = test_db_utils.get_data(test_db_utils.version_table_query)
         self.assertEqual(len(version_data), 1)
 
-
     @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_main_2(self, getpass_mock):
         """Verify new database is created."""
-        getpass_mock.side_effect = [USER, PWD]
+        # The convert pipeline gets called, which will ask for MySQL
+        # username and password. So provide these credentials twice.
+        getpass_mock.side_effect = [USER, PWD, USER, PWD]
         unparsed_args = get_unparsed_args(option="new")
         run.main(unparsed_args)
 

@@ -32,9 +32,10 @@ def main(unparsed_args_list):
     # Set values that are shared between all three options.
     database = args.database
     option = args.option
+    config_file = args.config_file
 
     # Create config object with data obtained from file and/or defaults.
-    config = configfile.build_complete_config(args.config_file)
+    config = configfile.build_complete_config(config_file)
     mysql_creds = config["mysql"]
     server_creds = config["download_server"]
 
@@ -85,7 +86,7 @@ def main(unparsed_args_list):
     if install == True:
         install_db(database, username=mysql_creds["user"],
                    password=mysql_creds["password"], db_filepath=db_filepath,
-                   schema_version=schema_version)
+                   schema_version=schema_version, config_file=config_file)
 
     # The output folder was only created for downloading from server.
     if option == "server":
@@ -94,7 +95,8 @@ def main(unparsed_args_list):
             shutil.rmtree(results_path)
 
 # TODO test.
-def install_db(database, username=None, password=None, db_filepath=None, schema_version=None):
+def install_db(database, username=None, password=None, db_filepath=None,
+               schema_version=None, config_file=None):
     """Install database. If database already exists, it is first removed."""
     # No need to specify database yet, since it needs to first check if the
     # database exists.
@@ -120,7 +122,9 @@ def install_db(database, username=None, password=None, db_filepath=None, schema_
                 mysqldb.execute_transaction(engine2, db_schema_0.STATEMENTS)
                 convert_args = ["pdm_utils.run", "convert", database,
                                 "-s", str(schema_version)]
-                convert_db.main(convert_args, engine2)
+                if config_file is not None:
+                    convert_args.extend(["-c", config_file])
+                convert_db.main(convert_args)
             # Close up all connections in the connection pool.
             engine2.dispose()
     # Close up all connections in the connection pool.

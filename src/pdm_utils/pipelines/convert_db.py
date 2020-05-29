@@ -67,19 +67,19 @@ def parse_args(unparsed_args_list):
 
 
 # TODO unittest.
-def main(unparsed_args_list, engine1=None):
+def main(unparsed_args_list):
     """Run main conversion pipeline."""
     # Parse command line arguments
     args = parse_args(unparsed_args_list)
+    config = configfile.build_complete_config(args.config_file)
+    mysql_creds = config["mysql"]
+    alchemist1 = AlchemyHandler(database=args.database,
+                                username=mysql_creds["user"],
+                                password=mysql_creds["password"])
+    alchemist1.connect(pipeline=True)
+    engine1 = alchemist1.engine
 
-    if engine1 is None:
-        config = configfile.build_complete_config(args.config_file)
-        mysql_creds = config["mysql"]
-        alchemist1 = AlchemyHandler(database=args.database,
-                                    username=mysql_creds["user"],
-                                    password=mysql_creds["password"])
-        alchemist1.connect(pipeline=True)
-        engine1 = alchemist1.engine
+
     target = args.schema_version
     actual = mysqldb.get_schema_version(engine1)
     steps, dir = get_conversion_direction(actual, target)
