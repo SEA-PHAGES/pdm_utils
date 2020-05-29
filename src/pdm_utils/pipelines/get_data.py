@@ -520,9 +520,9 @@ def get_genbank_data(output_folder, genome_dict, ncbi_cred_dict={},
     # Sayers, recommends that a single request not contain more than about 200
     # UIDS so we will use that as our batch size, and all Entrez requests must
     # include the user's email address and tool name.
-    ncbi.set_entrez_credentials(tool=ncbi_cred_dict["ncbi_tool"],
-                                email=ncbi_cred_dict["ncbi_email"],
-                                api_key=ncbi_cred_dict["ncbi_api_key"])
+    ncbi.set_entrez_credentials(tool=ncbi_cred_dict["tool"],
+                                email=ncbi_cred_dict["email"],
+                                api_key=ncbi_cred_dict["api_key"])
 
     results = retrieve_records(accession_dict, ncbi_folder, batch_size=200)
     ncbi_results_list.extend(results)

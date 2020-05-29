@@ -8,9 +8,9 @@ Every pipeline can accept a configuration file that contains user-specific infor
 The configuration file is formatted to meet requirements for the :configparser:`configparser <>` module. Below is an example of how it is structured with a brief description of each parameter::
 
     [ncbi]                      #
-    ncbi_email=jane@acme.com    # Your email address
-    ncbi_api_key=123456789      # Your NCBI api key
-    ncbi_tool=DataRetrievalTool # The name of your script
+    email=jane@acme.com         # Your email address
+    api_key=123456789           # Your NCBI api key
+    tool=DataRetrievalTool      # The name of your script
 
     [mysql]                     #
     user=janedoe                #

@@ -891,9 +891,9 @@ def get_genbank_data(ncbi_cred_dict, accession_set, batch_size=200):
     # Use esearch to verify the accessions are valid and
     # efetch to retrieve the record.
     ncbi.set_entrez_credentials(
-        tool=ncbi_cred_dict["ncbi_tool"],
-        email=ncbi_cred_dict["ncbi_email"],
-        api_key=ncbi_cred_dict["ncbi_api_key"])
+        tool=ncbi_cred_dict["tool"],
+        email=ncbi_cred_dict["email"],
+        api_key=ncbi_cred_dict["api_key"])
 
 
     #Create batches of accessions

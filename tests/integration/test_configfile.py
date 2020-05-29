@@ -33,8 +33,8 @@ def build_parser(mysql=False, password="", ncbi=False):
         parser["mysql"]["password"] = password
     if ncbi:
         parser["ncbi"] = {}
-        parser["ncbi"]["ncbi_tool"] = TOOL
-        parser["ncbi"]["ncbi_email"] = None
+        parser["ncbi"]["tool"] = TOOL
+        parser["ncbi"]["email"] = None
     return parser
 
 def create_config_file(parser, filepath):
@@ -80,9 +80,9 @@ class TestConfigFile(unittest.TestCase):
         with self.subTest():
             self.assertEqual(parser3["mysql"]["password"], PWD)
         with self.subTest():
-            self.assertEqual(parser3["ncbi"]["ncbi_tool"], TOOL)
+            self.assertEqual(parser3["ncbi"]["tool"], TOOL)
         with self.subTest():
-            self.assertIsNone(parser3["ncbi"]["ncbi_email"])
+            self.assertIsNone(parser3["ncbi"]["email"])
 
     def test_build_complete_config_1(self):
         """Confirm that ConfigParser is constructed with default None."""
@@ -92,9 +92,9 @@ class TestConfigFile(unittest.TestCase):
         with self.subTest():
             self.assertEqual(parser2["mysql"]["user"], USER)
         with self.subTest():
-            self.assertIsNone(parser2["ncbi"]["ncbi_tool"])
+            self.assertIsNone(parser2["ncbi"]["tool"])
         with self.subTest():
-            self.assertIsNone(parser2["ncbi"]["ncbi_email"])
+            self.assertIsNone(parser2["ncbi"]["email"])
 
 
 

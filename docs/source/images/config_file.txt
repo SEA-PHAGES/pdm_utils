@@ -1,7 +1,7 @@
 [ncbi]
-ncbi_email=jane@acme.com
-ncbi_api_key=123456789
-ncbi_tool=DataRetrievalTool
+email=jane@acme.com
+api_key=123456789
+tool=DataRetrievalTool
 
 [mysql]
 user=janedoe
