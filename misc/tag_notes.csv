@@ -1,7 +1,0 @@
-Tag,Functions with the database schema version,Notes,Impacted scripts
-V4.2,s2,Last commit before phage.Program field removed and all code that handles Program data is removed.,?
-V5.0,s3,Last commit before split Cluster and Subcluster data is stored in import tables and used in scripts.,import_phage; retrieve_database_updates
-V6.0,s3,Last commit before import table utilizes AnnotationAuthor field,import_phage; retrieve_database_updates; export_database
-V7.0,s3,Last commit before more complex QC customization,import_phage
-V8.0,s3,Last commit with QC customization before adding run mode to the import table,import_phage; retrieve_database_updates
-V9.0,s3,Last commit before code no longer appends Draft suffix to PhageID,import_phage; retrieve_database_updates
