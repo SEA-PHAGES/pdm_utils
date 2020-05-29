@@ -45,5 +45,6 @@ def parse_config(file, parser=None):
 def build_complete_config(file):
     "Buid a complete config object by merging user-supplied and default config."
     parser = default_parser(None)
-    parser = parse_config(file, parser)
+    if file is not None:
+        parser = parse_config(file, parser)
     return parser

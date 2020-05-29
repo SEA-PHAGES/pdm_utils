@@ -20,18 +20,18 @@ def main(unparsed_args_list):
     # Create config object with data obtained from file and/or defaults.
     # For server host and dir, give priority to config file over command line.
     # But this is arbitrary.
-    if args.config_file is not None:
-        config = configfile.build_complete_config(args.config_file)
-        server_host = config["upload_server"]["host"]
-        remote_dir = config["upload_server"]["dest"]
-        user = config["upload_server"]["user"]
-        pwd = config["upload_server"]["password"]
-    else:
-        config = configfile.default_parser(None)
+
+    config = configfile.build_complete_config(args.config_file)
+    server_host = config["upload_server"]["host"]
+    remote_dir = config["upload_server"]["dest"]
+    user = config["upload_server"]["user"]
+    pwd = config["upload_server"]["password"]
+
+    if server_host is None:
         server_host = args.server_host
+    if remote_dir is None:
         remote_dir = args.remote_directory
-        user = None
-        pwd = None
+
 
     if server_host is None or remote_dir is None:
         print("No host and/or remote directory provided. "

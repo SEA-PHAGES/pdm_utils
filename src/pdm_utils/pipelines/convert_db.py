@@ -73,13 +73,7 @@ def main(unparsed_args_list, engine1=None):
     args = parse_args(unparsed_args_list)
 
     if engine1 is None:
-
-        # Create config object with data obtained from file and/or defaults.
-        if args.config_file is not None:
-            config = configfile.build_complete_config(args.config_file)
-        else:
-            config = configfile.default_parser(None)
-
+        config = configfile.build_complete_config(args.config_file)
         mysql_creds = config["mysql"]
         alchemist1 = AlchemyHandler(database=args.database,
                                     username=mysql_creds["user"],

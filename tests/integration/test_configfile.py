@@ -85,7 +85,8 @@ class TestConfigFile(unittest.TestCase):
             self.assertIsNone(parser3["ncbi"]["email"])
 
     def test_build_complete_config_1(self):
-        """Confirm that ConfigParser is constructed with default None."""
+        """Confirm that ConfigParser is constructed with default None
+        using valid file."""
         parser1 = build_parser(mysql=True)
         create_config_file(parser1, config_filepath)
         parser2 = configfile.build_complete_config(config_filepath)
@@ -96,7 +97,16 @@ class TestConfigFile(unittest.TestCase):
         with self.subTest():
             self.assertIsNone(parser2["ncbi"]["email"])
 
-
+    def test_build_complete_config_2(self):
+        """Confirm that ConfigParser is constructed with default None
+        using no file."""
+        parser2 = configfile.build_complete_config(None)
+        with self.subTest():
+            self.assertIsNone(parser2["mysql"]["user"])
+        with self.subTest():
+            self.assertIsNone(parser2["ncbi"]["tool"])
+        with self.subTest():
+            self.assertIsNone(parser2["ncbi"]["email"])
 
 
 if __name__ == '__main__':

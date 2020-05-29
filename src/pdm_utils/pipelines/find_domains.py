@@ -253,11 +253,7 @@ def main(argument_list):
 
 
     # Create config object with data obtained from file and/or defaults.
-    if args.config_file is not None:
-        config = configfile.build_complete_config(args.config_file)
-    else:
-        config = configfile.default_parser(None)
-
+    config = configfile.build_complete_config(args.config_file)
     mysql_creds = config["mysql"]
 
     # Set up directory.

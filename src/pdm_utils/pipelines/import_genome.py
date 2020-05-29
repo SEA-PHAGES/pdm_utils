@@ -77,10 +77,7 @@ def main(unparsed_args_list):
         sys.exit(1)
 
     # Create config object with data obtained from file and/or defaults.
-    if args.config_file is not None:
-        config = configfile.build_complete_config(args.config_file)
-    else:
-        config = configfile.default_parser(None)
+    config = configfile.build_complete_config(args.config_file)
     mysql_creds = config["mysql"]
 
     log_file = pathlib.Path(results_path, MAIN_LOG_FILE)
