@@ -1,4 +1,4 @@
-.. _configfile:
+.. _config_file:
 
 Database management configuration file
 ======================================
