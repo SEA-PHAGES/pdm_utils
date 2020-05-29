@@ -32,3 +32,8 @@ Databases can be downloaded and installed in two steps, which can be used to ins
     2. Next, indicate the new name of the database to be created (e.g. NewDB), indicate that a local file will be used with 'file' , and indicate the path to the downloaded SQL file::
 
         > python3 -m pdm_utils get_db NewDB file ./downloaded_db/Actinobacteriophage.sql
+
+
+Use of a :ref:`config_file` can automate the pipeline so that user input such as MySQL credentials or server URL is not needed::
+
+    > python3 -m pdm_utils get_db Actinobacteriophage server -o ./ -d -v -c config_file.txt

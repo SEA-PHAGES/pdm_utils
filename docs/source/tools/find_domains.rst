@@ -21,3 +21,5 @@ However, rpsblast+ may report multiple hits to a domain within the same translat
     Warning: (1062, "Duplicate entry 'gnl|CDD|334100' for key 'hit_id'")
 
 This message is simply a warning, and no action needs to be taken.
+
+As with other pipelines, use of the :ref:`config_file` option can automate accessing MySQL.

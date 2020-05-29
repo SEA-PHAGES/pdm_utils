@@ -32,3 +32,6 @@ For instance, to manually convert a schema from version 6 to 5, execute each SQL
     2. Execute each query from the conversion script, such as below::
 
         mysql> ALTER TABLE `gene_domain` CHANGE `QueryEnd` `query_end` int(10) unsigned NOT NULL;
+
+
+As with other pipelines, use of the :ref:`config_file` option can automate accessing MySQL.

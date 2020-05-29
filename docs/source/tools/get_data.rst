@@ -16,7 +16,9 @@ These data can be automatically retrieved using the ``pdm_utils get_data`` tool:
 
     > python3 -m pdm_utils get_data Actinobacteriophage -o ./ -c config_file.txt
 
-The argument 'Actinobacteriophage' indicates the name of the database from which updates are determined. The '-o ./' indicates the directory where the data should be downloaded (if omitted, the default is the working directory from where the pipeline is called). Similar to the 'get_gb_records' tool, retrieving updates from GenBank relies upon the NCBI E-utilities (using a Biopython wrapper), and NCBI requests that you provide information about yourself. The '-c' flag points to a simple text file containing your information (:ref:`config_file`). If only certain types of updates are required, there are separate command line flags for each type of update.
+The argument 'Actinobacteriophage' indicates the name of the database from which updates are determined. The '-o ./' indicates the directory where the data should be downloaded (if omitted, the default is the working directory from where the pipeline is called).
+
+As with other pipelines, use of the :ref:`config_file` option can automate accessing MySQL and NCBI. If only certain types of updates are required, there are separate command line flags for each type of update.
 
 Each type of data is retrieved and staged for import. A new folder is created that contains:
 

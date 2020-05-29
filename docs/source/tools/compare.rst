@@ -12,7 +12,7 @@ The argument 'Actinobacteriophage' indicates the name of the local MySQL databas
     ..note:
         It does not directly compare PhagesDB and GenBank data unless it also compares MySQL database data.
 
-The '-c config_file.txt' argument indicates a local file containing login information for accessing NCBI databases.
+The '-c config_file.txt' argument indicates a local file containing login information for accessing MySQL and NCBI.
 
 Selected subsets of data can be compared using the filtering argument. For instance, to only compare phages that infect Mycobacterium and that are 'final' status::
 
