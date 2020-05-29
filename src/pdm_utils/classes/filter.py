@@ -265,12 +265,17 @@ class Filter:
     def reset(self):
         """Resets all filters, values, and Filter state conditions.
         """
-        self._filters = []
-        self._updated = True
-        self._or_index = -1
+        self.reset_filters()
 
         self._values = []
         self._values_valid = True
+
+    def reset_filters(self):
+        """Resets all filters and relevant Filter state condition.
+        """
+        self._filters = []
+        self._updated = True
+        self._or_index = -1
 
     def and_(self, filter):
         """Add an and conditional to the Filter object class.
