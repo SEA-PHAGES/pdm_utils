@@ -1,6 +1,7 @@
 """Configuration file definition and parsing."""
 
 import configparser
+import pathlib
 import sys
 
 from pdm_utils.functions import basic
@@ -9,7 +10,8 @@ def default_sections_keys():
     dict = {"mysql": {"user", "password"},
             "mysqldump": {"user", "password"},
             "ncbi": {"api_key", "email", "tool"},
-            "upload_server": {"host", "dest", "user", "password"}
+            "upload_server": {"host", "dest", "user", "password"},
+            "download_server": {"url"}
             }
     return dict
 
@@ -48,3 +50,18 @@ def build_complete_config(file):
     if file is not None:
         parser = parse_config(file, parser)
     return parser
+
+def write_config(parser, filepath):
+    """Write a ConfigParser to file."""
+    with filepath.open("w") as fh:
+        parser.write(fh)
+
+def create_empty_config_file(dir, file, null_value):
+    """Create an empty config file with all available settings."""
+    output_path = basic.set_path(dir, kind="dir", expect=True)
+    config_path = basic.make_new_file(output_path, file, "txt", attempt=50)
+    if config_path is None:
+        print("Unable to create config file. File already exists.")
+    else:
+        parser = default_parser(null_value)
+        write_config(parser, config_path)

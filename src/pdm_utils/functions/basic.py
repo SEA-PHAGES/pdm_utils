@@ -1400,6 +1400,8 @@ def make_new_file(output_dir, new_file, ext, attempt=1):
     :type output_dir: Path
     :param new_file: Name of the new file to be created.
     :type new_file: Path
+    :param ext: Name of the file extension to be used.
+    :type ext: str
     :param attempt: Number of attempts to create the file.
     :type attempt: int
     :returns:

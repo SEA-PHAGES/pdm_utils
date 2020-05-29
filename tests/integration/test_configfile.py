@@ -18,7 +18,8 @@ test_root_dir.mkdir()
 
 # New folder that will get created/removed for each test.
 test_folder = Path(test_root_dir, "output")
-config_filepath = Path(test_folder, "config.txt")
+config_filename = "config"
+config_filepath = Path(test_folder, config_filename + ".txt")
 
 USER = "pdm_anon"
 PWD = "pdm_anon"
@@ -40,6 +41,11 @@ def build_parser(mysql=False, password="", ncbi=False):
 def create_config_file(parser, filepath):
     with filepath.open("w") as fh:
         parser.write(fh)
+
+def open_config_file(filepath):
+    parser = configparser.ConfigParser()
+    parser.read(filepath)
+    return parser
 
 
 class TestConfigFile(unittest.TestCase):
@@ -107,6 +113,27 @@ class TestConfigFile(unittest.TestCase):
             self.assertIsNone(parser2["ncbi"]["tool"])
         with self.subTest():
             self.assertIsNone(parser2["ncbi"]["email"])
+
+    def test_write_config_1(self):
+        """Confirm that ConfigParser is written to file."""
+        parser1 = build_parser(mysql=True)
+        configfile.write_config(parser1, config_filepath)
+        parser2 = open_config_file(config_filepath)
+        with self.subTest():
+            self.assertEqual(parser2["mysql"]["user"], USER)
+        with self.subTest():
+            self.assertTrue("ncbi" not in parser2.keys())
+
+    def test_create_empty_config_file_1(self):
+        """Confirm that ConfigParser is written to file with "empty" values."""
+        value = "empty"
+        configfile.create_empty_config_file(test_folder, config_filename, value)
+        parser = open_config_file(config_filepath)
+        with self.subTest():
+            self.assertEqual(parser["mysql"]["user"], value)
+        with self.subTest():
+            self.assertEqual(parser["ncbi"]["tool"], value)
+
 
 
 if __name__ == '__main__':

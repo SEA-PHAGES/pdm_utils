@@ -36,6 +36,7 @@ def main(unparsed_args_list):
     # Create config object with data obtained from file and/or defaults.
     config = configfile.build_complete_config(args.config_file)
     mysql_creds = config["mysql"]
+    server_creds = config["download_server"]
 
     install = True
     schema_version = None
@@ -47,7 +48,10 @@ def main(unparsed_args_list):
         schema_version = args.schema_version
     else:
         # option must be "server"
-        server_url = args.url
+        # Give priority to config file to define url, although this is arbitrary.
+        server_url = server_creds["url"]
+        if server_url is None:
+            server_url = args.url
         version_file = args.version
         output_folder = basic.set_path(args.output_folder, kind="dir", expect=True)
         download = True
