@@ -144,6 +144,59 @@ class TestFilter(unittest.TestCase):
         self.assertFalse("phage.PhageID=Myrna" in second_or_block.keys())
         self.assertTrue("phage.PhageID=Trixie" in second_or_block.keys())
 
+    def test_parenthesize_1(self):
+        """Verify that parenthesize() condenses multiple or blocks.
+        """
+        self.db_filter.add("phage.PhageID = Myrna OR phage.PhageID = Trixie")
+        self.db_filter.parenthesize()
+
+        self.assertTrue(len(self.db_filter.filters) == 1)
+
+        or_block = self.db_filter.filters[0]
+
+        self.assertTrue("parenthetical" in or_block.keys())
+
+    def test_parenthesize_2(self):
+        """Verify that parenthesize() filters produce the expected conditionals.
+        """
+        self.db_filter.add("phage.PhageID = Myrna OR phage.PhageID = Trixie")
+        self.db_filter.parenthesize()
+
+        self.db_filter.key = "phage.PhageID"
+        self.db_filter.update()
+
+        self.assertTrue("Trixie" in self.db_filter.values)
+        self.assertTrue("Myrna" in self.db_filter.values)
+        self.assertTrue(len(self.db_filter.values) == 2)
+
+    
+    def test_parenthesize_3(self):
+        """Verify that parenthesize() allows for additional filter stacking.
+        """
+        self.db_filter.add("phage.PhageID = 'D29' OR phage.PhageID = 'Trixie'")
+        self.db_filter.parenthesize()
+        self.db_filter.add("phage.Cluster = 'A'")
+
+        self.db_filter.key = "phage.PhageID"
+        self.db_filter.update()
+
+        self.assertTrue("Trixie" in self.db_filter.values)
+        self.assertTrue("D29" in self.db_filter.values)
+        self.assertTrue(len(self.db_filter.values) == 2)
+
+    def test_parenthesize_4(self):
+        """Verify that parenthesize() prioritizes over OR conditionals.
+        """
+        self.db_filter.add("phage.PhageID = Myrna OR phage.PhageID = Trixie")
+        self.db_filter.parenthesize()
+        self.db_filter.add("phage.Cluster = 'A'")
+
+        self.db_filter.key = "phage.PhageID"
+        self.db_filter.update()
+
+        self.assertTrue("Trixie" in self.db_filter.values)
+        self.assertFalse("Myrna" in self.db_filter.values)
+        self.assertTrue(len(self.db_filter.values) == 1)
 
     def test_get_column_1(self):
         """Verify that get_column() converts string column input.

@@ -234,6 +234,9 @@ class Filter:
         if isinstance(key, Column):
             self._key = key
         elif isinstance(key, str):
+            if self.graph == None:
+                raise ValueError("String key input requires MySQL connection.")
+
             metadata = self.graph.graph["metadata"]
 
             try:
@@ -276,6 +279,18 @@ class Filter:
         self._filters = []
         self._updated = True
         self._or_index = -1
+
+    def parenthesize(self):
+        """Condense current filters into an isolated clause"""
+        conditionals = self.build_where_clauses()
+
+        self.reset_filters()
+        self.new_or_()
+        or_block = self._filters[self._or_index]
+
+        or_block.update({"parenthetical" : conditionals})
+
+        self._updated = False
 
     def and_(self, filter):
         """Add an and conditional to the Filter object class.

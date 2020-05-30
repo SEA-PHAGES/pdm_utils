@@ -27,7 +27,7 @@ from pdm_utils.functions import parsing
 #-----------------------------------------------------------------------------
 
 COLUMN_TYPES = [Column, Table, functions.count, BinaryExpression, 
-                UnaryExpression, Label, DeclarativeMeta]
+                UnaryExpression, Label, DeclarativeMeta, Grouping]
 
 #-----------------------------------------------------------------------------
 #SQLALCHEMY OBJECT RETRIEVAL
@@ -340,6 +340,8 @@ def extract_column(column, check=None):
         column = column.element
     elif isinstance(column, Label):
         column = column.element
+    elif isinstance(column, Grouping):
+        column = column.element.element
     #For handling SQLAlchemy comparison expressions
     elif isinstance(column, BinaryExpression):
         expression = column.left
@@ -393,6 +395,9 @@ def extract_columns(columns, check=None):
         for column in columns:
             if isinstance(column, BooleanClauseList):
                 extracted_columns = extracted_columns + extract_columns(column)
+            elif isinstance(column, Grouping):
+                extracted_columns = extracted_columns + \
+                                    extract_columns(column.element)
             else:
                 extracted_columns.append(extract_column(column, check=check))
     elif columns is None:
