@@ -600,10 +600,11 @@ def get_genome_seqrecords(alchemist, values=[], verbose=False):
 
     seqrecords = []
     for gnm in genomes:
-        sort_cds_features(gnm)
         if verbose:
             print(f"Converting {gnm.name}...")
-        seqrecords.append(flat_files.genome_to_seqrecord(gnm))
+        seqrecord = flat_files.genome_to_seqrecord(gnm)
+        sort_seqrecord_features(seqrecord)
+        seqrecords.append(seqrecord)
 
     return seqrecords
 
@@ -848,20 +849,20 @@ def decode_results(results, columns, verbose=False):
                 if not result[column.name] is None:
                     result[column.name] = result[column.name].decode("utf-8")
 
-def sort_cds_features(phage_genome):
-    """Function that sorts and processes the Cds objects of a Genome object.
+def sort_seqrecord_features(seqrecord):
+    """Function that sorts and processes the seqfeature objects of a seqrecord.
 
-    :param phage_genome: Genome object containing Cds objects.
-    :type phage_genome: Genome
+    :param seqrecord: Phage genome Biopython seqrecord object
+    :type seqrecord: SeqRecord
     """
 
     try:
-        def _sorting_key(cds_feature): return cds_feature.start
-        phage_genome.cds_features.sort(key=_sorting_key)
+        def _sorting_key(seqfeature): return seqfeature.location.start
+        seqrecord.features.sort(key=_sorting_key)
     except:
-        if phage_genome == None:
+        if seqrecord == None:
             raise TypeError
-        print("Genome cds features unable to be sorted")
+        print("Genome seqrecord features unable to be sorted")
         pass
 
 #----------------------------------------------------------------------------
