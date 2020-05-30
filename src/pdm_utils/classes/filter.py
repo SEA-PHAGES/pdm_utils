@@ -603,7 +603,12 @@ class Filter:
 
         group_results = {}
         for group in groups:
-            group_clauses = where_clauses + [(column == group)]
+            if column.type.python_type == bytes:
+                group_clauses = where_clauses + \
+                                            [(column == group.encode("utf_8"))]
+            else:
+                group_clauses = where_clauses + [(column == group)]
+
             values = self.build_values(where=group_clauses, raw_bytes=raw_bytes)
             group_results.update({group : values})
 
