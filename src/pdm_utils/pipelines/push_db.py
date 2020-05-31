@@ -13,14 +13,12 @@ from pdm_utils.functions import server
 def main(unparsed_args_list):
     """Run the push_db pipeline."""
     args = parse_args(unparsed_args_list)
-    server_host = args.server_host
-    remote_dir = args.remote_directory
-
+    local_dir = args.directory
+    local_file = args.file
 
     # Create config object with data obtained from file and/or defaults.
     # For server host and dir, give priority to config file over command line.
     # But this is arbitrary.
-
     config = configfile.build_complete_config(args.config_file)
     server_host = config["upload_server"]["host"]
     remote_dir = config["upload_server"]["dest"]
@@ -32,22 +30,12 @@ def main(unparsed_args_list):
     if remote_dir is None:
         remote_dir = args.remote_directory
 
-
     if server_host is None or remote_dir is None:
         print("No host and/or remote directory provided. "
               "Unable to upload file(s).")
         sys.exit(1)
 
-    file_list = []
-    if args.directory is not None:
-        args.directory = basic.set_path(args.directory,
-                                              kind="dir", expect=True)
-        folder_files = basic.identify_contents(args.directory, kind="file",
-                                               ignore_set=set([".DS_Store"]))
-        file_list.extend(folder_files)
-    if args.file is not None:
-        args.file = basic.set_path(args.file, kind="file", expect=True)
-        file_list.append(args.file)
+    file_list = get_files(local_dir, local_file, set([".DS_Store"]))
 
     status = True
     if len(file_list) == 0:
@@ -61,7 +49,10 @@ def main(unparsed_args_list):
             status = False
 
     if status == True:
-        sftp = server.setup_sftp_conn(transport, user, pwd, attempts=3)
+        # TODO attempts should be higher, but there is a bug in the code,
+        # such that if the incorrect user/pwd is provided, it won't let you
+        # try to connect again with a new user/pwd.
+        sftp = server.setup_sftp_conn(transport, user, pwd, attempts=1)
         if sftp is None:
             status = False
 
@@ -108,6 +99,28 @@ def parse_args(unparsed_args_list):
     # sys.argv:      [0]            [1]         [2...]
     args = parser.parse_args(unparsed_args_list[2:])
     return args
+
+
+
+
+# TODO test.
+def get_files(directory, file, ignore_set):
+    """Get the list of file(s) that need to be uploaded."""
+    file_list = []
+
+    if directory is not None:
+        directory = basic.set_path(directory, kind="dir", expect=True)
+        folder_files = basic.identify_contents(directory, kind="file",
+                                               ignore_set=ignore_set)
+        file_list.extend(folder_files)
+
+    if file is not None:
+        file = basic.set_path(file, kind="file", expect=True)
+        file_list.append(file)
+
+    return file_list
+
+
 
 # TODO test.
 def upload(sftp, remote_dir, file_list):

@@ -69,11 +69,16 @@ def setup_sftp_conn(transport, user=None, pwd=None, attempts=1):
                                            pwd_prompt="Server password: ")
         try:
             transport.connect(username=user, password=pwd)
-            sftp = paramiko.SFTPClient.from_transport(transport)
         except:
             print("Unable to connect to server. "
                   "Incorrect username and password")
+            # If user and pwd is incorrect, reset to None so that
+            # user is prompted to provide them again (if attempts > 0)
+            user = None
+            pwd = None
             attempts -= 1
+        else:
+            sftp = paramiko.SFTPClient.from_transport(transport)
     return sftp
 
 # TODO unittest (but manually tested).
