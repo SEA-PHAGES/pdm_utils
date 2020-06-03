@@ -234,6 +234,9 @@ class Filter:
         if isinstance(key, Column):
             self._key = key
         elif isinstance(key, str):
+            if self.graph == None:
+                raise ValueError("String key input requires MySQL connection.")
+
             metadata = self.graph.graph["metadata"]
 
             try:
@@ -265,12 +268,29 @@ class Filter:
     def reset(self):
         """Resets all filters, values, and Filter state conditions.
         """
+        self.reset_filters()
+
+        self._values = []
+        self._values_valid = True
+
+    def reset_filters(self):
+        """Resets all filters and relevant Filter state condition.
+        """
         self._filters = []
         self._updated = True
         self._or_index = -1
 
-        self._values = []
-        self._values_valid = True
+    def parenthesize(self):
+        """Condense current filters into an isolated clause"""
+        conditionals = self.build_where_clauses()
+
+        self.reset_filters()
+        self.new_or_()
+        or_block = self._filters[self._or_index]
+
+        or_block.update({"parenthetical" : conditionals})
+
+        self._updated = False
 
     def and_(self, filter):
         """Add an and conditional to the Filter object class.
@@ -583,7 +603,12 @@ class Filter:
 
         group_results = {}
         for group in groups:
-            group_clauses = where_clauses + [(column == group)]
+            if column.type.python_type == bytes:
+                group_clauses = where_clauses + \
+                                            [(column == group.encode("utf_8"))]
+            else:
+                group_clauses = where_clauses + [(column == group)]
+
             values = self.build_values(where=group_clauses, raw_bytes=raw_bytes)
             group_results.update({group : values})
 
@@ -613,7 +638,11 @@ class Filter:
 
         values = {}
         for value in self._values:
-            value_clauses = where_clauses + [(self._key == value)]
+            compare_value = value
+            if self._key.type.python_type == bytes and not value is None:
+                compare_value = value.encode("utf-8")
+
+            value_clauses = where_clauses + [(self._key == compare_value)]
             values.update({value : {}}) 
 
             #For each column for each value, add the respective data to a dict.
