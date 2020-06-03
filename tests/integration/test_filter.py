@@ -168,7 +168,6 @@ class TestFilter(unittest.TestCase):
         self.assertTrue("Trixie" in self.db_filter.values)
         self.assertTrue("Myrna" in self.db_filter.values)
         self.assertTrue(len(self.db_filter.values) == 2)
-
     
     def test_parenthesize_3(self):
         """Verify that parenthesize() allows for additional filter stacking.
@@ -452,7 +451,20 @@ class TestFilter(unittest.TestCase):
         self.assertEqual(c_data["Cluster"], ["C"])
         self.assertFalse("Trixie" in c_data["PhageID"])
         self.assertTrue("Myrna" in c_data["PhageID"])
-    
+
+    def test_retrieve_3(self):
+        """Verify that test_retrieve() can retrieve by byte-type columns.
+        """
+        self.db_filter.key = "gene.Notes"
+        self.db_filter.values = ["helix-turn-helix DNA binding protein", 
+                                 "RNA binding protein"]
+
+        retrieve_results = self.db_filter.retrieve("gene.PhamID")
+        self.assertTrue("helix-turn-helix DNA binding protein" \
+                                 in retrieve_results.keys())
+        self.assertTrue("RNA binding protein" in retrieve_results.keys())
+        
+
     def test_refresh_1(self):
         """Verify that refresh() eliminates invalid data.
         """
@@ -463,7 +475,7 @@ class TestFilter(unittest.TestCase):
         self.assertTrue("Myrna" in self.db_filter.values)
         self.assertTrue("D29" in self.db_filter.values)
         self.assertFalse("Sheetz" in self.db_filter.values)
-
+ 
     def test_update_1(self):
         """Verify that update() filters out values.
         """
@@ -538,6 +550,13 @@ class TestFilter(unittest.TestCase):
         self.assertTrue("Myrna" in group_results["C"])
         self.assertTrue("D29" in group_results["A"])
         self.assertTrue("Trixie" in group_results["A"])
+
+    def test_group_4(self):
+        """Verify that group() can group by byte-type columns.
+        """
+        self.db_filter.key = "gene.GeneID"
+        self.db_filter.values = ["Myrna_CDS_1", "D29_CDS_1", "Trixie_CDS_3"]
+        group_results = self.db_filter.group("gene.Notes")
 
 if __name__ == "__main__":
     unittest.main()

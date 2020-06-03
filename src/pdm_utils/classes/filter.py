@@ -638,7 +638,11 @@ class Filter:
 
         values = {}
         for value in self._values:
-            value_clauses = where_clauses + [(self._key == value)]
+            compare_value = value
+            if self._key.type.python_type == bytes and not value is None:
+                compare_value = value.encode("utf-8")
+
+            value_clauses = where_clauses + [(self._key == compare_value)]
             values.update({value : {}}) 
 
             #For each column for each value, add the respective data to a dict.
