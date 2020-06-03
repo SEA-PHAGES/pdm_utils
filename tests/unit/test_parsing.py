@@ -245,6 +245,14 @@ class TestParsing(unittest.TestCase):
         self.assertEqual(parsed_filter[3], 
                          "helix-turn-helix DNA binding domain protein")
 
+    def test_parse_filter_6(self):
+        """Verify parse_filter() recognizes empty quote values.
+        """
+        filter = "gene.Notes = ''"
+        parsed_filter = parsing.parse_filter(filter)
+
+        self.assertEqual(parsed_filter[3], "")
+
     @patch("pdm_utils.functions.parsing.parse_filter")
     def test_create_filter_key_1(self, parse_filter_mock):
         """Verify create_filter_key() calls parse_filter()
