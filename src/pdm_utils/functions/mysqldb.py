@@ -7,6 +7,9 @@ import sys
 from Bio.Alphabet import IUPAC
 from Bio.Seq import Seq
 import sqlalchemy
+from sqlalchemy import and_
+from sqlalchemy import select
+from sqlalchemy.sql import func
 
 from pdm_utils.classes import cds, trna, tmrna
 from pdm_utils.classes import genome
@@ -887,3 +890,100 @@ def execute_transaction(engine, statement_list=[]):
     # with engine.begin() as connection:
     #     for statement in statement_list:
     #         r1 = connection.execute(statement)
+
+def get_relative_gene(alchemist, geneid, pos):
+    gene_obj = alchemist.metadata.tables["gene"]
+
+    geneid_obj = gene_obj.c.GeneID
+    phageid_obj = gene_obj.c.PhageID
+    name_obj = gene_obj.c.Name
+   
+    name_query = select([name_obj, phageid_obj]).where(geneid_obj == geneid)
+    results = alchemist.engine.execute(name_query).first()
+
+    if results is None:
+        raise ValueError(f"{geneid} is not in the MySQL database."
+                          "Review/revise the information in the database.")
+
+    results = dict(results)
+    gene_pos = results['Name']
+    phageid = results['PhageID']
+
+    try:
+        gene_pos = int(gene_pos)
+    except:
+        raise ValueError(f"Retrieved {geneid} name/position is invalid."
+                          "Review/revise the information in the database.")
+
+    rel_gene_pos = gene_pos + pos
+
+    geneid_query = select([geneid_obj]).where(and_(*[
+                        (name_obj == rel_gene_pos), (phageid_obj == phageid)]))
+
+    rel_geneid = alchemist.engine.execute(geneid_query).scalar()
+    return rel_geneid
+
+def get_adjacent_genes(alchemist, gene):
+    left = get_relative_gene(alchemist, gene, -1)
+    right = get_relative_gene(alchemist, gene, 1)
+
+    return (left, right)
+
+def get_adjacent_phams(alchemist, pham):
+    db_filter = Filter(alchemist=alchemist)
+    db_filter.key = "gene.PhamID"
+    db_filter.values = [pham]
+    genes = db_filter.transpose("gene.GeneID")
+
+    adjacent_genes_dict = {"left" : [], "right" : []}
+    for gene in genes:
+        adjacent_genes = get_adjacent_genes(alchemist, gene)
+
+        left = adjacent_genes[0]
+        right = adjacent_genes[1]
+
+        if not left is None:
+            adjacent_genes_dict["left"].append(left)
+        if not right is None:
+            adjacent_genes_dict["right"].append(right)
+
+    db_filter.reset()
+    db_filter.key = "gene.GeneID"
+
+    adjacent_phams_dict = {}
+
+    db_filter.values = adjacent_genes_dict["left"]
+    adjacent_phams_dict["left"] = db_filter.transpose("gene.PhamID")
+
+    db_filter.values = adjacent_genes_dict["right"]
+    adjacent_phams_dict["right"] = db_filter.transpose("gene.PhamID")
+
+    return adjacent_phams_dict
+
+def get_count_pham_annotations(alchemist, pham):
+    db_filter = Filter(alchemist=alchemist)
+    db_filter.key = "pham.PhamID"
+    db_filter.values = [pham]
+
+    annotations = db_filter.transpose("gene.Notes")
+
+    gene_obj = alchemist.metadata.tables["gene"]
+
+    geneid_obj = gene_obj.c.GeneID
+    phamid_obj = gene_obj.c.PhamID 
+    notes_obj = gene_obj.c.Notes
+
+    annotation_counts = {}
+    for annotation in annotations:
+        byte_annotation = annotation 
+        if not annotation is None:
+            byte_annotation = annotation.encode("utf-8")
+
+        count_query = select([func.count(geneid_obj)]).where(and_(*[
+                        (notes_obj == byte_annotation),(phamid_obj == pham)]))
+
+        count = alchemist.engine.execute(count_query).scalar()
+
+        annotation_counts[annotation] = count
+
+    return annotation_counts
