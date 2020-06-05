@@ -17,6 +17,8 @@ from pdm_utils.classes import genomepair
 from pdm_utils.constants import constants
 from pdm_utils.functions import basic
 from pdm_utils.functions import mysqldb_basic
+from pdm_utils.functions import parsing
+from pdm_utils.functions import querying
 
 def parse_phage_table_data(data_dict, trans_table=11, gnm_type=""):
     """Parse a MySQL database dictionary to create a Genome object.
@@ -930,12 +932,17 @@ def get_adjacent_genes(alchemist, gene):
     return (left, right)
 
 def get_adjacent_phams(alchemist, pham):
-    db_filter = Filter(alchemist=alchemist)
-    db_filter.key = "gene.PhamID"
-    db_filter.values = [pham]
-    genes = db_filter.transpose("gene.GeneID")
+    gene_obj = alchemist.metadata.tables["gene"]
 
-    adjacent_genes_dict = {"left" : [], "right" : []}
+    geneid_obj = gene_obj.c.GeneID
+    phamid_obj = gene_obj.c.PhamID
+
+    genes_query = select([geneid_obj]).where(phamid_obj == pham).distinct()
+    
+    genes = querying.first_column(alchemist, genes_query)
+
+    left_genes = []
+    right_genes = []
     for gene in genes:
         adjacent_genes = get_adjacent_genes(alchemist, gene)
 
@@ -943,45 +950,46 @@ def get_adjacent_phams(alchemist, pham):
         right = adjacent_genes[1]
 
         if not left is None:
-            adjacent_genes_dict["left"].append(left)
+            left_genes.append(left)
         if not right is None:
-            adjacent_genes_dict["right"].append(right)
-
-    db_filter.reset()
-    db_filter.key = "gene.GeneID"
+            right_genes.append(right) 
 
     adjacent_phams_dict = {}
+   
+    phams_query = select([phamid_obj]).distinct()
+    adjacent_phams_dict["left"] = querying.first_column(
+                                                    alchemist, phams_query, 
+                                                    in_column=geneid_obj, 
+                                                    values=left_genes)
 
-    db_filter.values = adjacent_genes_dict["left"]
-    adjacent_phams_dict["left"] = db_filter.transpose("gene.PhamID")
-
-    db_filter.values = adjacent_genes_dict["right"]
-    adjacent_phams_dict["right"] = db_filter.transpose("gene.PhamID")
+    adjacent_phams_dict["right"] = querying.first_column(
+                                                    alchemist, phams_query,
+                                                    in_column=geneid_obj,
+                                                    values=right_genes)
 
     return adjacent_phams_dict
 
-def get_count_pham_annotations(alchemist, pham):
-    db_filter = Filter(alchemist=alchemist)
-    db_filter.key = "pham.PhamID"
-    db_filter.values = [pham]
-
-    annotations = db_filter.transpose("gene.Notes")
-
-    gene_obj = alchemist.metadata.tables["gene"]
+def get_count_pham_annotations(alchemist, pham, incounts=None):
+    gene_obj = alchemist.metadata.tables["gene"]  
 
     geneid_obj = gene_obj.c.GeneID
-    phamid_obj = gene_obj.c.PhamID 
+    phamid_obj = gene_obj.c.PhamID
     notes_obj = gene_obj.c.Notes
 
+    annotation_query = select([notes_obj]).where(phamid_obj == pham).distinct()
+    annotations = querying.first_column(alchemist, annotation_query)
+
     annotation_counts = {}
-    for annotation in annotations:
-        byte_annotation = annotation 
-        if not annotation is None:
-            byte_annotation = annotation.encode("utf-8")
+    if not incounts is None:
+        annotation_counts = incounts
+
+    for byte_annotation in annotations:
+        annotation = None
+        if not byte_annotation is None:
+            annotation = byte_annotation.decode("utf-8")
 
         count_query = select([func.count(geneid_obj)]).where(and_(*[
                         (notes_obj == byte_annotation),(phamid_obj == pham)]))
-
         count = alchemist.engine.execute(count_query).scalar()
 
         annotation_counts[annotation] = count

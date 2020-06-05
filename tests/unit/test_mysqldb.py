@@ -556,5 +556,120 @@ class TestMysqldbFunctions3(unittest.TestCase):
         mock_get_relative_gene.assert_any_call(
                                    self.mock_alchemist, "Trixie_CDS_2", -1)
 
+
+    @patch("pdm_utils.functions.mysqldb.get_adjacent_genes")
+    @patch("pdm_utils.functions.mysqldb.querying.first_column")
+    @patch("pdm_utils.functions.mysqldb.select")
+    def test_get_adjacent_phams_1(self, mock_select, mock_first_column,
+                                                     mock_get_adjacent_genes):
+        """Verify select() call structure of get_adjacent_phams()"""
+        mock_select_obj = Mock()
+        mock_select_where_obj = Mock()
+        mock_select_distinct_obj = Mock()
+
+        mock_select.return_value = mock_select_obj
+        mock_select_obj.where.return_value = mock_select_where_obj
+        mock_select_where_obj.distinct.return_value = mock_select_distinct_obj
+
+        mock_first_column.return_value = ["Trixie_CDS_2"]
+        mock_get_adjacent_genes.return_value = ("Trixie_CDS_1", "Trixie_CDS_3")
+
+        mysqldb.get_adjacent_phams(self.mock_alchemist, 8675309)
+
+        mock_select.assert_any_call([self.geneid_column])
+        mock_select.assert_any_call([self.phamid_column])
+        mock_select_obj.where.assert_called()
+        mock_select_where_obj.distinct.assert_called()
+
+    @patch("pdm_utils.functions.mysqldb.get_adjacent_genes")
+    @patch("pdm_utils.functions.mysqldb.querying.first_column")
+    @patch("pdm_utils.functions.mysqldb.select")
+    def test_get_adjacent_phams_2(self, mock_select, mock_first_column,
+                                                     mock_get_adjacent_genes):
+        """Verify first() call structure of get_adjacent_phams()"""
+        mock_select_obj = Mock()
+        mock_select_where_obj = Mock()
+        mock_select_distinct_obj = Mock()
+
+        mock_select.return_value = mock_select_obj
+        mock_select_obj.where.return_value = mock_select_where_obj
+        mock_select_obj.distinct.return_value = mock_select_distinct_obj
+        mock_select_where_obj.distinct.return_value = mock_select_distinct_obj
+
+        mock_first_column.return_value = ["Trixie_CDS_2"]
+        mock_get_adjacent_genes.return_value = ("Trixie_CDS_1", "Trixie_CDS_3")
+
+        mysqldb.get_adjacent_phams(self.mock_alchemist, 8675309)
+
+        mock_first_column.assert_any_call(self.mock_alchemist, 
+                                          mock_select_distinct_obj)
+        mock_first_column.assert_any_call(self.mock_alchemist, 
+                                          mock_select_distinct_obj,
+                                          in_column=self.geneid_column,
+                                          values=["Trixie_CDS_1"])
+        mock_first_column.assert_any_call(self.mock_alchemist, 
+                                          mock_select_distinct_obj,
+                                          in_column=self.geneid_column,
+                                          values=["Trixie_CDS_3"])
+
+    @patch("pdm_utils.functions.mysqldb.get_adjacent_genes")
+    @patch("pdm_utils.functions.mysqldb.querying.first_column")
+    @patch("pdm_utils.functions.mysqldb.select")  
+    def test_get_adjacent_phams_3(self, mock_select, mock_first_column,
+                                                     mock_get_adjacent_genes): 
+        """Verify get_adjacent_phams() calls get_adjacent_genes()"""
+        mock_first_column.return_value = ["Trixie_CDS_2"]
+        mock_get_adjacent_genes.return_value = ("Trixie_CDS_1", "Trixie_CDS_3")
+         
+        mysqldb.get_adjacent_phams(self.mock_alchemist, 8675309)
+
+        mock_get_adjacent_genes.assert_called_with(self.mock_alchemist, 
+                                                                "Trixie_CDS_2")
+
+    @patch("pdm_utils.functions.mysqldb.func.count")
+    @patch("pdm_utils.functions.mysqldb.querying.first_column")
+    @patch("pdm_utils.functions.mysqldb.select")
+    def test_get_count_pham_annotations_1(self, mock_select, mock_first_column,
+                                                             mock_count):
+        """Verify select() call structure of get_count_pham_annotations()"""
+        mock_count_geneid = Mock()
+        mock_count.return_value = mock_count_geneid
+
+        mock_first_column.return_value = ["acr".encode("utf-8")]
+
+        mysqldb.get_count_pham_annotations(self.mock_alchemist, 8675309)
+
+        mock_count.assert_called_with(self.geneid_column)
+
+        mock_select.assert_any_call([self.notes_column])
+        mock_select.assert_any_call([mock_count_geneid])
+
+    @patch("pdm_utils.functions.mysqldb.func.count")
+    @patch("pdm_utils.functions.mysqldb.querying.first_column")
+    @patch("pdm_utils.functions.mysqldb.select")   
+    def test_get_count_pham_annotations_2(self, mock_select, mock_first_column,
+                                                             mock_count):
+        """Verify first() call structure of get_count_pham_annotations()"""
+        mock_select_obj = Mock()
+        mock_select_where_obj = Mock()
+        mock_select_distinct_obj = Mock()
+
+        mock_select.return_value = mock_select_obj
+        mock_select_obj.where.return_value = mock_select_where_obj
+        mock_select_obj.distinct.return_value = mock_select_distinct_obj
+        mock_select_where_obj.distinct.return_value = mock_select_distinct_obj
+
+        mock_count_geneid = Mock()
+        mock_count.return_value = mock_count_geneid
+
+        mock_first_column.return_value = ["acr".encode("utf-8")]
+
+        mysqldb.get_count_pham_annotations(self.mock_alchemist, 8675309)
+
+        mock_count.assert_called_with(self.geneid_column)
+
+        mock_first_column.assert_called_with(self.mock_alchemist, 
+                                             mock_select_distinct_obj)  
+
 if __name__ == '__main__':
     unittest.main()
