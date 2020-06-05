@@ -11,6 +11,7 @@ from Bio.Seq import Seq
 import sqlalchemy
 
 from pdm_utils.classes import cds, trna, tmrna, genome
+from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.constants import constants
 from pdm_utils.functions import mysqldb
 
@@ -1012,8 +1013,85 @@ class TestMysqldbFunctions4(unittest.TestCase):
         return_code, msg = mysqldb.execute_transaction(self.engine)
         self.assertEqual(return_code, 0)
 
+class TestMysqldbFunctions5(unittest.TestCase):
+    @classmethod
+    def setUpClass(self):
+        test_db_utils.create_filled_test_db()
 
+    @classmethod
+    def tearDownClass(self):
+        test_db_utils.remove_db()
+    
+    def setUp(self):
+        self.alchemist = AlchemyHandler()
+        self.alchemist.username = test_db_utils.USER
+        self.alchemist.password = test_db_utils.PWD
+        self.alchemist.database = test_db_utils.DB
+        self.alchemist.connect(ask_database=True, login_attempts=0)
 
+    def test_get_relative_gene_1(self):
+        """Verify get_relative_gene() returns GeneID string as expected."""
+
+        rel_geneid = mysqldb.get_relative_gene(self.alchemist, "Trixie_CDS_2", 
+                                                                        -1)
+
+        self.assertEqual(rel_geneid, "Trixie_CDS_1")
+
+    def test_get_relative_gene_2(self):
+        """Verify get_relative_gene() returns None when expected."""
+
+        rel_geneid = mysqldb.get_relative_gene(self.alchemist, "Trixie_CDS_1", 
+                                                                        -1)
+
+        self.assertEqual(rel_geneid, None)
+
+    def test_get_relative_gene_3(self):
+        """Verify get_relative_gene() raises ValueError from bad GeneID."""
+        with self.assertRaises(ValueError):
+            mysqldb.get_relative_gene(self.alchemist, "NOT A GENE", 8675309)
+
+    def test_get_adjacent_genes_1(self):
+        """Verify get_adjacent_phams() returns get_relative_gene() results."""
+        adjacent_genes = mysqldb.get_adjacent_genes(self.alchemist, 
+                                                            "Trixie_CDS_2")
+
+        self.assertEqual(adjacent_genes[0], "Trixie_CDS_1")
+        self.assertEqual(adjacent_genes[1], "Trixie_CDS_3")
+
+    def test_get_adjacent_phams_1(self):
+        """Verify get_adjacent_phams() returns expected data type."""
+
+        adjacent_phams = mysqldb.get_adjacent_phams(self.alchemist, 42006)
+
+        self.assertTrue(isinstance(adjacent_phams, dict))
+
+        self.assertTrue("left" in adjacent_phams.keys())
+        self.assertTrue("right" in adjacent_phams.keys())
+
+        self.assertTrue(isinstance(adjacent_phams["left"], list))
+        self.assertTrue(isinstance(adjacent_phams["right"], list))
+
+        for left_pham in adjacent_phams["left"]:
+            with self.subTest(pham=left_pham):
+                self.assertTrue(isinstance(left_pham, int))
+
+        for right_pham in adjacent_phams["right"]:
+            with self.subTest(pham=right_pham):
+                self.assertTrue(isinstance(right_pham, int))
+
+    def test_get_count_pham_annotations_1(self):
+        """Verify get_count_pham_annotations() returns expected data type."""
+
+        annotation_counts = mysqldb.get_count_pham_annotations(self.alchemist, 
+                                                               42006)
+
+        self.assertTrue(isinstance(annotation_counts, dict))
+
+        for key in annotation_counts.keys():
+            with self.subTest(annotation=key):
+                self.assertTrue(isinstance(annotation_counts, str))
+
+                self.assertTrue(isinstance(annotation_counts[key], int))
 
 if __name__ == '__main__':
     unittest.main()

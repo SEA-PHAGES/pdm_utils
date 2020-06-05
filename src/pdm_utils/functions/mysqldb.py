@@ -939,7 +939,7 @@ def get_adjacent_phams(alchemist, pham):
 
     genes_query = select([geneid_obj]).where(phamid_obj == pham).distinct()
     
-    genes = querying.first_column(alchemist, genes_query)
+    genes = querying.first_column(alchemist.engine, genes_query)
 
     left_genes = []
     right_genes = []
@@ -958,12 +958,14 @@ def get_adjacent_phams(alchemist, pham):
    
     phams_query = select([phamid_obj]).distinct()
     adjacent_phams_dict["left"] = querying.first_column(
-                                                    alchemist, phams_query, 
+                                                    alchemist.engine, 
+                                                    phams_query, 
                                                     in_column=geneid_obj, 
                                                     values=left_genes)
 
     adjacent_phams_dict["right"] = querying.first_column(
-                                                    alchemist, phams_query,
+                                                    alchemist.engine, 
+                                                    phams_query,
                                                     in_column=geneid_obj,
                                                     values=right_genes)
 
@@ -977,7 +979,7 @@ def get_count_pham_annotations(alchemist, pham, incounts=None):
     notes_obj = gene_obj.c.Notes
 
     annotation_query = select([notes_obj]).where(phamid_obj == pham).distinct()
-    annotations = querying.first_column(alchemist, annotation_query)
+    annotations = querying.first_column(alchemist.engine, annotation_query)
 
     annotation_counts = {}
     if not incounts is None:
