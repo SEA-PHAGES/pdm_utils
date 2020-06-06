@@ -665,23 +665,15 @@ def apply_filters(alchemist, table, filters, values=None,
     db_filter.key = table
     db_filter.values = values
 
-    try:
-        db_filter.add(filters)
-    except:
-        print("Please check your syntax for the conditional string: "
-             f"{filters}")
-        exit(1)
+    if filters != "":
+        try:
+            db_filter.add(filters)
+        except:
+            print("Please check your syntax for the conditional string: "
+                 f"{filters}")
+            exit(1)
 
-    db_filter.update()
-    db_filter._filters = []
-    db_filter._or_index = -1 
-
-    if filters:
-        if db_filter.hits() == 0:
-            print("Filters yielded no database hits.")
-            sys.exit(1)
-        if verbose: 
-            print(f"Database hits from applied filters: {db_filter.hits()}")
+        db_filter.parenthesize()
 
     return db_filter
 
