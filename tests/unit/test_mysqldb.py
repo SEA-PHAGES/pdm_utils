@@ -601,13 +601,13 @@ class TestMysqldbFunctions3(unittest.TestCase):
 
         mysqldb.get_adjacent_phams(self.mock_alchemist, 8675309)
 
-        mock_first_column.assert_any_call(self.mock_alchemist, 
+        mock_first_column.assert_any_call(self.mock_engine, 
                                           mock_select_distinct_obj)
-        mock_first_column.assert_any_call(self.mock_alchemist, 
+        mock_first_column.assert_any_call(self.mock_engine, 
                                           mock_select_distinct_obj,
                                           in_column=self.geneid_column,
                                           values=["Trixie_CDS_1"])
-        mock_first_column.assert_any_call(self.mock_alchemist, 
+        mock_first_column.assert_any_call(self.mock_engine, 
                                           mock_select_distinct_obj,
                                           in_column=self.geneid_column,
                                           values=["Trixie_CDS_3"])
@@ -668,7 +668,7 @@ class TestMysqldbFunctions3(unittest.TestCase):
 
         mock_count.assert_called_with(self.geneid_column)
 
-        mock_first_column.assert_called_with(self.mock_alchemist, 
+        mock_first_column.assert_called_with(self.mock_engine, 
                                              mock_select_distinct_obj)  
 
 if __name__ == '__main__':
