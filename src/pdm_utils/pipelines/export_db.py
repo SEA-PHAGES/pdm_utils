@@ -720,8 +720,7 @@ def build_groups_map(db_filter, export_path, conditionals_map, groups=[],
         print(f"Group '{current_group}' is not a valid group.")
         sys.exit(1)
 
-    transposed_values = db_filter.build_values(column=current_group,
-                                               where=conditionals)
+    transposed_values = db_filter.transpose(group_column, filter=True)
 
     if not transposed_values:
         export_path.rmdir()
@@ -921,30 +920,3 @@ def append_database_version(genome_seqrecord, version_data):
         raise TypeError("Object must be of type SeqRecord."
                        f"Object was of type {type}.")
 
-#Similar to cds.get_qualifiers()
-#Intoduces a way to provide GenPept-formatted seqrecord qualifiers
-def get_genpept_cds_qualifiers(cds):
-    """Function that uses cds data to populate a genpept-cds qualifiers dict.
-
-    :returns: GenPept-CDS formatted SeqFeature qualifiers dictionary.
-    """
-    qualifiers = OrderedDict()
-    qualifiers["gene"] = [self.name]
-    if cds.locus_tag != "":
-        qualifiers["locus_tag"] = [self.locus_tag]
-    qualifiers["transl_table"] = ["11"]
-    if cds.raw_description != "":
-        qualifiers[""]
-
-    return qualifiers
-
-def get_protein_cds_qualfiiers(cds):
-    """Function that uses cds data to populate a protein qualifiers dict.
-
-    :returns: Protein SeqFeature qualifiers dictionary.
-    """
-    qualifiers = OrderedDict()
-    if cds.raw_description != "":
-        qualifiers["product"] = cds.raw_description
-
-    return qualifiers

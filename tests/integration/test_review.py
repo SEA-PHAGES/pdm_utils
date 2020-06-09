@@ -105,7 +105,7 @@ class TestPhamReview(unittest.TestCase):
         self.assertTrue(self.review_test_dir.is_dir())
 
     def test_execute_review_6(self):
-        """Verify execute_review() g_reports parameter functions as expected.
+        """Verify execute_review() gr_reports parameter functions as expected.
         """
         review.execute_review(self.alchemist, self.test_dir,
                               self.review_test_dir.name,
@@ -140,7 +140,7 @@ class TestPhamReview(unittest.TestCase):
         self.assertTrue(40481 in self.db_filter.values)
 
     def test_get_review_data_1(self):
-        """Verify get_pf_data() retrieves and returns data as expected.
+        """Verify get_review_data() retrieves and returns data as expected.
         """
         self.db_filter.values = [40481]
 
@@ -152,6 +152,15 @@ class TestPhamReview(unittest.TestCase):
             with self.subTest(header=header):
                 self.assertTrue(header in review_data[0].keys())
                 self.assertFalse(isinstance(review_data[0][header], list))
+
+    def test_get_summary_data_1(self):
+        """Verify get_summary_data() retrieves and returns data as expected.
+        """
+        self.db_filter.values = [40481]
+
+        summary_data = review.get_summary_data(self.alchemist, self.db_filter)
+
+        self.assertTrue(isinstance(review_data, dict))
 
     def test_get_gr_data_1(self):
         """Verify get_g_data() retrieves and returns data as expected.
