@@ -67,7 +67,7 @@ def main(unparsed_args_list):
         s_report = args.summary_report
     else:
         gr_reports = True
-        s_report=True
+        s_report = True
 
     execute_review(alchemist, args.folder_path, args.folder_name,
                    review=args.review, values=values,

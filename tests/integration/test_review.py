@@ -160,7 +160,7 @@ class TestPhamReview(unittest.TestCase):
 
         summary_data = review.get_summary_data(self.alchemist, self.db_filter)
 
-        self.assertTrue(isinstance(review_data, dict))
+        self.assertTrue(isinstance(summary_data, dict))
 
     def test_get_gr_data_1(self):
         """Verify get_g_data() retrieves and returns data as expected.

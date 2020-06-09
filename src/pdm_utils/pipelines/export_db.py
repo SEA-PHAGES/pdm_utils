@@ -720,7 +720,8 @@ def build_groups_map(db_filter, export_path, conditionals_map, groups=[],
         print(f"Group '{current_group}' is not a valid group.")
         sys.exit(1)
 
-    transposed_values = db_filter.transpose(group_column, filter=True)
+    transposed_values = db_filter.build_values(column=group_column, 
+                                               where=conditionals)
 
     if not transposed_values:
         export_path.rmdir()

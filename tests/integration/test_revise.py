@@ -10,7 +10,7 @@ from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.classes.filter import Filter
 from pdm_utils.functions import basic
 from pdm_utils.pipelines import revise
-from pdm_utils.pipelines.review import PF_HEADER
+from pdm_utils.pipelines.review import REVIEW_HEADER
 
 # Import helper functions to build mock database
 unittest_file = Path(__file__)
@@ -53,7 +53,7 @@ class TestGenbankRevise(unittest.TestCase):
         self.test_dir.mkdir()
         self.revise_form = self.test_dir.joinpath("revise_form.txt")
 
-        basic.export_data_dict(TEST_DATA, self.revise_form, PF_HEADER,
+        basic.export_data_dict(TEST_DATA, self.revise_form, REVIEW_HEADER,
                                                         include_headers=True)
 
     @classmethod
