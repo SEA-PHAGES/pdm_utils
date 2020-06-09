@@ -665,23 +665,15 @@ def apply_filters(alchemist, table, filters, values=None,
     db_filter.key = table
     db_filter.values = values
 
-    try:
-        db_filter.add(filters)
-    except:
-        print("Please check your syntax for the conditional string: "
-             f"{filters}")
-        exit(1)
+    if filters != "":
+        try:
+            db_filter.add(filters)
+        except:
+            print("Please check your syntax for the conditional string: "
+                 f"{filters}")
+            exit(1)
 
-    db_filter.update()
-    db_filter._filters = []
-    db_filter._or_index = -1 
-
-    if filters:
-        if db_filter.hits() == 0:
-            print("Filters yielded no database hits.")
-            sys.exit(1)
-        if verbose: 
-            print(f"Database hits from applied filters: {db_filter.hits()}")
+        db_filter.parenthesize()
 
     return db_filter
 
@@ -728,7 +720,7 @@ def build_groups_map(db_filter, export_path, conditionals_map, groups=[],
         print(f"Group '{current_group}' is not a valid group.")
         sys.exit(1)
 
-    transposed_values = db_filter.build_values(column=current_group,
+    transposed_values = db_filter.build_values(column=group_column, 
                                                where=conditionals)
 
     if not transposed_values:
@@ -929,30 +921,3 @@ def append_database_version(genome_seqrecord, version_data):
         raise TypeError("Object must be of type SeqRecord."
                        f"Object was of type {type}.")
 
-#Similar to cds.get_qualifiers()
-#Intoduces a way to provide GenPept-formatted seqrecord qualifiers
-def get_genpept_cds_qualifiers(cds):
-    """Function that uses cds data to populate a genpept-cds qualifiers dict.
-
-    :returns: GenPept-CDS formatted SeqFeature qualifiers dictionary.
-    """
-    qualifiers = OrderedDict()
-    qualifiers["gene"] = [self.name]
-    if cds.locus_tag != "":
-        qualifiers["locus_tag"] = [self.locus_tag]
-    qualifiers["transl_table"] = ["11"]
-    if cds.raw_description != "":
-        qualifiers[""]
-
-    return qualifiers
-
-def get_protein_cds_qualfiiers(cds):
-    """Function that uses cds data to populate a protein qualifiers dict.
-
-    :returns: Protein SeqFeature qualifiers dictionary.
-    """
-    qualifiers = OrderedDict()
-    if cds.raw_description != "":
-        qualifiers["product"] = cds.raw_description
-
-    return qualifiers

@@ -24,13 +24,13 @@ DEFAULT_FOLDER_NAME = f"{time.strftime('%Y%m%d')}_review"
 DEFAULT_FOLDER_PATH = Path.cwd()
 
 
-PF_HEADER = ["Pham", 
+REVIEW_HEADER = ["Pham", 
              "Final Call",
              "#Members", 
              "Clusters", 
              "#Functions", 
              "Functional Calls"]
-PG_HEADER = ["Gene",
+GR_HEADER = ["Gene",
              "Phage",
              "Gene#",
              "Cluster",
@@ -38,8 +38,8 @@ PG_HEADER = ["Gene",
              "Functional Call",
              "Translation"]
 
-PF_DATA_COLUMNS = ["gene.GeneID", "phage.Cluster", "gene.Notes"]
-PG_DATA_COLUMNS = ["phage.PhageID", "gene.Name", "phage.Cluster", 
+REVIEW_DATA_COLUMNS = ["gene.GeneID", "phage.Cluster", "gene.Notes"]
+GR_DATA_COLUMNS = ["phage.PhageID", "gene.Name", "phage.Cluster", 
                    "phage.Subcluster", "gene.Notes", "gene.Translation"]
 
 BASE_CONDITIONALS = ("phage.Status = final AND "
@@ -61,11 +61,18 @@ def main(unparsed_args_list):
     alchemist.connect(ask_database=True, pipeline=True)
 
     values = export_db.parse_value_input(args.input)
-    
+   
+    if not args.all_reports:
+        gr_reports = args.gene_reports
+        s_report = args.summary_report
+    else:
+        gr_reports = True
+        s_report = True
+
     execute_review(alchemist, args.folder_path, args.folder_name,
                    review=args.review, values=values,
                    filters=args.filters, groups=args.groups, sort=args.sort,
-                   g_reports=args.gene_reports, s_report=args.summary_report,
+                   s_report=s_report, gr_reports=gr_reports,
                    verbose=args.verbose)
 
 def parse_review(unparsed_args_list):
@@ -93,13 +100,16 @@ def parse_review(unparsed_args_list):
             Follow selection argument with the desired name.
         """
 
+    ALL_REPORTS_HELP = """
+        Export option to toggle export of all report options.
+        """
     GENE_REPORTS_HELP = """
         Export option to toggle export of supplemental information about 
         the genes in the phams selected.
         """
     SUMMARY_REPORT_HELP = """
         Export option to toggle export of supplemental information about
-        the profile of the phams selected.
+        the profile of the phages selected.
         """
 
     REVIEW_HELP = """
@@ -145,6 +155,8 @@ def parse_review(unparsed_args_list):
     parser.add_argument("-v", "--verbose", action="store_true", 
                                                help=VERBOSE_HELP)
 
+    parser.add_argument("-a", "--all_reports", action="store_true",
+                                               help=ALL_REPORTS_HELP)
     parser.add_argument("-gr", "--gene_reports", action="store_true",
                                                help=GENE_REPORTS_HELP)
     parser.add_argument("-sr", "--summary_report", action="store_true",
@@ -180,8 +192,8 @@ def parse_review(unparsed_args_list):
 
 def execute_review(alchemist, folder_path, folder_name, 
                               review=True, values=[],
-                              filters="", groups=[], sort=[],
-                              g_reports=False, s_report=False,
+                              filters="", groups=[], sort=[], s_report=False, 
+                              gr_reports=False, psr_reports=False,
                               verbose=False):
     """Executes the entirety of the pham review pipeline.
     
@@ -202,8 +214,8 @@ def execute_review(alchemist, folder_path, folder_name,
     :param groups: A list of supported MySQL column names to group by.
     :type groups: list[str]
     :param sort: A list of supported MySQL column names to sort by. 
-    :param g_reports: A boolean to toggle export of additional pham information.
-    :type g_reports: bool
+    :param gr_reports: A boolean to toggle export of additional pham information.
+    :type gr_reports: bool
     :param verbose: A boolean value to toggle progress print statements.
     :type verbose: bool
     """
@@ -225,10 +237,8 @@ def execute_review(alchemist, folder_path, folder_name,
             sys.exit(1)
         finally:
             db_filter.update() 
-
-    db_filter._filters = []
-    db_filter._updated = False 
-    db_filter._or_index = -1
+        
+        db_filter.parenthesize()
 
     db_filter.add(BASE_CONDITIONALS)
     db_filter.update()
@@ -256,119 +266,75 @@ def execute_review(alchemist, folder_path, folder_name,
     if verbose:
         print("Prepared query and path structure, beginning review export...")
     original_phams = db_filter.values
-    total_g_data = {}
+    total_gr_data = {}
+    total_psr_data = {}
     for mapped_path in conditionals_map.keys():
         conditionals = conditionals_map[mapped_path]
         db_filter.values = original_phams
         db_filter.values = db_filter.build_values(where=conditionals)
 
-        pf_data = get_pf_data(alchemist, db_filter, verbose=verbose) 
-        write_report(pf_data, mapped_path, PF_HEADER,
-                     csv_name=f"FunctionReport",
+        review_data = get_review_data(alchemist, db_filter, verbose=verbose) 
+        write_report(review_data, mapped_path, REVIEW_HEADER,
+                     csv_name=f"ReviewReport",
                      verbose=verbose)
 
-        if g_reports:
-            execute_g_report_export(alchemist, db_filter, mapped_path, 
-                                                    total_g_data=total_g_data,
+        if s_report:
+            summary_data = get_summary_data(alchemist, db_filter)
+            write_summary_report(alchemist, summary_data, mapped_path,
                                                     verbose=verbose)
 
-        if s_report:
-            execute_s_report_export(alchemist, db_filter, conditionals, 
-                                                    mapped_path,
-                                                    verbose=verbose)
+        if gr_reports or psr_reports:
+            execute_pham_report_export(alchemist, db_filter, mapped_path, 
+                                                gr_reports=gr_reports,
+                                                psr_reports=psr_reports,
+                                                total_gr_data=total_gr_data,
+                                                total_psr_data=total_psr_data,
+                                                verbose=verbose)
                
-def execute_g_report_export(alchemist, db_filter, export_path, total_g_data={},
-                                                         verbose=False):
+def execute_pham_report_export(alchemist, db_filter, export_path, 
+                                        gr_reports=False, total_gr_data={},
+                                        psr_reports=False, total_psr_data={},
+                                                             verbose=False):
     """Executes export of gene data for a reviewed pham.
 
     :param alchemist: A connected and fully built AlchemyHandler object.
     :type alchemist: AlchemyHandler
     :param export_path: Path to a valid dir for new file creation.
     :type export_path: Path
-    :param total_g_data: Total data extracted for gene reports.
-    :type total_g_data: dict
+    :param total_gr_data: Total data extracted for gene reports.
+    :type total_gr_data: dict
     :param verbose: A boolean value to toggle progress print statements.
     :type verbose: bool
     """
     phams = db_filter.values
 
-    pg_path = export_path.joinpath("GeneReports")
-    pg_path.mkdir()
+    pham_report_path = export_path.joinpath("PhamReports")
+    pham_report_path.mkdir()
 
     for pham in phams:
+        pham_path = pham_report_path.joinpath(str(pham))
+        pham_path.mkdir()
+
         db_filter.values = [pham]
 
-        try:
-            g_data = total_g_data[pham]
-        except:
-            g_data = get_g_data(alchemist, db_filter, pham, 
-                                                        verbose=verbose)
-            total_g_data[pham] = g_data
+        if gr_reports:
+            try:
+                gr_data = total_gr_data[pham]
+            except:
+                gr_data = get_gr_data(alchemist, db_filter, verbose=verbose)
+                total_gr_data[pham] = gr_data
 
-        write_report(g_data, pg_path, PG_HEADER,
-                     csv_name=f"{pham}_GeneReport",
-                     verbose=verbose)
+            write_report(gr_data, pham_path, GR_HEADER,
+                         csv_name=f"{pham}_GeneReport",
+                         verbose=verbose)
+        if psr_reports:
+            try:
+                psr_data = total_psr_data[pham]
+            except:
+                psr_data = get_psr_data(alchemist, db_filter, verbose=verbose) 
+                total_psr_data[pham] = psr_data
 
-    db_filter.values = phams
-
-def execute_s_report_export(alchemist, db_filter, conditionals, export_path, 
-                                                    verbose=False):
-    """Executes export of summary data for all reviewed phams.
-
-    :param alchemist: A connected and fully build
-    :param alchemist: A connected and fully built AlchemyHandler object.
-    :type alchemist: AlchemyHandler
-    :param export_path: A path to a valid dir for new file creation.
-    :type export_path: Path
-    :param verbose: A boolean value to toggle progress print statements.
-    :type verbose: bool
-    """
-    phams = db_filter.values
-
-    if verbose:
-        print(f"Retrieving SummaryReport data...")
-    phages_histogram = {}
- 
-    for pham in phams:
-        db_filter.values = [pham]
-        phages = db_filter.build_values(column="phage.PhageID",
-                                        where=conditionals)
-
-        increment_histogram(phages, phages_histogram)
-
-    db_filter.values = phams
-    db_filter.transpose("phage.PhageID", set_values=True)
-    db_filter.sort("phage.DateLastModified")
-
-    submitted_sorted_phages = db_filter.values
-    submitted_sorted_phages.reverse()
-    last_submitted_phages = chunk_list(submitted_sorted_phages, 5)[0]
-
-    occurance_sorted_phages = sort_histogram_keys(phages_histogram)
-    top_occuring_phages = chunk_list(occurance_sorted_phages, 5)[0]
-
-    version_data = mysqldb_basic.get_first_row_data(alchemist.engine, "version")
-
-    if verbose:
-        print(f"Writing SummaryReport.txt in {export_path.name}")
-
-    s_path = export_path.joinpath("SummaryReport.txt")
-    s_file = open(s_path, "w")
-
-    s_file.write(f"Phams reviewed on: {time.strftime('%d-%m-%Y')}\n")
-    s_file.write(f"Database reviewed: {alchemist.database}\n")
-    s_file.write(f"Schema version: {version_data['SchemaVersion']} "
-                 f"Database version: {version_data['Version']}\n\n") 
-    s_file.write(f"Phams reviewed using the following base conditionals:\n")
-    s_file.write(f"    {BASE_CONDITIONALS}\n")
-
-    s_file.write(f"\n\n")
-    s_file.write(f"Most occuring phages: {', '.join(top_occuring_phages)}\n")
-    s_file.write(f"Phages recently submitted: {', '.join(last_submitted_phages)}\n")
-    s_file.close()
-
-    db_filter.values = phams
-    db_filter.key = "pham.PhamID"
+            write_pham_summary_report(psr_data, pham_path, verbose=verbose)
 
 def review_phams(db_filter, verbose=False):
     """Finds and stores phams with discrepant function calls in a Filter.
@@ -402,10 +368,9 @@ def review_phams(db_filter, verbose=False):
 
     db_filter.values = reviewed_phams
 
-def write_report(data, export_path, header, csv_name="PhamReport",
+def write_report(data, export_path, header, csv_name="Report",
                                             verbose=False):
     """Outputs a csv file
-
     """
     if not export_path.is_dir():
         print("Passed in path is not a directory.")
@@ -417,51 +382,105 @@ def write_report(data, export_path, header, csv_name="PhamReport",
 
     basic.export_data_dict(data, file_path, header, include_headers=True)
 
+def write_summary_report(alchemist, summary_data, export_path, verbose=False): 
+    if verbose:
+        print(f"Writing SummaryReport.txt in {export_path.name}")
+
+    s_path = export_path.joinpath("SummaryReport.txt")
+    s_file = open(s_path, "w")
+
+    version_data = summary_data["version_data"]
+    recurring_phages = summary_data["recurring_phages"]
+    recent_phages = summary_data["recent_phages"]
+    
+    s_file.write(f"Phams reviewed on: {time.strftime('%d-%m-%Y')}\n")
+    s_file.write(f"Database reviewed: {alchemist.database}\n")
+    s_file.write(f"Schema version: {version_data['SchemaVersion']} "
+                 f"Database version: {version_data['Version']}\n\n") 
+    s_file.write(f"Phams reviewed using the following base conditionals:\n")
+    s_file.write(f"    {BASE_CONDITIONALS}\n")
+
+    s_file.write(f"\n\n")
+    s_file.write(f"Most occuring phages: {', '.join(recurring_phages)}\n")
+    s_file.write(f"Phages recently submitted: {', '.join(recent_phages)}\n")
+    s_file.close()
+
+def write_pham_summary_report(psr_data, pham_path, verbose=False):
+    pass
+
 #-----------------------------------------------------------------------------
 #REVIEW-SPECIFIC HELPER FUNCTIONS
 
-def get_pf_data(alchemist, db_filter, verbose=False):
+def get_review_data(alchemist, db_filter, verbose=False):
     """
     """
     if verbose:
         print("Retrieving data for phams...")
      
-    pf_columns = get_pf_data_columns(alchemist) 
-    row_dicts = db_filter.retrieve(pf_columns)
+    review_columns = get_review_data_columns(alchemist) 
+    row_dicts = db_filter.retrieve(review_columns)
 
-    pf_data = []
+    review_data = []
     for pham in row_dicts.keys():
         if verbose:
             print(f"...Processing data for pham {pham}...")
         row_dict = row_dicts[pham]
 
-        format_pf_data(row_dict, pham)
-        pf_data.append(row_dict)
+        format_review_data(row_dict, pham)
+        review_data.append(row_dict)
 
-    return pf_data
+    return review_data
 
-def get_g_data(alchemist, db_filter, pham, verbose=False):  
+def get_summary_data(alchemist, db_filter, verbose=False):
+    phams = db_filter.values
+    phages_histogram = {}
+
+    phages_data = db_filter.retrieve("phage.PhageID", filter=True)
+
+    db_filter.values = phams
+    db_filter.transpose("phage.PhageID", set_values=True)
+    db_filter.sort("phage.DateLastModified")
+
+    version_data = mysqldb_basic.get_first_row_data(alchemist.engine, "version")
+
+    summary_data = {}
+    summary_data["recent_phages"] = db_filter.values
+    summary_data["recurring_phages"] = phages_data
+    summary_data["version_data"] = version_data
+    
+    format_summary_data(summary_data)
+
+    db_filter.values = phams
+    db_filter.key = "gene.PhamID"
+    return summary_data
+
+def get_gr_data(alchemist, db_filter, verbose=False):  
+    pham = db_filter.values[0]
     if verbose:
         print(f"Retrieving genes in pham {pham}...")
     db_filter.transpose("gene.GeneID", set_values=True) 
    
-    pg_columns = get_g_data_columns(alchemist) 
+    pg_columns = get_gr_data_columns(alchemist) 
     row_dicts = db_filter.retrieve(pg_columns)
 
-    g_data = []
+    gr_data = []
     for gene in row_dicts.keys():
         if verbose:
             print(f"...Processing data for gene {gene}...")
 
         row_dict = row_dicts[gene]
 
-        format_g_data(row_dict, gene)
-        g_data.append(row_dict)
+        format_gr_data(row_dict, gene)
+        gr_data.append(row_dict)
 
+    db_filter.values = [pham]
     db_filter.key = "gene.PhamID"
-    return g_data 
+    return gr_data 
 
-def format_pf_data(row_dict, pham):
+def get_pham_summary_data(alchemist, db_filter, verbose=False):
+    pass
+
+def format_review_data(row_dict, pham):
     """Function to format function report dictionary keys.
     
     :param row_dict: Data dictionary for a function report.
@@ -484,7 +503,25 @@ def format_pf_data(row_dict, pham):
 
     row_dict["Functional Calls"] = ";".join(notes)
 
-def format_g_data(row_dict, gene):
+def format_summary_data(summary_data):
+    recent_phages = summary_data["recent_phages"]
+    recent_phages.reverse()
+    recent_phages = chunk_list(recent_phages, 5)[0]
+    summary_data["recent_phages"] = recent_phages
+
+    phages_data = summary_data["recurring_phages"]
+    phages_histogram = {}
+    for pham in phages_data.keys():
+        increment_histogram(phages_data[pham]["PhageID"], phages_histogram)
+
+    recurring_phages = sort_histogram_keys(phages_histogram)
+    recurring_phages = chunk_list(recurring_phages, 5)[0]
+    for i in range(len(recurring_phages)):
+        recurring_phages[i] = "".join([recurring_phages[i], 
+                            f"({str(phages_histogram[recurring_phages[i]])})"])
+    summary_data["recurring_phages"] = recurring_phages
+
+def format_gr_data(row_dict, gene):
     """Function to format gene report dictionary keys.
 
     :param row_dict: Data dictionary for a gene report.
@@ -505,20 +542,24 @@ def format_g_data(row_dict, gene):
 
     row_dict["Functional Call"] = note
 
-def get_pf_data_columns(alchemist):
+def format_pham_summary_data(summary_data):
+    pass
+
+def get_review_data_columns(alchemist):
     """Gets labelled columns for pham function data retrieval.
     
     :returns: List of labelled columns for function data retrieval.
     :rtype: list[Column]
     """
-    pf_columns = []
+    review_columns = []
 
-    for column_name in PF_DATA_COLUMNS:
-        pf_columns.append(querying.get_column(alchemist.metadata, column_name))
+    for column_name in REVIEW_DATA_COLUMNS:
+        review_columns.append(querying.get_column(alchemist.metadata, 
+                                                                  column_name))
 
-    return pf_columns
+    return review_columns
 
-def get_g_data_columns(alchemist):
+def get_gr_data_columns(alchemist):
     """Gets labelled columns for pham gene data retrieval.
 
     :returns: List of labelled columns for gene data retrieval.
@@ -526,7 +567,7 @@ def get_g_data_columns(alchemist):
     """
     pg_columns = []
 
-    for column_name in PG_DATA_COLUMNS:
+    for column_name in GR_DATA_COLUMNS:
         pg_columns.append(querying.get_column(alchemist.metadata, column_name))
 
     return pg_columns 

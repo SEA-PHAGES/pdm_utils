@@ -49,6 +49,8 @@ class TestMain(unittest.TestCase):
                                         return_value=self.mock_summary_report)
         type(self.args).verbose = PropertyMock(
                                         return_value=self.mock_verbose)
+        type(self.args).all_reports = PropertyMock(
+                                        return_value=False)
 
     @patch("pdm_utils.pipelines.review.execute_review")
     @patch("pdm_utils.pipelines.review.parse_review")
@@ -72,7 +74,7 @@ class TestMain(unittest.TestCase):
                             self.mock_folder_name, review=self.mock_review,
                             values=self.mock_values, filters=self.mock_filters,
                             groups=self.mock_groups, sort=self.mock_sort, 
-                            g_reports=self.mock_gene_report, 
+                            gr_reports=self.mock_gene_report, 
                             s_report=self.mock_summary_report,
                             verbose=self.mock_verbose)
 
