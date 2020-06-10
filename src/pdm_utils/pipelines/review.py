@@ -2,6 +2,7 @@
 
 import argparse
 import sys
+import textwrap
 import time
 from pathlib import Path
 
@@ -11,6 +12,7 @@ from sqlalchemy.sql import func
 
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.classes.filter import Filter
+from pdm_utils.functions import mysqldb
 from pdm_utils.functions import mysqldb_basic
 from pdm_utils.functions import parsing
 from pdm_utils.functions import querying
@@ -38,7 +40,7 @@ GR_HEADER = ["Gene",
              "Functional Call",
              "Translation"]
 
-REVIEW_DATA_COLUMNS = ["gene.GeneID", "phage.Cluster", "gene.Notes"]
+REVIEW_DATA_COLUMNS = ["gene.GeneID", "phage.Cluster"]
 GR_DATA_COLUMNS = ["phage.PhageID", "gene.Name", "phage.Cluster", 
                    "phage.Subcluster", "gene.Notes", "gene.Translation"]
 
@@ -65,15 +67,17 @@ def main(unparsed_args_list):
     if not args.all_reports:
         gr_reports = args.gene_reports
         s_report = args.summary_report
+        psr_reports = args.pham_summary_report
     else:
         gr_reports = True
         s_report = True
+        psr_reports = True
 
     execute_review(alchemist, args.folder_path, args.folder_name,
                    review=args.review, values=values,
                    filters=args.filters, groups=args.groups, sort=args.sort,
-                   s_report=s_report, gr_reports=gr_reports,
-                   verbose=args.verbose)
+                   s_report=s_report, gr_reports=gr_reports, 
+                   psr_reports=psr_reports, verbose=args.verbose)
 
 def parse_review(unparsed_args_list):
     """Parses review arguments and stores them with an argparse object.
@@ -110,6 +114,10 @@ def parse_review(unparsed_args_list):
     SUMMARY_REPORT_HELP = """
         Export option to toggle export of supplemental information about
         the profile of the phages selected.
+        """
+    PHAM_SUMMARY_REPORT_HELP = """
+        Export option to toggle export of supplemental information about
+        the profile of a pham selected for review.
         """
 
     REVIEW_HELP = """
@@ -161,6 +169,8 @@ def parse_review(unparsed_args_list):
                                                help=GENE_REPORTS_HELP)
     parser.add_argument("-sr", "--summary_report", action="store_true",
                                                help=SUMMARY_REPORT_HELP)
+    parser.add_argument("-psr", "--pham_summary_report", action="store_true",
+                                               help=PHAM_SUMMARY_REPORT_HELP)
 
     parser.add_argument("-r", "--review", action="store_false",
                                                help=REVIEW_HELP)
@@ -405,9 +415,28 @@ def write_summary_report(alchemist, summary_data, export_path, verbose=False):
     s_file.write(f"Phages recently submitted: {', '.join(recent_phages)}\n")
     s_file.close()
 
-def write_pham_summary_report(psr_data, pham_path, verbose=False):
-    pass
+def write_pham_summary_report(psr_data, export_path, verbose=False):
+    if verbose:
+        print(f"Writing SummaryReport.txt in {export_path.name}")
 
+    s_path = export_path.joinpath("SummaryReport.txt")
+    s_file = open(s_path, "w")
+
+    s_file.write(f"Pham reviewed {export_path.name}\n\n")
+
+    s_file.write(f"Left adjacent phams:\n")
+    for left_pham in psr_data["left_phams"]:
+        s_file.write(f"{left_pham}\n")
+
+    s_file.write(f"\n")
+    s_file.write(f"Right adjacent phams:\n")
+    for right_pham in psr_data["right_phams"]:
+        s_file.write(f"{right_pham}\n")
+
+    s_file.write(f"\n\n")
+    s_file.write(f"Conserved Database Domains in pham:\n\n")
+    for domain in psr_data["cdd_domains"]:
+        s_file.write(f"{domain}\n\n")
 #-----------------------------------------------------------------------------
 #REVIEW-SPECIFIC HELPER FUNCTIONS
 
@@ -425,6 +454,7 @@ def get_review_data(alchemist, db_filter, verbose=False):
         if verbose:
             print(f"...Processing data for pham {pham}...")
         row_dict = row_dicts[pham]
+        row_dict["Notes"] = mysqldb.get_count_pham_annotations(alchemist, pham)
 
         format_review_data(row_dict, pham)
         review_data.append(row_dict)
@@ -477,8 +507,24 @@ def get_gr_data(alchemist, db_filter, verbose=False):
     db_filter.key = "gene.PhamID"
     return gr_data 
 
-def get_pham_summary_data(alchemist, db_filter, verbose=False):
-    pass
+def get_psr_data(alchemist, db_filter, verbose=False):
+    pham = db_filter.values[0]
+    adjacent_phams = mysqldb.get_adjacent_phams(alchemist, pham)
+    psr_data = {}
+
+    psr_data["left_phams"] = adjacent_phams["left"]
+    psr_data["right_phams"] = adjacent_phams["right"]
+
+    db_filter.values = [pham] 
+    db_filter.transpose("domain.Name", set_values=True)
+    cdd_domains = db_filter.retrieve("domain.Description")
+    psr_data["cdd_domains"] = cdd_domains
+
+    format_psr_data(psr_data)
+
+    db_filter.values = [pham]
+    db_filter.key = "gene.PhamID"
+    return psr_data
 
 def format_review_data(row_dict, pham):
     """Function to format function report dictionary keys.
@@ -496,12 +542,18 @@ def format_review_data(row_dict, pham):
     row_dict["Clusters"] = ";".join([str(cluster) \
                                     for cluster in row_dict.pop("Cluster")])
 
+    count_functional_calls = []
     notes = row_dict.pop("Notes")
-    for index in range(len(notes)):
-        if notes[index] is None or notes[index] == "": 
-            notes[index] = "Hypothetical Protein"
+    for key in notes.keys():
+        if key is None or key == "": 
+            function = "Hypothetical Protein"
+        else: 
+            function = key
 
-    row_dict["Functional Calls"] = ";".join(notes)
+        count_functional_calls.append(
+            "".join([function, f"({str(notes[key])})"]))
+
+    row_dict["Functional Calls"] = ";".join(count_functional_calls)
 
 def format_summary_data(summary_data):
     recent_phages = summary_data["recent_phages"]
@@ -542,8 +594,31 @@ def format_gr_data(row_dict, gene):
 
     row_dict["Functional Call"] = note
 
-def format_pham_summary_data(summary_data):
-    pass
+def format_psr_data(psr_data):
+    left_phams_list = psr_data["left_phams"]
+    left_phams = ", ".join([str(pham) for pham in left_phams_list])
+    left_phams = textwrap.wrap(left_phams, 72)
+    left_phams = "".join(left_phams)
+    left_phams = textwrap.indent(left_phams, "    ")
+    psr_data["left_phams"] = left_phams 
+
+    right_phams_list = psr_data["right_phams"]
+    right_phams = ", ".join([str(pham) for pham in right_phams_list])
+    right_phams = textwrap.wrap(right_phams, 72)
+    right_phams = "".join(right_phams)
+    right_phams = textwrap.indent(left_phams, "    ")
+    psr_data["right_phams"] = right_phams
+
+    cdd_domains_data = psr_data["cdd_domains"]
+    cdd_domains = []
+    for domain in cdd_domains_data.keys():
+        description = cdd_domains_data[domain]["Description"][0]
+        description = textwrap.wrap(description, 72)
+        description = "\n".join(description)
+        description = textwrap.indent(description, "    ")
+        cdd_domain = "".join([domain, "\n", description])
+        cdd_domains.append(cdd_domain)
+    psr_data["cdd_domains"] = cdd_domains
 
 def get_review_data_columns(alchemist):
     """Gets labelled columns for pham function data retrieval.

@@ -944,7 +944,10 @@ def get_adjacent_phams(alchemist, pham):
     left_genes = []
     right_genes = []
     for gene in genes:
-        adjacent_genes = get_adjacent_genes(alchemist, gene)
+        try:
+            adjacent_genes = get_adjacent_genes(alchemist, gene)
+        except:
+            continue
 
         left = adjacent_genes[0]
         right = adjacent_genes[1]
