@@ -67,7 +67,7 @@ def main(unparsed_args_list):
     if not args.all_reports:
         gr_reports = args.gene_reports
         s_report = args.summary_report
-        psr_reports = args.pham_summary_report
+        psr_reports = args.pham_summary_reports
     else:
         gr_reports = True
         s_report = True
@@ -169,7 +169,7 @@ def parse_review(unparsed_args_list):
                                                help=GENE_REPORTS_HELP)
     parser.add_argument("-sr", "--summary_report", action="store_true",
                                                help=SUMMARY_REPORT_HELP)
-    parser.add_argument("-psr", "--pham_summary_report", action="store_true",
+    parser.add_argument("-psr", "--pham_summary_reports", action="store_true",
                                                help=PHAM_SUMMARY_REPORT_HELP)
 
     parser.add_argument("-r", "--review", action="store_false",
@@ -422,16 +422,14 @@ def write_pham_summary_report(psr_data, export_path, verbose=False):
     s_path = export_path.joinpath("SummaryReport.txt")
     s_file = open(s_path, "w")
 
-    s_file.write(f"Pham reviewed {export_path.name}\n\n")
+    s_file.write(f"Pham reviewed: {export_path.name}\n\n")
 
     s_file.write(f"Left adjacent phams:\n")
-    for left_pham in psr_data["left_phams"]:
-        s_file.write(f"{left_pham}\n")
+    s_file.write(f"{psr_data['left_phams']}\n")
 
     s_file.write(f"\n")
     s_file.write(f"Right adjacent phams:\n")
-    for right_pham in psr_data["right_phams"]:
-        s_file.write(f"{right_pham}\n")
+    s_file.write(f"{psr_data['right_phams']}\n")
 
     s_file.write(f"\n\n")
     s_file.write(f"Conserved Database Domains in pham:\n\n")
@@ -598,15 +596,15 @@ def format_psr_data(psr_data):
     left_phams_list = psr_data["left_phams"]
     left_phams = ", ".join([str(pham) for pham in left_phams_list])
     left_phams = textwrap.wrap(left_phams, 72)
-    left_phams = "".join(left_phams)
+    left_phams = "\n".join(left_phams)
     left_phams = textwrap.indent(left_phams, "    ")
     psr_data["left_phams"] = left_phams 
 
     right_phams_list = psr_data["right_phams"]
     right_phams = ", ".join([str(pham) for pham in right_phams_list])
     right_phams = textwrap.wrap(right_phams, 72)
-    right_phams = "".join(right_phams)
-    right_phams = textwrap.indent(left_phams, "    ")
+    right_phams = "\n".join(right_phams)
+    right_phams = textwrap.indent(right_phams, "    ")
     psr_data["right_phams"] = right_phams
 
     cdd_domains_data = psr_data["cdd_domains"]

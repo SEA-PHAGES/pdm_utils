@@ -508,43 +508,15 @@ class TestMysqldbFunctions3(unittest.TestCase):
     @patch("pdm_utils.functions.mysqldb.select")
     def test_get_relative_gene_1(self, mock_select):
         """Verify select() function calls of get_relative_gene()."""
-        self.mock_execute_obj.first.return_value = {"Name"    : "2", 
-                                                    "PhageID" : "Trixie"}
-
         mysqldb.get_relative_gene(self.mock_alchemist, "Trixie_CDS_2", -1)
 
-        mock_select.assert_any_call([self.name_column, self.phageid_column])
         mock_select.assert_any_call([self.geneid_column])
-    
+   
     @patch("pdm_utils.functions.mysqldb.select")
     def test_get_relative_gene_2(self, mock_select):
-        """Verify get_relative_gene() returns the scalar result."""
-        self.mock_execute_obj.first.return_value = {"Name"    : "2", 
-                                                    "PhageID" : "Trixie"}
-        self.mock_execute_obj.scalar.return_value = "Trixie_CDS_1"
-
-        result = mysqldb.get_relative_gene(
-                                        self.mock_alchemist, "Trixie_CDS_2", -1)
-
-        self.assertEqual(result, "Trixie_CDS_1")
-
-    @patch("pdm_utils.functions.mysqldb.select")
-    def test_get_relative_gene_3(self, mock_select):
-        """Verify get_relative_gene() raises ValueError from bad name"""
-        self.mock_execute_obj.first.return_value = {"Name"    : "2.1", 
-                                                    "PhageID" : "Trixie"}
-
+        """Verify get_relative_gene() raises ValueError at bad GeneID input."""
         with self.assertRaises(ValueError):
-            result = mysqldb.get_relative_gene(
-                                        self.mock_alchemist, "Trixie_CDS_2", -1)
-
-    @patch("pdm_utils.functions.mysqldb.select")
-    def test_get_relative_gene_4(self, mock_select):
-        self.mock_execute_obj.first.return_value = None
-
-        with self.assertRaises(ValueError):
-            result = mysqldb.get_relative_gene(
-                                        self.mock_alchemist, "Trixie_CDS_2", -1)
+            mysqldb.get_relative_gene(self.mock_alchemist, "BAD_GENE", -1)
 
     @patch("pdm_utils.functions.mysqldb.get_relative_gene")
     def test_get_adjacent_genes_1(self, mock_get_relative_gene):

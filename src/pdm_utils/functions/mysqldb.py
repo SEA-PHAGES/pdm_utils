@@ -3,6 +3,7 @@
 import getpass
 import subprocess
 import sys
+import re
 
 from Bio.Alphabet import IUPAC
 from Bio.Seq import Seq
@@ -894,35 +895,23 @@ def execute_transaction(engine, statement_list=[]):
     #         r1 = connection.execute(statement)
 
 def get_relative_gene(alchemist, geneid, pos):
-    gene_obj = alchemist.metadata.tables["gene"]
+    gene_obj = alchemist.metadata.tables["gene"] 
 
     geneid_obj = gene_obj.c.GeneID
-    phageid_obj = gene_obj.c.PhageID
-    name_obj = gene_obj.c.Name
-   
-    name_query = select([name_obj, phageid_obj]).where(geneid_obj == geneid)
-    results = alchemist.engine.execute(name_query).first()
 
-    if results is None:
-        raise ValueError(f"{geneid} is not in the MySQL database."
-                          "Review/revise the information in the database.")
+    geneid_format = re.compile("\w+_CDS_[0-9]+")
+    if not re.match(geneid_format, geneid) is None:
+        parsed_geneid = re.split("_", geneid)
+    else:
+        raise ValueError("Passed GeneID is not of the proper GeneID format")
 
-    results = dict(results)
-    gene_pos = results['Name']
-    phageid = results['PhageID']
+    gene_num = int(parsed_geneid[2])
+    rel_gene_pos = gene_num + pos
 
-    try:
-        gene_pos = int(gene_pos)
-    except:
-        raise ValueError(f"Retrieved {geneid} name/position is invalid."
-                          "Review/revise the information in the database.")
-
-    rel_gene_pos = gene_pos + pos
-
-    geneid_query = select([geneid_obj]).where(and_(*[
-                        (name_obj == rel_gene_pos), (phageid_obj == phageid)]))
-
+    rel_geneid = "_".join(parsed_geneid[:2] + [str(rel_gene_pos)])
+    geneid_query = select([geneid_obj]).where(geneid_obj == rel_geneid)
     rel_geneid = alchemist.engine.execute(geneid_query).scalar()
+
     return rel_geneid
 
 def get_adjacent_genes(alchemist, gene):
