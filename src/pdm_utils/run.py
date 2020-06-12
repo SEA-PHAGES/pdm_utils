@@ -22,7 +22,7 @@ from pdm_utils.pipelines import update_field
 
 VALID_PIPELINES = {
     "compare", "convert", "export", "find_domains", "freeze", "get_data",
-    "get_db", "get_gb_records", "import", "phamerate", "push", "resubmit",
+    "get_db", "get_gb_records", "import", "phamerate", "push", "revise",
     "review", "update"}
 
 def main(unparsed_args):
