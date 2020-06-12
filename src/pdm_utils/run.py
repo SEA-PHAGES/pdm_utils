@@ -53,8 +53,8 @@ def main(unparsed_args):
         get_gb_records.main(unparsed_args)
     elif args.pipeline == "convert":
         convert_db.main(unparsed_args)
-    elif args.pipeline == "resubmit":
-        resubmit.main(unparsed_args)
+    elif args.pipeline == "revise":
+        revise.main(unparsed_args)
     elif args.pipeline == "review":
         review.main(unparsed_args)
     else:
