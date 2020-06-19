@@ -13,6 +13,7 @@ from pdm_utils.functions import basic
 from pdm_utils.functions import querying
 from pdm_utils.functions import mysqldb_basic
 from pdm_utils.pipelines import export_db
+from pdm_utils.pipelines.export_db import apply_filters, build_groups_map
 
 #-----------------------------------------------------------------------------
 #GLOBAL VARIABLES
@@ -143,32 +144,23 @@ def execute_revise(alchemist, revisions_data_dicts, folder_path, folder_name,
     :param verbose: A boolean value to toggle progress print statements.
     :type verbose: bool
     """
-    db_filter = Filter(alchemist=alchemist)
-    db_filter.key = "gene.PhamID"
-    db_filter.add(BASE_CONDITIONALS)
-
-    if filters != "":
-        try:
-            db_filter.add(filters)
-        except:
-            print("Please check your syntax for the conditional string:\n"
-                 f"{filters}")
-    
-    revise_columns = db_filter.get_columns(RESUBMIT_COLUMNS)
-    
     phams = []
     for data_dict in revisions_data_dicts:
         phams.append(data_dict["Pham"])
 
-    db_filter.values = phams
+    db_filter = apply_filters(alchemist, "gene.PhamID", filters, values=phams,
+                                                            verbose=verbose)
+    db_filter.add(BASE_CONDITIONALS)
     
+    revise_columns = db_filter.get_columns(RESUBMIT_COLUMNS)
+     
     if verbose:
         print("Creating export folder...")
     export_path = folder_path.joinpath(folder_name)
     export_path = basic.make_new_dir(folder_path, export_path, attempt=50)
 
     conditionals_map = {}
-    export_db.build_groups_map(db_filter, export_path, conditionals_map,
+    build_groups_map(db_filter, export_path, conditionals_map,
                                                          groups=groups,
                                                          verbose=verbose)
 
@@ -199,6 +191,8 @@ def execute_revise(alchemist, revisions_data_dicts, folder_path, folder_name,
                                                     values=[data_dict["Pham"]])
 
             for result in results:
+                if (not result["Accession"]) or (not result["LocusTag"]):
+                    continue
                 format_revise_data(result, data_dict["Final Call"]) 
                 export_dicts.append(result)
 
