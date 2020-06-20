@@ -8,9 +8,6 @@ import re
 from Bio.Alphabet import IUPAC
 from Bio.Seq import Seq
 import sqlalchemy
-from sqlalchemy import and_
-from sqlalchemy import select
-from sqlalchemy.sql import func
 
 from pdm_utils.classes import cds, trna, tmrna
 from pdm_utils.classes import genome
@@ -18,8 +15,6 @@ from pdm_utils.classes import genomepair
 from pdm_utils.constants import constants
 from pdm_utils.functions import basic
 from pdm_utils.functions import mysqldb_basic
-from pdm_utils.functions import parsing
-from pdm_utils.functions import querying
 
 def parse_phage_table_data(data_dict, trans_table=11, gnm_type=""):
     """Parse a MySQL database dictionary to create a Genome object.
@@ -894,98 +889,3 @@ def execute_transaction(engine, statement_list=[]):
     #     for statement in statement_list:
     #         r1 = connection.execute(statement)
 
-def get_relative_gene(alchemist, geneid, pos):
-    gene_obj = alchemist.metadata.tables["gene"] 
-
-    geneid_obj = gene_obj.c.GeneID
-
-    geneid_format = re.compile("\w+_CDS_[0-9]+")
-    if not re.match(geneid_format, geneid) is None:
-        parsed_geneid = re.split("_", geneid)
-    else:
-        raise ValueError("Passed GeneID is not of the proper GeneID format")
-
-    gene_num = int(parsed_geneid[2])
-    rel_gene_pos = gene_num + pos
-
-    rel_geneid = "_".join(parsed_geneid[:2] + [str(rel_gene_pos)])
-    geneid_query = select([geneid_obj]).where(geneid_obj == rel_geneid)
-    rel_geneid = alchemist.engine.execute(geneid_query).scalar()
-
-    return rel_geneid
-
-def get_adjacent_genes(alchemist, gene):
-    left = get_relative_gene(alchemist, gene, -1)
-    right = get_relative_gene(alchemist, gene, 1)
-
-    return (left, right)
-
-def get_adjacent_phams(alchemist, pham):
-    gene_obj = alchemist.metadata.tables["gene"]
-
-    geneid_obj = gene_obj.c.GeneID
-    phamid_obj = gene_obj.c.PhamID
-
-    genes_query = select([geneid_obj]).where(phamid_obj == pham).distinct()
-    
-    genes = querying.first_column(alchemist.engine, genes_query)
-
-    left_genes = []
-    right_genes = []
-    for gene in genes:
-        try:
-            adjacent_genes = get_adjacent_genes(alchemist, gene)
-        except:
-            continue
-
-        left = adjacent_genes[0]
-        right = adjacent_genes[1]
-
-        if not left is None:
-            left_genes.append(left)
-        if not right is None:
-            right_genes.append(right) 
-
-    adjacent_phams_dict = {}
-   
-    phams_query = select([phamid_obj]).distinct()
-    adjacent_phams_dict["left"] = querying.first_column(
-                                                    alchemist.engine, 
-                                                    phams_query, 
-                                                    in_column=geneid_obj, 
-                                                    values=left_genes)
-
-    adjacent_phams_dict["right"] = querying.first_column(
-                                                    alchemist.engine, 
-                                                    phams_query,
-                                                    in_column=geneid_obj,
-                                                    values=right_genes)
-
-    return adjacent_phams_dict
-
-def get_count_pham_annotations(alchemist, pham, incounts=None):
-    gene_obj = alchemist.metadata.tables["gene"]  
-
-    geneid_obj = gene_obj.c.GeneID
-    phamid_obj = gene_obj.c.PhamID
-    notes_obj = gene_obj.c.Notes
-
-    annotation_query = select([notes_obj]).where(phamid_obj == pham).distinct()
-    annotations = querying.first_column(alchemist.engine, annotation_query)
-
-    annotation_counts = {}
-    if not incounts is None:
-        annotation_counts = incounts
-
-    for byte_annotation in annotations:
-        annotation = None
-        if not byte_annotation is None:
-            annotation = byte_annotation.decode("utf-8")
-
-        count_query = select([func.count(geneid_obj)]).where(and_(*[
-                        (notes_obj == byte_annotation),(phamid_obj == pham)]))
-        count = alchemist.engine.execute(count_query).scalar()
-
-        annotation_counts[annotation] = count
-
-    return annotation_counts
