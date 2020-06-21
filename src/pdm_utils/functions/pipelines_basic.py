@@ -77,7 +77,8 @@ def build_filter(alchemist, key, filters, values=None,
     :returns: filter-Loaded Filter object.
     :rtype: Filter
     """
-    db_filter = Filter(alchemist=alchemist, key=key)
+    db_filter = Filter(alchemist=alchemist)
+    db_filter.key = key
     db_filter.values = values
 
     if filters != "":
