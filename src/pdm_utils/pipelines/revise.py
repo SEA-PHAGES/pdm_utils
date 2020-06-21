@@ -7,13 +7,10 @@ from pathlib import Path
 
 from sqlalchemy import select
 
-from pdm_utils.classes.alchemyhandler import AlchemyHandler
-from pdm_utils.classes.filter import Filter
 from pdm_utils.functions import basic
+from pdm_utils.functions import pipelines_basic
 from pdm_utils.functions import querying
 from pdm_utils.functions import mysqldb_basic
-from pdm_utils.pipelines import export_db
-from pdm_utils.pipelines.export_db import apply_filters, build_groups_map
 
 #-----------------------------------------------------------------------------
 #GLOBAL VARIABLES
@@ -42,9 +39,8 @@ def main(unparsed_args_list):
     :type unparsed_args_list: list[str]
     """
     args = parse_revise(unparsed_args_list)
-   
-    alchemist = AlchemyHandler(database=args.database)
-    alchemist.connect(ask_database=True, pipeline=True)
+  
+    alchemist = pipelines_basic.build_alchemist(args.database)
 
     revisions_data_dicts = basic.retrieve_data_dict(args.revisions_file)
 
@@ -101,12 +97,12 @@ def parse_revise(unparsed_args_list):
 
     parser.add_argument("database", type=str,  help=DATABASE_HELP)
     parser.add_argument("revisions_file", help=REVISIONS_FILE_HELP,
-                                    type=export_db.convert_file_path)
+                                    type=pipelines_basic.convert_file_path)
 
     parser.add_argument("-o", "--folder_name", 
                                     type=str,  help=FOLDER_NAME_HELP)
     parser.add_argument("-p", "--folder_path", 
-                                    type=export_db.convert_dir_path,
+                                    type=pipelines_basic.convert_dir_path,
                                                help=FOLDER_PATH_HELP)
     parser.add_argument("-v", "--verbose", action="store_true", 
                                                help=VERBOSE_HELP)
@@ -148,7 +144,8 @@ def execute_revise(alchemist, revisions_data_dicts, folder_path, folder_name,
     for data_dict in revisions_data_dicts:
         phams.append(data_dict["Pham"])
 
-    db_filter = apply_filters(alchemist, "gene.PhamID", filters, values=phams,
+    db_filter = pipelines_basic.build_filter(alchemist, "gene.PhamID", filters, 
+                                                            values=phams,
                                                             verbose=verbose)
     db_filter.add(BASE_CONDITIONALS)
     
@@ -160,7 +157,7 @@ def execute_revise(alchemist, revisions_data_dicts, folder_path, folder_name,
     export_path = basic.make_new_dir(folder_path, export_path, attempt=50)
 
     conditionals_map = {}
-    build_groups_map(db_filter, export_path, conditionals_map,
+    pipelines_basic.build_groups_map(db_filter, export_path, conditionals_map,
                                                          groups=groups,
                                                          verbose=verbose)
 

@@ -57,20 +57,20 @@ class TestMain(unittest.TestCase):
                                         return_value=False)
     @patch("pdm_utils.pipelines.review.execute_review")
     @patch("pdm_utils.pipelines.review.parse_review")
-    @patch("pdm_utils.pipelines.review.AlchemyHandler")
-    @patch("pdm_utils.pipelines.review.export_db.parse_value_input")
-    def test_main_1(self, parse_value_input_mock, alchemyhandler_mock, 
+    @patch("pdm_utils.pipelines.review.pipelines_basic.build_alchemist")
+    @patch("pdm_utils.pipelines.review.pipelines_basic.parse_value_input")
+    def test_main_1(self, parse_value_input_mock, build_alchemist_mock, 
                                         parse_review_mock, execute_review_mock):
         """Verify the function structure of main().
         """
         parse_review_mock.return_value = self.args
-        alchemyhandler_mock.return_value = self.mock_alchemist
+        build_alchemist_mock.return_value = self.mock_alchemist
         parse_value_input_mock.return_value = self.mock_values
 
         review.main(self.test_args_list)     
 
         parse_review_mock.assert_called_with(self.test_args_list)
-        alchemyhandler_mock.assert_called_with(database=self.mock_database)
+        build_alchemist_mock.assert_called_with(self.mock_database)
         parse_value_input_mock.assert_called_with(self.mock_input)
         execute_review_mock.assert_called_with(
                             self.mock_alchemist, self.mock_folder_path, 

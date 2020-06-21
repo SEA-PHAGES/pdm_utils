@@ -84,11 +84,11 @@ class TestExportMain(unittest.TestCase):
                             PropertyMock(return_value=self.mock_concatenate)
         
     @patch("pdm_utils.pipelines.export_db.execute_export")
-    @patch("pdm_utils.pipelines.export_db.parse_value_input")
+    @patch("pdm_utils.pipelines.export_db.pipelines_basic.parse_value_input")
     @patch("pdm_utils.pipelines.export_db.mysqldb.check_schema_compatibility")
-    @patch("pdm_utils.pipelines.export_db.AlchemyHandler")
+    @patch("pdm_utils.pipelines.export_db.pipelines_basic.build_alchemist")
     @patch("pdm_utils.pipelines.export_db.parse_export")
-    def test_main_1(self, parse_export_mock, alchemyhandler_mock,
+    def test_main_1(self, parse_export_mock, build_alchemist_mock,
                                              check_schema_compatibility_mock,
                                              parse_value_input_mock,
                                              execute_export_mock):
@@ -96,12 +96,12 @@ class TestExportMain(unittest.TestCase):
         """ 
         parse_export_mock.return_value = self.mock_args
         parse_value_input_mock.return_value = self.mock_values
-        alchemyhandler_mock.return_value = self.mock_alchemist
+        build_alchemist_mock.return_value = self.mock_alchemist
         
         export_db.main(["cmd", "args"])
 
         parse_export_mock.assert_called_with(["cmd", "args"])
-        alchemyhandler_mock.assert_called_with(database=self.mock_database)
+        build_alchemist_mock.assert_called_with(self.mock_database)
         check_schema_compatibility_mock.assert_called_with(self.mock_engine,
                                                            "export")
         parse_value_input_mock.assert_called_with(self.mock_input)

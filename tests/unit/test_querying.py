@@ -891,7 +891,7 @@ class TestExecute(unittest.TestCase):
                                           self.mock_in_column,
                                           self.values)
 
-    @patch("pdm_utils.functions.querying.parsing.convert_to_encoded")
+    @patch("pdm_utils.functions.querying.basic.convert_to_encoded")
     def test_execute_value_subqueries_3(self, convert_to_encoded_mock):
         """Verify execute_value_subqueries() calls convert_to_encoded().
         """
@@ -956,7 +956,7 @@ class TestExecute(unittest.TestCase):
                                           self.mock_in_column,
                                           self.values)
 
-    @patch("pdm_utils.functions.querying.parsing.convert_to_encoded")
+    @patch("pdm_utils.functions.querying.basic.convert_to_encoded")
     def test_first_column_value_subqueries_3(self, convert_to_encoded_mock):
         """Verify first_column_value_subqueries() calls convert_to_encoded().
         """

@@ -5,9 +5,7 @@ import os
 import shutil
 import sys
 import time
-from functools import singledispatch
 from pathlib import Path
-from typing import List, Dict
 
 from Bio import SeqIO
 from Bio.Alphabet import IUPAC
@@ -15,13 +13,12 @@ from Bio.SeqFeature import SeqFeature
 from Bio.SeqRecord import SeqRecord
 from sqlalchemy.sql.elements import Null
 
-from pdm_utils.classes.alchemyhandler import AlchemyHandler
-from pdm_utils.classes.filter import Filter
 from pdm_utils.functions import basic
 from pdm_utils.functions import cartography
 from pdm_utils.functions import flat_files
 from pdm_utils.functions import mysqldb
 from pdm_utils.functions import mysqldb_basic
+from pdm_utils.functions import pipelines_basic
 from pdm_utils.functions import parsing
 from pdm_utils.functions import querying
 
@@ -80,9 +77,7 @@ def main(unparsed_args_list):
     #Returns after printing appropriate error message from parsing/connecting.
     args = parse_export(unparsed_args_list)
 
-    alchemist = AlchemyHandler(database=args.database)
-    alchemist.connect(ask_database=True, pipeline=True)
-    alchemist.build_graph()
+    alchemist = pipelines_basic.build_alchemist(args.database)
 
     # Exporting as a SQL file is not constricted by schema version.
     if args.pipeline != "sql":
@@ -90,7 +85,7 @@ def main(unparsed_args_list):
 
     values = None
     if args.pipeline in FILTERABLE_PIPELINES:
-        values = parse_value_input(args.input)
+        values = pipelines_basic.parse_value_input(args.input)
         if not values:
             values = None
 
@@ -215,7 +210,8 @@ def parse_export(unparsed_args_list):
 
     optional_parser.add_argument("-m", "--folder_name",
                                type=str, help=FOLDER_NAME_HELP)
-    optional_parser.add_argument("-o", "--folder_path", type=convert_dir_path,
+    optional_parser.add_argument("-o", "--folder_path", 
+                               type=pipelines_basic.convert_dir_path,
                                help=FOLDER_PATH_HELP)
     optional_parser.add_argument("-v", "--verbose", action="store_true",
                                help=VERBOSE_HELP)
@@ -228,7 +224,7 @@ def parse_export(unparsed_args_list):
                                 choices=table_choices[initial.pipeline])
 
         optional_parser.add_argument("-if", "--import_file",
-                                type=convert_file_path,
+                                type=pipelines_basic.convert_file_path,
                                 help=IMPORT_FILE_HELP, dest="input",
                                 default=[])
         optional_parser.add_argument("-in", "--import_names", nargs="*",
@@ -319,7 +315,8 @@ def execute_export(alchemist, folder_path, folder_name, pipeline,
                                       sequence_columns=sequence_columns)
 
     if pipeline in FILTERABLE_PIPELINES: 
-        db_filter = apply_filters(alchemist, table, filters, values=values,
+        db_filter = pipelines_basic.build_filter(alchemist, table, filters, 
+                                                             values=values,
                                                              verbose=verbose) 
         if sort:
             if verbose:
@@ -536,56 +533,7 @@ def write_database(alchemist, version, export_path):
     version_path.touch()
     version_path.write_text(f"{version}")
 
-#-----------------------------------------------------------------------------
-#PIPELINE SETUP FUNCTIONS
-#-----------------------------------------------------------------------------
 
-def convert_dir_path(path: str):
-    """Function to convert argparse input to a working directory path.
-
-    :param path: A string to be converted into a Path object.
-    :type path: str
-    :returns: A Path object converted from the inputed string.
-    :rtype: Path
-    """
-    return basic.set_path(Path(path), kind="dir")
-
-def convert_file_path(path: str):
-    """Function to convert argparse input to a working file path.
-
-    :param path: A string to be converted into a Path object.
-    :type path: str
-    :returns: A Path object converted from the inputed string.
-    :rtype: Path
-    """
-    return basic.set_path(Path(path), kind="file")
-
-@singledispatch
-def parse_value_input(value_list_input):
-    """Function to convert values input to a recognized data types.
-
-    :param value_list_input: Values stored in recognized data types.
-    :type value_list_input: list[str]
-    :type value_list_input: Path
-    :returns: List of values to filter database results.
-    :rtype: list[str]
-    """
-
-    print("Value list input for export is of an unexpected type.")
-    sys.exit(1)
-
-@parse_value_input.register(Path)
-def _(value_list_input):
-    value_list = []
-    with open(value_list_input, newline = '') as csv_file:
-        csv_reader = csv.reader(csv_file, delimiter = ",")
-        for name in csv_reader:
-            value_list.append(name[0])
-    return value_list
-
-@parse_value_input.register(list)
-def _(value_list_input):
-    return value_list_input
 
 #-----------------------------------------------------------------------------
 #EXPORT-SPECIFIC HELPER FUNCTIONS
@@ -645,99 +593,6 @@ def get_cds_seqrecords(alchemist, values=[], nucleotide=False, verbose=False):
         seqrecords.append(record)
 
     return seqrecords
-
-def apply_filters(alchemist, table, filters, values=None,
-                                                     verbose=False):
-    """Applies MySQL WHERE clause filters using a Filter.
-
-    :param alchemist: A connected and fully built AlchemyHandler object.
-    :type alchemist: AlchemyHandler
-    :param table: MySQL table name.
-    :type table: str
-    :param filters: A list of lists with filter values, grouped by ORs.
-    :type filters: list[list[str]]
-    :param groups: A list of supported MySQL column names.
-    :type groups: list[str]
-    :returns: filter-Loaded Filter object.
-    :rtype: Filter
-    """
-    db_filter = Filter(alchemist=alchemist, key=table)
-    db_filter.key = table
-    db_filter.values = values
-
-    if filters != "":
-        try:
-            db_filter.add(filters)
-        except:
-            print("Please check your syntax for the conditional string: "
-                 f"{filters}")
-            exit(1)
-
-        db_filter.parenthesize()
-
-    return db_filter
-
-def build_groups_map(db_filter, export_path, conditionals_map, groups=[],
-                                                               verbose=False,
-                                                               previous=None,
-                                                               depth=0):
-    """Recursive function that generates conditionals and maps them to a Path.
-
-    :param db_filter: A connected and fully loaded Filter object.
-    :type db_filter: Filter
-    :param export_path: Path to a dir for new dir creation.
-    :type folder_path: Path
-    :param groups: A list of supported MySQL column names.
-    :type groups: list[str]
-    :param conditionals_map: A mapping between group conditionals and Paths.
-    :type conditionals_map: dict{Path:list}\
-    :param verbose: A boolean value to toggle progress print statements.
-    :type verbose: bool
-    :param previous: Value set by function to provide info for print statements.
-    :type previous: str
-    :param depth: Value set by function to provide info for print statements.
-    :type depth: int
-    :returns conditionals_map: A mapping between group conditionals and Paths.
-    :rtype: dict{Path:list}
-    """
-    groups = groups.copy()
-    conditionals = db_filter.build_where_clauses()
-    if not groups:
-        conditionals_map.update({export_path : conditionals})
-        return
-
-    current_group = groups.pop(0)
-    if verbose:
-        if depth > 0:
-            dots = ".." * depth
-            print(f"{dots}Grouping by {current_group} in {previous}...")
-        else:
-            print(f"Grouping by {current_group}...")
-
-    try:
-        group_column = db_filter.get_column(current_group)
-    except:
-        print(f"Group '{current_group}' is not a valid group.")
-        sys.exit(1)
-
-    transposed_values = db_filter.build_values(column=group_column, 
-                                               where=conditionals)
-
-    if not transposed_values:
-        export_path.rmdir()
-
-    for group in transposed_values:
-        group_path = export_path.joinpath(str(group))
-        group_path.mkdir()
-        db_filter_copy = db_filter.copy()
-        db_filter_copy.add(f"{current_group}={group}")
-
-        previous = f"{current_group} {group}"
-        build_groups_map(db_filter_copy, group_path, conditionals_map,
-                                                     groups=groups,
-                                                     verbose=verbose,
-                                                     previous=previous,
-                                                     depth=depth+1)
 
 def get_sort_columns(alchemist, sort_inputs):
     """Function that converts input for sorting to SQLAlchemy Columns.

@@ -1643,7 +1643,7 @@ class TestBytesHandling(unittest.TestCase):
     def test_convert_to_encoded_1(self):
         """Verify convert_to_encoded() encodes strings properly and in order.
         """
-        encoded_values = parsing.convert_to_encoded(self.test_values)
+        encoded_values = basic.convert_to_encoded(self.test_values)
 
         for index in range(len(self.encoded_test_values)):
             with self.subTest(list_index=index):
@@ -1653,7 +1653,7 @@ class TestBytesHandling(unittest.TestCase):
     def test_convert_to_decoded_1(self):
         """Verify convert_to_decoded() decodes strings properly and in order.
         """
-        decoded_values = parsing.convert_to_decoded(self.encoded_test_values)
+        decoded_values = basic.convert_to_decoded(self.encoded_test_values)
 
         for index in range(len(self.test_values)):
             with self.subTest(list_index=index):

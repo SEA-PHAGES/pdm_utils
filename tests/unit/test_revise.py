@@ -39,20 +39,20 @@ class TestReviseMain(unittest.TestCase):
 
     @patch("pdm_utils.pipelines.revise.execute_revise")
     @patch("pdm_utils.pipelines.revise.basic.retrieve_data_dict")
-    @patch("pdm_utils.pipelines.revise.AlchemyHandler")
+    @patch("pdm_utils.pipelines.revise.pipelines_basic.build_alchemist")
     @patch("pdm_utils.pipelines.revise.parse_revise")
-    def test_main_1(self, parse_revise_mock, alchemyhandler_mock,
+    def test_main_1(self, parse_revise_mock, build_alchemist_mock,
                             retrieve_data_dict_mock, execute_revise_mock):
         """Verfiy function structure of main().
         """
         parse_revise_mock.return_value = self.mock_args
-        alchemyhandler_mock.return_value = self.mock_alchemist
+        build_alchemist_mock.return_value = self.mock_alchemist
         retrieve_data_dict_mock.return_value = self.mock_revisions_data_dicts
 
         revise.main(self.test_args_list)
 
         parse_revise_mock.assert_called_with(self.test_args_list)
-        alchemyhandler_mock.assert_called_with(database=self.mock_database)
+        build_alchemist_mock.assert_called_with(self.mock_database)
         retrieve_data_dict_mock.assert_called_with(self.mock_revisions_file)
 
         execute_revise_mock.assert_called_with(

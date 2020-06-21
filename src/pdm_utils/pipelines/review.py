@@ -10,14 +10,12 @@ from sqlalchemy import Column
 from sqlalchemy import and_
 from sqlalchemy.sql import func
 
-from pdm_utils.classes.alchemyhandler import AlchemyHandler
-from pdm_utils.classes.filter import Filter
 from pdm_utils.functions import annotation
 from pdm_utils.functions import basic
 from pdm_utils.functions import mysqldb_basic
+from pdm_utils.functions import pipelines_basic
 from pdm_utils.functions import parsing
 from pdm_utils.functions import querying
-from pdm_utils.pipelines import export_db
 
 #-----------------------------------------------------------------------------
 #GLOBAL VARIABLES
@@ -59,10 +57,9 @@ def main(unparsed_args_list):
     """
     args = parse_review(unparsed_args_list)
 
-    alchemist = AlchemyHandler(database=args.database)
-    alchemist.connect(ask_database=True, pipeline=True)
+    alchemist = pipelines_basic.build_alchemist(args.database)
 
-    values = export_db.parse_value_input(args.input)
+    values = pipelines_basic.parse_value_input(args.input)
    
     if not args.all_reports:
         gr_reports = args.gene_reports
@@ -158,7 +155,7 @@ def parse_review(unparsed_args_list):
     parser.add_argument("-o", "--folder_name", 
                                     type=str,  help=FOLDER_NAME_HELP)
     parser.add_argument("-p", "--folder_path", 
-                                    type=export_db.convert_dir_path,
+                                    type=pipelines_basic.convert_dir_path,
                                                help=FOLDER_PATH_HELP)
     parser.add_argument("-v", "--verbose", action="store_true", 
                                                help=VERBOSE_HELP)
@@ -175,7 +172,7 @@ def parse_review(unparsed_args_list):
     parser.add_argument("-r", "--review", action="store_false",
                                                help=REVIEW_HELP)
     parser.add_argument("-if", "--import_files", dest="input",
-                                    type=export_db.convert_file_path,
+                                    type=pipelines_basic.convert_file_path,
                                                help=IMPORT_FILE_HELP)
     parser.add_argument("-in", "--import_names", nargs="*", dest="input",
                                                help=IMPORT_NAMES_HELP)
@@ -269,7 +266,7 @@ def execute_review(alchemist, folder_path, folder_name,
     export_path = basic.make_new_dir(folder_path, export_path, attempt=50)
 
     conditionals_map = {}
-    export_db.build_groups_map(db_filter, export_path, conditionals_map, 
+    pipelines_basic.build_groups_map(db_filter, export_path, conditionals_map, 
                                                        groups=groups,
                                                        verbose=verbose)
 
