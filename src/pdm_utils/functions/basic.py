@@ -1,6 +1,7 @@
 """Misc. base/simple functions. These should not require import of other
 modules in this package to prevent circular imports."""
 
+import collections
 import configparser
 import csv
 import getpass
@@ -1211,6 +1212,63 @@ def convert_list_to_dict(data_list, key):
         data_dict = {}
     return data_dict
 
+#TODO unittest
+def partition_list(data_list, size):
+    """Chunks list into a list of lists with the given size.
+
+    :param data_list: List to be split into equal-sized lists.
+    :type data_list: list
+    :param size: Length of the resulting list chunks.
+    :param size: int
+    :returns: Returns list of lists with length of the given size.
+    :rtype: list[list]
+    """
+    chunked_list = [data_list[i*size:(i+1)*size]\
+            for i in range((len(data_list) + size - 1) // size)]
+
+    return chunked_list
+
+#TODO unittest
+def increment_histogram(data, histogram):
+    """Increments a dictionary histogram based on given data.
+
+    :param data: Data to be used to index or create new keys in the histogram.
+    :type data: list
+    :param histogram: Dictionary containing keys whose values contain counts.
+    :type histogram: dict
+    """
+    for item in data:
+        count = histogram.get(item, 0)
+        count += 1
+        histogram[item] = count
+
+#TODO unittest
+def sort_histogram_keys(histogram, descending=True):
+    """Sorts a dictionary by its values and returns the sorted histogram.
+
+    :param histogram: Dictionary containing keys whose values contain counts.
+    :type histogram: dict
+    :returns: A list from keys from the histogram sorted by value.
+    :rtype: list
+    """
+    sorted_keys = [key for key, value in sorted(histogram.items(), 
+                                                key=lambda item:item[1], 
+                                                reverse=descending)] 
+
+    return sorted_keys
+
+def sort_histogram(histogram, descending=True):
+    """Sorts a dictionary by its values and returns the sorted histogram.
+
+    :param histogram: Dictionary containing keys whose values contain counts.
+    :type histogram: dict
+    :returns: An ordered dict from items from the histogram sorted by value.
+    :rtype: OrderedDict
+    """
+    sorted_histogram = OrderedDict(sorted(histogram.items(),
+                                          key=lambda item:item[1],
+                                          reverse=descending))
+    return sorted_histogram
 
 # TODO unittest
 def prepare_filepath(folder_path, file_name, folder_name=None):
@@ -1382,6 +1440,45 @@ def choose_most_common(string, values):
             count1 = count2
     return value1
 
+def convert_to_encoded(values):
+    """Converts a list of strings to utf-8 encoded values.
+
+    :param values: Strings for a MySQL query to be encoded.
+    :type values: list[str]
+    :returns: List of utf-8 encoded values.
+    :rtype: list[bytes]
+    """
+    if not isinstance(values, list):
+        values = [values]
+
+    converted_values = []
+    for value in values:
+        if value is None:
+            converted_values.append(value)
+        else:
+            converted_values.append(value.encode("utf-8"))
+
+    return converted_values
+
+def convert_to_decoded(values):
+    """Converts a list of strings to utf-8 encoded values.
+
+    :param values: Byte values from MySQL queries to be decoded.
+    :type values: list[bytes]
+    :returns: List of utf-8 decoded values.
+    :rtype: list[str]
+    """
+    if not isinstance(values, list):
+        values = [values]
+
+    converted_values = []
+    for value in values:
+        if value is None:
+            converted_values.append(value)
+        else:
+            converted_values.append(value.decode("utf-8"))
+
+    return converted_values
 
 
 

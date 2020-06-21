@@ -12,11 +12,11 @@ from sqlalchemy.sql import func
 
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.classes.filter import Filter
-from pdm_utils.functions import mysqldb
+from pdm_utils.functions import annotation
+from pdm_utils.functions import basic
 from pdm_utils.functions import mysqldb_basic
 from pdm_utils.functions import parsing
 from pdm_utils.functions import querying
-from pdm_utils.functions import basic
 from pdm_utils.pipelines import export_db
 
 #-----------------------------------------------------------------------------
@@ -452,7 +452,8 @@ def get_review_data(alchemist, db_filter, verbose=False):
         if verbose:
             print(f"...Processing data for pham {pham}...")
         row_dict = row_dicts[pham]
-        row_dict["Notes"] = mysqldb.get_count_pham_annotations(alchemist, pham)
+        row_dict["Notes"] = annotation.get_count_annotations_in_pham(
+                                                            alchemist, pham)
 
         format_review_data(row_dict, pham)
         review_data.append(row_dict)
@@ -507,7 +508,7 @@ def get_gr_data(alchemist, db_filter, verbose=False):
 
 def get_psr_data(alchemist, db_filter, verbose=False):
     pham = db_filter.values[0]
-    adjacent_phams = mysqldb.get_adjacent_phams(alchemist, pham)
+    adjacent_phams = annotation.get_distinct_adjacent_phams(alchemist, pham)
     psr_data = {}
 
     psr_data["left_phams"] = adjacent_phams["left"]
@@ -556,16 +557,17 @@ def format_review_data(row_dict, pham):
 def format_summary_data(summary_data):
     recent_phages = summary_data["recent_phages"]
     recent_phages.reverse()
-    recent_phages = chunk_list(recent_phages, 5)[0]
+    recent_phages = basic.partition_list(recent_phages, 5)[0]
     summary_data["recent_phages"] = recent_phages
 
     phages_data = summary_data["recurring_phages"]
     phages_histogram = {}
     for pham in phages_data.keys():
-        increment_histogram(phages_data[pham]["PhageID"], phages_histogram)
+        basic.increment_histogram(phages_data[pham]["PhageID"], 
+                                  phages_histogram)
 
-    recurring_phages = sort_histogram_keys(phages_histogram)
-    recurring_phages = chunk_list(recurring_phages, 5)[0]
+    recurring_phages = basic.sort_histogram_keys(phages_histogram)
+    recurring_phages = basic.partition_list(recurring_phages, 5)[0]
     for i in range(len(recurring_phages)):
         recurring_phages[i] = "".join([recurring_phages[i], 
                             f"({str(phages_histogram[recurring_phages[i]])})"])
@@ -644,49 +646,6 @@ def get_gr_data_columns(alchemist):
         pg_columns.append(querying.get_column(alchemist.metadata, column_name))
 
     return pg_columns 
-
-def increment_histogram(data, histogram):
-    """Increments a dictionary histogram based on given data.
-
-    :param data: Data to be used to index or create new keys in the histogram.
-    :type data: list
-    :param histogram: Dictionary containing keys whose values contain counts.
-    :type histogram: dict
-    """
-    for item in data:
-        try:
-            histogram[item] += 1
-        except:
-            histogram[item] = 1
-
-def sort_histogram_keys(histogram):
-    """Sorts a dictionary histogram by its values and returns the sorted keys.
-    
-    :param histogram: Dictionary containing keys whose values contain counts.
-    :type histogram: dict
-    :returns: A list containing the keys from the histogram sorted by value.
-    :rtype: list
-    """
-    sorted_keys = [key for key, value in sorted(histogram.items(), 
-                                                key=lambda item:item[1], 
-                                                reverse=True)] 
-
-    return sorted_keys
-
-def chunk_list(data_list, size):
-    """Chunks list into a list of lists with the given size.
-
-    :param data_list: List to be split into equal-sized lists.
-    :type data_list: list
-    :param size: Length of the resulting list chunks.
-    :param size: int
-    :returns: Returns list of lists with length of the given size.
-    :rtype: list[list]
-    """
-    chunked_list = [data_list[i*size:(i+1)*size]\
-            for i in range((len(data_list) + size - 1) // size)]
-
-    return chunked_list
 
 
 if __name__ == "__main__":

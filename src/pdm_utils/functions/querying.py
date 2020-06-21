@@ -21,6 +21,7 @@ from sqlalchemy.sql.elements import Grouping
 from sqlalchemy.sql.elements import Label
 from sqlalchemy.sql.elements import UnaryExpression
 
+from pdm_utils.functions import basic
 from pdm_utils.functions import parsing
 
 #GLOBAL VARIABLES
@@ -660,10 +661,9 @@ def execute_value_subqueries(engine, executable, in_column, source_values,
     
     values=[]
     if in_column.type.python_type == bytes:
-        source_values = parsing.convert_to_encoded(source_values)
+        source_values = basic.convert_to_encoded(source_values)
 
-    chunked_values = [source_values[i*limit:(i+1)*limit]\
-                for i in range((len(source_values) + limit - 1) // limit)]
+    chunked_values = basic.partition_list(source_values, limit)
 
     for value_chunk in chunked_values:
         subquery = executable.where(in_column.in_(value_chunk))
@@ -711,10 +711,9 @@ def first_column_value_subqueries(engine, executable, in_column, source_values,
 
     values = []
     if in_column.type.python_type == bytes:
-        source_values = parsing.convert_to_encoded(source_values)
-
-    chunked_values = [source_values[i*limit:(i+1)*limit]\
-                for i in range((len(source_values) + limit - 1) // limit)]  
+        source_values = basic.convert_to_encoded(source_values)
+ 
+    chunked_values = basic.partition_list(source_values, limit)
 
     for value_chunk in chunked_values: 
         subquery = executable.where(in_column.in_(value_chunk))

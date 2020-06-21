@@ -7,7 +7,109 @@ from sqlalchemy import and_
 from sqlalchemy import select
 from sqlalchemy.sql import func
 
+from pdm_utils.functions import basic
 from pdm_utils.functions import querying
+
+#ANNOTATION RETRIEVAL
+#-------------------------
+def get_genes_from_pham(alchemist, pham):
+    gene_obj = alchemist.metadata.tables["gene"]
+
+    geneid_obj = gene_obj.c.GeneID
+    phamid_obj = gene_obj.c.PhamID
+
+    genes_query = select([geneid_obj]).where(phamid_obj == pham).distinct()
+    
+    genes = querying.first_column(alchemist.engine, genes_query)
+    return genes
+
+def get_distinct_phams_from_genes(alchemist, geneids):
+    gene_obj = alchemist.metadata.tables["gene"]
+
+    geneid_obj = gene_obj.c.GeneID
+    phamid_obj = gene_obj.c.PhamID
+
+    phams_query = select([phamid_obj]).distinct()
+ 
+    phams = querying.first_column(alchemist.engine, phams_query,
+                                  in_column=geneid_obj, values=geneids)
+    return phams
+
+def get_distinct_annotations_from_genes(alchemist, geneids):
+    gene_obj = alchemist.metadata.tables["gene"]
+
+    geneid_obj = gene_obj.c.GeneID
+    notes_obj = gene_obj.c.Notes
+
+    notes_query = select([notes_obj]).distinct()
+    
+    bytes_annotations = querying.first_column(alchemist.engine, notes_query,
+                                                        in_column=geneid_obj, 
+                                                        values=geneids)
+    
+    annotations = basic.convert_to_decoded(bytes_annotations)
+    return annotations
+
+def get_phams_from_genes(alchemist, geneids):
+    gene_obj = alchemist.metadata.tables["gene"]
+
+    geneid_obj = gene_obj.c.GeneID
+    phamid_obj = gene_obj.c.PhamID
+
+    pham_query = select([phamid_obj])
+
+    phams = []
+    for gene in geneids:
+        pham = alchemist.engine.execute(pham_query.where(geneid_obj == gene))\
+                                                                    .scalar()
+        phams.append(pham)
+
+    return phams
+
+def get_annotations_from_genes(alchemist, geneids):
+    gene_obj = alchemist.metadata.tables["gene"]
+
+    geneid_obj = gene_obj.c.GeneID
+    notes_obj = gene_obj.c.Notes
+
+    notes_query = select([notes_obj])
+
+    annotations = []
+    for gene in geneids:
+        note = alchemist.engine.execute(notes_query.where(geneid_obj == gene))\
+                                                                    .scalar()
+
+        if not note is None:
+            note = note.decode("utf-8")
+        annotations.append(note)
+
+    return annotations
+
+def get_count_phams_in_genes(alchemist, geneids, incounts=None): 
+    phams = get_phams_from_genes(alchemist, geneids) 
+
+    pham_histogram = {}
+    if not incounts is None:
+        pham_histogram = incounts
+
+    basic.increment_histogram(phams, histogram)
+    return pham_histogram
+
+def get_count_annotations_in_genes(alchemist, geneids, incounts=None):
+    annotations = get_annotations_from_genes(alchemist, geneids)
+
+    annotation_counts = {}
+    if not incounts is None:
+        annotation_counts = incounts
+
+    basic.increment_histogram(annotations, annotation_counts)
+    return annotation_counts
+
+def get_count_annotations_in_pham(alchemist, pham, incounts=None):
+    genes = get_genes_from_pham(alchemist, pham)
+    count_annotations = get_count_annotations_in_genes(alchemist, genes,
+                                                        incounts=incounts)
+    return count_annotations
 
 def get_relative_gene(alchemist, geneid, pos):
     gene_obj = alchemist.metadata.tables["gene"] 
@@ -35,128 +137,59 @@ def get_adjacent_genes(alchemist, gene):
 
     return (left, right)
 
-def get_genes_from_pham(alchemist, pham):
-    gene_obj = alchemist.metadata.tables["gene"]
-
-    geneid_obj = gene_obj.c.GeneID
-    phamid_obj = gene_obj.c.PhamID
-
-    genes_query = select([geneid_obj]).where(phamid_obj == pham).distinct()
-    
-    genes = querying.first_column(alchemist.engine, genes_query)
-    return genes
-
-def get_phams_from_genes(alchemist, geneids):
-    gene_obj = alchemist.metadata.tables["gene"]
-
-    geneid_obj = gene_obj.c.GeneID
-    phamid_obj = gene_obj.c.PhamID
-
-    phams_query = select([phamid_obj]).distinct()
- 
-    phams = querying.first_column(alchemist.engine, phams_query,
-                                  in_column=geneid_obj, values=geneids)
-
-    return phams
-
 def get_genes_adjacent_to_pham(alchemist, pham):
     genes = get_genes_from_pham(alchemist, pham)
     
     left_genes = []
     right_genes = []
     for gene in genes:
-        try:
-            adjacent_genes = get_adjacent_genes(alchemist, gene)
-        except:
-            continue
-
-        left = adjacent_genes[0]
-        right = adjacent_genes[1]
+        adjacent_genes = get_adjacent_genes(alchemist, gene)
 
         if not left is None:
-            left_genes.append(left)
+            left_genes.append(adjacent_genes[0])
         if not right is None:
-            right_genes.append(right)
+            right_genes.append(adjacent_genes[1])
 
     return (left_genes, right_genes)
 
-def get_adjacent_phams(alchemist, pham):
+def get_distinct_adjacent_phams(alchemist, pham):
     adjacent_genes = get_genes_adjacent_to_pham(alchemist, pham)     
 
     left_phams = get_phams_from_genes(alchemist, adjacent_genes[0])
     right_phams = get_phams_from_genes(alchemist, adjacent_genes[1])
 
     return (left_phams, right_phams)
-
-def get_count_adjacent_phams(alchemist, pham, incounts=None):
+ 
+def get_count_adjacent_phams_to_pham(alchemist, pham, incounts=None):
     adjacent_genes = get_genes_adjacent_to_pham(alchemist, pham) 
 
-    count_adjacent_phams_dicts = {}
+    adjacent_phams = ({}, {})
     if not incounts is None:
-        count_adjacent_phams_dicts = incounts
+        adjacent_phams = incounts
 
-    left_phams_in = None
-    if not incounts is None:
-        left_phams_in = incounts['left']
-    count_adjacent_phams_dicts['left'] = get_count_phams_in_genes(
-                            alchemist, left_genes, incounts=left_phams_in)
+    left_in = adjacent_phams[0]
+    get_count_phams_in_genes(alchemist, adjacent_genes[0], 
+                                                        incounts=left_in)
    
-    right_phams_in = None
-    if not incounts is None:
-        right_phams_in = incounts['right']
-    count_adjacent_phams_dicts['right'] = get_count_phams_in_genes(
-                            alchemist, right_genes, incounts=right_phams_in)
+    right_in = adjacent_phams[1]
+    get_count_phams_in_genes(alchemist, adjacent_genes[1], 
+                                                        incounts=right_in)
 
-    return count_adjacent_phams_dicts
+    return adjacent_phams
     
-def get_count_phams_in_genes(alchemist, geneids, incounts=None): 
-    gene_obj = alchemist.metadata.tables["gene"]
+def get_count_adjacent_annotations_to_pham(alchemist, pham, incounts=None):
+    adjacent_genes = get_genes_adjacent_to_pham(alchemist, pham) 
 
-    geneid_obj = gene_obj.c.GeneID
-    phamid_obj = gene_obj.c.PhamID
-
-    pham_query = select([phamid_obj])
-
-    pham_histogram = {}
+    adjacent_annotations = ({}, {})
     if not incounts is None:
-        pham_histogram = incounts
+        adjacent_annotations = incounts
 
-    for gene in geneids:
-        pham = alchemist.engine.execute(pham_query.where(geneid_obj == gene))\
-                                                                    .scalar()
-        try:
-            pham_histogram[pham] += 1
-        except:
-            pham_histogram[pham] = 1
+    left_in = adjacent_annotations[0]
+    get_count_annotations_in_genes(alchemist, adjacent_genes[0], 
+                                                        incounts=left_in)
+   
+    right_in = adjacent_annotations[1]
+    get_count_annotations_in_genes(alchemist, adjacent_genes[1], 
+                                                        incounts=right_in)
 
-    return pham_histogram
-
-def get_count_pham_annotations(alchemist, pham, incounts=None):
-    gene_obj = alchemist.metadata.tables["gene"]  
-
-    geneid_obj = gene_obj.c.GeneID
-    phamid_obj = gene_obj.c.PhamID
-    notes_obj = gene_obj.c.Notes
-
-    annotation_query = select([notes_obj]).where(phamid_obj == pham).distinct()
-    annotations = querying.first_column(alchemist.engine, annotation_query)
-
-    annotation_counts = {}
-    if not incounts is None:
-        annotation_counts = incounts
-
-    for byte_annotation in annotations:
-        annotation = None
-        if not byte_annotation is None:
-            annotation = byte_annotation.decode("utf-8")
-
-        count_query = select([func.count(geneid_obj)]).where(and_(*[
-                        (notes_obj == byte_annotation),(phamid_obj == pham)]))
-        count = alchemist.engine.execute(count_query).scalar()
-
-        try:
-            annotation_counts[annotation] += count
-        except:
-            annotation_counts[annotation] = count
-
-    return annotation_counts
+    return adjacent_annotations

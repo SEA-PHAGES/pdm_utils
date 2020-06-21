@@ -13,6 +13,7 @@ from sqlalchemy.sql.elements import Label
 from sqlalchemy.orm.session import Session
 
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
+from pdm_utils.functions import basic
 from pdm_utils.functions import cartography
 from pdm_utils.functions import parsing
 from pdm_utils.functions import querying as q
@@ -459,7 +460,7 @@ class Filter:
 
         if not raw_bytes:
             if column_obj.type.python_type is bytes:
-                values = parsing.convert_to_decoded(values)
+                values = basic.convert_to_decoded(values)
 
         return values
 
@@ -655,7 +656,7 @@ class Filter:
 
                 if not raw_bytes:
                     if columns[i].type.python_type == bytes:
-                        value_data = parsing.convert_to_decoded(value_data)
+                        value_data = basic.convert_to_decoded(value_data)
 
                 values[value].update({columns[i].name : value_data})
 

@@ -63,7 +63,8 @@ class TestAnnotationRetrieval(unittest.TestCase):
     def test_get_adjacent_phams_1(self):
         """Verify get_adjacent_phams() returns expected data type."""
 
-        adjacent_phams = annotation.get_adjacent_phams(self.alchemist, 42006)
+        adjacent_phams = annotation.get_distinct_adjacent_phams(
+                                                        self.alchemist, 42006)
 
         self.assertTrue(isinstance(adjacent_phams, tuple))
         self.assertTrue(len(adjacent_phams) == 2)
@@ -79,11 +80,11 @@ class TestAnnotationRetrieval(unittest.TestCase):
             with self.subTest(pham=right_pham):
                 self.assertTrue(isinstance(right_pham, int))
 
-    def test_get_count_pham_annotations_1(self):
-        """Verify get_count_pham_annotations() returns expected data type."""
+    def test_get_count_annotations_in_pham_1(self):
+        """Verify get_count_annotations_in_pham() returns expected data type."""
 
-        annotation_counts = annotation.get_count_pham_annotations(self.alchemist, 
-                                                               42006)
+        annotation_counts = annotation.get_count_annotations_in_pham(
+                                                        self.alchemist, 42006)
 
         self.assertTrue(isinstance(annotation_counts, dict))
 
