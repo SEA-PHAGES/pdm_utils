@@ -99,9 +99,9 @@ def parse_revise(unparsed_args_list):
     parser.add_argument("revisions_file", help=REVISIONS_FILE_HELP,
                                     type=pipelines_basic.convert_file_path)
 
-    parser.add_argument("-o", "--folder_name", 
+    parser.add_argument("-m", "--folder_name", 
                                     type=str,  help=FOLDER_NAME_HELP)
-    parser.add_argument("-p", "--folder_path", 
+    parser.add_argument("-o", "--folder_path", 
                                     type=pipelines_basic.convert_dir_path,
                                                help=FOLDER_PATH_HELP)
     parser.add_argument("-v", "--verbose", action="store_true", 
