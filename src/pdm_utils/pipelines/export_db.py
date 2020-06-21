@@ -332,17 +332,17 @@ def execute_export(alchemist, folder_path, folder_name, pipeline,
         print("Creating export folder...")
     export_path = folder_path.joinpath(folder_name)
     export_path = basic.make_new_dir(folder_path, export_path, attempt=50)
-
+ 
+    data_cache = {}
     if pipeline == "sql":
         if verbose:
             print("Writing SQL database file...")
         write_database(alchemist, db_version["Version"], export_path)
-
     elif pipeline in FILTERABLE_PIPELINES:
         conditionals_map = {}
-        build_groups_map(db_filter, export_path, conditionals_map,
-                                                 groups=groups,
-                                                 verbose=verbose)
+        pipelines_basic.build_groups_map(db_filter, export_path, 
+                                                conditionals_map,
+                                                groups=groups, verbose=verbose)
 
         if verbose:
             print("Prepared query and path structure, beginning export...")
@@ -368,18 +368,18 @@ def execute_export(alchemist, folder_path, folder_name, pipeline,
                 execute_ffx_export(alchemist, mapped_path, export_path,
                                    db_filter.values, pipeline, db_version,
                                    table, concatenate=concatenate,
-                                   verbose=verbose)
+                                   data_cache=data_cache, verbose=verbose)
             else:
                 execute_csv_export(db_filter, mapped_path, export_path,
                                    csv_columns, table, raw_bytes=raw_bytes,
-                                   verbose=verbose)
+                                   data_cache=data_cache, verbose=verbose)
     else:
         print("Unrecognized export pipeline, aborting export")
         sys.exit(1)
 
 def execute_csv_export(db_filter, export_path, folder_path, columns, csv_name,
-                                        sort=[], raw_bytes=False,
-                                        verbose=False):
+                                        data_cache=None, sort=[], 
+                                        raw_bytes=False, verbose=False):
     """Executes csv export of a MySQL database table with select columns.
 
     :param alchemist: A connected and fully build AlchemyHandler object.
@@ -399,6 +399,9 @@ def execute_csv_export(db_filter, export_path, folder_path, columns, csv_name,
     :param verbose: A boolean value to toggle progress print statements.
     :type verbose: bool
     """
+    if data_cache is None:
+        data_cache = {}
+
     if verbose:
         relative_path = str(export_path.relative_to(folder_path))
         print(f"Preparing {csv_name} export for '{relative_path}'...")
@@ -426,8 +429,8 @@ def execute_csv_export(db_filter, export_path, folder_path, columns, csv_name,
                                                include_headers=True)
 
 def execute_ffx_export(alchemist, export_path, folder_path, values,
-                       file_format, db_version, table,
-                       concatenate=False, verbose=False):
+                       file_format, db_version, table, concatenate=False, 
+                       data_cache=None, verbose=False):
     """Executes SeqRecord export of the compilation of data from a MySQL emtry.
 
     :param alchemist: A connected and fully build AlchemyHandler object.
@@ -453,16 +456,20 @@ def execute_ffx_export(alchemist, export_path, folder_path, values,
     :param verbose: A boolean value to toggle progress print statements.
     :type verbose: bool
     """
+    if data_cache is None:
+        data_cache = {}
+
     if verbose:
         print(f"Retrieving {export_path.name} data...")
 
-    seqrecords = []
     if table == "phage":
-        seqrecords = get_genome_seqrecords(alchemist, values=values,
-                                                            verbose=verbose)
+        seqrecords = get_genome_seqrecords(alchemist, values, 
+                                                        data_cache=data_cache,
+                                                        verbose=verbose)
     elif table == "gene":
-        seqrecords = get_cds_seqrecords(alchemist, values=values,
-                                                            verbose=verbose)
+        seqrecords = get_cds_seqrecords(alchemist, values,
+                                                        data_cache=data_cache,
+                                                        verbose=verbose)
     else:
         print(f"Unknown error occured, table '{table}' is not recognized "
                "for SeqRecord export pipelines.")
@@ -533,18 +540,23 @@ def write_database(alchemist, version, export_path):
     version_path.touch()
     version_path.write_text(f"{version}")
 
-
-
 #-----------------------------------------------------------------------------
 #EXPORT-SPECIFIC HELPER FUNCTIONS
 #-----------------------------------------------------------------------------
 
-def get_genome_seqrecords(alchemist, values=[], verbose=False):
-    genomes = mysqldb.parse_genome_data(alchemist.engine,
-                                        phage_id_list=values,
-                                        phage_query=PHAGE_QUERY,
-                                        gene_query=GENE_QUERY,
-                                        trna_query=TRNA_QUERY)
+#TODO Document and Unittest
+def get_genome_seqrecords(alchemist, values, data_cache=None, verbose=False):
+    if data_cache is None:
+        data_cache = {}
+
+    genomes = []
+    for genome_id in values:
+        genome = data_cache.get(genome_id)
+        if genome is None:
+            genome = get_single_genome(alchemist, genome_id, 
+                                                    data_cache=data_cache)
+
+        genomes.append(genome)
 
     seqrecords = []
     for gnm in genomes:
@@ -556,43 +568,52 @@ def get_genome_seqrecords(alchemist, values=[], verbose=False):
 
     return seqrecords
 
-def get_cds_seqrecords(alchemist, values=[], nucleotide=False, verbose=False):
+#TODO Document and Unittest
+def get_cds_seqrecords(alchemist, values, data_cache=None, nucleotide=False, 
+                                                                 verbose=False):
+    if data_cache is None:
+        data_cache = {}
+
     cds_list = parse_feature_data(alchemist, values=values)
 
     seqrecords = []
-    genomes_dict = {}
     for cds in cds_list:
-        if not cds.genome_id in genomes_dict.keys():
-            if verbose:
+        parent_genome = data_cache.get(cds.genome_id)
+        if parent_genome is None:
+            if verbose: 
                 print(f"...Retrieving parent genome for {cds.id}...")
-            phage_id_obj = querying.get_column(alchemist.metadata,
-                                               "phage.PhageID")
-
-            phage_obj = phage_id_obj.table
-            parent_genome_query = querying.build_select(
-                                                alchemist.graph,
-                                                phage_obj,
-                                                where=\
-                                                phage_id_obj==cds.genome_id)
-            parent_genome_data = mysqldb_basic.first(alchemist.engine,
-                                                     parent_genome_query)
-            parent_genome = mysqldb.parse_phage_table_data(parent_genome_data)
-            genomes_dict.update({cds.genome_id : parent_genome})
+            parent_genome = get_single_genome(alchemist, cds.genome_id, 
+                                                         data_cache=data_cache)
 
         if verbose:
             print(f"Converting {cds.id}...")
-        cds.genome_length = genomes_dict[cds.genome_id].length
+        cds.genome_length = parent_genome.length
         cds.set_seqfeature()
 
         gene_domain = cartography.get_map(alchemist.mapper, "gene_domain")
         gene_domains = alchemist.session.query(gene_domain)\
                                                 .filter_by(GeneID=cds.id).all()
 
-        record = flat_files.cds_to_seqrecord(cds, genomes_dict[cds.genome_id],
-                                                gene_domains=gene_domains)
+        record = flat_files.cds_to_seqrecord(cds, parent_genome,
+                                                  gene_domains=gene_domains)
         seqrecords.append(record)
 
     return seqrecords
+
+#TODO Document
+def get_single_genome(alchemist, phageid, data_cache=None):
+    phage_obj = alchemist.metadata.tables["phage"]
+    phageid_obj = phage_obj.c.PhageID
+
+    genome_query = querying.build_select(alchemist.graph, phage_obj,
+                                                where=\
+                                                phageid_obj==phageid)
+    genome_data = mysqldb_basic.first(alchemist.engine, genome_query)
+    genome = mysqldb.parse_phage_table_data(genome_data)
+    if not data_cache is None:
+        data_cache[phageid] = genome
+
+    return genome
 
 def get_sort_columns(alchemist, sort_inputs):
     """Function that converts input for sorting to SQLAlchemy Columns.

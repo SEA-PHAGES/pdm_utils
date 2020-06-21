@@ -60,6 +60,8 @@ def build_alchemist(database):
     alchemist = AlchemyHandler(database=database)
     alchemist.connect(ask_database=True, pipeline=True) 
 
+    return alchemist
+
 def build_filter(alchemist, table, filters, values=None,
                                                      verbose=False):
     """Applies MySQL WHERE clause filters using a Filter.
