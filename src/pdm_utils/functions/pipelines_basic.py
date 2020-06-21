@@ -62,7 +62,7 @@ def build_alchemist(database):
 
     return alchemist
 
-def build_filter(alchemist, table, filters, values=None,
+def build_filter(alchemist, key, filters, values=None,
                                                      verbose=False):
     """Applies MySQL WHERE clause filters using a Filter.
 

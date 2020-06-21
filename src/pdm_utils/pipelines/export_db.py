@@ -733,8 +733,9 @@ def sort_seqrecord_features(seqrecord):
         print("Genome seqrecord features unable to be sorted")
         pass
 
-#----------------------------------------------------------------------------
-#TODO Travis
+
+#---------
+#---------
 #Functions to be evaluated for another module:
 #-----------------------------------------------------------------------------
 
