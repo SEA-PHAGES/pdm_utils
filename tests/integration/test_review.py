@@ -113,8 +113,8 @@ class TestPhamReview(unittest.TestCase):
 
         self.assertTrue(self.review_test_dir.is_dir())
 
-        gene_report_dir = self.review_test_dir.joinpath("PhamReports")
-        self.assertTrue(gene_report_dir.is_dir())
+        pham_report_dir = self.review_test_dir.joinpath("PhamReports")
+        self.assertTrue(pham_report_dir.is_dir())
 
     def test_execute_review_7(self):
         """Verify execute_review() s_report parameter functions as expected.
@@ -127,6 +127,18 @@ class TestPhamReview(unittest.TestCase):
 
         summary_report_file = self.review_test_dir.joinpath("SummaryReport.txt")
         self.assertTrue(summary_report_file.is_file())
+
+    def test_execute_review_8(self):
+        """Verify execute_review() psr_reports parameter functions as expected.
+        """
+        review.execute_review(self.alchemist, self.test_dir,
+                              self.review_test_dir.name,
+                              psr_reports=True)
+
+        self.assertTrue(self.review_test_dir.is_dir())
+
+        pham_report_dir = self.review_test_dir.joinpath("PhamReports")
+        self.assertTrue(pham_report_dir.is_dir())
 
     def test_review_phams_1(self):
         """Verify review_phams() correctly identifies disrepencies.

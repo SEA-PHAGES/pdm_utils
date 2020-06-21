@@ -116,11 +116,12 @@ def get_relative_gene(alchemist, geneid, pos):
 
     geneid_obj = gene_obj.c.GeneID
 
-    geneid_format = re.compile("\w+_CDS_[0-9]+")
+    geneid_format = re.compile("[\w\W]+_CDS_[0-9]+")
     if not re.match(geneid_format, geneid) is None:
         parsed_geneid = re.split("_", geneid)
     else:
-        raise ValueError("Passed GeneID is not of the proper GeneID format")
+        raise ValueError(f"Passed GeneID {geneid} "
+                          "is not of the proper GeneID format")
 
     gene_num = int(parsed_geneid[2])
     rel_gene_pos = gene_num + pos
@@ -145,9 +146,9 @@ def get_genes_adjacent_to_pham(alchemist, pham):
     for gene in genes:
         adjacent_genes = get_adjacent_genes(alchemist, gene)
 
-        if not left is None:
+        if not adjacent_genes[0] is None:
             left_genes.append(adjacent_genes[0])
-        if not right is None:
+        if not adjacent_genes[1] is None:
             right_genes.append(adjacent_genes[1])
 
     return (left_genes, right_genes)

@@ -259,8 +259,8 @@ def execute_review(alchemist, folder_path, folder_name,
     if verbose:
         print("Prepared query and path structure, beginning review export...")
     original_phams = db_filter.values
-    total_gr_data = {}
-    total_psr_data = {}
+    gr_data_cache = {}
+    psr_data_cache = {}
     for mapped_path in conditionals_map.keys():
         conditionals = conditionals_map[mapped_path]
         db_filter.values = original_phams
@@ -280,13 +280,13 @@ def execute_review(alchemist, folder_path, folder_name,
             execute_pham_report_export(alchemist, db_filter, mapped_path, 
                                                 gr_reports=gr_reports,
                                                 psr_reports=psr_reports,
-                                                total_gr_data=total_gr_data,
-                                                total_psr_data=total_psr_data,
+                                                gr_data_cache=gr_data_cache,
+                                                psr_data_cache=psr_data_cache,
                                                 verbose=verbose)
                
 def execute_pham_report_export(alchemist, db_filter, export_path, 
-                                        gr_reports=False, total_gr_data={},
-                                        psr_reports=False, total_psr_data={},
+                                        gr_reports=False, gr_data_cache={},
+                                        psr_reports=False, psr_data_cache={},
                                                              verbose=False):
     """Executes export of gene data for a reviewed pham.
 
@@ -294,8 +294,8 @@ def execute_pham_report_export(alchemist, db_filter, export_path,
     :type alchemist: AlchemyHandler
     :param export_path: Path to a valid dir for new file creation.
     :type export_path: Path
-    :param total_gr_data: Total data extracted for gene reports.
-    :type total_gr_data: dict
+    :param gr_data_cache: Total data extracted for gene reports.
+    :type gr_data_cache: dict
     :param verbose: A boolean value to toggle progress print statements.
     :type verbose: bool
     """
@@ -310,22 +310,21 @@ def execute_pham_report_export(alchemist, db_filter, export_path,
 
         db_filter.values = [pham]
 
+        
         if gr_reports:
-            try:
-                gr_data = total_gr_data[pham]
-            except:
+            gr_data = gr_data_cache.get(pham)
+            if gr_data is None:
                 gr_data = get_gr_data(alchemist, db_filter, verbose=verbose)
-                total_gr_data[pham] = gr_data
+                gr_data_cache[pham] = gr_data
 
             write_report(gr_data, pham_path, GR_HEADER,
                          csv_name=f"{pham}_GeneReport",
                          verbose=verbose)
         if psr_reports:
-            try:
-                psr_data = total_psr_data[pham]
-            except:
+            psr_data = psr_data_cache.get(pham)
+            if psr_data is None:
                 psr_data = get_psr_data(alchemist, db_filter, verbose=verbose) 
-                total_psr_data[pham] = psr_data
+                psr_data_cache[pham] = psr_data
 
             write_pham_summary_report(psr_data, pham_path, verbose=verbose)
 
@@ -405,22 +404,25 @@ def write_pham_summary_report(psr_data, export_path, verbose=False):
     s_path = export_path.joinpath("SummaryReport.txt")
     s_file = open(s_path, "w")
 
-    s_file.write(f"Pham reviewed: {export_path.name}\n\n")
+    s_file.write(f"Pham: {export_path.name}\n\n")
 
-    s_file.write(f"Left adjacent phams:\n")
-    s_file.write(f"{psr_data['left_phams']}\n")
+    s_file.write(f"Annotations of genes to the left:\n")
+    s_file.write(f"{psr_data['left_annotations']}\n")
 
     s_file.write(f"\n")
-    s_file.write(f"Right adjacent phams:\n")
-    s_file.write(f"{psr_data['right_phams']}\n")
+    s_file.write(f"Annotations of genes to the right:\n")
+    s_file.write(f"{psr_data['right_annotations']}\n")
 
     s_file.write(f"\n\n")
     s_file.write(f"Conserved Database Domains in pham:\n\n")
     for domain in psr_data["cdd_domains"]:
         s_file.write(f"{domain}\n\n")
+
+    s_file.close()
 #-----------------------------------------------------------------------------
 #REVIEW-SPECIFIC HELPER FUNCTIONS
 
+#TODO Documentation
 def get_review_data(alchemist, db_filter, verbose=False):
     """
     """
@@ -491,11 +493,13 @@ def get_gr_data(alchemist, db_filter, verbose=False):
 
 def get_psr_data(alchemist, db_filter, verbose=False):
     pham = db_filter.values[0]
-    adjacent_phams = annotation.get_distinct_adjacent_phams(alchemist, pham)
+    adjacent_genes = annotation.get_genes_adjacent_to_pham(alchemist, pham)
     psr_data = {}
 
-    psr_data["left_phams"] = adjacent_phams["left"]
-    psr_data["right_phams"] = adjacent_phams["right"]
+    psr_data["left_annotations"] = annotation.get_count_annotations_in_genes(
+                                                alchemist, adjacent_genes[0])
+    psr_data["right_annotations"] = annotation.get_count_annotations_in_genes(
+                                                alchemist, adjacent_genes[1])
 
     db_filter.values = [pham] 
     db_filter.transpose("domain.Name", set_values=True)
@@ -526,6 +530,7 @@ def format_review_data(row_dict, pham):
 
     count_functional_calls = []
     notes = row_dict.pop("Notes")
+    notes = basic.sort_histogram(notes)
     for key in notes.keys():
         if key is None or key == "": 
             function = "Hypothetical Protein"
@@ -578,19 +583,13 @@ def format_gr_data(row_dict, gene):
     row_dict["Functional Call"] = note
 
 def format_psr_data(psr_data):
-    left_phams_list = psr_data["left_phams"]
-    left_phams = ", ".join([str(pham) for pham in left_phams_list])
-    left_phams = textwrap.wrap(left_phams, 72)
-    left_phams = "\n".join(left_phams)
-    left_phams = textwrap.indent(left_phams, "    ")
-    psr_data["left_phams"] = left_phams 
+    left_annotations = format_adjacent_annotations(
+                                                psr_data["left_annotations"])
+    psr_data["left_annotations"] = left_annotations
 
-    right_phams_list = psr_data["right_phams"]
-    right_phams = ", ".join([str(pham) for pham in right_phams_list])
-    right_phams = textwrap.wrap(right_phams, 72)
-    right_phams = "\n".join(right_phams)
-    right_phams = textwrap.indent(right_phams, "    ")
-    psr_data["right_phams"] = right_phams
+    right_annotations = format_adjacent_annotations(
+                                                psr_data["right_annotations"])
+    psr_data["right_annotations"] = right_annotations
 
     cdd_domains_data = psr_data["cdd_domains"]
     cdd_domains = []
@@ -602,6 +601,22 @@ def format_psr_data(psr_data):
         cdd_domain = "".join([domain, "\n", description])
         cdd_domains.append(cdd_domain)
     psr_data["cdd_domains"] = cdd_domains
+
+def format_adjacent_annotations(annotation_histogram):
+    annotation_histogram = basic.sort_histogram(annotation_histogram)
+
+    annotation_list = []
+    for note in annotation_histogram.keys():
+        count = annotation_histogram[note]
+        if (note == "") or (note is None):
+            note = "Hypothetical Protein"
+        annotation_list.append("".join([note, "(", str(count), ")"]))
+
+    annotations = ", ".join(annotation_list)
+    wrapped_annotations = textwrap.wrap(annotations, 72)
+    annotations = "\n".join(wrapped_annotations)
+    annotations = textwrap.indent(annotations, "    ")
+    return annotations
 
 def get_review_data_columns(alchemist):
     """Gets labelled columns for pham function data retrieval.

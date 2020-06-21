@@ -1,7 +1,7 @@
 """Misc. base/simple functions. These should not require import of other
 modules in this package to prevent circular imports."""
 
-import collections
+from collections import OrderedDict
 import configparser
 import csv
 import getpass
