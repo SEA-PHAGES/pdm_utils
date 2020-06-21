@@ -17,7 +17,7 @@ class TestMain(unittest.TestCase):
         self.mock_database = Mock()
         self.mock_folder_path = Mock()
         self.mock_folder_name = Mock()
-        self.mock_review = Mock()
+        self.mock_no_review = Mock()
         self.mock_input = Mock()
         self.mock_filters = Mock()
         self.mock_groups = Mock()
@@ -34,8 +34,8 @@ class TestMain(unittest.TestCase):
                                         return_value=self.mock_folder_path)
         type(self.args).folder_name = PropertyMock(
                                         return_value=self.mock_folder_name)
-        type(self.args).review = PropertyMock(
-                                        return_value=self.mock_review)
+        type(self.args).no_review = PropertyMock(
+                                        return_value=self.mock_no_review)
         type(self.args).input = PropertyMock(
                                         return_value=self.mock_input)
         type(self.args).filters = PropertyMock(
@@ -74,7 +74,8 @@ class TestMain(unittest.TestCase):
         parse_value_input_mock.assert_called_with(self.mock_input)
         execute_review_mock.assert_called_with(
                             self.mock_alchemist, self.mock_folder_path, 
-                            self.mock_folder_name, review=self.mock_review,
+                            self.mock_folder_name, 
+                            no_review=self.mock_no_review,
                             values=self.mock_values, filters=self.mock_filters,
                             groups=self.mock_groups, sort=self.mock_sort, 
                             gr_reports=self.mock_gene_report, 

@@ -71,7 +71,7 @@ def main(unparsed_args_list):
         psr_reports = True
 
     execute_review(alchemist, args.folder_path, args.folder_name,
-                   review=args.review, values=values,
+                   no_review=args.no_review, values=values,
                    filters=args.filters, groups=args.groups, sort=args.sort,
                    s_report=s_report, gr_reports=gr_reports, 
                    psr_reports=psr_reports, verbose=args.verbose)
@@ -152,9 +152,9 @@ def parse_review(unparsed_args_list):
     parser = argparse.ArgumentParser()
 
     parser.add_argument("database", type=str,  help=DATABASE_HELP)
-    parser.add_argument("-o", "--folder_name", 
+    parser.add_argument("-m", "--folder_name", 
                                     type=str,  help=FOLDER_NAME_HELP)
-    parser.add_argument("-p", "--folder_path", 
+    parser.add_argument("-o", "--folder_path", 
                                     type=pipelines_basic.convert_dir_path,
                                                help=FOLDER_PATH_HELP)
     parser.add_argument("-v", "--verbose", action="store_true", 
@@ -169,7 +169,7 @@ def parse_review(unparsed_args_list):
     parser.add_argument("-psr", "--pham_summary_reports", action="store_true",
                                                help=PHAM_SUMMARY_REPORT_HELP)
 
-    parser.add_argument("-r", "--review", action="store_false",
+    parser.add_argument("-nr", "--no_review", action="store_true",
                                                help=REVIEW_HELP)
     parser.add_argument("-if", "--import_files", dest="input",
                                     type=pipelines_basic.convert_file_path,
@@ -191,14 +191,14 @@ def parse_review(unparsed_args_list):
     parser.set_defaults(folder_name=default_folder_name,
                         folder_path=default_folder_path,
                         input=[], filters="", groups=[], sort=[],
-                        review=True, gene_report=False, summary_report=False,
-                        verbose=False)
+                        no_review=False, gene_report=False, 
+                        summary_report=False, verbose=False)
 
     parsed_args = parser.parse_args(unparsed_args_list[2:])
     return parsed_args
 
 def execute_review(alchemist, folder_path, folder_name, 
-                              review=True, values=[],
+                              no_review=False, values=[],
                               filters="", groups=[], sort=[], s_report=False, 
                               gr_reports=False, psr_reports=False,
                               verbose=False):
@@ -240,7 +240,7 @@ def execute_review(alchemist, folder_path, folder_name,
         if verbose:
             print(f"Identified {db_filter.hits()} phams to review...")
 
-    if review: 
+    if not no_review: 
         review_phams(db_filter, verbose=verbose)
 
     if sort:
@@ -268,7 +268,7 @@ def execute_review(alchemist, folder_path, folder_name,
 
         review_data = get_review_data(alchemist, db_filter, verbose=verbose) 
         write_report(review_data, mapped_path, REVIEW_HEADER,
-                     csv_name=f"ReviewReport",
+                     csv_name=f"FunctionReport",
                      verbose=verbose)
 
         if s_report:

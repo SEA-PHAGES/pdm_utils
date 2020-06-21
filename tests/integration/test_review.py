@@ -100,7 +100,7 @@ class TestPhamReview(unittest.TestCase):
         """
         review.execute_review(self.alchemist, self.test_dir,
                               self.review_test_dir.name,
-                              review=False)
+                              no_review=True)
 
         self.assertTrue(self.review_test_dir.is_dir())
 
