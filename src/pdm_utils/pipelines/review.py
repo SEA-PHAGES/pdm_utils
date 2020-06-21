@@ -226,33 +226,19 @@ def execute_review(alchemist, folder_path, folder_name,
     :param verbose: A boolean value to toggle progress print statements.
     :type verbose: bool
     """
-    db_filter = Filter(alchemist=alchemist)
-    db_filter.key = ("gene.PhamID")
- 
-    if values:
-        db_filter.values = values
-
-    if verbose:
-        print(f"Identified {len(values)} phams to review...")
-           
-    if filters != "":
-        try:
-            db_filter.add(filters)
-        except:
-            print("Please check your syntax for the conditional string:\n"
-                 f"{filters}")
-            sys.exit(1)
-        finally:
-            db_filter.update() 
-        
-        db_filter.parenthesize()
-
+    db_filter = pipelines_basic.build_filter(alchemist, "gene.PhamID", filters,
+                                                        values=values,
+                                                        verbose=verbose)
     db_filter.add(BASE_CONDITIONALS)
     db_filter.update()
 
+    
     if not db_filter.values:
         print("Current settings produced no database hits.")
         sys.exit(1)
+    else:
+        if verbose:
+            print(f"Identified {db_filter.hits()} phams to review...")
 
     if review: 
         review_phams(db_filter, verbose=verbose)
