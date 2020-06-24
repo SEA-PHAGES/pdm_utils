@@ -2,67 +2,14 @@
 
 import shlex
 from subprocess import Popen, PIPE
-import csv
 import random
 import colorsys
 
-from pdm_utils.constants.constants import BLASTCLUST_PATH
 from pdm_utils.functions import mysqldb
 from pdm_utils.functions import mysqldb_basic
 
-def get_program_params(program, args):
-    program_params = dict()
 
-    if program == "blast":
-        program_params = get_blast_params(args)
-    elif program == "mmseqs":
-        program_params = get_mmseqs_params(args)
-    else:
-        print(f"Unknown program {program}")
-
-    return program_params
-
-
-def get_blast_params(args):
-    """
-    Uses parsed arguments from phamerate.main() to build the blastclust
-    commandline argument dictionary
-    :param args: dictionary from Argparse.ArgumentParser.parse_args()
-    :return: dictionary of blast CLI parameters
-    """
-    blast_params = dict()
-    try:
-        blast_params["-S"] = args.identity
-        blast_params["-L"] = float(args.coverage)/100
-        blast_params["-a"] = args.threads
-    except AttributeError as err:
-        print(f"Error {err.args[0]}: {err.args[1]}")
-    return blast_params
-
-
-def get_mmseqs_params(args):
-    """
-    Uses parsed arguments from phamerate.main() to build the MMseqs2
-    commandline argument dictionary
-    :param args: dictionary from Argparse.ArgumentParser.parse_args()
-    :return: dictionary of MMseqs2 CLI parameters
-    """
-    mmseqs_params = dict()
-    try:
-        mmseqs_params["--threads"] = args.threads
-        mmseqs_params["-v"] = args.verbose
-        mmseqs_params["--cluster-steps"] = args.steps
-        mmseqs_params["--max-seqs"] = args.max_seqs
-        mmseqs_params["--min-seq-id"] = float(args.identity)/100
-        mmseqs_params["-c"] = float(args.coverage)/100
-        mmseqs_params["--alignment-mode"] = args.aln_mode
-        mmseqs_params["--cov-mode"] = args.cov_mode
-        mmseqs_params["--cluster-mode"] = args.clu_mode
-    except AttributeError as err:
-        print(f"Error {err.args[0]}: {err.args[1]}")
-    return mmseqs_params
-
-
+# DATABASE FUNCTIONS
 def get_pham_geneids(engine):
     """
     Queries the database for those genes that are already phamerated.
@@ -73,8 +20,6 @@ def get_pham_geneids(engine):
 
     geneid_query = "SELECT GeneID, PhamID FROM gene WHERE PhamID IS NOT NULL"
     geneid_results = mysqldb_basic.query_dict_list(engine, geneid_query)
-
-    print(f"Found {len(geneid_results)} genes in phams...")
 
     for dictionary in geneid_results:
         pham_id = dictionary["PhamID"]
@@ -99,13 +44,11 @@ def get_pham_colors(engine):
     color_query = "SELECT PhamID, Color FROM pham"
     color_results = mysqldb_basic.query_dict_list(engine, color_query)
 
-    print(f"Found colors for {len(color_results)} phams...")
-
     for dictionary in color_results:
         pham_id = dictionary["PhamID"]
         color = dictionary["Color"]
 
-        pham_colors[pham_id] = color
+        pham_colors[pham_id] = color.upper()
 
     return pham_colors
 
@@ -116,21 +59,21 @@ def get_new_geneids(engine):
     :param engine: the Engine allowing access to the database
     :return: new_geneids
     """
-    new_geneids = set()
+    new_geneids = list()
 
     gene_query = "SELECT GeneID FROM gene WHERE PhamID IS NULL"
     gene_results = mysqldb_basic.query_dict_list(engine, gene_query)
 
+    # At scale, much cheaper to convert list to set than to build the
+    # set one gene at a time
     for dictionary in gene_results:
         geneid = dictionary["GeneID"]
-        new_geneids = new_geneids | {geneid}
+        new_geneids.append(geneid)
 
-    print(f"Found {len(new_geneids)} genes not in phams...")
-
-    return new_geneids
+    return set(new_geneids)
 
 
-def map_geneids_to_translations(engine):
+def get_geneids_and_translations(engine):
     """
     Constructs a dictionary mapping all geneids to their translations.
     :param engine: the Engine allowing access to the database
@@ -144,18 +87,16 @@ def map_geneids_to_translations(engine):
 
     for dictionary in results:
         geneid = dictionary["GeneID"]
-        trans = dictionary["Translation"]
-        gs_to_ts[geneid] = trans
-
-    print(f"Found {len(results)} genes in the database...")
+        translation = dictionary["Translation"]
+        gs_to_ts[geneid] = translation
 
     return gs_to_ts
 
 
-def map_translations_to_geneids(engine):
+def get_translation_groups(engine):
     """
     Constructs a dictionary mapping all unique translations to their
-    groups of geneids
+    groups of geneids that share them
     :param engine: the Engine allowing access to the database
     :return: ts_to_gs
     """
@@ -172,259 +113,229 @@ def map_translations_to_geneids(engine):
         geneids.append(geneid)
         ts_to_gs[trans] = geneids
 
-    print(f"Found {len(ts_to_gs)} unique translations in the database...")
-
     return ts_to_gs
 
 
-def write_fasta(trans_groups, wd):
+def update_pham_table(colors, engine):
     """
-    Writes the translations in `trans_dict` to a fasta_file in `wd`.
-    :param trans_groups: dictionary mapping translations to their
-    associated GeneIDs
-    :param wd: the temporary working directory for phameration
+    Populates the pham table with the new PhamIDs and their colors.
+    :param colors: new pham color data
+    :type colors: dict
+    :param engine: sqlalchemy Engine allowing access to the database
     :return:
     """
-    print("Begin writing genes to fasta...")
-    fasta = open(f"{wd}/input.fasta", "w")
-    for translation in trans_groups.keys():
-        fasta.write(f">{trans_groups[translation][0]}\n{translation}\n")
+    # First command needs to clear the pham table
+    commands = ["DELETE FROM pham"]
+
+    # Then we need to issue insert commands for each pham
+    for key in colors.keys():
+        commands.append(f"INSERT INTO pham (PhamID, Color) VALUES ({key}, "
+                        f"'{colors[key]}')")
+
+    mysqldb.execute_transaction(engine, commands)
+
+
+def update_gene_table(phams, engine):
+    """
+    Updates the gene table with new pham data
+    :param phams: new pham gene data
+    :type phams: dict
+    :param engine: sqlalchemy Engine allowing access to the database
+    :return:
+    """
+    commands = []
+
+    # We need to issue an update command for each gene in each pham
+    for key in phams.keys():
+        for gene in phams[key]:
+            commands.append(f"UPDATE gene SET PhamID = {key} WHERE GeneID = '{gene}'")
+
+    mysqldb.execute_transaction(engine, commands)
+
+
+def fix_white_phams(engine):
+    """
+    Find any phams with 2+ members which are colored as though they are
+    orphams (#FFFFFF in pham.Color).
+    :param engine: sqlalchemy Engine allowing access to the database
+    :return:
+    """
+    query = "SELECT c.PhamID FROM (SELECT g.PhamID, COUNT(GeneID) AS count, "\
+            "p.Color FROM gene AS g INNER JOIN pham AS p ON g.PhamID " \
+            "= p.PhamID GROUP BY PhamID) AS c WHERE Color = '#FFFFFF' "\
+            "AND count > 1"
+
+    results = mysqldb_basic.query_dict_list(engine, query)
+    print(f"Found {len(results)} white phams...")
+
+    commands = []
+    for dictionary in results:
+        pham_id = dictionary["PhamID"]
+        h = s = v = 0
+        while h <= 0:
+            h = random.random()
+        while s < 0.5:
+            s = random.random()
+        while v < 0.8:
+            v = random.random()
+        rgb = colorsys.hsv_to_rgb(h, s, v)
+        rgb = (rgb[0] * 255, rgb[1] * 255, rgb[2] * 255)
+        hexrgb = "#{:02x}{:02x}{:02x}".format(int(rgb[0]), int(rgb[1]),
+                                              int(rgb[2]))
+        new_color = hexrgb.upper()
+        commands.append(f"UPDATE pham SET Color = '{new_color}' WHERE "
+                        f"PhamID = '{pham_id}'")
+
+    mysqldb.execute_transaction(engine, commands)
+
+
+def fix_colored_orphams(engine):
+    """
+    Find any single-member phams which are colored as though they are
+    multi-member phams (not #FFFFFF in pham.Color).
+    :param engine: sqlalchemy Engine allowing access to the database
+    :return:
+    """
+    query = "SELECT * FROM (SELECT g.PhamID, COUNT(GeneID) AS count, " \
+            "p.Color FROM gene AS g INNER JOIN pham AS p ON g.PhamID " \
+            "=p.PhamID GROUP BY PhamID) AS c WHERE Color != '#FFFFFF' " \
+            "AND count = 1"
+
+    results = mysqldb_basic.query_dict_list(engine, query)
+    print(f"Found {len(results)} non-white orphams...")
+
+    commands = []
+    for dictionary in results:
+        pham_id = dictionary["PhamID"]
+        count = dictionary["count"]
+        color = dictionary["Color"]
+        new_color = "#FFFFFF"
+        commands.append(f"UPDATE pham SET Color = '{new_color}' WHERE "
+                        f"PhamID = '{pham_id}'")
+
+    mysqldb.execute_transaction(engine, commands)
+
+
+# FILE I/O FUNCTIONS
+def write_fasta(translation_groups, outfile):
+    """
+    Writes a FASTA file of the non-redundant protein sequences to be
+    assorted into phamilies.
+    :param translation_groups: groups of genes that share a translation
+    :type translation_groups: dict
+    :param outfile: FASTA filename
+    :type outfile: str
+    :return:
+    """
+    fasta = open(f"{outfile}", "w")
+    for translation in translation_groups.keys():
+        fasta.write(f">{translation_groups[translation][0]}\n{translation}\n")
     fasta.close()
 
 
-def create_clusterdb(program, wd):
+def parse_mmseqs_output(outfile):
     """
-    Decides which program is being used for clustering and calls
-    the database constructor method for that program to build a
-    database from input.fasta
-    :param program: the program to be used for clustering (currently
-    supported options are "mmseqs" or "blast")
-    :param wd: the temporary working directory for phameration
-    :return:
+    Parses the indicated MMseqs2 FASTA-like file into a dictionary of
+    integer-named phams.
+    :param outfile: FASTA-like parseable output
+    :type outfile: str
+    :return: phams
+    :rtype: dict
     """
-    # If program is MMseqs2 (default), make MMseqs2 database
-    if program == "mmseqs":
-        command = mmseqsdb_command(wd)
-    # If program is blast, make blastdb
-    elif program == "blast":
-        command = blastdb_command(wd)
-    # Otherwise (e.g. kClust or other programs not currently supported)
-    else:
-        print(f"Unknown program {program}")
-        command = "echo No database construction command..."
-
-    # Run the command - assumes mmseqs and makeblastdb are either at the
-    # same scope as toplevel that calls these functions, or in $PATH
-    with Popen(args=shlex.split(command), stdout=PIPE) as process:
-        print(process.stdout.read().decode("utf-8") + "\n\n")
-
-
-def blastdb_command(wd):
-    """
-    Builds a blastp database to use for blastclust phameration
-    :param wd: the temporary working directory for phameration
-    :return:
-    """
-    # -i: fasta file to be converted to blastdb <filepath>
-    # -p: is it a protein? <boolean T/F>
-    # -o: parse/index sequence IDs? <boolean T/F>
-    # -n: database name </path/to/name>
-    # -l: log file <filepath>
-    command = f"{BLASTCLUST_PATH}/formatdb -i {wd}/input.fasta " \
-              f"-p T -o T -n {wd}/sequenceDB -l {wd}/formatdb.log"
-
-    print("Build blast protein database for blastclust...")
-
-    return command
-
-
-def mmseqsdb_command(wd):
-    """
-    Builds an MMseqs2 database to use for MMseqs2 phameration
-    :param wd: the temporary working directory for phameration
-    :return:
-    """
-    command = f"mmseqs createdb {wd}/input.fasta {wd}/sequenceDB"
-
-    print("Build MMseqs2 protein database for mmseqs cluster...")
-
-    return command
-
-
-def phamerate(params, program, wd):
-    """
-    Phamerates unique translations using specified program
-    :param params: dictionary of program parameters
-    :param program: the program to be used for clustering (currently
-    supported options are "mmseqs" or "blast")
-    :param wd: the temporary working directory for phameration
-    :return:
-    """
-    # If program is MMseqs2 (default), create mmseqs command string
-    if program == "mmseqs":
-        command = mmseqs_phamerate_command(params, wd)
-    # If program is blast, create blastclust command string
-    elif program == "blast":
-        command = blast_phamerate_command(params, wd)
-    # Otherwise (e.g. kClust or other programs not currently supported)
-    else:
-        print(f"Unknown program {program}")
-        command = "echo No phameration command..."
-
-    print(f"Begin clustering with {program}...")
-    with Popen(args=shlex.split(command), stdout=PIPE, stderr=PIPE) as process:
-        print(process.stdout.read().decode("utf-8") + "\n\n")
-        print(process.stderr.read().decode("utf-8") + "\n\n")
-
-    print(f"Finish clustering with {program}...")
-
-
-def blast_phamerate_command(parameters, wd):
-    """
-    Builds blast phameration command (base command + user args)
-    :param parameters: dictionary of blastclust parameters
-    :param wd: the temporary working directory for phameration
-    :return: command
-    """
-    # -d: database to cluster </path/to/name>
-    # -o: output file <filepath>
-    command = f"{BLASTCLUST_PATH}/blastclust -d {wd}/sequenceDB " \
-              f"-o {wd}/output.txt"
-
-    for parameter in parameters.keys():
-        command += f" {parameter} {parameters[parameter]}"
-
-    return command
-
-
-def mmseqs_phamerate_command(parameters, wd):
-    """
-    Builds MMseqs2 phameration command (base command + user args)
-    :param parameters: dictionary of MMseqs2 parameters
-    :param wd: the temporary working directory for phameration
-    :return: command
-    """
-    command = f"mmseqs cluster {wd}/sequenceDB {wd}/clusterDB {wd}"
-
-    for parameter in parameters.keys():
-        command += f" {parameter} {parameters[parameter]}"
-
-    return command
-
-
-def parse_output(program, wd):
-    """
-    Runs the parser appropriate to the specified phameration program
-    :param program: program used for clustering
-    :param wd: the temporary working directory for phameration
-    :return:
-    """
-    # Variables to store the new pham data
-    parsed_phams = dict()
-
-    if program == "mmseqs":
-        parsed_phams = parse_mmseqs(wd)
-    elif program == "blast":
-        parsed_phams = parse_blast(wd)
-    else:
-        print(f"Unknown program {program}...")
-
-    return parsed_phams
-
-
-def parse_mmseqs(wd):
-    """
-    Parses MMseqs2 clustering output by running:
-    - mmseqs createseqfiledb sequenceDB clusterDB clusterSeqs
-    - mmseqs result2flat sequenceDB sequenceDB clusterSeqs output.txt
-    and then parsing output.txt
-    :param wd: the temporary working directory for phameration
-    :return: parsed_phams (dictionary)
-    """
-    filename = f"{wd}/output.txt"
-
-    print("Convert MMseqs2 output into parseable format...")
-
-    command = f"mmseqs createseqfiledb {wd}/sequenceDB {wd}/clusterDB " \
-              f"{wd}/clusterSeqs"
-
-    with Popen(args=shlex.split(command), stdout=PIPE) as process:
-        print(process.stdout.read().decode("utf-8") + "\n\n")
-
-    command = f"mmseqs result2flat {wd}/sequenceDB {wd}/sequenceDB " \
-              f"{wd}/clusterSeqs {filename}"
-
-    with Popen(args=shlex.split(command), stdout=PIPE) as process:
-        print(process.stdout.read().decode("utf-8") + "\n\n")
-
-    print("Begin parsing MMseqs2 output...")
-
-    parsed_phams = dict()
+    phams = {}
     pham_geneids = list()
     pham_name = 0
 
-    with open(filename, "r") as fh:
-        # Latest MMseqs2 output format indicates the start of a new
-        # pham by repeating the pham representative's identifier in
-        # two adjacent lines - need references to the prior line as
-        # well as the current one.
-        prior_line = fh.readline()
-        current_line = fh.readline()
+    with open(f"{outfile}", "r") as fh:
+        prior = fh.readline()
+        current = fh.readline()
 
-        # While not EOF, iterate through lines
-        while current_line:
-            if current_line.startswith(">"):
-                if prior_line.startswith(">"):
+        # While loop to interate until EOF
+        while current:
+            # If current line is a header line
+            if current.startswith(">"):
+                # If the prior line was also a header line
+                if prior.startswith(">"):
+                    # We've reached a new pham block
                     try:
+                        # We need to remove prior line's geneid before dumping
                         pham_geneids.pop(-1)
                     except IndexError:
-                        # First pham should fail because pham_geneids is empty
+                        # This should happen for the first pham dump
                         pass
-                    parsed_phams[pham_name] = pham_geneids
+                    phams[pham_name] = pham_geneids
                     pham_name += 1
-                    pham_geneids = [current_line.lstrip(">").rstrip()]
+                    pham_geneids = [current.lstrip(">").rstrip()]
+                # Otherwise, we're still in a pham block
                 else:
-                    pham_geneids.append(current_line.lstrip(">").rstrip())
+                    pham_geneids.append(current.lstrip(">").rstrip())
+            # If the current line is a translation line
             else:
-                # Translation, skip
+                # We don't care about it - do nothing and move on
                 pass
-            # prior gets current's value, current gets new line
-            prior_line, current_line = current_line, fh.readline()
+            prior, current = current, fh.readline()
+        # Need to dump the last pham into the dictionary
+        phams[pham_name] = pham_geneids
+    # Pham 0 is a placeholder
+    phams.pop(0)
 
-        # Dump the last working pham into the dictionary
-        parsed_phams[pham_name] = pham_geneids
-
-    # Pham 0 is a placeholder - remove it and then return parsed_phams
-    parsed_phams.pop(0)
-
-    print("Finish parsing MMseqs2 output...")
-    print(f"Genes were sorted into {len(parsed_phams)} phams...")
-
-    return parsed_phams
+    return phams
 
 
-def parse_blast(wd):
+def parse_mcl_output(outfile):
     """
-    Parses blastclust output (space-delimited values)
-    :param wd: the temporary working directory for phameration
-    :return: parsed_phams (dictionary)
+    Parse the mci output into phams
+    :param outfile: mci output file
+    :type outfile: str
+    :return: phams
+    :rtype: dict
     """
-    parsed_phams = dict()
+    phams = dict()
 
-    filename = f"{wd}/output.txt"
+    counter = 0
+    with open(outfile, "r") as fh:
+        for line in fh:
+            counter += 1
+            pham = line.rstrip().split()
+            for i in range(len(pham)):
+                gene = pham[i]
+                if "|" in gene:
+                    gene = gene.split("|")
+                    gene = "_".join(gene[1:])
+                pham[i] = gene
+            phams[counter] = pham
 
-    print("Begin parsing blastclust output...")
+    return phams
 
-    with open(filename, "r") as fh:
-        in_reader = csv.reader(fh, delimiter=" ")
-        for i, row in enumerate(in_reader):
-            geneids = [geneid for geneid in row[:-1]]   # last token is ''
-            parsed_phams[i + 1] = geneids
 
-    print("Finish parsing blastclust output...")
-    print(f"Genes were sorted into {len(parsed_phams)} phams...")
+# PHAM MANIPULATION FUNCTIONS
+def merge_pre_and_hmm_phams(hmm_phams, pre_phams, consensus_lookup):
+    """
+    Merges the pre-pham sequences (which contain all nr sequences) with
+    the hmm phams (which contain only hmm consensus sequences) into the
+    full hmm-based clustering output. Uses consensus_lookup dictionary
+    to find the pre-pham that each consensus belongs to, and then adds
+    each pre-pham geneid to a full pham based on the hmm phams.
+    :param hmm_phams: clustered consensus sequences
+    :type hmm_phams: dict
+    :param pre_phams: clustered sequences (used to generate hmms)
+    :type pre_phams: dict
+    :param consensus_lookup: reverse-mapped pre_phams
+    :type consensus_lookup: dict
+    :return: phams
+    :rtype: dict
+    """
+    phams = dict()
 
-    return parsed_phams
+    for name, members in hmm_phams.items():
+        full_pham = list()
+        for member in members:
+            pre_pham_key = consensus_lookup[member]
+            for geneid in pre_phams[pre_pham_key]:
+                full_pham.append(geneid)
+        phams[name] = full_pham
+
+    return phams
 
 
 def reintroduce_duplicates(new_phams, trans_groups, genes_and_trans):
@@ -471,7 +382,7 @@ def preserve_phams(old_phams, new_phams, old_colors, new_genes):
     # Iterate through old and new phams
     for old_key in old_phams.keys():
         outcount += 1
-        print("Pham Name Conservation: {} / {}".format(outcount, total))
+        # print("Pham Name Conservation: {} / {}".format(outcount, total))
 
         old_pham = old_phams[old_key]
 
@@ -526,6 +437,7 @@ def preserve_phams(old_phams, new_phams, old_colors, new_genes):
 
         final_phams[new_key] = new_phams_copy[key]
 
+        # Multi-member pham gets non-white color
         if len(new_phams_copy[key]) > 1:
             h = s = v = 0
             while h <= 0:
@@ -538,93 +450,275 @@ def preserve_phams(old_phams, new_phams, old_colors, new_genes):
             rgb = (rgb[0] * 255, rgb[1] * 255, rgb[2] * 255)
             hexrgb = "#{:02x}{:02x}{:02x}".format(int(rgb[0]), int(rgb[1]),
                                                   int(rgb[2]))
-            final_colors[new_key] = hexrgb
+            final_colors[new_key] = hexrgb.upper()
+        # Orpham gets white
         else:
             final_colors[new_key] = '#FFFFFF'
 
     return final_phams, final_colors
 
 
-def reinsert_pham_data(new_phams, new_colors, engine):
+# MMSEQS2 CLUSTERING FUNCTIONS
+def mmseqs_createdb(fasta, sequence_db):
     """
-    Puts pham data back into the database
-    :param new_phams:
-    :param new_colors:
-    :param engine:
-    :return:
+    Runs 'mmseqs createdb' to convert a FASTA file into an MMseqs2
+    sequence database.
+    :param fasta: path to the FASTA file to convert
+    :type fasta: str
+    :param sequence_db: MMseqs2 sequence database
+    :type sequence_db: str
     """
-    # Colors have to go first, since PhamID column in gene table references
-    # PhamID in pham table
-    commands = []
-    for key in new_colors.keys():
-        commands.append(f"INSERT INTO pham (PhamID, Color) VALUES ({key}, "
-                        f"'{new_colors[key]}')")
-
-    mysqldb.execute_transaction(engine, commands)
+    command = f"mmseqs createdb {fasta} {sequence_db} -v 3"
+    with Popen(args=shlex.split(command), stdout=PIPE, stderr=PIPE) as process:
+        # print(process.stdout.read().decode("utf-8"))
+        # print(process.stderr.read().decode("utf-8"))
+        process.wait()
 
 
-
-    commands = []
-    for key in new_phams.keys():
-        for gene in new_phams[key]:
-            commands.append(f"UPDATE gene SET PhamID = {key} WHERE GeneID = '{gene}'")
-
-    mysqldb.execute_transaction(engine, commands)
-
-
-def fix_miscolored_phams(engine):
-    print("Phixing Phalsely Hued Phams...")
-    # Phams which are colored as though they are orphams, when really
-    # they are multi-member phams
-    query = "SELECT * FROM (SELECT g.PhamID, COUNT(GeneID) AS count, "\
-            "p.Color FROM gene AS g INNER JOIN pham AS p ON g.PhamID " \
-            "= p.PhamID GROUP BY PhamID) AS c WHERE Color = '#FFFFFF' "\
-            "AND count > 1"
-
-    results = mysqldb_basic.query_dict_list(engine, query)
-
-
-    print(f"Found {len(results)} miscolored phams to fix")
-
-    commands = []
-    for dictionary in results:
-        pham_id = dictionary["PhamID"]
-        count = dictionary["count"]
-        color = dictionary["Color"]
-        h = s = v = 0
-        while h <= 0:
-            h = random.random()
-        while s < 0.5:
-            s = random.random()
-        while v < 0.8:
-            v = random.random()
-        rgb = colorsys.hsv_to_rgb(h, s, v)
-        rgb = (rgb[0] * 255, rgb[1] * 255, rgb[2] * 255)
-        hexrgb = "#{:02x}{:02x}{:02x}".format(int(rgb[0]), int(rgb[1]),
-                                              int(rgb[2]))
-        new_color = hexrgb
-        commands.append(f"UPDATE pham SET Color = '{new_color}' WHERE PhamID = '{pham_id}'")
-
-    mysqldb.execute_transaction(engine, commands)
+def mmseqs_cluster(sequence_db, cluster_db, args):
+    """
+    Runs 'mmseqs cluster' to cluster an MMseqs2 sequence database.
+    :param sequence_db: MMseqs2 sequence database
+    :type sequence_db: str
+    :param cluster_db: MMseqs2 clustered database
+    :type cluster_db: str
+    :param args: parsed command line arguments
+    :type args: dict
+    """
+    command = f"mmseqs cluster {sequence_db} {cluster_db} {args['tmp_dir']}" \
+              f" -v 3 --min-seq-id {args['identity']} -c {args['coverage']} " \
+              f"-e {args['e_value']} -s {args['sens']} --max-seqs 1000 " \
+              f"--cluster-steps {args['steps']} --threads {args['threads']} " \
+              f"--alignment-mode {args['aln_mode']} --cov-mode " \
+              f"{args['cov_mode']} --cluster-mode {args['clu_mode']}"
+    with Popen(args=shlex.split(command), stdout=PIPE, stderr=PIPE) as process:
+        # print(process.stdout.read().decode("utf-8"))
+        # print(process.stderr.read().decode("utf-8"))
+        process.wait()
 
 
-    print("Phixing Phalsely Phlagged Orphams...")
-    # Phams which are colored as though they are multi-member phams
-    # when really they are orphams
-    query = "SELECT * FROM (SELECT g.PhamID, COUNT(GeneID) AS count, "\
-            "p.Color FROM gene AS g INNER JOIN pham AS p ON g.PhamID "\
-            "=p.PhamID GROUP BY PhamID) AS c WHERE Color != '#FFFFFF' "\
-            "AND count = 1"
+def mmseqs_result2profile(sequence_db, cluster_db, profile_db):
+    """
+    Runs 'mmseqs result2profile' to convert clusters from one MMseqs2
+    clustered database into a profile database.
+    :param sequence_db: MMseqs2 sequence database
+    :type sequence_db: str
+    :param cluster_db: MMseqs2 clustered database
+    :type cluster_db: str
+    :param profile_db: MMseqs2 profile database
+    :type profile_db: str
+    """
+    command = f"mmseqs result2profile {sequence_db} {sequence_db} " \
+              f"{cluster_db} {profile_db} -v 3"
+    with Popen(args=shlex.split(command), stdout=PIPE, stderr=PIPE) as process:
+        # print(process.stdout.read().decode("utf-8"))
+        # print(process.stderr.read().decode("utf-8"))
+        process.wait()
 
-    results = mysqldb_basic.query_dict_list(engine, query)
-    print(f"Found {len(results)} miscolored orphams to fix...")
 
-    commands = []
-    for dictionary in results:
-        pham_id = dictionary["PhamID"]
-        count = dictionary["count"]
-        color = dictionary["Color"]
-        new_color = "#FFFFFF"
-        commands.append(f"UPDATE pham SET Color = '{new_color}' WHERE PhamID = '{pham_id}'")
+def mmseqs_profile2consensus(profile_db, consensus_db):
+    """
+    Runs 'mmseqs profile2consensus' to extract consensus sequences from
+    an MMseqs2 profile database, and creates an MMseqs2 sequence
+    database from the consensuses.
+    :param profile_db: MMseqs2 profile database
+    :type profile_db: str
+    :param consensus_db: MMseqs2 sequence database
+    :type consensus_db: str
+    """
+    command = f"mmseqs profile2consensus {profile_db} {consensus_db} -v 3"
+    with Popen(args=shlex.split(command), stdout=PIPE, stderr=PIPE) as process:
+        # print(process.stdout.read().decode("utf-8"))
+        # print(process.stderr.read().decode("utf-8"))
+        process.wait()
 
-    mysqldb.execute_transaction(engine, commands)
+
+def mmseqs_search(profile_db, consensus_db, align_db, args):
+    """
+    Runs 'mmseqs search' to search profiles against their consensus
+    sequences and save the alignment results to an MMseqs2 alignment
+    database. The profile_db and consensus_db MUST be the same size.
+    :param profile_db: MMseqs2 profile database
+    :type profile_db: str
+    :param consensus_db: MMseqs2 sequence database
+    :type consensus_db: str
+    :param align_db: MMseqs2 alignment database
+    :type align_db: str
+    :param args: parsed command line arguments
+    :type args: dict
+    """
+    command = f"mmseqs search {profile_db} {consensus_db} {align_db} " \
+              f"{args['tmp_dir']} --min-seq-id {args['hmmident']} -c " \
+              f"{args['hmmcover']} --e-profile {args['hmm_eval']} -v 3 " \
+              f"--add-self-matches 1"
+    with Popen(args=shlex.split(command), stdout=PIPE, stderr=PIPE) as process:
+        # print(process.stdout.read().decode("utf-8"))
+        # print(process.stderr.read().decode("utf-8"))
+        process.wait()
+
+
+def mmseqs_clust(consensus_db, align_db, cluster_db):
+    """
+    Runs 'mmseqs clust' to cluster an MMseqs2 consensus database
+    using an MMseqs2 alignment database, with results being saved to
+    an MMseqs2 cluster database.
+    :param consensus_db: MMseqs sequence database
+    :type consensus_db: str
+    :param align_db: MMseqs2 alignment database
+    :type align_db: str
+    :param cluster_db: MMseqs2 cluster database
+    :type cluster_db: str
+    """
+    command = f"mmseqs clust {consensus_db} {align_db} {cluster_db}"
+    with Popen(args=shlex.split(command), stdout=PIPE, stderr=PIPE) as process:
+        # print(process.stdout.read().decode("utf-8"))
+        # print(process.stderr.read().decode("utf-8"))
+        process.wait()
+
+
+def mmseqs_createseqfiledb(sequence_db, cluster_db, seqfile_db):
+    """
+    Runs 'mmseqs createseqfiledb' to create the intermediate to the
+    FASTA-like parseable output.
+    :param sequence_db: MMseqs2 sequence database
+    :type sequence_db: str
+    :param cluster_db: MMseqs2 clustered database
+    :type cluster_db: str
+    :param seqfile_db: MMseqs2 seqfile database
+    :type seqfile_db: str
+    """
+    command = f"mmseqs createseqfiledb {sequence_db} {cluster_db} " \
+              f"{seqfile_db} -v 3"
+    with Popen(args=shlex.split(command), stdout=PIPE, stderr=PIPE) as process:
+        # print(process.stdout.read().decode("utf-8"))
+        # print(process.stderr.read().decode("utf-8"))
+        process.wait()
+
+
+def mmseqs_result2flat(query_db, target_db, seqfile_db, outfile):
+    """
+    Runs 'mmseqs result2flat' to create FASTA-like parseable output.
+    :param query_db: MMseqs2 sequence or profile database
+    :type query_db: str
+    :param target_db: MMseqs2 sequence database
+    :type target_db: str
+    :param seqfile_db: MMseqs2 seqfile database
+    :type seqfile_db: str
+    :param outfile: FASTA-like parseable output
+    :type outfile: str
+    """
+    command = f"mmseqs result2flat {query_db} {target_db} {seqfile_db} " \
+              f"{outfile} -v 3"
+    with Popen(args=shlex.split(command), stdout=PIPE, stderr=PIPE) as process:
+        # print(process.stdout.read().decode("utf-8"))
+        # print(process.stderr.read().decode("utf-8"))
+        process.wait()
+
+
+# BLAST-MCL CLUSTERING FUNCTIONS
+def create_blastdb(fasta, db_name, db_path):
+    """
+    Runs 'makeblastdb' to create a BLAST-searchable database.
+    :param fasta: FASTA-formatted input file
+    :type fasta: str
+    :param db_name: BLAST sequence database
+    :type db_name: str
+    :param db_path: BLAST sequence database path
+    :type db_path: str
+    """
+    command = f"makeblastdb -in {fasta} -dbtype prot -title {db_name} " \
+              f"-parse_seqids -out {db_path}"
+    with Popen(args=shlex.split(command), stdout=PIPE, stderr=PIPE) as process:
+        # print(process.stdout.read().decode("utf-8"))
+        # print(process.stderr.read().decode("utf-8"))
+        process.wait()
+
+
+def chunk_translations(translation_groups, chunksize=500):
+    """
+    Break translation_groups into a dictionary of chunksize-tuples of
+    2-tuples where each 2-tuple is a translation and its corresponding
+    geneid.
+    :param translation_groups: translations and their geneids
+    :type translation_groups: dict
+    :param chunksize: how many translations will be in a chunk?
+    :type chunksize: int
+    :return: chunks
+    :rtype: dict
+    """
+    chunks = dict()
+    keys = list(translation_groups.keys())
+    num_chunks = len(keys) // chunksize
+
+    index = 0
+    for i in range(num_chunks):
+        temp_chunk = tuple((x, translation_groups[x][0]) for x in keys[index:index+chunksize])
+        chunks[i] = temp_chunk
+        index += chunksize
+
+    # Add any leftovers to one last (smaller) chunk
+    temp_chunk = tuple((x, translation_groups[x][0]) for x in keys[index:])
+    chunks[num_chunks + 1] = temp_chunk
+
+    return chunks
+
+
+def blastp(index, chunk, tmp, db_path, evalue):
+    """
+    Runs 'blastp' using the given chunk as the input gene set. The
+    blast output is an adjacency matrix for this chunk.
+    :param index: chunk index being run
+    :type index: int
+    :param chunk: the translations to run right now
+    :type chunk: tuple of 2-tuples
+    :param tmp: path where I/O can go on
+    :type tmp: str
+    :param db_path: path to the target blast database
+    :type db_path: str
+    :param evalue: e-value cutoff to report hits
+    :type evalue: float
+    """
+    in_name = f"{tmp}/input{index}.fasta"
+    out_name = f"{tmp}/output{index}.tsv"
+
+    with open(in_name, "w") as fh:
+        for t in chunk:
+            fh.write(f">{t[1]}\n{t[0]}\n")
+
+    command = f"blastp -query {in_name} -db {db_path} -out {out_name} " \
+              f"-outfmt '6 qseqid sseqid evalue' -max_target_seqs " \
+              f"10000 -num_threads 1 -use_sw_tback -evalue {evalue} " \
+              f"-qcov_hsp_perc 50 -max_hsps 1"
+    with Popen(args=shlex.split(command), stdout=PIPE, stderr=PIPE) as process:
+        stdout = process.stdout.read().decode("utf-8")
+        stderr = process.stderr.read().decode("utf-8")
+        if stdout != "":
+            print(stdout)
+        if stderr != "":
+            print(stderr)
+
+    return [out_name]
+
+
+def markov_cluster(adj_mat_file, inflation, tmp_dir):
+    """
+    Run 'mcl' on an adjacency matrix to cluster the blastp results.
+    :param adj_mat_file: 3-column file with blastp resultant
+    queries, subjects, and evalues
+    :type adj_mat_file: str
+    :param inflation: mcl inflation parameter
+    :type inflation: float
+    :param tmp_dir: file I/O directory
+    :type tmp_dir: str
+    :return: outfile
+    :rtype: str
+    """
+    outfile = f"{tmp_dir}/mcl_clusters.txt"
+    command = f"mcl {adj_mat_file} -I {inflation} --abc -o {outfile} " \
+              f"-abc-tf 'ceil(200)' --abc-neg-log10"
+    with Popen(args=shlex.split(command), stdout=PIPE, stderr=PIPE) as process:
+        # print(process.stdout.read().decode("utf-8"))
+        # print(process.stderr.read().decode("utf-8"))
+        process.wait()
+
+    return outfile

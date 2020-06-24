@@ -1,139 +1,329 @@
-"""Primary pipeline to group related gene products into phamilies."""
+"""Program to group related gene products into phamilies using either MMseqs2
+for both similarity search and clustering, or blastp for similarity search
+and mcl for clustering."""
 
 import argparse
 import datetime
 import os
-import shutil
 import sys
+import shutil
 
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.functions.phameration import *
-from pdm_utils.functions import mysqldb
+from pdm_utils.functions.parallelize import *
+
+MMSEQS_DESCRIPTION = """
+Assort protein sequences into phamilies using MMseqs2.
+
+[1] Steinegger M and Soeding J. MMseqs2 enables sensitive protein 
+sequence searching for the analysis of massive data sets. Nature 
+Biotechnology, 2017. doi: 10.1038/nbt.3988).
+"""
+
+BLAST_DESCRIPTION = """
+Assort protein sequences into phamilies using blastp for homology 
+search and mcl to extract groups of homologs from the blastp output.
+
+[1] Altschul et al. Basic Local Alignment Search Tool. Journal of 
+Molecular Biology, 1990. doi: 10.1016/S0022-2836(05)80360-2
+[2] Stijn van Dongen and Cei Abreu-Goodger. Using MCL to Extract 
+Clusters From Networks. Methods in Molecular Biology, 2012. doi: 
+10.1007/978-1-61779-361-5_15.
+"""
+
 
 def setup_argparser():
     """
     Builds argparse.ArgumentParser for this script
     :return:
     """
-    # Pipeline description
-    description = "Groups related CDS features into phamilies using MMseqs2 " \
-                  "(default) or blastclust"
-
     # Initialize parser and add arguments
-    parser = argparse.ArgumentParser(description=description)
-    parser.add_argument("db", type=str,
-                        help="name of database to phamerate")
-    parser.add_argument("--program", type=str, default="mmseqs", choices=[
-        "mmseqs", "blast"], help="which program to use for clustering")
-    parser.add_argument("--threads", default=1, help="number of threads to use")
-    parser.add_argument("--identity", type=float, default=32.5,
-                        help="percent identity threshold in range [0,100]")
-    parser.add_argument("--coverage", type=float, default=65,
-                        help="coverage threshold in range [0,100]")
-    parser.add_argument("--steps", type=int, default=1,
-                        help="number of clustering steps (mmseqs only)")
-    parser.add_argument("--max_seqs", type=int, default=1000,
-                        help="max number of targets per query per step "
-                             "(mmseqs only)")
-    parser.add_argument("--verbose", type=int, default=3,
-                        help="verbosity of output in range [0, 3] (mmseqs "
-                             "only)")
-    parser.add_argument("--aln_mode", type=int, default=3,
-                        help="alignment mode in range [0, 4] (mmseqs only)")
-    parser.add_argument("--cov_mode", type=int, default=0,
-                        help="coverage mode in range [0, 4] (mmseqs only)")
-    parser.add_argument("--clu_mode", type=int, default=0,
-                        help="cluster mode in range [0, 3] (mmseqs only)")
-    parser.add_argument("--temp_dir", type=str, default="/tmp/phamerate",
-                        help="temporary directory for phameration file I/O")
+    parser = argparse.ArgumentParser(description=__doc__)
+    subparsers = parser.add_subparsers()
+
+    # Create sub-parser for MMseqs2 invocation
+    mmseqs_parser = subparsers.add_parser("mmseqs",
+                                          help="pham assembly uses MMseqs2")
+    mmseqs_parser.description = MMSEQS_DESCRIPTION
+    mmseqs_parser.add_argument("db", type=str,
+                               help="name of database to phamerate")
+    mmseqs_parser.add_argument("--identity", type=float, default=0.45,
+                               help="pct identity to enter pre-pham [0, 1]")
+    mmseqs_parser.add_argument("--coverage", type=float, default=0.75,
+                               help="pct coverage to enter pre-pham [0, 1]")
+    mmseqs_parser.add_argument("--e-value", type=float, default=0.001,
+                               help="E-value to enter pre-pham HMM")
+    mmseqs_parser.add_argument("--sens", type=float, default=8,
+                               help="sensitivity in range [1, 8.5]")
+    mmseqs_parser.add_argument("--steps", type=int, default=1,
+                               help="number of steps to build pre-pham HMMs")
+    mmseqs_parser.add_argument("--aln-mode", type=int, default=3,
+                               help="alignment mode in range [0, 4]")
+    mmseqs_parser.add_argument("--cov-mode", type=int, default=0,
+                               help="coverage mode in range [0, 4]")
+    mmseqs_parser.add_argument("--clu-mode", type=int, default=0,
+                               help="cluster mode in range [0, 3]")
+    mmseqs_parser.add_argument("--skip-hmm", action="store_true",
+                               help="skip the HMM clustering step")
+    mmseqs_parser.add_argument("--hmmident", type=float, default=0.30,
+                               help="pct identity to cluster HMMs [0, 1]")
+    mmseqs_parser.add_argument("--hmmcover", type=float, default=0.50,
+                               help="pct coverage to cluster HMMs [0, 1]")
+    mmseqs_parser.add_argument("--hmm-eval", type=float, default=0.001,
+                               help="E-value to cluster HMMs")
+    mmseqs_parser.add_argument("--threads", type=int, default=mp.cpu_count(),
+                               help="number of threads to use")
+    mmseqs_parser.add_argument("--tmp-dir", type=str, default="/tmp/phamerate",
+                               help="temporary directory for file I/O")
+    mmseqs_parser.formatter_class = argparse.RawTextHelpFormatter
+
+    # Create sub-parser for blast-mcl invocation
+    blast_parser = subparsers.add_parser("blast-mcl",
+                                         help="pham assembly uses blastp+mcl")
+    blast_parser.description = BLAST_DESCRIPTION
+    blast_parser.add_argument("db", type=str,
+                              help="name of database to phamerate")
+    blast_parser.add_argument("--e-value", type=float, default=0.001,
+                              help="blastp e-value to store result")
+    blast_parser.add_argument("--inflate", type=float, default=5.0,
+                              help="MCL inflation parameter")
+    blast_parser.add_argument("--threads", type=int, default=mp.cpu_count(),
+                              help="blastp instances to run in parallel")
+    blast_parser.add_argument("--tmp-dir", type=str, default="/tmp/phamerate",
+                              help="temporary directory for file I/O")
+    blast_parser.formatter_class = argparse.RawTextHelpFormatter
     return parser
+
+
+def refresh_tempdir(tmpdir):
+    """
+    Recursively deletes tmpdir if it exists, otherwise makes it
+    :param tmpdir: directory to refresh
+    :return:
+    """
+    if os.path.exists(tmpdir):
+        try:
+            shutil.rmtree(tmpdir)
+        except OSError:
+            print(f"Failed to delete existing temp directory '{tmpdir}'")
+            return
+    try:
+        os.makedirs(tmpdir)
+    except OSError:
+        print(f"Failed to create new temp directory '{tmpdir}")
+        return
 
 
 def main(argument_list):
     # Set up the argument parser
-    phamerate_parser = setup_argparser()
+    parser = setup_argparser()
 
-    # Parse arguments
-    args = phamerate_parser.parse_args(argument_list)
-    program = args.program
-    temp_dir = args.temp_dir
+    # Parse arguments into a dictionary
+    args = vars(parser.parse_args(argument_list))
+
+    # Temporary directory gets its own variable because we'll use it a lot
+    tmp = args["tmp_dir"]
+
+    # Make a note of which workflow we're using based on len(args)
+    if len(args) == 15:
+        program = "mmseqs"
+    else:
+        program = "blast-mcl"
+
+    # Record start time
+    start_time = datetime.datetime.now()
 
     # Initialize SQLAlchemy engine with database provided at CLI
-    alchemist = AlchemyHandler(database=args.db)
+    alchemist = AlchemyHandler(database=args["db"])
     alchemist.connect(pipeline=True)
     engine = alchemist.engine
 
-
-    # If we made it past the above connection_status() check, database access
-    # works (user at least has SELECT privileges on the indicated database).
-    # We'll assume that they also have UPDATE, INSERT, and TRUNCATE privileges.
-
-    # Record start time
-    start = datetime.datetime.now()
-
     # Refresh temp_dir
-    if os.path.exists(temp_dir):
-        try:
-            shutil.rmtree(temp_dir)
-        except OSError:
-            print(f"Failed to delete existing temp directory '{temp_dir}'")
-            return
-    try:
-        os.makedirs(temp_dir)
-    except OSError:
-        print(f"Failed to create new temp directory '{temp_dir}")
-        return
+    refresh_tempdir(tmp)
 
     # Get old pham data and un-phamerated genes
     old_phams = get_pham_geneids(engine)
     old_colors = get_pham_colors(engine)
-    unphamerated = get_new_geneids(engine)
+    new_genes = get_new_geneids(engine)
 
     # Get GeneIDs & translations, and translation groups
-    genes_and_trans = map_geneids_to_translations(engine)
-    translation_groups = map_translations_to_geneids(engine)
+    genes_and_translations = get_geneids_and_translations(engine)   # gene_x: translation_x
+    translation_groups = get_translation_groups(engine)             # translation_x: [gene_x, ..., gene_z]
+
+    # Print initial state
+    initial_summary = f"""
+Initial database summary:
+=============================
+ {len(old_phams)} total phams
+ {sum([len(x) == 1 for x in old_phams.values()])} orphams
+ {sum([len(x) for x in old_phams.values()])} genes in phams
+ {len(new_genes)} genes not in phams
+ {len(genes_and_translations)} total genes
+ {len(translation_groups)} non-redundant genes
+=============================
+"""
+    print(initial_summary)
 
     # Write input fasta file
-    write_fasta(translation_groups, temp_dir)
+    print("Writing non-redundant sequences to input fasta...")
+    infile = f"{tmp}/input.fasta"
+    write_fasta(translation_groups, infile)
 
-    # Create clusterdb and perform clustering
-    program_params = get_program_params(program, args)
-    create_clusterdb(program, temp_dir)
-    phamerate(program_params, program, temp_dir)
+    # Here is where the workflow selection comes into play
+    if program == "mmseqs":
+        seq_db = f"{tmp}/sequenceDB"            # MMseqs2 sequence database
+        clu_db = f"{tmp}/clusterDB"             # MMseqs2 cluster database
+        psf_db = f"{tmp}/seqfileDB"             # pre-pham seqfile database
+        p_out = f"{tmp}/pre_out.fasta"          # pre-pham output (FASTA)
 
-    # Parse phameration output
-    new_phams = parse_output(program, temp_dir)
-    new_phams = reintroduce_duplicates(new_phams, translation_groups, genes_and_trans)
+        print("Creating MMseqs2 sequence database...")
+        mmseqs_createdb(infile, seq_db)
+
+        print("Clustering sequence database...")
+        mmseqs_cluster(seq_db, clu_db, args)
+
+        print("Storing sequence-based phamilies...")
+        mmseqs_createseqfiledb(seq_db, clu_db, psf_db)
+        mmseqs_result2flat(seq_db, seq_db, psf_db, p_out)
+        pre_phams = parse_mmseqs_output(p_out)      # Parse pre-pham output
+
+        # Proceed with profile clustering, if allowed
+        if not args["skip_hmm"]:
+            con_lookup = dict()
+            for name, geneids in pre_phams.items():
+                for geneid in geneids:
+                    con_lookup[geneid] = name
+
+            pro_db = f"{tmp}/profileDB"         # MMseqs2 profile database
+            con_db = f"{tmp}/consensusDB"       # Consensus sequence database
+            aln_db = f"{tmp}/alignDB"           # Alignment database
+            res_db = f"{tmp}/resultDB"          # Cluster database
+            hsf_db = f"{tmp}/hmmSeqfileDB"      # hmm-pham seqfile database
+            h_out = f"{tmp}/hmm_out.fasta"      # hmm-pham output (FASTA)
+
+            print("Creating HMM profiles from sequence-based phamilies...")
+            mmseqs_result2profile(seq_db, clu_db, pro_db)
+
+            print("Extracting consensus sequences from HMM profiles...")
+            mmseqs_profile2consensus(pro_db, con_db)
+
+            print("Searching for profile-profile hits...")
+            mmseqs_search(pro_db, con_db, aln_db, args)
+
+            print("Clustering based on profile-profile alignments...")
+            mmseqs_clust(con_db, aln_db, res_db)
+
+            print("Storing profile-based phamilies...")
+            mmseqs_createseqfiledb(seq_db, res_db, hsf_db)
+            mmseqs_result2flat(pro_db, con_db, hsf_db, h_out)
+            hmm_phams = parse_mmseqs_output(h_out)
+
+            print("Merging sequence and profile-based phamilies...")
+            new_phams = merge_pre_and_hmm_phams(hmm_phams, pre_phams, con_lookup)
+        else:
+            new_phams = pre_phams
+    elif program == "blast-mcl":
+        blast_db = "blastdb"
+        blast_path = f"{tmp}/{blast_db}"
+
+        print("Creating blast protein database...")
+        create_blastdb(infile, blast_db, blast_path)
+
+        print("Splitting non-redundant sequences into multiple blastp query files...")
+        chunks = chunk_translations(translation_groups)
+
+        jobs = []
+        for key, chunk in chunks.items():
+            jobs.append((key, chunk, tmp, blast_path, args["e_value"]))
+
+        print("Running blastp...")
+        results = parallelize(jobs, args["threads"], blastp)
+
+        print("Converting blastp output into adjacency matrix for mcl...")
+        results = [x for x in os.listdir(tmp) if x.endswith(".tsv")]
+        adjacency = f"{tmp}/blast_adjacency.abc"
+        with open(adjacency, "w") as fh:
+            for result in results:
+                f = open(f"{tmp}/{result}", "r")
+                for line in f:
+                    fh.write(line)
+                f.close()
+
+        print("Running mcl on adjacency matrix...")
+        outfile = markov_cluster(adjacency, args["inflate"], tmp)
+
+        print("Storing blast-mcl phamilies...")
+        new_phams = parse_mcl_output(outfile)
+
+        # Some proteins don't have even self-hits in blastp - take a
+        # census of who is missing, and add them as "orphams"
+        mcl_genes = set()
+        for name, pham in new_phams.items():
+            for gene in pham:
+                mcl_genes.add(genes_and_translations[gene])
+
+        all_trans = set(translation_groups.keys())
+
+        # Some genes don't have blast hits, even to themselves. These are
+        # not in the blast output and need to be re-inserted as orphams.
+        missing = all_trans - mcl_genes
+        for translation in missing:
+            new_phams[len(new_phams) + 1] = \
+                [translation_groups[translation][0]]
+
+    # Reintroduce duplicates
+    print("Propagating phamily assignments to duplicate genes...")
+    new_phams = reintroduce_duplicates(new_phams, translation_groups,
+                                       genes_and_translations)
 
     # Preserve old pham names and colors
-    new_phams, new_colors = preserve_phams(old_phams, new_phams, old_colors,
-                                           unphamerated)
+    print("Preserving old phamily names/colors where possible...")
+    new_phams, new_colors = preserve_phams(old_phams, new_phams,
+                                           old_colors, new_genes)
 
     # Early exit if we don't have new phams or new colors - avoids
-    # overwriting the existing pham data with potentially incomplete new data
+    # overwriting the existing pham data with incomplete new data
     if len(new_phams) == 0 or len(new_colors) == 0:
-        print("Failed to parse new pham/color data... Terminating pipeline")
+        print("Failed to parse new pham/color data properly... Terminating "
+              "pipeline")
         return
 
-    # If we got past the early exit, we are probably safe to truncate the
-    # pham table, and insert the new pham data
-    # Clear old pham data - auto commits at end of transaction - this will also
-    # set all PhamID values in gene table to NULL
-    commands = ["DELETE FROM pham"]
-    mysqldb.execute_transaction(engine, commands)
-
-
-    # Insert new pham/color data
-    reinsert_pham_data(new_phams, new_colors, engine)
+    # Update gene/pham tables with new pham data. Pham colors need to be done
+    # first, because gene.PhamID is a foreign key to pham.PhamID.
+    print("Updating pham data in database...")
+    update_pham_table(new_colors, engine)
+    update_gene_table(new_phams, engine)
 
     # Fix miscolored phams/orphams
-    fix_miscolored_phams(engine)
+    print("Phixing phalsely phlagged orphams...", end=" ")
+    fix_white_phams(engine)
+    print("Phixing phalsely hued phams...", end=" ")
+    fix_colored_orphams(engine)
 
     # Close all connections in the connection pool.
     engine.dispose()
 
+    # Print final state
+    final_summary = f"""
+Final database summary:
+=============================
+ {len(new_phams)} total phams
+ {sum([len(x) == 1 for x in new_phams.values()])} orphams
+ {sum([len(x) for x in new_phams.values()])} genes in phams
+ {len(genes_and_translations) - sum([len(x) for x in new_phams.values()])} genes not in phams
+ {len(genes_and_translations)} total genes
+ {len(translation_groups)} non-redundant genes
+=============================
+"""
+    print(final_summary)
+
     # Record stop time
-    stop = datetime.datetime.now()
+    stop_time = datetime.datetime.now()
+    elapsed_time = str(stop_time - start_time)
 
     # Report phameration elapsed time
-    print("Elapsed time: {}".format(str(stop - start)))
+    print(f"Elapsed time: {elapsed_time}")
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])
