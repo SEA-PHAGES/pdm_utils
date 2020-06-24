@@ -92,10 +92,6 @@ EMPTY_SET = {"",
              0,
              EMPTY_DATE}
 
-# Path to blastclust binary
-BLASTCLUST_PATH = Path("~/bin/blast-2.2.14/bin").expanduser()
-
-
 # Set up dna and protein alphabets to verify sequence integrity
 DNA_ALPHABET = set(IUPAC.IUPACUnambiguousDNA.letters)
 PROTEIN_ALPHABET = set(IUPAC.protein.letters)
