@@ -3,6 +3,10 @@
 Bibliography
 ============
 
+.. _altschul1990:
+
+Altschul et al, 1990. https://pubmed.ncbi.nlm.nih.gov/2231712/
+
 .. _camacho2009:
 
 Camacho et al., 2009. https://www.ncbi.nlm.nih.gov/pubmed/20003500.
@@ -25,7 +29,7 @@ Hanauer et al., 2017. https://www.ncbi.nlm.nih.gov/pubmed/29208718.
 
 .. _laslett2004:
 
-Laslett & Canback, 2004. 'https://www.ncbi.nlm.nih.gov/pubmed/14704338.
+Laslett & Canback, 2004. https://www.ncbi.nlm.nih.gov/pubmed/14704338.
 
 .. _lu2020:
 
@@ -38,3 +42,7 @@ Nawrocki & Eddy, 2013. https://www.ncbi.nlm.nih.gov/pubmed/24008419.
 .. _steinegger2017:
 
 Steinegger and Söding, 2017. https://www.ncbi.nlm.nih.gov/pubmed/29035372.
+
+.. _vanDongen2012:
+
+van Dongen & Abreu-Goodger, 2012. https://pubmed.ncbi.nlm.nih.gov/22144159/

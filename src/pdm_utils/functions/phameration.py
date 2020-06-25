@@ -663,7 +663,7 @@ def chunk_translations(translation_groups, chunksize=500):
     return chunks
 
 
-def blastp(index, chunk, tmp, db_path, evalue):
+def blastp(index, chunk, tmp, db_path, evalue, query_cov):
     """
     Runs 'blastp' using the given chunk as the input gene set. The
     blast output is an adjacency matrix for this chunk.
@@ -688,7 +688,7 @@ def blastp(index, chunk, tmp, db_path, evalue):
     command = f"blastp -query {in_name} -db {db_path} -out {out_name} " \
               f"-outfmt '6 qseqid sseqid evalue' -max_target_seqs " \
               f"10000 -num_threads 1 -use_sw_tback -evalue {evalue} " \
-              f"-qcov_hsp_perc 50 -max_hsps 1"
+              f"-qcov_hsp_perc {int(100*query_cov)} -max_hsps 1"
     with Popen(args=shlex.split(command), stdout=PIPE, stderr=PIPE) as process:
         stdout = process.stdout.read().decode("utf-8")
         stderr = process.stderr.read().decode("utf-8")

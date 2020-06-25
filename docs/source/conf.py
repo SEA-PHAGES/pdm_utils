@@ -66,7 +66,6 @@ extlinks = {
     'biopython': ('https://biopython.org/%s', ''),
     'blastplus': ('https://blast.ncbi.nlm.nih.gov/'
         'Blast.cgi?CMD=Web&PAGE_TYPE=BlastDocs&DOC_TYPE=Download%s', ''),
-    'blastlegacy': ('https://ftp.ncbi.nlm.nih.gov/blast/executables/legacy.NOTSUPPORTED/2.2.14%s', ''),
     'cdd': ('https://www.ncbi.nlm.nih.gov/cdd/%s', ''),
     'cdd_le': ('ftp://ftp.ncbi.nih.gov/pub/mmdb/cdd/little_endian/Cdd_LE.tar.gz%s',''),
     'conda_docs': ('https://conda.io/projects/conda/en/latest/%s', ''),

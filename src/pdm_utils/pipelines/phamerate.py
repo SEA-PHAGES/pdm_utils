@@ -85,6 +85,8 @@ def setup_argparser():
                               help="name of database to phamerate")
     blast_parser.add_argument("--e-value", type=float, default=0.001,
                               help="blastp e-value to store result")
+    blast_parser.add_argument("--query-cov", type=float, default=0.50,
+                              help="blastp query coverage to keep HSPs [0, 1]")
     blast_parser.add_argument("--inflate", type=float, default=5.0,
                               help="MCL inflation parameter")
     blast_parser.add_argument("--threads", type=int, default=mp.cpu_count(),
@@ -234,7 +236,7 @@ Initial database summary:
 
         jobs = []
         for key, chunk in chunks.items():
-            jobs.append((key, chunk, tmp, blast_path, args["e_value"]))
+            jobs.append((key, chunk, tmp, blast_path, args["e_value"], args["query_cov"]))
 
         print("Running blastp...")
         results = parallelize(jobs, args["threads"], blastp)
