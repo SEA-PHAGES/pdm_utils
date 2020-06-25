@@ -34,7 +34,7 @@ ________
   ./installation/install_mmseqs2
   ./installation/install_ncbi_tools
   ./installation/install_ncbi_tools
-  ./installation/install_legacy_blast
+  ./installation/install_mcl
   ./installation/install_pdm_utils_repo
   ./installation/install_trnascan_se
   ./installation/install_aragorn
@@ -47,7 +47,7 @@ Several ``pdm_utils`` tools have specific dependencies. Install the following so
 - :ref:`MMseqs2 (creating gene phamilies) <install_mmseqs2>`
 - :ref:`NCBI Blast+ (finding conserved domains) <install_ncbi_tools>`
 - :ref:`NCBI Conserved Domain Database (finding conserved domains) <install_ncbi_tools>`
-- :ref:`NCBI Legacy Blast (creating gene phamilies) <install_legacy_blast>`
+- :ref:`Markov Clustering (creating gene phamilies) <install_mcl>`
 - :ref:`tRNAScan-SE (importing tRNA and tmRNA data) <install_trnascan_se>`
 - :ref:`ARAGORN (importing tRNA and tmRNA data) <install_aragorn>`
 - :ref:`Infernal (importing tRNA and tmRNA data) <install_infernal>`
