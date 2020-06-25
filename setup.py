@@ -5,9 +5,9 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="pdm_utils",
-    version="0.7.0",
-    author="Travis Mavrich",
-    author_email="trm53@pitt.edu",
+    version="0.8.0",
+    author="Christian Gauthier",
+    author_email="chg60@pitt.edu",
     description="MySQL phage genomics database management utilities",
     long_description=long_description,
     long_description_content_type="text/markdown",
