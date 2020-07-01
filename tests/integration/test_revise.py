@@ -24,7 +24,8 @@ PWD = test_db_utils.PWD
 DB = test_db_utils.DB
 TEST_DIR = "/tmp/pdm_utils_tests_revise"
 
-TEST_DATA = [{"Pham" : 40481,"#Members" : 4,"Clusters" : "A", "#Functions" : 3,
+TEST_FR_DATA = \
+            [{"Pham" : 40481,"#Members" : 4,"Clusters" : "A", "#Functions" : 3,
               "Functional Calls" : "Hypothetical Protein;terminase;Terminase",
               "Final Call" : "terminase"},
              {"Pham" : 25050,"#Members" : 4,"Clusters" : "A;N;None",
@@ -53,7 +54,7 @@ class TestGenbankRevise(unittest.TestCase):
         self.test_dir.mkdir()
         self.revise_form = self.test_dir.joinpath("revise_form.txt")
 
-        basic.export_data_dict(TEST_DATA, self.revise_form, REVIEW_HEADER,
+        basic.export_data_dict(TEST_FR_DATA, self.revise_form, REVIEW_HEADER,
                                                         include_headers=True)
 
     @classmethod
@@ -69,6 +70,15 @@ class TestGenbankRevise(unittest.TestCase):
         self.alchemist.connect(ask_database=True, login_attempts=0)
 
         self.revise_test_dir = self.test_dir.joinpath("revise_test_dir")
+        self.fr_input_file_path = self.test_dir.joinpath(
+                                                      "FunctionReport.csv")
+        self.csv_input_file_path = self.revise_test_dir.joinpath(
+                                                      "gene.csv")
+
+        basic.export_data_dict(TEST_FR_DATA, self.fr_input_file_path,
+                               REVIEW_HEADER, include_headers=True)
+
+        self.assertTrue(self.fr_input_file_path.is_file())
 
     def tearDown(self):
         if self.revise_test_dir.is_dir():
@@ -77,7 +87,8 @@ class TestGenbankRevise(unittest.TestCase):
     def test_execute_revise_1(self):
         """Verify execute_revise() creates new directory as expected.
         """
-        revise.execute_revise(self.alchemist, TEST_DATA, self.test_dir,
+        revise.execute_revise(self.alchemist, self.fr_input_file_path, 
+                                    self.test_dir,
                                     self.revise_test_dir.name)
 
         self.assertTrue(self.revise_test_dir.is_dir())
@@ -85,7 +96,8 @@ class TestGenbankRevise(unittest.TestCase):
     def test_execute_revise_2(self):
         """Verify execute_revise() filters parameter functions as expected.
         """
-        revise.execute_revise(self.alchemist, TEST_DATA, self.test_dir,
+        revise.execute_revise(self.alchemist, self.fr_input_file_path, 
+                                    self.test_dir,
                                     self.revise_test_dir.name,
                                     filters="phage.Cluster=A")
 
@@ -94,7 +106,8 @@ class TestGenbankRevise(unittest.TestCase):
     def test_execute_revise_3(self):
         """Verify execute_revise() group parameter functions as expected.
         """
-        revise.execute_revise(self.alchemist, TEST_DATA, self.test_dir,
+        revise.execute_revise(self.alchemist, self.fr_input_file_path,
+                                    self.test_dir,
                                     self.revise_test_dir.name,
                                     groups=["phage.Cluster"])
 
@@ -116,7 +129,8 @@ class TestGenbankRevise(unittest.TestCase):
     def test_execute_revise_4(self):
         """Verify execute_revise() removes directory lacking needed revisions.
         """
-        revise.execute_revise(self.alchemist, TEST_DATA, self.test_dir,
+        revise.execute_revise(self.alchemist, self.fr_input_file_path, 
+                                    self.test_dir,
                                     self.revise_test_dir.name,
                                     filters="phage.Cluster=N")
 
@@ -125,7 +139,8 @@ class TestGenbankRevise(unittest.TestCase):
     def test_execute_revise_5(self):
         """Verify execute_revise() exports expected data.
         """
-        revise.execute_revise(self.alchemist, TEST_DATA, self.test_dir,
+        revise.execute_revise(self.alchemist, self.fr_input_file_path, 
+                                    self.test_dir,
                                     self.revise_test_dir.name,
                                     groups=["gene.PhamID"])
 
@@ -215,8 +230,6 @@ class TestGenbankRevise(unittest.TestCase):
 
             for function in functions:
                 self.assertEqual(function, "endonuclease VII")
-
-
 
 if __name__ == "__main__":
     unittest.main()

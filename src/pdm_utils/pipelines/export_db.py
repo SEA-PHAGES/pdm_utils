@@ -382,8 +382,8 @@ def execute_csv_export(db_filter, export_path, folder_path, columns, csv_name,
                                         raw_bytes=False, verbose=False):
     """Executes csv export of a MySQL database table with select columns.
 
-    :param alchemist: A connected and fully build AlchemyHandler object.
-    :type alchemist: AlchemyHandler
+    :param db_filter: A connected and fully built Filter object.
+    :type db_filter: Filter
     :param export_path: Path to a dir for file creation.
     :type export_path: Path
     :param folder_path: Path to a top-level dir.
