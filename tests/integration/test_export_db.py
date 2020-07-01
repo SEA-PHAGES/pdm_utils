@@ -183,10 +183,11 @@ class TestFileExport(unittest.TestCase):
                                  self.export_test_dir.name, "fasta",
                                  concatenate=True)
 
-        fasta_path = self.export_test_dir.joinpath(
+        fasta_path = self.test_dir.joinpath(
                                         f"{self.export_test_dir.name}.fasta")
 
         self.assertTrue(fasta_path.is_file())
+        self.assertFalse(self.export_test_dir.is_file())
 
     def test_execute_export_9(self):
         """Verify execute_export() include_columns functions as expected.
