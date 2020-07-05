@@ -585,7 +585,7 @@ class Cds:
             if self.locus_tag != "":
                 qualifiers["locus_tag"] = [self.locus_tag]
             qualifiers["codon_start"] = ["1"]
-            qualifiers["transl_table"] = self.translation_table 
+            qualifiers["transl_table"] = [self.translation_table]
             qualifiers["product"] = [product]
             qualifiers["translation"] = [self.translation]
 

@@ -419,12 +419,15 @@ class Trna:
 
     # TODO: create base feature class - fully equivalent to the version in Cds,
     #  but better documented.
-    def set_seqfeature(self):
+    def set_seqfeature(self, type=None):
         """
         Create a SeqFeature object with which to populate the
         `seqfeature` attribute.
         :return:
         """
+        if type is None:
+            type = self.type
+
         # SeqFeature coordinates are 0-based half-open
         start, stop = basic.reformat_coordinates(
             self.start, self.stop, self.coordinate_format, "0_half_open")
@@ -432,37 +435,46 @@ class Trna:
         # SeqFeature orientation is (-1, 1) instead of ("R", "F")
         strand = basic.reformat_strand(self.orientation, "numeric")
 
+        self.seqfeature = self.create_seqfeature(type, start, stop, strand) 
+
+    def create_seqfeature(self, type, start, stop, strand):
         # Standard genes will have start < stop
-        if self.start <= self.stop:
-            self.seqfeature = SeqFeature(FeatureLocation(start, stop),
-                                         strand=strand, type=self.type)
+        if start <= stop:
+            seqfeature = SeqFeature(FeatureLocation(start, stop),
+                                         strand=strand, type=type)
         # Wrap-around genes will have stop < start
         else:
-            self.seqfeature = SeqFeature(CompoundLocation(
+            seqfeature = SeqFeature(CompoundLocation(
                 [FeatureLocation(start, self.genome_length),
-                 FeatureLocation(0, stop)]), strand=strand, type=self.type)
+                 FeatureLocation(0, stop)]), strand=strand, type=type)
         # Add feature qualifiers
-        self.seqfeature.qualifiers = self.get_qualifiers()
+        seqfeature.qualifiers = self.get_qualifiers(type)
 
-    def get_qualifiers(self):
+        return seqfeature
+
+    def get_qualifiers(self, type):
         """
         Helper function that uses tRNA data to populate the qualifiers
         attribute of `seqfeature`.
         :return: qualifiers OrderedDict()
         """
         qualifiers = OrderedDict()
-        qualifiers["gene"] = [self.name]
-        if self.locus_tag != "":
+        if type == "tRNA":
+            qualifiers["gene"] = [self.name]
+            if self.locus_tag != "":
+                qualifiers["locus_tag"] = [self.locus_tag]
+
+            if self.amino_acid not in GENBANK_AMINO_ACIDS:
+                amino_acid = "OTHER"
+            else:
+                amino_acid = self.amino_acid
+
+            qualifiers["product"] = [f"tRNA-{amino_acid}"]
+            qualifiers["note"] = [f"tRNA-{self.amino_acid}"
+                                  f"({self.anticodon})"]
+        if type == "gene":
+            qualifiers["gene"] = [self.name]
             qualifiers["locus_tag"] = [self.locus_tag]
-
-        if self.amino_acid not in GENBANK_AMINO_ACIDS:
-            amino_acid = "OTHER"
-        else:
-            amino_acid = self.amino_acid
-
-        qualifiers["product"] = [f"tRNA-{amino_acid}"]
-        qualifiers["note"] = [f"tRNA-{self.amino_acid}"
-                              f"({self.anticodon})"]
 
         return qualifiers
 

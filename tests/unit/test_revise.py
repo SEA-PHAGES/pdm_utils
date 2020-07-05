@@ -16,6 +16,9 @@ class TestReviseMain(unittest.TestCase):
         self.mock_database = Mock()
         self.mock_revisions_file = Mock()
 
+        self.mock_input_type = Mock()
+        self.mock_output_type = Mock()
+
         self.mock_folder_path = Mock()
         self.mock_folder_name = Mock()
         self.mock_filters = Mock()
@@ -30,6 +33,10 @@ class TestReviseMain(unittest.TestCase):
                                     return_value=self.mock_folder_path)
         type(self.mock_args).folder_name = PropertyMock(
                                     return_value=self.mock_folder_name)
+        type(self.mock_args).input_type = PropertyMock(
+                                    return_value=self.mock_input_type)
+        type(self.mock_args).output_type = PropertyMock(
+                                    return_value=self.mock_output_type)
         type(self.mock_args).filters = PropertyMock(
                                     return_value=self.mock_filters)
         type(self.mock_args).groups = PropertyMock(
@@ -38,26 +45,25 @@ class TestReviseMain(unittest.TestCase):
                                     return_value=self.mock_verbose)
 
     @patch("pdm_utils.pipelines.revise.execute_revise")
-    @patch("pdm_utils.pipelines.revise.basic.retrieve_data_dict")
     @patch("pdm_utils.pipelines.revise.pipelines_basic.build_alchemist")
     @patch("pdm_utils.pipelines.revise.parse_revise")
     def test_main_1(self, parse_revise_mock, build_alchemist_mock,
-                            retrieve_data_dict_mock, execute_revise_mock):
+                                             execute_revise_mock):
         """Verfiy function structure of main().
         """
         parse_revise_mock.return_value = self.mock_args
         build_alchemist_mock.return_value = self.mock_alchemist
-        retrieve_data_dict_mock.return_value = self.mock_revisions_data_dicts
 
         revise.main(self.test_args_list)
 
         parse_revise_mock.assert_called_with(self.test_args_list)
         build_alchemist_mock.assert_called_with(self.mock_database)
-        retrieve_data_dict_mock.assert_called_with(self.mock_revisions_file)
 
         execute_revise_mock.assert_called_with(
-                            self.mock_alchemist, self.mock_revisions_data_dicts,
+                            self.mock_alchemist, self.mock_revisions_file,
                             self.mock_folder_path, self.mock_folder_name,
+                            input_type=self.mock_input_type,
+                            output_type=self.mock_output_type,
                             filters=self.mock_filters, groups=self.mock_groups,
                             verbose=self.mock_verbose)
 

@@ -33,6 +33,7 @@ DEFAULT_TABLE = "phage"
 PHAGE_QUERY = "SELECT * FROM phage"
 GENE_QUERY = "SELECT * FROM gene"
 TRNA_QUERY = "SELECT * FROM trna"
+TMRNA_QUERY = "SELECT * FROM tmrna"
 
 # Valid Biopython formats that crash the script due to specific values in
 # some genomes that can probably be fixed relatively easily and implemented.
@@ -46,9 +47,10 @@ TRNA_QUERY = "SELECT * FROM trna"
 # Valid file formats using Biopython
 BIOPYTHON_PIPELINES = ["gb", "fasta", "clustal", "fasta-2line", "nexus",
                        "phylip", "pir", "stockholm", "tab"]
-FILTERABLE_PIPELINES = BIOPYTHON_PIPELINES + ["csv"]
+FILTERABLE_PIPELINES = BIOPYTHON_PIPELINES + ["csv", "tbl"]
 PIPELINES = FILTERABLE_PIPELINES + ["sql"]
 FLAT_FILE_TABLES = ["phage", "gene"]
+FIVE_COLUMN_TABLES = ["phage"]
 
 #Once trna has data, these tables can be reintroduced.
 TABLES = ["phage", "gene", "domain", "gene_domain", "pham",
@@ -138,7 +140,6 @@ def parse_export(unparsed_args_list):
             Follow selection argument with the desired name.
         """
 
-
     IMPORT_FILE_HELP = """
         Selection input option that imports values from a csv file.
             Follow selection argument with path to the
@@ -217,9 +218,10 @@ def parse_export(unparsed_args_list):
                                help=VERBOSE_HELP)
 
 
-    if initial.pipeline in (BIOPYTHON_PIPELINES + ["csv"]):
+    if initial.pipeline in FILTERABLE_PIPELINES:
         table_choices = dict.fromkeys(BIOPYTHON_PIPELINES, FLAT_FILE_TABLES)
-        table_choices.update({"csv": TABLES})
+        table_choices["csv"] = TABLES
+        table_choices["tbl"] = FIVE_COLUMN_TABLES
         optional_parser.add_argument("-t", "--table", help=TABLE_HELP,
                                 choices=table_choices[initial.pipeline])
 
@@ -241,7 +243,7 @@ def parse_export(unparsed_args_list):
         if initial.pipeline in BIOPYTHON_PIPELINES:
             optional_parser.add_argument("-cc", "--concatenate",
                                 help=CONCATENATE_HELP, action="store_true")
-        else:
+        elif initial.pipeline == "csv":
             optional_parser.add_argument("-sc", "--sequence_columns",
                                 help=SEQUENCE_COLUMNS_HELP, action="store_true")
             optional_parser.add_argument("-ic", "--include_columns", nargs="*",
@@ -369,9 +371,13 @@ def execute_export(alchemist, folder_path, folder_name, pipeline,
                                    db_filter.values, pipeline, db_version,
                                    table, concatenate=concatenate,
                                    data_cache=data_cache, verbose=verbose)
-            else:
+            elif pipeline == "csv":
                 execute_csv_export(db_filter, mapped_path, export_path,
                                    csv_columns, table, raw_bytes=raw_bytes,
+                                   data_cache=data_cache, verbose=verbose)
+            elif pipeline == "tbl":
+                execute_tbl_export(alchemist, mapped_path, export_path,
+                                   db_filter.values, 
                                    data_cache=data_cache, verbose=verbose)
     else:
         print("Unrecognized export pipeline, aborting export")
@@ -382,8 +388,8 @@ def execute_csv_export(db_filter, export_path, folder_path, columns, csv_name,
                                         raw_bytes=False, verbose=False):
     """Executes csv export of a MySQL database table with select columns.
 
-    :param alchemist: A connected and fully build AlchemyHandler object.
-    :type alchemist: AlchemyHandler
+    :param db_filter: A connected and fully built Filter object.
+    :type db_filter: Filter
     :param export_path: Path to a dir for file creation.
     :type export_path: Path
     :param folder_path: Path to a top-level dir.
@@ -463,7 +469,7 @@ def execute_ffx_export(alchemist, export_path, folder_path, values,
         print(f"Retrieving {export_path.name} data...")
 
     if table == "phage":
-        seqrecords = get_genome_seqrecords(alchemist, values, 
+        seqrecords = get_genome_seqrecords(alchemist, values,
                                                         data_cache=data_cache,
                                                         verbose=verbose)
     elif table == "gene":
@@ -481,6 +487,45 @@ def execute_ffx_export(alchemist, export_path, folder_path, values,
         append_database_version(record, db_version)
     write_seqrecord(seqrecords, file_format, export_path, verbose=verbose,
                                                     concatenate=concatenate)
+
+def execute_tbl_export(alchemist, export_path, folder_path, values,
+                                        data_cache=None, verbose=False):
+    """Executes five-column table export of a compilation of MySQL entries.
+
+    :param alchemist: A connected and fully build AlchemyHandler object.
+    :type alchemist: AlchemyHandler
+    :param export_path: Path to a dir for file creation.
+    :type export_path: Path
+    :param folder_path: Path to a top-level dir.
+    :type folder_path: Path
+    :param file_format: Biopython supported file type.
+    :type file_format: str
+    :param db_version: Dictionary containing database version information.
+    :type db_version: dict
+    :param table: MySQL table name.
+    :type table: str
+    :param values: List of values to fitler database results.
+    :type values: list[str]
+    :param conditionals: MySQL WHERE clause-related SQLAlchemy objects.
+    :type conditionals: list[BinaryExpression]
+    :param sort: A list of SQLAlchemy Columns to sort by.
+    :type sort: list[Column]
+    :param concatenate: A boolean to toggle concatenation of SeqRecords.
+    :type concaternate: bool
+    :param verbose: A boolean value to toggle progress print statements.
+    :type verbose: bool
+    """
+    if data_cache is None:
+        data_cache = {}
+
+    if verbose:
+        print(f"Retrieving {export_path.name} data...")
+
+    seqrecords = get_genome_seqrecords(alchemist, values,
+                                                        data_cache=data_cache,
+                                                        verbose=verbose)
+
+    write_five_column_table(seqrecords, export_path, verbose=verbose)
 
 def write_seqrecord(seqrecord_list, file_format, export_path, concatenate=False,
                                                               verbose=False):
@@ -511,7 +556,11 @@ def write_seqrecord(seqrecord_list, file_format, export_path, concatenate=False,
         if verbose:
             print(f"...Writing {record_name}...")
         file_name = f"{record_name}.{file_format}"
-        file_path = export_path.joinpath(file_name)
+        if concatenate:
+            file_path = export_path.parent.joinpath(file_name)
+            export_path.rmdir()
+        else:
+            file_path = export_path.joinpath(file_name)
         file_handle = file_path.open(mode='w')
         records = record_dictionary[record_name]
         if isinstance(records, list):
@@ -520,6 +569,44 @@ def write_seqrecord(seqrecord_list, file_format, export_path, concatenate=False,
                 file_handle.write("\n")
         else:
             SeqIO.write(record_dictionary[record_name], file_handle, file_format)
+
+        file_handle.close()
+
+def write_five_column_table(seqrecord_list, export_path, verbose=False):
+    """Outputs files as five_column tab-delimited text files.
+
+    :param seq_record_list: List of populated SeqRecords.
+    :type seq_record_list: list[SeqRecord]
+    :param export_path: Path to a dir for file creation.
+    :type export_path: Path
+    :param verbose: A boolean value to toggle progress print statements.
+    :type verbose: bool
+    """
+    if verbose:
+        print("Writing selected data to files...")
+    for record in seqrecord_list:
+        if verbose:
+            print(f"...Writing {record.name}...")
+        file_name = f"{record.name}.tbl"
+        file_path = export_path.joinpath(file_name)
+        file_handle = file_path.open(mode='w')
+
+        file_handle.write(f">Feature {record.id}\n")
+
+        for feature in record.features[1:]:
+            if feature.strand == 1:
+                start = feature.location.start
+                stop = feature.location.end
+            elif feature.strand == -1:
+                start = feature.location.end
+                stop = feature.location.start
+
+            file_handle.write(f"{start+1}\t{stop}\t{feature.type}\n")
+            for key in feature.qualifiers.keys():
+                if key in ["translation"]:
+                    continue
+                file_handle.write(f"\t\t\t{key}\t"
+                                  f"{feature.qualifiers[key][0]}\n")
 
         file_handle.close()
 
@@ -553,7 +640,7 @@ def get_genome_seqrecords(alchemist, values, data_cache=None, verbose=False):
     for genome_id in values:
         genome = data_cache.get(genome_id)
         if genome is None:
-            genome = get_single_genome(alchemist, genome_id, 
+            genome = get_single_genome(alchemist, genome_id, get_features=True,
                                                     data_cache=data_cache)
 
         genomes.append(genome)
@@ -601,15 +688,20 @@ def get_cds_seqrecords(alchemist, values, data_cache=None, nucleotide=False,
     return seqrecords
 
 #TODO Document
-def get_single_genome(alchemist, phageid, data_cache=None):
-    phage_obj = alchemist.metadata.tables["phage"]
-    phageid_obj = phage_obj.c.PhageID
+def get_single_genome(alchemist, phageid, get_features=False, data_cache=None):
+    gene_query = None
+    trna_query = None
+    tmrna_query = None
+    if get_features:
+        gene_query = GENE_QUERY
+        trna_query = TRNA_QUERY
+        tmrna_query = TMRNA_QUERY
 
-    genome_query = querying.build_select(alchemist.graph, phage_obj,
-                                                where=\
-                                                phageid_obj==phageid)
-    genome_data = mysqldb_basic.first(alchemist.engine, genome_query)
-    genome = mysqldb.parse_phage_table_data(genome_data)
+    genome = mysqldb.parse_genome_data(
+                            alchemist.engine, phage_id_list=[phageid],
+                            phage_query=PHAGE_QUERY, gene_query=gene_query,
+                            trna_query=trna_query, tmrna_query=tmrna_query)[0]
+
     if not data_cache is None:
         data_cache[phageid] = genome
 
