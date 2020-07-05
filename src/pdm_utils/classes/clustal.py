@@ -154,6 +154,46 @@ class PercentIdentityMatrix:
 
         self.__initialized__ = value
 
+    def get_nearest_neighbors(self, query, threshold):
+        """
+        Scans the query's row in the percent identity matrix to find
+        all target nodes with values >= threshold. Returns the list
+        in descending order (highest identity first).
+        :param query: the anchoring geneid
+        :type query: str
+        :param threshold: the percent identity threshold for inclusion
+        in the return list
+        :type threshold: int, float
+        :return: neighbors
+        :rtype: list
+        """
+        self.check_initialization("get_nearest_neighbors")
+
+        # Get the query row (or throw an error if the node name is invalid)
+        query_index = self.node_names.index(query)
+        query_row = self.get_row(query_index)
+
+        # Iterate over the row - store node names where identity > threshold
+        identities = list()
+        keep_nodes = list()
+        for i in range(len(query_row)):
+            # Skip the self-match
+            if i == query_index:
+                continue
+            identity = query_row[i]
+            if identity >= threshold:
+                identities.append(identity)
+                keep_nodes.append(self.node_names[i])
+
+        # Order from highest to lowest identity
+        neighbors = list()
+        while len(identities) > 0:
+            next_index = identities.index(max(identities))
+            identities.pop(next_index)
+            neighbors.append(keep_nodes.pop(next_index))
+
+        return neighbors
+
     def get_row(self, index):
         """
         Returns a copy of the requested matrix row.

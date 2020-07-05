@@ -114,8 +114,8 @@ def main():
     engine = alchemist.engine
 
     # Choose a pham, set up infile name, and construct FASTA
-    pham = 49991
-    infile = "/tmp/pham_49991.fasta"
+    pham = 11176
+    infile = "/tmp/pham_11176.fasta"
     genes = get_pham_genes(engine, pham)
     write_genes_to_fasta(genes, infile)
 
@@ -127,6 +127,8 @@ def main():
     mat = PercentIdentityMatrix(out_mat)
     mat.parse_matrix()
     centroid = mat.get_centroid()
+    neighbors = mat.get_nearest_neighbors(centroid, 50)
+    neighbors = "\n".join(neighbors)
     average_dist = round(100 - mat.get_average_identity(centroid), 3)
 
     # Parse the multiple sequence alignment and get centroid sequence w/o gaps
@@ -134,11 +136,12 @@ def main():
     aln.parse_alignment()
     centroid_seq = aln.get_sequence(centroid, gaps=False)
 
-    print("Summary")
     print("=======================================")
     print(f"Centroid gene: {centroid}")
     print(f"Centroid sequence: {centroid_seq[:16]}...")
     print(f"Average distance from centroid: {average_dist}%")
+    print(f"{neighbors}")
+    print("=======================================")
 
 
 if __name__ == "__main__":
