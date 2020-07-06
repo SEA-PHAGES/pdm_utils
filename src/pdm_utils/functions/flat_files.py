@@ -602,7 +602,9 @@ def genome_to_seqrecord(phage_genome):
               "convert to SeqRecord object.")
         raise
     record.name = phage_genome.name
-    if phage_genome.accession != "":
+    if phage_genome.accession == "" or phage_genome.accession is None:
+        record.id = "".join(["|", phage_genome.name])
+    else:
         record.id = phage_genome.accession
     record.features = get_genome_seqrecord_features(phage_genome)
     record.description = get_genome_seqrecord_description(phage_genome)
@@ -630,7 +632,9 @@ def cds_to_seqrecord(cds, parent_genome, gene_domains=[]):
     record = SeqRecord(cds.translation)
     record.seq.alphabet = IUPAC.IUPACProtein()
     record.name = cds.id
-    if cds.locus_tag != "":
+    if cds.locus_tag == "" or cds.locus_tag == None:
+        record.id = "".join(["|", cds.id])
+    else:
         record.id = cds.locus_tag
     
     cds.set_seqfeature()

@@ -1,20 +1,13 @@
 """Pipeline for exporting database information into files."""
 import argparse
-import csv
-import os
 import shutil
 import sys
 import time
 from pathlib import Path
 
-from Bio import SeqIO
-from Bio.Alphabet import IUPAC
-from Bio.SeqFeature import SeqFeature
-from Bio.SeqRecord import SeqRecord
-from sqlalchemy.sql.elements import Null
-
 from pdm_utils.functions import basic
 from pdm_utils.functions import cartography
+from pdm_utils.functions import fileio
 from pdm_utils.functions import flat_files
 from pdm_utils.functions import mysqldb
 from pdm_utils.functions import mysqldb_basic
@@ -316,7 +309,7 @@ def execute_export(alchemist, folder_path, folder_name, pipeline,
                                       exclude_columns=exclude_columns,
                                       sequence_columns=sequence_columns)
 
-    if pipeline in FILTERABLE_PIPELINES: 
+    if pipeline in FILTERABLE_PIPELINES + ["tbl"]: 
         db_filter = pipelines_basic.build_filter(alchemist, table, filters, 
                                                              values=values,
                                                              verbose=verbose) 
@@ -339,7 +332,7 @@ def execute_export(alchemist, folder_path, folder_name, pipeline,
     if pipeline == "sql":
         if verbose:
             print("Writing SQL database file...")
-        write_database(alchemist, db_version["Version"], export_path)
+        fileio.write_database(alchemist, db_version["Version"], export_path)
     elif pipeline in FILTERABLE_PIPELINES:
         conditionals_map = {}
         pipelines_basic.build_groups_map(db_filter, export_path, 
@@ -374,10 +367,6 @@ def execute_export(alchemist, folder_path, folder_name, pipeline,
             elif pipeline == "csv":
                 execute_csv_export(db_filter, mapped_path, export_path,
                                    csv_columns, table, raw_bytes=raw_bytes,
-                                   data_cache=data_cache, verbose=verbose)
-            elif pipeline == "tbl":
-                execute_tbl_export(alchemist, mapped_path, export_path,
-                                   db_filter.values, 
                                    data_cache=data_cache, verbose=verbose)
     else:
         print("Unrecognized export pipeline, aborting export")
@@ -481,151 +470,17 @@ def execute_ffx_export(alchemist, export_path, folder_path, values,
                "for SeqRecord export pipelines.")
         sys.exit(1)
 
-    if verbose:
-            print("Appending database version...")
-    for record in seqrecords:
-        append_database_version(record, db_version)
-    write_seqrecord(seqrecords, file_format, export_path, verbose=verbose,
-                                                    concatenate=concatenate)
-
-def execute_tbl_export(alchemist, export_path, folder_path, values,
-                                        data_cache=None, verbose=False):
-    """Executes five-column table export of a compilation of MySQL entries.
-
-    :param alchemist: A connected and fully build AlchemyHandler object.
-    :type alchemist: AlchemyHandler
-    :param export_path: Path to a dir for file creation.
-    :type export_path: Path
-    :param folder_path: Path to a top-level dir.
-    :type folder_path: Path
-    :param file_format: Biopython supported file type.
-    :type file_format: str
-    :param db_version: Dictionary containing database version information.
-    :type db_version: dict
-    :param table: MySQL table name.
-    :type table: str
-    :param values: List of values to fitler database results.
-    :type values: list[str]
-    :param conditionals: MySQL WHERE clause-related SQLAlchemy objects.
-    :type conditionals: list[BinaryExpression]
-    :param sort: A list of SQLAlchemy Columns to sort by.
-    :type sort: list[Column]
-    :param concatenate: A boolean to toggle concatenation of SeqRecords.
-    :type concaternate: bool
-    :param verbose: A boolean value to toggle progress print statements.
-    :type verbose: bool
-    """
-    if data_cache is None:
-        data_cache = {}
-
-    if verbose:
-        print(f"Retrieving {export_path.name} data...")
-
-    seqrecords = get_genome_seqrecords(alchemist, values,
-                                                        data_cache=data_cache,
-                                                        verbose=verbose)
-
-    write_five_column_table(seqrecords, export_path, verbose=verbose)
-
-def write_seqrecord(seqrecord_list, file_format, export_path, concatenate=False,
-                                                              verbose=False):
-    """Outputs files with a particuar format from a SeqRecord list.
-
-    :param seq_record_list: List of populated SeqRecords.
-    :type seq_record_list: list[SeqRecord]
-    :param file_format: Biopython supported file type.
-    :type file_format: str
-    :param export_path: Path to a dir for file creation.
-    :type export_path: Path
-    :param concatenate: A boolean to toggle concatenation of SeqRecords.
-    :type concaternate: bool
-    :param verbose: A boolean value to toggle progress print statements.
-    :type verbose: bool
-    """
-    if verbose:
-        print("Writing selected data to files...")
-
-    record_dictionary = {}
-    if concatenate:
-        record_dictionary.update({export_path.name:seqrecord_list})
+    if file_format == "tbl":
+        fileio.write_five_column_table(seqrecords, export_path, verbose=verbose)
     else:
-        for record in seqrecord_list:
-            record_dictionary.update({record.name:record})
-
-    for record_name in record_dictionary.keys():
         if verbose:
-            print(f"...Writing {record_name}...")
-        file_name = f"{record_name}.{file_format}"
-        if concatenate:
-            file_path = export_path.parent.joinpath(file_name)
-            export_path.rmdir()
-        else:
-            file_path = export_path.joinpath(file_name)
-        file_handle = file_path.open(mode='w')
-        records = record_dictionary[record_name]
-        if isinstance(records, list):
-            for record in records:
-                SeqIO.write(record, file_handle, file_format)
-                file_handle.write("\n")
-        else:
-            SeqIO.write(record_dictionary[record_name], file_handle, file_format)
+                print("Appending database version...")
+        for record in seqrecords:
+            append_database_version(record, db_version)
+        fileio.write_seqrecord(seqrecords, file_format, export_path, 
+                                                        verbose=verbose,
+                                                        concatenate=concatenate)
 
-        file_handle.close()
-
-def write_five_column_table(seqrecord_list, export_path, verbose=False):
-    """Outputs files as five_column tab-delimited text files.
-
-    :param seq_record_list: List of populated SeqRecords.
-    :type seq_record_list: list[SeqRecord]
-    :param export_path: Path to a dir for file creation.
-    :type export_path: Path
-    :param verbose: A boolean value to toggle progress print statements.
-    :type verbose: bool
-    """
-    if verbose:
-        print("Writing selected data to files...")
-    for record in seqrecord_list:
-        if verbose:
-            print(f"...Writing {record.name}...")
-        file_name = f"{record.name}.tbl"
-        file_path = export_path.joinpath(file_name)
-        file_handle = file_path.open(mode='w')
-
-        file_handle.write(f">Feature {record.id}\n")
-
-        for feature in record.features[1:]:
-            if feature.strand == 1:
-                start = feature.location.start
-                stop = feature.location.end
-            elif feature.strand == -1:
-                start = feature.location.end
-                stop = feature.location.start
-
-            file_handle.write(f"{start+1}\t{stop}\t{feature.type}\n")
-            for key in feature.qualifiers.keys():
-                if key in ["translation"]:
-                    continue
-                file_handle.write(f"\t\t\t{key}\t"
-                                  f"{feature.qualifiers[key][0]}\n")
-
-        file_handle.close()
-
-def write_database(alchemist, version, export_path):
-    """Output .sql file from the selected database.
-
-    :param alchemist: A connected and fully built AlchemyHandler object.
-    :type alchemist: AlchemyHandler
-    :param version: Database version information.
-    :type version: int
-    :param export_path: Path to a valid dir for file creation.
-    :type export_path: Path
-    """
-    sql_path = export_path.joinpath(f"{alchemist.database}.sql")
-    os.system(f"mysqldump -u {alchemist.username} -p{alchemist.password} "
-              f"--skip-comments {alchemist.database} > {str(sql_path)}")
-    version_path = sql_path.with_name(f"{alchemist.database}.version")
-    version_path.touch()
-    version_path.write_text(f"{version}")
 
 #-----------------------------------------------------------------------------
 #EXPORT-SPECIFIC HELPER FUNCTIONS
@@ -686,26 +541,6 @@ def get_cds_seqrecords(alchemist, values, data_cache=None, nucleotide=False,
         seqrecords.append(record)
 
     return seqrecords
-
-#TODO Document
-def get_single_genome(alchemist, phageid, get_features=False, data_cache=None):
-    gene_query = None
-    trna_query = None
-    tmrna_query = None
-    if get_features:
-        gene_query = GENE_QUERY
-        trna_query = TRNA_QUERY
-        tmrna_query = TMRNA_QUERY
-
-    genome = mysqldb.parse_genome_data(
-                            alchemist.engine, phage_id_list=[phageid],
-                            phage_query=PHAGE_QUERY, gene_query=gene_query,
-                            trna_query=trna_query, tmrna_query=tmrna_query)[0]
-
-    if not data_cache is None:
-        data_cache[phageid] = genome
-
-    return genome
 
 def get_sort_columns(alchemist, sort_inputs):
     """Function that converts input for sorting to SQLAlchemy Columns.
@@ -825,7 +660,6 @@ def sort_seqrecord_features(seqrecord):
         print("Genome seqrecord features unable to be sorted")
         pass
 
-
 #---------
 #---------
 #Functions to be evaluated for another module:
@@ -889,4 +723,25 @@ def append_database_version(genome_seqrecord, version_data):
 
         raise TypeError("Object must be of type SeqRecord."
                        f"Object was of type {type}.")
+
+#TODO Document
+#TODO Evaluate for redundancy
+def get_single_genome(alchemist, phageid, get_features=False, data_cache=None):
+    gene_query = None
+    trna_query = None
+    tmrna_query = None
+    if get_features:
+        gene_query = GENE_QUERY
+        trna_query = TRNA_QUERY
+        tmrna_query = TMRNA_QUERY
+
+    genome = mysqldb.parse_genome_data(
+                            alchemist.engine, phage_id_list=[phageid],
+                            phage_query=PHAGE_QUERY, gene_query=gene_query,
+                            trna_query=trna_query, tmrna_query=tmrna_query)[0]
+
+    if not data_cache is None:
+        data_cache[phageid] = genome
+
+    return genome
 
