@@ -20,6 +20,7 @@ from pdm_utils.constants import constants, eval_descriptions
 from pdm_utils.functions import basic
 from pdm_utils.functions import configfile
 from pdm_utils.functions import tickets
+from pdm_utils.functions import fileio
 from pdm_utils.functions import flat_files
 from pdm_utils.functions import phagesdb
 from pdm_utils.functions import mysqldb
@@ -315,7 +316,7 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
     if (len(success_ticket_list) > 0 or len(success_filepath_list) > 0):
         if len(success_ticket_list) > 0:
             success_tkt_file = pathlib.Path(success_path, "import_table.csv")
-            basic.export_data_dict(success_ticket_list, success_tkt_file,
+            fileio.export_data_dict(success_ticket_list, success_tkt_file,
                                        headers, include_headers=True)
         if len(success_filepath_list) > 0:
             for file in success_filepath_list:
@@ -326,7 +327,7 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
     if (len(failed_ticket_list) > 0 or len(failed_filepath_list) > 0):
         if len(failed_ticket_list) > 0:
             failed_tkt_file = pathlib.Path(failed_path, "import_table.csv")
-            basic.export_data_dict(failed_ticket_list, failed_tkt_file,
+            fileio.export_data_dict(failed_ticket_list, failed_tkt_file,
                                        headers, include_headers=True)
             summary.append(f"{len(failed_ticket_list)} ticket(s) NOT implemented:")
             for tkt in failed_ticket_list:
@@ -454,7 +455,7 @@ def prepare_tickets(import_table_file=pathlib.Path(), eval_data_dict=None,
     list_of_tkts = []
     tkt_errors = 0
     logger.info("Retrieving ticket data.")
-    list_of_data_dicts = basic.retrieve_data_dict(import_table_file)
+    list_of_data_dicts = fileio.retrieve_data_dict(import_table_file)
     logger.info("Constructing tickets.")
     list_of_tkts = tickets.construct_tickets(list_of_data_dicts, eval_data_dict,
                     description_field, required_keys, optional_keys,

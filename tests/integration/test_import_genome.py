@@ -15,7 +15,7 @@ from pdm_utils.classes import bundle, ticket, evaluation
 from pdm_utils.classes import cds, trna, tmrna, source
 from pdm_utils.classes import genome, genomepair
 from pdm_utils.constants import constants
-from pdm_utils.functions import basic, eval_modes, mysqldb
+from pdm_utils.functions import basic, eval_modes, fileio, mysqldb
 from pdm_utils.pipelines import import_genome
 
 # Import helper functions to build mock database and mock flat files
@@ -826,7 +826,7 @@ class TestImportGenome4(unittest.TestCase):
 
     # Patch so that a variety of different types of files don't need
     # to be created just to test this function.
-    @patch("pdm_utils.functions.basic.retrieve_data_dict")
+    @patch("pdm_utils.functions.fileio.retrieve_data_dict")
     def test_prepare_tickets_2(self, mock_retrieve_tickets):
         """Verify dictionary is returned from two correct
         import data dictionaries."""
@@ -840,7 +840,7 @@ class TestImportGenome4(unittest.TestCase):
         self.assertEqual(len(tkt_dict.keys()), 2)
 
 
-    @patch("pdm_utils.functions.basic.retrieve_data_dict")
+    @patch("pdm_utils.functions.fileio.retrieve_data_dict")
     def test_prepare_tickets_3(self, mock_retrieve_tickets):
         """Verify no dictionary is returned from one correct
         and one incorrect import data dictionaries."""
@@ -857,7 +857,7 @@ class TestImportGenome4(unittest.TestCase):
 
 
 
-    @patch("pdm_utils.functions.basic.retrieve_data_dict")
+    @patch("pdm_utils.functions.fileio.retrieve_data_dict")
     def test_prepare_tickets_4(self, mock_retrieve_tickets):
         """Verify no dictionary is returned from one correct
         data dictionary and one correct data dictionary with
@@ -873,7 +873,7 @@ class TestImportGenome4(unittest.TestCase):
         self.assertIsNone(tkt_dict)
 
 
-    @patch("pdm_utils.functions.basic.retrieve_data_dict")
+    @patch("pdm_utils.functions.fileio.retrieve_data_dict")
     def test_prepare_tickets_5(self, mock_retrieve_tickets):
         """Verify no dictionary is returned from one correct
         data dictionary and one incorrect data dictionary with
@@ -889,7 +889,7 @@ class TestImportGenome4(unittest.TestCase):
         self.assertIsNone(tkt_dict)
 
 
-    @patch("pdm_utils.functions.basic.retrieve_data_dict")
+    @patch("pdm_utils.functions.fileio.retrieve_data_dict")
     def test_prepare_tickets_6(self, mock_retrieve_tickets):
         """Verify no dictionary is returned from one correct
         data dictionary and one incorrect data dictionary with

@@ -8,7 +8,7 @@ from unittest.mock import PropertyMock
 
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.classes.filter import Filter
-from pdm_utils.functions import basic
+from pdm_utils.functions import fileio
 from pdm_utils.pipelines import revise
 from pdm_utils.pipelines.review import REVIEW_HEADER
 
@@ -54,7 +54,7 @@ class TestGenbankRevise(unittest.TestCase):
         self.test_dir.mkdir()
         self.revise_form = self.test_dir.joinpath("revise_form.txt")
 
-        basic.export_data_dict(TEST_FR_DATA, self.revise_form, REVIEW_HEADER,
+        fileio.export_data_dict(TEST_FR_DATA, self.revise_form, REVIEW_HEADER,
                                                         include_headers=True)
 
     @classmethod
@@ -75,7 +75,7 @@ class TestGenbankRevise(unittest.TestCase):
         self.csv_input_file_path = self.revise_test_dir.joinpath(
                                                       "gene.csv")
 
-        basic.export_data_dict(TEST_FR_DATA, self.fr_input_file_path,
+        fileio.export_data_dict(TEST_FR_DATA, self.fr_input_file_path,
                                REVIEW_HEADER, include_headers=True)
 
         self.assertTrue(self.fr_input_file_path.is_file())
@@ -160,7 +160,7 @@ class TestGenbankRevise(unittest.TestCase):
 
         with self.subTest(cluster=40481):
             pham_40481_file = pham_40481_dir.joinpath("revise.csv")
-            data_dicts = basic.retrieve_data_dict(pham_40481_file)
+            data_dicts = fileio.retrieve_data_dict(pham_40481_file)
 
             phages = []
             functions = []
@@ -178,7 +178,7 @@ class TestGenbankRevise(unittest.TestCase):
 
         with self.subTest(cluster=25050):
             pham_25050_file = pham_25050_dir.joinpath("revise.csv")
-            data_dicts = basic.retrieve_data_dict(pham_25050_file)
+            data_dicts = fileio.retrieve_data_dict(pham_25050_file)
 
             phages = []
             functions = []
@@ -195,7 +195,7 @@ class TestGenbankRevise(unittest.TestCase):
 
         with self.subTest(cluster=40880):
             pham_40880_file = pham_40880_dir.joinpath("revise.csv")
-            data_dicts = basic.retrieve_data_dict(pham_40880_file)
+            data_dicts = fileio.retrieve_data_dict(pham_40880_file)
 
             phages = []
             functions = []
@@ -214,7 +214,7 @@ class TestGenbankRevise(unittest.TestCase):
 
         with self.subTest(cluster=39529):
             pham_39529_file = pham_39529_dir.joinpath("revise.csv")
-            data_dicts = basic.retrieve_data_dict(pham_39529_file)
+            data_dicts = fileio.retrieve_data_dict(pham_39529_file)
 
             phages = []
             functions = []

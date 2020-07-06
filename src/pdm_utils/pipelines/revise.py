@@ -8,6 +8,7 @@ from pathlib import Path
 from sqlalchemy import select
 
 from pdm_utils.functions import basic
+from pdm_utils.functions import fileio
 from pdm_utils.functions import pipelines_basic
 from pdm_utils.functions import querying
 from pdm_utils.functions import mysqldb_basic
@@ -175,7 +176,7 @@ def execute_revise(alchemist, revisions_file_path, folder_path, folder_name,
     if keys is None: 
         raise ValueError(f"Revision input type {input_type} is not supported.")
 
-    revisions_data_dicts = basic.retrieve_data_dict(revisions_file_path)
+    revisions_data_dicts = fileio.retrieve_data_dict(revisions_file_path)
     
     values = []
     for data_dict in revisions_data_dicts:
@@ -333,7 +334,7 @@ def write_curation_data(data_dicts, export_path, file_name=CURATION_NAME,
     if verbose:
         print(f"Writing {file_name} in {export_path.name}...")
     file_path = export_path.joinpath(file_name)
-    basic.export_data_dict(data_dicts, file_path, CURATION_HEADER, 
+    fileio.export_data_dict(data_dicts, file_path, CURATION_HEADER, 
                                                     include_headers=True)
 
 #-----------------------------------------------------------------------------

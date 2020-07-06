@@ -12,6 +12,7 @@ from sqlalchemy.sql import func
 
 from pdm_utils.functions import annotation
 from pdm_utils.functions import basic
+from pdm_utils.functions import fileio
 from pdm_utils.functions import mysqldb_basic
 from pdm_utils.functions import pipelines_basic
 from pdm_utils.functions import parsing
@@ -372,7 +373,7 @@ def write_report(data, export_path, header, csv_name="Report",
     if verbose:
         print(f"Writing {file_path.name} in {export_path.name}...")
 
-    basic.export_data_dict(data, file_path, header, include_headers=True)
+    fileio.export_data_dict(data, file_path, header, include_headers=True)
 
 def write_summary_report(alchemist, summary_data, export_path, verbose=False): 
     if verbose:

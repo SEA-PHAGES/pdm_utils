@@ -15,6 +15,7 @@ from pdm_utils.classes import ticket
 from pdm_utils.constants import constants
 from pdm_utils.functions import basic
 from pdm_utils.functions import configfile
+from pdm_utils.functions import fileio
 from pdm_utils.functions import ncbi
 from pdm_utils.functions import mysqldb
 from pdm_utils.functions import phagesdb
@@ -286,7 +287,7 @@ def get_update_data(output_folder, matched_genomes):
     if len(update_tickets) > 0:
         print(f"\n\n{len(update_tickets)} field updates are available.")
         filepath = pathlib.Path(updates_folder, UPDATE_TABLE)
-        basic.export_data_dict(update_tickets, filepath, UPDATE_COLUMNS,
+        fileio.export_data_dict(update_tickets, filepath, UPDATE_COLUMNS,
                                include_headers=True)
     else:
         print("\n\nNo field updates.")
@@ -540,7 +541,7 @@ def get_genbank_data(output_folder, genome_dict, ncbi_cred_dict={},
 def output_genbank_summary(output_folder, results):
     """Save summary of GenBank retrieval results to file."""
     filepath = pathlib.Path(output_folder, GENBANK_RESULTS_TABLE)
-    basic.export_data_dict(results, filepath, NCBI_RESULTS_COLUMNS,
+    fileio.export_data_dict(results, filepath, NCBI_RESULTS_COLUMNS,
                            include_headers=True)
 
 
@@ -804,7 +805,7 @@ def create_ticket_table(tickets, output_folder):
     """Save tickets associated with retrieved from GenBank files."""
     filepath = pathlib.Path(output_folder, IMPORT_TABLE)
     tickets = convert_tickets_to_dict(tickets)
-    basic.export_data_dict(tickets, filepath, IMPORT_COLUMNS,
+    fileio.export_data_dict(tickets, filepath, IMPORT_COLUMNS,
                            include_headers=True)
 
 

@@ -420,7 +420,7 @@ def execute_csv_export(db_filter, export_path, folder_path, columns, csv_name,
             print(f"...Writing csv {csv_name}.csv in '{export_path.name}'...")
 
         file_path = export_path.joinpath(f"{csv_name}.csv")
-        basic.export_data_dict(results, file_path, headers,
+        fileio.export_data_dict(results, file_path, headers,
                                                include_headers=True)
 
 def execute_ffx_export(alchemist, export_path, folder_path, values,
