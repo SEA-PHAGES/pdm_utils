@@ -54,31 +54,6 @@ def get_pham_genes(engine, phamid):
 
     return pham_genes
 
-def write_genes_to_fasta(genes_translations, infile):
-    """
-    Writes the input genes to the indicated file in FASTA multiple
-    sequence format (unaligned).
-    :param genes_translations: the genes and translations to be written to file 
-    :type genes: dict
-    :param infile: the path of the file to write the genes to
-    :type infile: Path
-    :type infile: str
-    :return:
-    """
-    if isinstance(infile, str):
-        file_handle = open(infile, "w")
-    elif isinstance(infile, Path):
-        file_handle = infile.open(mode="w")
-    else:
-        raise TypeError("File path type not supported.")
-
-    for geneid, translation in genes_translations.items():
-        wrapped_translation = textwrap.wrap(annotations, 60)
-        translation = "\n".join(wrapped_translation)
-        file_handle.write(f">{geneid}\n{translation}\n")
-
-    file_handle.close()
-
 #PAIRWISE ALIGNMENT TOOLS
 #---------------------------------------------------------------------
 def pairwise_align(query_seq_path, target_seq_path, outfile_path, 
