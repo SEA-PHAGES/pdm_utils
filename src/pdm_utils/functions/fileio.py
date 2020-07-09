@@ -1,5 +1,6 @@
 import csv
 import os
+import textwrap
 from pathlib import Path
 
 from Bio import SeqIO
@@ -68,17 +69,17 @@ def write_fasta(ids_seqs, infile_path):
     :type infile: Path
     :type infile: str
     """
-    if isinstance(infile, str):
+    if isinstance(infile_path, str):
         file_handle = open(infile_path, "w")
     elif isinstance(infile_path, Path):
-        file_handle = infile.open(mode="w")
+        file_handle = infile_path.open(mode="w")
     else:
         raise TypeError("File path type not supported.")
 
     for id, seq in ids_seqs.items():
         split_seq = textwrap.wrap(seq, 60)
         wrapped_seq = "\n".join(split_seq)
-        file_handle.write(f">{id}\n{wrapped_seq}\n")
+        file_handle.write(f">{id}\n{wrapped_seq}\n\n")
 
     file_handle.close()
 
