@@ -5,6 +5,8 @@ import sys
 import time
 from pathlib import Path
 
+from pdm_utils.classes.filter import Filter
+
 from pdm_utils.functions import basic
 from pdm_utils.functions import cartography
 from pdm_utils.functions import fileio
@@ -521,8 +523,8 @@ def get_cds_seqrecords(alchemist, values, data_cache=None, nucleotide=False,
     cds_list = parse_feature_data(alchemist, values=values)
 
 	
-	db_filter = Filter(alchemist)
-	db_filter.key = 'gene.GeneID'
+    db_filter = Filter(alchemist)
+    db_filter.key = 'gene.GeneID'
 
     seqrecords = []
     for cds in cds_list:
@@ -543,11 +545,10 @@ def get_cds_seqrecords(alchemist, values, data_cache=None, nucleotide=False,
         gene_domain = cartography.get_map(alchemist.mapper, "gene_domain")
 		#gene_domains = alchemist.session.query(gene_domain)\
         #                                      .filter_by(GeneID=cds.id).all()
-
-		
-		db_filter.values = [cds.id]
-				
-		gene_domains = db_filter.select(CDD_DATA_COLUMNS)
+        
+        db_filter.values = [cds.id]
+        
+        gene_domains = db_filter.select(CDD_DATA_COLUMNS)
 				
 
         record = flat_files.cds_to_seqrecord(cds, parent_genome,
