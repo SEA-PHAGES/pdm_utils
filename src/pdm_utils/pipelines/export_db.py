@@ -47,7 +47,8 @@ PIPELINES = FILTERABLE_PIPELINES + ["sql"]
 FLAT_FILE_TABLES = ["phage", "gene"]
 FIVE_COLUMN_TABLES = ["phage"]
 
-CDD_DATA_COLUMNS = ["gene_domain.GeneID", "gene_domain.QueryStart", "gene_domain.QueryEnd", "domain.DomainID", "domain.Name", "domain.Description"]
+CDD_DATA_COLUMNS = ["gene_domain.QueryStart", "gene_domain.QueryEnd", 
+                    "domain.DomainID", "domain.Name", "domain.Description"]
 
 #Once trna has data, these tables can be reintroduced.
 TABLES = ["phage", "gene", "domain", "gene_domain", "pham",
@@ -542,14 +543,8 @@ def get_cds_seqrecords(alchemist, values, data_cache=None, nucleotide=False,
         cds.genome_length = parent_genome.length
         cds.set_seqfeature()
 
-        gene_domain = cartography.get_map(alchemist.mapper, "gene_domain")
-		#gene_domains = alchemist.session.query(gene_domain)\
-        #                                      .filter_by(GeneID=cds.id).all()
-        
         db_filter.values = [cds.id]
-        
         gene_domains = db_filter.select(CDD_DATA_COLUMNS)
-				
 
         record = flat_files.cds_to_seqrecord(cds, parent_genome,
                                                   gene_domains=gene_domains)
