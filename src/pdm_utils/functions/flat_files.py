@@ -789,9 +789,9 @@ def get_cds_seqrecord_regions(gene_domains, cds):
                                                     gene_domain["QueryEnd"], 1) 
             region_feature.qualifiers["region_name"] = [gene_domain["Name"]]
             region_feature.qualifiers["note"] = [
-                                    gene_domain.domain.Description.decode("utf-8")]
+                                    gene_domain["Description"].decode("utf-8")] 
             region_feature.qualifiers["db_xref"]  = ["CDD:"
-                                    f"{gene_domain[DomainID]}"]
+                                    f"{gene_domain['DomainID']}"]
             region_features.append(region_feature)
 
     return region_features
