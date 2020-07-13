@@ -420,7 +420,7 @@ class Tmrna:
         if self.locus_tag != "":
             qualifiers["locus_tag"] = [self.locus_tag]
         if self.peptide_tag != "":
-            qualifiers["note"] = [f"Peptide tag: {self.peptide_tag}"]
+            qualifiers["note"] = [f"Tag peptide: {self.peptide_tag}"]
 
         return qualifiers
 
