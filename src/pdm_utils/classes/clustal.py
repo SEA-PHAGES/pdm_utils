@@ -194,6 +194,35 @@ class PercentIdentityMatrix:
 
         return neighbors
 
+    def get_identity(self, query, target):
+        """
+        Returns the percent identity between a pair of genes in the
+        matrix.
+        :param query: row geneid
+        :type query: str
+        :param target: column geneid
+        :type target: str
+        :return: identity
+        :rtype: float
+        """
+        q_index = self.node_names.index(query)
+        t_index = self.node_names.index(target)
+        identity = self.get_row(q_index)[t_index]
+        return identity
+
+    def get_distance(self, query, target):
+        """
+        Returns the distance between a pair of genes in the matrix.
+        :param query: row geneid
+        :type query: str
+        :param target: column geneid
+        :type target: str
+        :return: distance
+        :rtype: float
+        """
+        distance = 100 - self.get_identity(query, target)
+        return distance
+
     def get_row(self, index):
         """
         Returns a copy of the requested matrix row.
