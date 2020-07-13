@@ -403,7 +403,7 @@ def get_alice_tmrna_169_draft_data_in_db():
         "Length": 435,
         "Name": "169",
         "Orientation": "F",
-        "Note": "Peptide tag: ATDTDATVTDAEIEAFFAEEAAALV*",
+        "Note": "Tag peptide: ATDTDATVTDAEIEAFFAEEAAALV*",
         "LocusTag": "NULL",
         "PeptideTag": "ATDTDATVTDAEIEAFFAEEAAALV*"
         }
@@ -415,7 +415,7 @@ def get_alice_tmrna_169_qualifier_dict():
     dict = OrderedDict(
             [('gene', ['169']),
              ('locus_tag', ['ALICE_169']),
-             ('note', ['Peptide tag: ATDTDATVTDAEIEAFFAEEAAALV*'])])
+             ('note', ['Tag peptide: ATDTDATVTDAEIEAFFAEEAAALV*'])])
     return dict
 
 def get_alice_tmrna_169():

@@ -15,7 +15,7 @@ from pdm_utils.functions import basic
 
 # Extracts peptide tag from note field acid and anticodon from note field for Aragorn-determinate
 # or tRNAscan-SE- determinate or indeterminate tRNAs
-NOTE_STANDARD_REGEX = re.compile("Peptide tag: ([\w|*]*)")
+NOTE_STANDARD_REGEX = re.compile("Tag peptide:\s+([\w|*]*)")
 
 
 class Tmrna:
