@@ -208,7 +208,7 @@ def interactive():
 	        
 	db = input("\n\nWhich database would you like to download? (Enter 1-41)" )
 	
-	selected = databases[db-1]
+	selected = databases[int(db)-1]
 	return selected["name"]	
 		
 
