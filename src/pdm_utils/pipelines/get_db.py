@@ -6,7 +6,7 @@ import pathlib
 import shutil
 import subprocess
 import sys
-from urllib.request import urlopen
+import urllib3
 import re
 
 from pdm_utils.classes.alchemyhandler import AlchemyHandler

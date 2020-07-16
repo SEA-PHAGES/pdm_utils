@@ -237,7 +237,7 @@ def parse_args(unparsed_args_list):
     schema_version_help = (
         "Database schema version to which the database should be converted.")
     config_file_help = "Path to the file containing user-specific login data."
-	interactive_help = "List of possible databases."
+    interactive_help = "List of possible databases."
 
     parser = argparse.ArgumentParser(description=get_db_help)
     parser.add_argument("-db", "--database", type=str, help=database_help, default=None)
