@@ -192,7 +192,7 @@ def interactive():
 	
 	
 	#creating a list of dictionaries
-	for i in names:
+	for i in range(len(names)):
 	    db_dict = dict()
 	    db_dict["num"] = i+1
 	    db_dict["name"] = names[i]
