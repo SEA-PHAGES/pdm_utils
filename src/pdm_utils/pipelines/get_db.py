@@ -204,8 +204,7 @@ def interactive():
 	print("Databases available at '", DB_LINK, "':\n")
 	
 	for i in databases:
-	    for x in databases[i]:
-	        print(x["num"], ".\t", x["name"], "\t", x["date"])
+	    print(i["num"], ".\t", i["name"], "\t", i["date"])
 	        
 	db = input("\n\nWhich database would you like to download? (Enter 1-41)" )
 	
