@@ -88,6 +88,14 @@ class TestFilter(unittest.TestCase):
         or_block = self.db_filter.filters[0]
         self.assertEqual(len(or_block), 2)
 
+    def test_and_4(self):
+        """Verify that and_() recognizes and stores IN-type clauses.
+        """
+        self.db_filter.and_("phage.PhageID IN (D29, Trixie, Myrna)")
+
+        or_block = self.db_filter.filters[0]
+        self.assertTrue("phage.PhageIDIN(D29,Trixie,Myrna)")
+
     def test_remove_1(self):
         """Verify that remove() removes dictionary entry after depleted.
         """

@@ -115,6 +115,13 @@ Ex. Creating the Subcluster filter identifies 90 phages in Subcluster A2::
      >>> db_filter.hits()
      90
 
+The method Filter.add() can take a number of expressions with different operators including !=, >, <, >=, <=, LIKE, IS NOT, IN, and NOT IN::
+
+    >>> db_filter.add("phage.Subcluster IN ('A2')")
+    >>> db_filter.update()
+    >>> db_filter.hits()
+    90
+
 The filter results are stored in the values attribute, and can be sorted and accessed::
 
      >>> db_filter.sort("phage.PhageID")

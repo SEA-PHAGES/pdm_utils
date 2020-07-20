@@ -304,6 +304,10 @@ def build_where_clause(db_graph, filter_expression):
         where_clause = (column_object  <   right)
     elif filter_params[2] == "<=":
         where_clause = (column_object  <=  right)
+    elif filter_params[2] == "IN":
+        where_clause = (column_object.in_(right))
+    elif filter_params[2] == "NOT IN":
+        where_clause = (column_object.notin_(right))
 
     return where_clause 
 

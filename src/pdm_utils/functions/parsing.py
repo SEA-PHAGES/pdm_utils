@@ -6,7 +6,7 @@ from sqlalchemy import Column
 #----------------------------------------------------------------------------
 #GLOBAL VARIABLES
 NUMERIC_OPERATORS     = [">", ">=", "<", "<="]
-NONNUMERIC_OPERATORS  = ["=", "!=", "IS NOT", "LIKE"]
+NONNUMERIC_OPERATORS  = ["=", "!=", "IS NOT", "LIKE", "IN", "NOT IN"]
 OPERATORS             = NUMERIC_OPERATORS + NONNUMERIC_OPERATORS
 COMPARABLE_TYPES      = [int, Decimal, float, datetime]
 TYPES                 = [str, bytes] + COMPARABLE_TYPES
@@ -143,22 +143,53 @@ def parse_filter(unparsed_filter):
     """
     filter_format = re.compile(" *\w+\.\w+ *([=<>!]+ *| +LIKE +| +IS NOT +) *"
                                "([\w\W]+|'[ \w\W]*') *")
-    quote_value_format = re.compile("'[ \w\W]*'")
+    in_format = re.compile(" *\w+\.\w+ *( +IN +| +NOT IN +)+"
+                           "\(( *[\w\W]+ *,{1} *| *'[ \w\W]' *,{1} *)*"
+                           "( *[\w\W]+ *| *'[ \w\W]' *])\)")
 
-    if re.match(filter_format, unparsed_filter) != None:
+    quote_value_format = re.compile("('[ \w\W]*')")
+
+    if not re.match(filter_format, unparsed_filter) is None:
         operators = re.compile("( *[=<>!]+ *| +LIKE +| +IS NOT +)")
 
         operator_split = re.split(operators, unparsed_filter)
         parsed_column = parse_column(operator_split[0])
        
         operator_split[1] = parse_out_ends(operator_split[1])
-
         operator_split[2] = parse_out_ends(operator_split[2])
+
         if re.match(quote_value_format, operator_split[2]) != None:
             operator_split[2] = operator_split[2].replace("'", "")
 
         parsed_filter = parsed_column + operator_split[1:] 
-                
+
+    elif not re.match(in_format, unparsed_filter) is None:
+        operators = re.compile("( +IN +| +NOT IN +)")
+
+        operator_split = re.split(operators, unparsed_filter)
+        parsed_column = parse_column(operator_split[0])
+
+        operator_split[1] = parse_out_ends(operator_split[1]) 
+        operator_split[2] = parse_out_ends(operator_split[2])  
+ 
+        parenthesized = operator_split[2]
+        parenthesized = parenthesized.replace("(", "")
+        parenthesized = parenthesized.replace(")", "")
+        parenthesized = re.split(quote_value_format, parenthesized)
+
+        in_values = []
+        for value in parenthesized:
+            if not re.match(quote_value_format, value) is None:
+                value = value.replace("'", "")
+                in_values.append(parse_out_ends(value))
+            else:
+                quoteless_values = value.split(",")        
+                for quoteless_value in quoteless_values:
+                    in_values.append(parse_out_ends(quoteless_value))
+
+        operator_split[2] = in_values
+        parsed_filter = parsed_column + operator_split[1:]
+
     else:
         raise ValueError(f"Unsupported filtering format: '{unparsed_filter}'")
      
@@ -174,6 +205,10 @@ def create_filter_key(unparsed_filter):
     """
     parsed_filter = parse_filter(unparsed_filter)
     column = ".".join(parsed_filter[0:2])
+    
+    if isinstance(parsed_filter[3], list):
+        parsed_filter[3] = ",".join(parsed_filter[3])
+        parsed_filter[3] = "".join(["(", parsed_filter[3], ")"])
     filter_right = "".join(parsed_filter[2:])
 
     filter_key = column + filter_right
