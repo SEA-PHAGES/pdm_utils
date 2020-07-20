@@ -3,12 +3,12 @@ for both similarity search and clustering, or blastp for similarity search
 and mcl for clustering."""
 
 import argparse
-import datetime
+from datetime import datetime
 import os
-import sys
 import shutil
 
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
+from pdm_utils.functions.configfile import *
 from pdm_utils.functions.phameration import *
 from pdm_utils.functions.parallelize import *
 
@@ -75,6 +75,8 @@ def setup_argparser():
                                help="number of threads to use")
     mmseqs_parser.add_argument("--tmp-dir", type=str, default="/tmp/phamerate",
                                help="temporary directory for file I/O")
+    mmseqs_parser.add_argument("-c", "--config_file", type=str, default=None,
+                               help="path to file containing login details")
     mmseqs_parser.formatter_class = argparse.RawTextHelpFormatter
 
     # Create sub-parser for blast-mcl invocation
@@ -93,6 +95,8 @@ def setup_argparser():
                               help="blastp instances to run in parallel")
     blast_parser.add_argument("--tmp-dir", type=str, default="/tmp/phamerate",
                               help="temporary directory for file I/O")
+    blast_parser.add_argument("-c", "--config_file", type=str, default=None,
+                              help="path to file containing login details")
     blast_parser.formatter_class = argparse.RawTextHelpFormatter
     return parser
 
@@ -120,24 +124,30 @@ def main(argument_list):
     # Set up the argument parser
     parser = setup_argparser()
 
-    # Parse arguments into a dictionary
-    args = vars(parser.parse_args(argument_list))
+    # Parse arguments
+    args = vars(parser.parse_args(argument_list[2:]))
 
     # Temporary directory gets its own variable because we'll use it a lot
     tmp = args["tmp_dir"]
 
+    # Create config object with data obtained from file and/or defaults.
+    config = build_complete_config(args["config_file"])
+    mysql_creds = config["mysql"]
+
     # Make a note of which workflow we're using based on len(args)
-    if len(args) == 15:
+    if len(args) > 10:
         program = "mmseqs"
     else:
         program = "blast-mcl"
 
     # Record start time
-    start_time = datetime.datetime.now()
+    start_time = datetime.now()
 
     # Initialize SQLAlchemy engine with database provided at CLI
-    alchemist = AlchemyHandler(database=args["db"])
-    alchemist.connect(pipeline=True)
+    alchemist = AlchemyHandler(database=args["db"],
+                               username=mysql_creds["username"],
+                               password=mysql_creds["password"])
+    alchemist.connect(login_attempts=5, pipeline=True)
     engine = alchemist.engine
 
     # Refresh temp_dir
@@ -149,8 +159,10 @@ def main(argument_list):
     new_genes = get_new_geneids(engine)
 
     # Get GeneIDs & translations, and translation groups
-    genes_and_translations = get_geneids_and_translations(engine)   # gene_x: translation_x
-    translation_groups = get_translation_groups(engine)             # translation_x: [gene_x, ..., gene_z]
+    # gene_x: translation_x
+    genes_and_translations = get_geneids_and_translations(engine)
+    # translation_x: [gene_x, ..., gene_z]
+    translation_groups = get_translation_groups(engine)
 
     # Print initial state
     initial_summary = f"""
@@ -221,25 +233,28 @@ Initial database summary:
             hmm_phams = parse_mmseqs_output(h_out)
 
             print("Merging sequence and profile-based phamilies...")
-            new_phams = merge_pre_and_hmm_phams(hmm_phams, pre_phams, con_lookup)
+            new_phams = merge_pre_and_hmm_phams(
+                hmm_phams, pre_phams, con_lookup)
         else:
             new_phams = pre_phams
-    elif program == "blast-mcl":
+    else:
         blast_db = "blastdb"
         blast_path = f"{tmp}/{blast_db}"
 
         print("Creating blast protein database...")
         create_blastdb(infile, blast_db, blast_path)
 
-        print("Splitting non-redundant sequences into multiple blastp query files...")
+        print("Splitting non-redundant sequences into multiple blastp query "
+              "files...")
         chunks = chunk_translations(translation_groups)
 
         jobs = []
         for key, chunk in chunks.items():
-            jobs.append((key, chunk, tmp, blast_path, args["e_value"], args["query_cov"]))
+            jobs.append((key, chunk, tmp, blast_path, 
+                         args["e_value"], args["query_cov"]))
 
         print("Running blastp...")
-        results = parallelize(jobs, args["threads"], blastp)
+        parallelize(jobs, args["threads"], blastp)
 
         print("Converting blastp output into adjacency matrix for mcl...")
         results = [x for x in os.listdir(tmp) if x.endswith(".tsv")]
@@ -320,7 +335,7 @@ Final database summary:
     print(final_summary)
 
     # Record stop time
-    stop_time = datetime.datetime.now()
+    stop_time = datetime.now()
     elapsed_time = str(stop_time - start_time)
 
     # Report phameration elapsed time

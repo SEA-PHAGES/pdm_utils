@@ -88,14 +88,13 @@ def setup_argparser():
     config_file_help = (
         "Path to the file containing user-specific login data.")
 
-
     # Initialize parser and add arguments
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument("database", type=str,
-                        help="name of database to phamerate")
+                        help="name of database to find conserved domains for")
     parser.add_argument("-d", "--cdd", type=str, default=DEFAULT_CDD,
                         help=cdd_help)
-    parser.add_argument("-t","--threads", default=mp.cpu_count(), type=int,
+    parser.add_argument("-t", "--threads", default=mp.cpu_count(), type=int,
                         help="number of concurrent CDD searches to run")
     parser.add_argument("-e", "--evalue", default=0.001, type=float,
                         help="evalue cutoff for rpsblast(+) hits")
@@ -106,12 +105,12 @@ def setup_argparser():
     parser.add_argument("-o", "--output_folder", type=pathlib.Path,
                         default=pathlib.Path(DEFAULT_OUTPUT_FOLDER),
                         help=output_folder_help)
-    parser.add_argument("-b","--batch_size", default=10000, type=int,
+    parser.add_argument("-b", "--batch_size", default=10000, type=int,
                         help="number of translations to search at a time")
     parser.add_argument("-x", "--reset", action="store_true",
-        default=False, help=reset_help)
+                        default=False, help=reset_help)
     parser.add_argument("-c", "--config_file", type=pathlib.Path,
-                       help=config_file_help, default=None)
+                        help=config_file_help, default=None)
 
     return parser
 
@@ -237,7 +236,7 @@ def main(argument_list):
     cdd_parser = setup_argparser()
 
     # Use argument parser to parse argument_list
-    args = cdd_parser.parse_args(argument_list)
+    args = cdd_parser.parse_args(argument_list[2:])
 
     # Store arguments in more easily accessible variables
     database = args.database
@@ -250,7 +249,6 @@ def main(argument_list):
     output_folder = args.output_folder
     reset = args.reset
     batch_size = args.batch_size
-
 
     # Create config object with data obtained from file and/or defaults.
     config = configfile.build_complete_config(args.config_file)
@@ -347,6 +345,7 @@ def main(argument_list):
         engine.dispose()
 
     return
+
 
 def search_summary(rolled_back):
     """Print search results."""
