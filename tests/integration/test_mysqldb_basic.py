@@ -86,9 +86,6 @@ class TestMysqldbBasic1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(result, 1)
 
-
-
-
     def test_create_db_1(self):
         """Verify new database is created."""
         before = test_db_utils.check_if_exists(db=DB2)
@@ -177,6 +174,23 @@ class TestMysqldbBasic1(unittest.TestCase):
 
 
 
+    def test_db_exists_1(self):
+        """Verify db_exists() can detect existing databases.
+        """
+        self.assertTrue(mysqldb_basic.db_exists(self.engine, DB))
+
+    def test_db_exists_2(self):
+        """Verify db_exists() can detect non-existing databases.
+        """
+        self.assertFalse(mysqldb_basic.db_exists(self.engine, DB3))
+
+    def test_db_exists_3(self):
+        """Verify db_exists() can detect if a database was dropped.
+        """
+        self.assertTrue(mysqldb_basic.db_exists(self.engine, DB))
+
+        mysqldb_basic.drop_db(self.engine, DB)
+        self.assertFalse(mysqldb_basic.db_exists(self.engine, DB))
 
     def test_get_mysql_dbs_1(self):
         """Verify set of databases is retrieved when engine

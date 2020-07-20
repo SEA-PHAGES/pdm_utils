@@ -22,7 +22,6 @@ def drop_db(engine, database):
     else:
         return 0
 
-
 def create_db(engine, database):
     """Create a new, empty database.
 
@@ -62,7 +61,6 @@ def drop_create_db(engine, database):
         result = create_db(engine, database)
     return result
 
-
 def install_db(engine, schema_filepath):
     """Install a MySQL file into the indicated database.
 
@@ -88,7 +86,6 @@ def install_db(engine, schema_filepath):
             print("Installation complete.")
             result = 0
     return result
-
 
 def copy_db(engine, new_database):
     """Copies a database.
@@ -132,6 +129,22 @@ def copy_db(engine, new_database):
                 result = 0
 
     return result
+
+def db_exists(engine, database):
+    """Check if given name for a local MySQL database exists.
+
+    :param engine: SQLAlchemy Engine object able to connect to a MySQL database.
+    :type engine: Engine
+    :param database: The name of the database to check exists.
+    :type database: str
+    :returns: Returns whether the database exists
+    :rtype: bool
+    """
+    exists_query = ("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA "
+                   f"WHERE SCHEMA_NAME = '{database}'")
+
+    existing_db = scalar(engine, exists_query)
+    return (not existing_db is None)
 
 # TODO test.
 def pipe_commands(command1, command2):
