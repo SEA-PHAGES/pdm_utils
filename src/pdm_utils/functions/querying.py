@@ -413,7 +413,8 @@ def extract_columns(columns, check=None):
 #Functions that build and modify SqlAlchemy executable objects.
 #-----------------------------------------------------------------------------
 
-def build_select(db_graph, columns, where=None, order_by=None, add_in=None):
+def build_select(db_graph, columns, where=None, order_by=None, add_in=None,
+                                    having=None, group_by=None):
     """Get MySQL SELECT expression SQLAlchemy executable.
 
     :param db_graph: SQLAlchemy structured NetworkX Graph object.
@@ -430,12 +431,20 @@ def build_select(db_graph, columns, where=None, order_by=None, add_in=None):
     :param add_in: MySQL Column-related inputs to be considered for joining.
     :type add_in: Column
     :type add_in: list
+    :param having: MySQL HAVING clause-related SQLAlchemy object(s).
+    :type having: BinaryExpression
+    :type having: list
+    :param group_by: MySQL GROUP BY clause-related SQLAlchemy object(s).
+    :type group_by: Column
+    :type group_by: list
     :returns: MySQL SELECT expression-related SQLAlchemy executable.
     :rtype: Select
     """
     where_columns = extract_columns(where)
+    having_columns = extract_columns(having)
     add_in_columns = extract_columns(add_in, check=Column)
     order_by_columns = extract_columns(order_by, check=Column)
+    group_by_columns = extract_columns(group_by, check=Column)
 
     if not isinstance(columns, list):
         columns = [columns]
@@ -445,8 +454,10 @@ def build_select(db_graph, columns, where=None, order_by=None, add_in=None):
     fromclause = build_fromclause(db_graph, total_columns) 
 
     select_query = select(columns).select_from(fromclause)
-    select_query = append_where_clauses(select_query, where)
+    select_query = append_group_by_clauses(select_query, group_by)
     select_query = append_order_by_clauses(select_query, order_by)
+    select_query = append_where_clauses(select_query, where)
+    select_query = append_having_clauses(select_query, having)
 
     return select_query
 
@@ -534,7 +545,28 @@ def append_where_clauses(executable, where_clauses):
         executable = executable.where(where_clauses)
 
     return executable
+
+def append_having_clauses(executable, having_clauses):
+    """Add HAVING SQLAlchemy Column objects to a Select object.
     
+    :param executable: SQLAlchemy executable query object.
+    :type executable: Select
+    :param having_clauses: MySQL HAVING clause-related SQLAlchemy object(s).
+    :type order_by_clauses: Column
+    :type order_by_clauses: List
+    :returns MySQL expression-related SQLAlchemy executable.
+    :rtype: Select
+    """
+    if having_clauses is None:
+        return executable
+
+    if isinstance(having_clauses, list):
+        executable = executable.having(and_(*having_clauses))
+    else:
+        executable = executable.having(having_clauses)
+
+    return executable
+
 def append_order_by_clauses(executable, order_by_clauses):
     """Add ORDER BY SQLAlchemy Column objects to a Select object.
 
@@ -554,6 +586,28 @@ def append_order_by_clauses(executable, order_by_clauses):
             executable = executable.order_by(clause)
     else: 
         executable = executable.order_by(order_by_clauses)
+
+    return executable
+
+def append_group_by_clauses(executable, group_by_clauses):
+    """Add GROUP BY SQLAlchemy Column objects to a Select object.
+
+    :param executable: SQLAlchemy executable query object.
+    :type executable: Select
+    :param order_by_clauses: MySQL GROUP BY clause-related SQLAlchemy object(s).
+    :type order_by_clauses: Column
+    :type order_by_clauses: list
+    :returns: MySQL expression-related SQLAlchemy exectuable.
+    :rtype: Select
+    """
+    if group_by_clauses is None:
+        return executable
+    
+    if isinstance(group_by_clauses, list):
+        for clause in group_by_clauses:
+            executable = executable.group_by(clause)
+    else:
+        executable = executable.group_by(group_by_clauses)
 
     return executable
 

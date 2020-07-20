@@ -65,6 +65,7 @@ class TestQuerying(unittest.TestCase):
         self.PhageID = self.phage.c.PhageID
         self.Cluster = self.phage.c.Cluster
         self.Subcluster = self.phage.c.Subcluster
+        self.HostGenus = self.phage.c.HostGenus
         self.GeneID = self.gene.c.GeneID
         self.PhamID = self.gene.c.PhamID
         self.TrnaID = self.trna.c.GeneID
@@ -375,6 +376,31 @@ class TestQuerying(unittest.TestCase):
         dict_list = query_dict_list(self.engine, select_query)
 
         self.assertTrue(len(dict_list) > 1)
+
+    def test_build_select_5(self):
+        """Verify build_select() appends GROUP BY clauses to executable.
+        """
+        select_query = querying.build_select(self.graph, self.HostGenus,
+                                             group_by=self.PhageID)
+
+        hosts = []
+        dict_list = query_dict_list(self.engine, select_query)
+        for dict in dict_list:
+            hosts.append(dict["HostGenus"])
+
+
+    def test_build_select_6(self):
+        """Verify build_select() correctly aggregates columns for having query.
+        """
+        having_clause = (func.count(self.GeneID) == 1)
+        select_query = querying.build_select(self.graph, self.PhamID, 
+                                             group_by=self.PhamID,
+                                             having=having_clause)
+
+        phamids = []
+        dict_list = query_dict_list(self.engine, select_query)
+        for dict in dict_list:
+            phamids.append(dict["PhamID"]) 
 
     def test_build_count_1(self):
         """Verify build_count() creates valid SQLAlchemy executable.
