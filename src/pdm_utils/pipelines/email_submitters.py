@@ -313,7 +313,7 @@ def submit_to_genbank(username, password, to_addr, phage_ids):
     message["Reply-to"] = username
     message["To"] = to_addr
 
-    message["Subject"] = "THIS IS A TEST - IGNORE OR DELETE THIS EMAIL"
+    message["Subject"] = "Phages ready for submission to Genbank"
     body = TEMPLATES[status].format(phage_string)
 
     # Attach the body
