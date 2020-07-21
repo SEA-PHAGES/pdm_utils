@@ -1,3 +1,4 @@
+import sys
 from functools import singledispatch
 from pathlib import Path
 
@@ -39,7 +40,7 @@ def parse_value_input(value_list_input):
     :rtype: list[str]
     """
 
-    print("Value list input for export is of an unexpected type.")
+    print("Value list input is of an unexpected type.")
     sys.exit(1)
 
 @parse_value_input.register(Path)
@@ -56,9 +57,9 @@ def _(value_list_input):
     return value_list_input
 
 #MYSQL FILTERS AND HANDLER FUNCTIONS
-def build_alchemist(database):
+def build_alchemist(database, db_required=True):
     alchemist = AlchemyHandler(database=database)
-    alchemist.connect(ask_database=True, pipeline=True) 
+    alchemist.connect(ask_database=db_required, pipeline=True) 
 
     return alchemist
 

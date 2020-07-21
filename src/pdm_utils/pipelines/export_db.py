@@ -289,10 +289,11 @@ def execute_export(alchemist, folder_path, folder_name, pipeline,
     :param table: MySQL table name.
     :type table: str
     :param filters: A list of lists with filter values, grouped by ORs.
-    :type filters: list[list[str]]
+    :type filters: str
     :param groups: A list of supported MySQL column names to group by.
     :type groups: list[str]
     :param sort: A list of supported MySQL column names to sort by.
+    :type sort: list[str]
     :param include_columns: A csv export column selection parameter.
     :type include_columns: list[str]
     :param exclude_columns: A csv export column selection parameter.
@@ -326,7 +327,7 @@ def execute_export(alchemist, folder_path, folder_name, pipeline,
             except:
                 print("Please check your syntax for sorting columns:\n"
                       f"{', '.join(sort)}")
-                exit(1)
+                sys.exit(1)
 
     if verbose:
         print("Creating export folder...")
