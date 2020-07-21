@@ -34,7 +34,7 @@ def main(unparsed_args_list):
                         args.adatabase, args.bdatabase, values=values,
                         filters=args.filters, groups=args.groups, 
                         sort=args.sort, show_per=args.show_percentages,
-                        verbose=args.verbose)
+                        use_locus=args.use_locus, verbose=args.verbose)
 
 def parse_pham_finder(unparsed_args_list):
     """Parses pham_finder arguments and stores them with an argparse object.
@@ -95,6 +95,9 @@ def parse_pham_finder(unparsed_args_list):
         Pham finder option that enables the display of the percent of 
         the referenced pham that the found pham covers.
         """
+    USE_LOCUS_HELP = """
+        Pham finder option that converts between phams using LocusTags.
+        """
 
     parser = argparse.ArgumentParser()
     parser.add_argument("adatabase", type=str, 
@@ -124,6 +127,8 @@ def parse_pham_finder(unparsed_args_list):
 
     parser.add_argument("-per", "--show_percentages", action="store_true", 
                         help=SHOW_PERCENTAGES_HELP)
+    parser.add_argument("-ul", "--use_locus", action="store_true",
+                        help=USE_LOCUS_HELP)
 
     parser.set_defaults(folder_name=DEFAULT_FOLDER_NAME,
                         folder_path=DEFAULT_FOLDER_PATH,
@@ -138,7 +143,7 @@ def parse_pham_finder(unparsed_args_list):
 def execute_pham_finder(alchemist, folder_path, folder_name, 
                         adatabase, bdatabase, values=None,
                         filters="", groups=[], sort=[],
-                        show_per=False, verbose=False):
+                        show_per=False, use_locus=False, verbose=False):
     """Executes the entirety of the file export pipeline.
 
     :param alchemist: A connected and fully build AlchemyHandler object.
@@ -166,6 +171,8 @@ def execute_pham_finder(alchemist, folder_path, folder_name,
     :type sort: list[str]
     :param show_per: Enables display gene coverage of the corresponding phams.
     :type show_per: bool
+    :param use_locus: Toggles conversion between phams using LocusTag instead
+    :type use_locus: bool
     """
     if not (adatabase in alchemist.databases and \
             bdatabase in alchemist.databases):
@@ -181,7 +188,10 @@ def execute_pham_finder(alchemist, folder_path, folder_name,
 
     alchemist.database = bdatabase
     alchemist.connect()
-    b_filter = pipelines_basic.build_filter(alchemist, "gene", "")
+    if use_locus:
+        b_filter = pipelines_basic.build_filter(alchemist, "gene.LocusTag", "")
+    else:
+        b_filter = pipelines_basic.build_filter(alchemist, "gene", "")
 
     if sort:
         try:
@@ -242,7 +252,7 @@ def execute_pham_finder(alchemist, folder_path, folder_name,
                                 include_headers=True)
 
 #TODO Owen Needs unittests
-def find_phams(a_filter, b_filter, show_per=False):
+def find_phams(a_filter, b_filter, show_per=False, use_locus=False):
     """Find phams helper function that finds phams via GeneID intermediates.
 
     :param a_filter: Fully built Filter connected to the reference database.
@@ -254,11 +264,19 @@ def find_phams(a_filter, b_filter, show_per=False):
     :returns: Returns a dictionary mapping original phams to corresponding phams
     :rtype: dict{int:str}
     """
-    genes = a_filter.retrieve("gene.GeneID")
+    if use_locus:
+        genes = a_filter.retrieve("gene.GeneID")
+    else:
+        genes = a_filter.retrieve("gene.GeneID")
 
     mapped_phams = {}
     for pham, data_dict in genes.items():
-        b_filter.values = data_dict["GeneID"]        
+        if use_locus:
+            values = data_dict["LocusTag"]
+            values.remove(None)
+            b_filter.values = values
+        else:
+            b_filter.values = data_dict["GeneID"]        
 
         if show_per:
             pham_groups = b_filter.group("gene.PhamID")
