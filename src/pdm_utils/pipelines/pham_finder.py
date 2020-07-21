@@ -30,8 +30,6 @@ def main(unparsed_args_list):
     if args.input:
         values = pipelines_basic.parse_value_input(args.input)
 
-    print(values)
-
     execute_pham_finder(alchemist, args.folder_path, args.folder_name,
                         args.adatabase, args.bdatabase, values=values,
                         filters=args.filters, groups=args.groups, 
