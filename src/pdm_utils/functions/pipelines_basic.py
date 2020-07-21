@@ -1,3 +1,4 @@
+import csv
 import sys
 from functools import singledispatch
 from pathlib import Path
