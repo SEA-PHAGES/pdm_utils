@@ -30,7 +30,11 @@ TEMPLATES = {"success": "{} has been successfully imported into Phamerator. "
              "submit": "The following genomes are ready for submission to "
                        "Genbank:\n{}\n\nBest,\n\nChristian",
              "fail": "{} could not be imported into Phamerator. See the "
-                     "attached log file(s) for details. Feel free to reach "
+                     "attached log file(s) for details.\n\nA Google "
+                     "spreadsheet (https://docs.google.com/spreadsheets/d/1LU"
+                     "-ueqWIwjiWWjGFVuLlptr6ha4zF4re2ScmYhdExPc/edit?usp"
+                     "=sharing) has been created to help interpret "
+                     "some of the most common errors.  Feel free to reach "
                      "out if any of the error messages are difficult to "
                      "understand.\n\nBest,\n\nChristian"}
 
