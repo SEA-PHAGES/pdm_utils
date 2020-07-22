@@ -192,7 +192,8 @@ def send_successful_emails(username, password, phage_ids):
         reply_to = get_reply_to(username, password, phage_id)
         # If email address retrieved, send automated email
         if reply_to != "":
-            to_addr = list({reply_to, "djs@pitt.edu"})
+            to_addr = list({reply_to, "djs@pitt.edu",
+                            "phamerator.qc@gmail.com"})
             send_to_submitter(username, password, to_addr, phage_id, status)
             print(f"Automated email sent to {reply_to} for {phage_id}")
         # Else notify that manual email is needed
@@ -200,7 +201,7 @@ def send_successful_emails(username, password, phage_ids):
             print(f"Manual email required for {phage_id}")
 
     # Send "ready for submission" email
-    to_addr = ["djs@pitt.edu"]
+    to_addr = ["djs@pitt.edu", "phamerator.qc@gmail.com"]
     submit_to_genbank(username, password, to_addr, phage_ids)
 
 
@@ -224,7 +225,8 @@ def send_failed_emails(username, password, phage_ids):
         reply_to = get_reply_to(username, password, phage_id)
         # If email address retrieved, send automated email
         if reply_to != "":
-            to_addr = list({reply_to, "djs@pitt.edu"})
+            to_addr = list({reply_to, "djs@pitt.edu",
+                            "phamerator.qc@gmail.com"})
             attach = phage_ids[phage_id]
             send_to_submitter(username, password, to_addr,
                               phage_id, status, attach)
@@ -255,7 +257,7 @@ def send_to_submitter(username, password, to_addr, phage_id, status,
     # Set up header
     message["From"] = username
     message["Reply-to"] = username
-    message["To"] = to_addr
+    message["To"] = ','.join(to_addr)
 
     # If status is success, build successful email
     if status == "success":
@@ -311,7 +313,7 @@ def submit_to_genbank(username, password, to_addr, phage_ids):
     # Set up header
     message["From"] = username
     message["Reply-to"] = username
-    message["To"] = to_addr
+    message["To"] = ','.join(to_addr)
 
     message["Subject"] = "Phages ready for submission to Genbank"
     body = TEMPLATES[status].format(phage_string)
@@ -384,5 +386,5 @@ def main(argument_list):
     send_failed_emails(username, password, phage_dict)
 
     # Cleanup .zip and ASN1 files
-    shutil.rmtree(ZIP_FILE)
+    os.remove(ZIP_FILE)
     shutil.rmtree(ASN1_DIR)
