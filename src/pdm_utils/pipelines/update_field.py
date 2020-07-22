@@ -2,14 +2,11 @@
 import argparse
 import csv
 import pathlib
-import sys
 
 from sqlalchemy import update
 
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
-from pdm_utils.classes.randomfieldupdatehandler import RandomFieldUpdateHandler
 from pdm_utils.functions import basic
-from pdm_utils.functions import cartography
 from pdm_utils.functions import configfile
 from pdm_utils.functions import mysqldb
 from pdm_utils.functions import mysqldb_basic
@@ -19,7 +16,7 @@ from pdm_utils.functions import querying
 # TODO unittest.
 def main(unparsed_args):
     """Runs the complete update pipeline."""
-    args = parse_args(unparsed_args)
+    args = parse_args(unparsed_args[2:])
 
     # Verify database connection and schema compatibility.
     print("Connecting to the MySQL database...")
@@ -34,8 +31,7 @@ def main(unparsed_args):
     engine = alchemist.engine
     mysqldb.check_schema_compatibility(engine, "the update pipeline")
 
-
-    if args.version == True:
+    if args.version is True:
         mysqldb.change_version(engine)
         print("Database version updated.")
 
@@ -71,6 +67,7 @@ def main(unparsed_args):
             print(f"{succeeded} / {processed} tickets successfully handled.")
         if failed > 0:
             print(f"{failed} / {processed} tickets failed to be handled.")
+
 
 def update_field(alchemist, update_ticket):
     """Attempts to update a field using information from an update_ticket.
@@ -123,6 +120,7 @@ def update_field(alchemist, update_ticket):
     alchemist.engine.execute(statement)
     return 1
 
+
 # TODO unittest.
 def parse_args(unparsed_args_list):
     """Verify the correct arguments are selected for getting updates."""
@@ -144,9 +142,9 @@ def parse_args(unparsed_args_list):
     parser = argparse.ArgumentParser(description=update_help)
     parser.add_argument("database", type=str, help=database_help)
     parser.add_argument("-f", "--ticket_table", type=pathlib.Path,
-        help=ticket_table_help)
+                        help=ticket_table_help)
     parser.add_argument("-v", "--version", action="store_true",
-        default=False, help=version_help)
+                        default=False, help=version_help)
     parser.add_argument("-c", "--config_file", type=pathlib.Path,
                         help=config_file_help, default=None)
     args = parser.parse_args(unparsed_args_list)

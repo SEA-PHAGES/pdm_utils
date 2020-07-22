@@ -12,7 +12,7 @@ import sys
 
 from tabulate import tabulate
 
-import pdm_utils # to get version number.
+import pdm_utils     # to get version number.
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.classes import bundle
 from pdm_utils.classes import genomepair

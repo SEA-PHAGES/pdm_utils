@@ -11,7 +11,8 @@ def default_sections_keys():
             "mysqldump": {"user", "password"},
             "ncbi": {"api_key", "email", "tool"},
             "upload_server": {"host", "dest", "user", "password"},
-            "download_server": {"url"}
+            "download_server": {"url"},
+            "emailer": {"username", "password"}
             }
     return dict
 
