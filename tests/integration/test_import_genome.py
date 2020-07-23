@@ -89,10 +89,15 @@ def count_contents(path_to_folder):
     return count
 
 class TestImportGenome1(unittest.TestCase):
+    @classmethod
+    def setUpClass(self):
+        test_db_utils.create_empty_test_db()
 
+    @classmethod
+    def tearDownClass(self):
+        test_db_utils.remove_db()
 
     def setUp(self):
-        test_db_utils.create_empty_test_db()
         self.base_dir = Path(test_root_dir, "test_import")
         self.base_dir.mkdir()
 
@@ -135,9 +140,6 @@ class TestImportGenome1(unittest.TestCase):
 
         # Close all open connections.
         self.engine.dispose()
-
-        # Remove the MySQL database created for the test.
-        test_db_utils.remove_db()
 
     def test_prepare_bundle_1(self):
         """Verify bundle is returned from a flat file with:
@@ -290,123 +292,9 @@ class TestImportGenome1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(len(bndl.genome_dict.keys()), 2)
         with self.subTest():
-            self.assertFalse("phagesdb" in bndl.genome_dict.keys())
-
+            self.assertFalse("phagesdb" in bndl.genome_dict.keys()) 
 
     def test_prepare_bundle_7(self):
-        """Verify bundle is returned from a flat file with:
-        one record, one 'replace' ticket, with MySQL data,
-        and no PhagesDB data."""
-        # Use host_genus and accession to confirm that only attributes
-        # in the data_retain set are copied.
-
-        phage_data1 = test_data_utils.get_trixie_phage_data()
-        phage_data2 = test_data_utils.get_trixie_phage_data()
-        phage_data3 = test_data_utils.get_trixie_phage_data()
-        phage_data1["PhageID"] = "Trixie"
-        phage_data2["PhageID"] = "D29"
-        phage_data3["PhageID"] = "L5"
-        phage_data1["Accession"] = "BCD456"
-        phage_data2["Accession"] = "XYZ123"
-        phage_data3["Accession"] = "EFG789"
-        test_db_utils.insert_data(PHAGE, phage_data1)
-        test_db_utils.insert_data(PHAGE, phage_data2)
-        test_db_utils.insert_data(PHAGE, phage_data3)
-        self.tkt1.type = "replace"
-        self.tkt1.data_dict["host_genus"] = "retain"
-        self.tkt1.data_add = set(["cluster", "subcluster",
-                                     "annotation_status", "annotation_author",
-                                     "retrieve_record", "accession"])
-        self.tkt1.data_retain = set(["host_genus"])
-        tkt_dict = {"L5":self.tkt1, "Trixie":self.tkt2}
-        bndl = import_genome.prepare_bundle(
-                    filepath=self.test_flat_file1,
-                    ticket_dict=tkt_dict, id=1,
-                    genome_id_field="_organism_name",
-                    file_ref="flat_file",
-                    retain_ref="mysql",
-                    engine=self.engine)
-        ff_gnm = bndl.genome_dict["flat_file"]
-        pmr_gnm = bndl.genome_dict["mysql"]
-        ff_pmr_pair = bndl.genome_pair_dict["flat_file_mysql"]
-        with self.subTest():
-            self.assertEqual(len(bndl.genome_dict.keys()), 3)
-        with self.subTest():
-            self.assertEqual(len(bndl.genome_pair_dict.keys()), 1)
-        with self.subTest():
-            self.assertEqual(ff_gnm.host_genus, "Gordonia")
-        with self.subTest():
-            self.assertEqual(ff_gnm.accession, "ABC123")
-        with self.subTest():
-            self.assertEqual(pmr_gnm.accession, "EFG789")
-
-
-    def test_prepare_bundle_8(self):
-        """Verify bundle is returned from a flat file with:
-        one record, one 'replace' ticket, no MySQL data,
-        and no PhagesDB data."""
-        phage_data1 = test_data_utils.get_trixie_phage_data()
-        phage_data2 = test_data_utils.get_trixie_phage_data()
-        phage_data3 = test_data_utils.get_trixie_phage_data()
-        phage_data1["PhageID"] = "L5x"
-        phage_data2["PhageID"] = "Trixie"
-        phage_data3["PhageID"] = "D29"
-        test_db_utils.insert_data(PHAGE, phage_data1)
-        test_db_utils.insert_data(PHAGE, phage_data2)
-        test_db_utils.insert_data(PHAGE, phage_data3)
-        self.tkt1.type = "replace"
-        self.tkt1.data_dict["host_genus"] = "retain"
-        self.tkt1.data_add = set(["cluster", "subcluster",
-                                     "annotation_status", "annotation_author",
-                                     "retrieve_record", "accession"])
-        self.tkt1.data_retain = set(["host_genus"])
-        tkt_dict = {"L5":self.tkt1, "Trixie":self.tkt2}
-        bndl = import_genome.prepare_bundle(
-                    filepath=self.test_flat_file1,
-                    ticket_dict=tkt_dict, id=1,
-                    genome_id_field="_organism_name",
-                    file_ref="flat_file",
-                    engine=self.engine)
-        ff_gnm = bndl.genome_dict["flat_file"]
-        with self.subTest():
-            self.assertEqual(len(bndl.genome_dict.keys()), 2)
-        with self.subTest():
-            self.assertEqual(ff_gnm.host_genus, "")
-
-
-    def test_prepare_bundle_9(self):
-        """Verify bundle is returned from a flat file with:
-        one record, one 'replace' ticket, with MySQL data,
-        no MySQL engine, and no PhagesDB data."""
-        phage_data1 = test_data_utils.get_trixie_phage_data()
-        phage_data2 = test_data_utils.get_trixie_phage_data()
-        phage_data3 = test_data_utils.get_trixie_phage_data()
-        phage_data1["PhageID"] = "L5x"
-        phage_data2["PhageID"] = "Trixie"
-        phage_data3["PhageID"] = "D29"
-        test_db_utils.insert_data(PHAGE, phage_data1)
-        test_db_utils.insert_data(PHAGE, phage_data2)
-        test_db_utils.insert_data(PHAGE, phage_data3)
-        self.tkt1.type = "replace"
-        self.tkt1.data_dict["host_genus"] = "retain"
-        self.tkt1.data_add = set(["cluster", "subcluster",
-                                     "annotation_status", "annotation_author",
-                                     "retrieve_record", "accession"])
-        self.tkt1.data_retain = set(["host_genus"])
-        tkt_dict = {"L5":self.tkt1, "Trixie":self.tkt2}
-        bndl = import_genome.prepare_bundle(
-                    filepath=self.test_flat_file1,
-                    ticket_dict=tkt_dict, id=1,
-                    genome_id_field="_organism_name",
-                    file_ref="flat_file")
-        ff_gnm = bndl.genome_dict["flat_file"]
-        with self.subTest():
-            self.assertEqual(len(bndl.genome_dict.keys()), 2)
-        with self.subTest():
-            self.assertEqual(len(bndl.genome_pair_dict.keys()), 0)
-
-
-    def test_prepare_bundle_10(self):
         """Verify bundle is returned with the genome id converted using
         the id dictionary. Several attributes in the genome object should
         be updated, including the genome's 'id' and 'name' attributes,
@@ -459,7 +347,7 @@ class TestImportGenome1(unittest.TestCase):
 
     @patch("pdm_utils.functions.basic.choose_from_list")
     @patch("pdm_utils.functions.basic.ask_yes_no")
-    def test_prepare_bundle_11(self, ask_mock, choose_mock):
+    def test_prepare_bundle_8(self, ask_mock, choose_mock):
         """Verify bundle is returned with the CDS descriptions derived
         from 'product' instead of 'function', after it is
         interactively selected using interactive = True.
@@ -548,10 +436,164 @@ class TestImportGenome1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(ref_dict["subcluster_set"], exp_subclusters)
 
-
-
 class TestImportGenome2(unittest.TestCase):
+    def setUp(self):
+        self.base_dir = Path(test_root_dir, "test_import")
+        self.base_dir.mkdir()
 
+        self.genome_folder = Path(self.base_dir,"genome_folder")
+        self.genome_folder.mkdir()
+
+        self.test_flat_file1 = Path(test_file_dir, "test_flat_file_1.gb")
+        self.test_flat_file2 = Path(test_file_dir, "test_flat_file_2.gb")
+
+        self.engine = sqlalchemy.create_engine(ENGINE_STRING1, echo=False)
+
+        # Evaluation dict with all flags = True.
+        self.eval_flags = eval_modes.get_eval_flag_dict("base")
+
+        self.data_dict = {}
+        self.data_dict["host_genus"] = "Arthrobacter"
+        self.data_dict["cluster"] = "B"
+        self.data_dict["subcluster"] = "B2"
+        self.data_dict["annotation_status"] = "draft"
+        self.data_dict["annotation_author"] = 1
+        self.data_dict["retrieve_record"] = 1
+        self.data_dict["accession"] = "ABC123"
+
+        self.tkt1 = ticket.ImportTicket()
+        self.tkt1.id = 1
+        self.tkt1.type = "add"
+        self.tkt1.phage_id = "L5"
+        self.tkt1.eval_mode = "final"
+        self.tkt1.description_field = "product"
+        self.tkt1.eval_flags = self.eval_flags
+        self.tkt1.data_dict = self.data_dict
+
+        self.tkt2 = ticket.ImportTicket()
+
+        test_db_utils.create_empty_test_db()
+
+    def tearDown(self):
+        # Remove all contents in the directory created for the test.
+        shutil.rmtree(self.base_dir)
+
+        # Close all open connections.
+        self.engine.dispose()
+
+        test_db_utils.remove_db()
+
+    def test_prepare_bundle_9(self):
+        """Verify bundle is returned from a flat file with:
+        one record, one 'replace' ticket, with MySQL data,
+        and no PhagesDB data."""
+        # Use host_genus and accession to confirm that only attributes
+        # in the data_retain set are copied.
+
+        phage_data1 = test_data_utils.get_trixie_phage_data()
+        phage_data2 = test_data_utils.get_trixie_phage_data()
+        phage_data3 = test_data_utils.get_trixie_phage_data()
+        phage_data1["PhageID"] = "Trixie"
+        phage_data2["PhageID"] = "D29"
+        phage_data3["PhageID"] = "L5"
+        phage_data1["Accession"] = "BCD456"
+        phage_data2["Accession"] = "XYZ123"
+        phage_data3["Accession"] = "EFG789"
+        test_db_utils.insert_data(PHAGE, phage_data1)
+        test_db_utils.insert_data(PHAGE, phage_data2)
+        test_db_utils.insert_data(PHAGE, phage_data3)
+        self.tkt1.type = "replace"
+        self.tkt1.data_dict["host_genus"] = "retain"
+        self.tkt1.data_add = set(["cluster", "subcluster",
+                                     "annotation_status", "annotation_author",
+                                     "retrieve_record", "accession"])
+        self.tkt1.data_retain = set(["host_genus"])
+        tkt_dict = {"L5":self.tkt1, "Trixie":self.tkt2}
+        bndl = import_genome.prepare_bundle(
+                    filepath=self.test_flat_file1,
+                    ticket_dict=tkt_dict, id=1,
+                    genome_id_field="_organism_name",
+                    file_ref="flat_file",
+                    retain_ref="mysql",
+                    engine=self.engine)
+        ff_gnm = bndl.genome_dict["flat_file"]
+        pmr_gnm = bndl.genome_dict["mysql"]
+        ff_pmr_pair = bndl.genome_pair_dict["flat_file_mysql"]
+        with self.subTest():
+            self.assertEqual(len(bndl.genome_dict.keys()), 3)
+        with self.subTest():
+            self.assertEqual(len(bndl.genome_pair_dict.keys()), 1)
+        with self.subTest():
+            self.assertEqual(ff_gnm.host_genus, "Gordonia")
+        with self.subTest():
+            self.assertEqual(ff_gnm.accession, "ABC123")
+        with self.subTest():
+            self.assertEqual(pmr_gnm.accession, "EFG789")
+
+    def test_prepare_bundle_10(self):
+        """Verify bundle is returned from a flat file with:
+        one record, one 'replace' ticket, no MySQL data,
+        and no PhagesDB data."""
+        phage_data1 = test_data_utils.get_trixie_phage_data()
+        phage_data2 = test_data_utils.get_trixie_phage_data()
+        phage_data3 = test_data_utils.get_trixie_phage_data()
+        phage_data1["PhageID"] = "L5x"
+        phage_data2["PhageID"] = "Trixie"
+        phage_data3["PhageID"] = "D29"
+        test_db_utils.insert_data(PHAGE, phage_data1)
+        test_db_utils.insert_data(PHAGE, phage_data2)
+        test_db_utils.insert_data(PHAGE, phage_data3)
+        self.tkt1.type = "replace"
+        self.tkt1.data_dict["host_genus"] = "retain"
+        self.tkt1.data_add = set(["cluster", "subcluster",
+                                     "annotation_status", "annotation_author",
+                                     "retrieve_record", "accession"])
+        self.tkt1.data_retain = set(["host_genus"])
+        tkt_dict = {"L5":self.tkt1, "Trixie":self.tkt2}
+        bndl = import_genome.prepare_bundle(
+                    filepath=self.test_flat_file1,
+                    ticket_dict=tkt_dict, id=1,
+                    genome_id_field="_organism_name",
+                    file_ref="flat_file",
+                    engine=self.engine)
+        ff_gnm = bndl.genome_dict["flat_file"]
+        with self.subTest():
+            self.assertEqual(len(bndl.genome_dict.keys()), 2)
+        with self.subTest():
+            self.assertEqual(ff_gnm.host_genus, "")
+
+    def test_prepare_bundle_11(self):
+        """Verify bundle is returned from a flat file with:
+        one record, one 'replace' ticket, with MySQL data,
+        no MySQL engine, and no PhagesDB data."""
+        phage_data1 = test_data_utils.get_trixie_phage_data()
+        phage_data2 = test_data_utils.get_trixie_phage_data()
+        phage_data3 = test_data_utils.get_trixie_phage_data()
+        phage_data1["PhageID"] = "L5x"
+        phage_data2["PhageID"] = "Trixie"
+        phage_data3["PhageID"] = "D29"
+        test_db_utils.insert_data(PHAGE, phage_data1)
+        test_db_utils.insert_data(PHAGE, phage_data2)
+        test_db_utils.insert_data(PHAGE, phage_data3)
+        self.tkt1.type = "replace"
+        self.tkt1.data_dict["host_genus"] = "retain"
+        self.tkt1.data_add = set(["cluster", "subcluster",
+                                     "annotation_status", "annotation_author",
+                                     "retrieve_record", "accession"])
+        self.tkt1.data_retain = set(["host_genus"])
+        tkt_dict = {"L5":self.tkt1, "Trixie":self.tkt2}
+        bndl = import_genome.prepare_bundle(
+                    filepath=self.test_flat_file1,
+                    ticket_dict=tkt_dict, id=1,
+                    genome_id_field="_organism_name",
+                    file_ref="flat_file")
+        ff_gnm = bndl.genome_dict["flat_file"]
+        with self.subTest():
+            self.assertEqual(len(bndl.genome_dict.keys()), 2)
+        with self.subTest():
+            self.assertEqual(len(bndl.genome_pair_dict.keys()), 0)
+
+class TestImportGenome3(unittest.TestCase):
     def setUp(self):
         self.test_filepath1 = Path(test_file_dir, "test_flat_file_1.gb")
         self.test_directory1 = Path(test_root_dir, "test_dir")
@@ -564,13 +606,9 @@ class TestImportGenome2(unittest.TestCase):
                           str(self.test_directory1),
                           str(self.test_filepath1)]
 
-
     def tearDown(self):
         shutil.rmtree(self.test_directory1)
-
-
-
-
+ 
     def test_parse_args_1(self):
         """Verify args when minimum args_list is provided."""
         args = import_genome.parse_args(self.args_list)
@@ -593,14 +631,12 @@ class TestImportGenome2(unittest.TestCase):
         with self.subTest():
             self.assertFalse(args.interactive)
 
-
     @patch("sys.exit")
     def test_parse_args_2(self, sys_exit_mock):
         """Verify sys exit when too few arguments are provided."""
         self.args_list.pop()
         args = import_genome.parse_args(self.args_list)
         self.assertTrue(sys_exit_mock.called)
-
 
     def test_parse_args_3(self):
         """Verify parsed args when all args are explicitly provided
@@ -627,7 +663,6 @@ class TestImportGenome2(unittest.TestCase):
         with self.subTest():
             self.assertTrue(args.interactive)
 
-
     def test_parse_args_4(self):
         """Verify parsed args when all args are explicitly provided
         using long name."""
@@ -653,11 +688,7 @@ class TestImportGenome2(unittest.TestCase):
         with self.subTest():
             self.assertTrue(args.interactive)
 
-
-
-
-class TestImportGenome3(unittest.TestCase):
-
+class TestImportGenome4(unittest.TestCase):
     def setUp(self):
         # The empty pdm_test_db is only needed to test shema compatibility.
         # Otherwise, Actinobacteriophage is sufficient.
@@ -775,13 +806,8 @@ class TestImportGenome3(unittest.TestCase):
         import_genome.main(self.args_list)
         self.assertTrue(sys_exit_mock.called)
 
-
-
-
-class TestImportGenome4(unittest.TestCase):
-
+class TestImportGenome5(unittest.TestCase):
     def setUp(self):
-
         self.eval_data_dict = {"eval_mode": "custom_eval_mode",
                                    "eval_flag_dict": {"a":1}}
 
@@ -807,11 +833,7 @@ class TestImportGenome4(unittest.TestCase):
         self.data_dict2["host_genus"] = "retrieve"
         self.data_dict2["cluster"] = "retain"
 
-
         self.dict1_dict2 = [self.data_dict1, self.data_dict2]
-
-
-
 
     def test_prepare_tickets_1(self):
         """Verify dictionary is returned from a correct import table file."""
@@ -822,7 +844,6 @@ class TestImportGenome4(unittest.TestCase):
                         description_field="product",
                         table_structure_dict=self.table_structure_dict)
         self.assertEqual(len(tkt_dict.keys()), 2)
-
 
     # Patch so that a variety of different types of files don't need
     # to be created just to test this function.
@@ -904,14 +925,8 @@ class TestImportGenome4(unittest.TestCase):
                         table_structure_dict=self.table_structure_dict)
         self.assertIsNone(tkt_dict)
 
-
-
-
-class TestImportGenome5(unittest.TestCase):
-
-
+class TestImportGenome6(unittest.TestCase):
     def setUp(self):
-
         self.flat_file_l5 = Path(test_file_dir, "test_flat_file_1.gb")
         self.flat_file_trixie = Path(test_file_dir, "test_flat_file_6.gb")
 
@@ -971,9 +986,6 @@ class TestImportGenome5(unittest.TestCase):
     def tearDown(self):
         self.engine.dispose()
         shutil.rmtree(self.base_dir)
-
-
-
 
     def test_process_files_and_tickets_1(self):
         """Verify correct output using:
@@ -1350,13 +1362,8 @@ class TestImportGenome5(unittest.TestCase):
         with self.subTest():
             self.assertEqual(bndl2._errors, 0)
 
-
-
-
-class TestImportGenome6(unittest.TestCase):
-
+class TestImportGenome7(unittest.TestCase):
     def setUp(self):
-
         self.base_dir = Path(test_root_dir,"test_import")
         self.base_dir.mkdir()
 
@@ -1370,7 +1377,6 @@ class TestImportGenome6(unittest.TestCase):
         self.invalid_import_table_file = Path(test_file_dir,
                                             "test_import_table_2.csv")
         self.output_folder = Path(self.base_dir, import_genome.RESULTS_FOLDER)
-
 
         self.engine = sqlalchemy.create_engine(ENGINE_STRING1, echo=False)
 
@@ -1398,7 +1404,6 @@ class TestImportGenome6(unittest.TestCase):
         self.exp_fail_tkt_table = Path(self.exp_fail, "import_table.csv")
         self.exp_fail_genomes = Path(self.exp_fail, "genomes")
         self.exp_fail_logs = Path(self.exp_fail, "logs")
-
 
     def tearDown(self):
         shutil.rmtree(self.base_dir)
@@ -1686,13 +1691,8 @@ class TestImportGenome6(unittest.TestCase):
         with self.subTest():
             self.assertFalse(self.exp_success.exists())
 
-
-
-class TestImportGenome7(unittest.TestCase):
-
-
+class TestImportGenome8(unittest.TestCase):
     def setUp(self):
-
         self.eval_warning1 = evaluation.Evaluation(status="warning", result="temp")
         self.eval_warning2 = evaluation.Evaluation(status="warning")
         self.eval_warning3 = evaluation.Evaluation(status="warning")
@@ -1755,9 +1755,6 @@ class TestImportGenome7(unittest.TestCase):
 
         self.bndl = bundle.Bundle()
 
-
-
-
     @patch("pdm_utils.functions.basic.ask_yes_no")
     def test_review_evaluation_1(self, ask_mock):
         """Verify values and no need for user input with:
@@ -1813,7 +1810,6 @@ class TestImportGenome7(unittest.TestCase):
         with self.subTest():
             self.assertTrue(self.eval_warning1.result.endswith("manually."))
 
-
     @patch("pdm_utils.functions.basic.ask_yes_no")
     def test_review_evaluation_4(self, ask_mock):
         """Verify values and need for user input with:
@@ -1833,7 +1829,6 @@ class TestImportGenome7(unittest.TestCase):
             self.assertFalse(self.eval_warning1.result.startswith("Status"))
         with self.subTest():
             self.assertTrue(self.eval_warning1.result.endswith("exit."))
-
 
     @patch("builtins.input")
     def test_review_evaluation_5(self, input_mock):
@@ -1855,7 +1850,6 @@ class TestImportGenome7(unittest.TestCase):
         with self.subTest():
             self.assertTrue(self.eval_warning1.result.endswith("exit."))
 
-
     @patch("builtins.input")
     def test_review_evaluation_6(self, input_mock):
         """Verify values and need for user input with:
@@ -1871,7 +1865,6 @@ class TestImportGenome7(unittest.TestCase):
         with self.subTest():
             self.assertTrue(input_mock.called)
 
-
     @patch("builtins.input")
     def test_review_evaluation_7(self, input_mock):
         """Verify values and no need for user input with:
@@ -1886,7 +1879,6 @@ class TestImportGenome7(unittest.TestCase):
             self.assertFalse(correct)
         with self.subTest():
             self.assertFalse(input_mock.called)
-
 
     @patch("builtins.input")
     def test_review_evaluation_8(self, input_mock):
@@ -2350,13 +2342,8 @@ class TestImportGenome7(unittest.TestCase):
         with self.subTest():
             self.assertEqual(src1_list[0].status, "warning")
 
-
-
-
-class TestImportGenome8(unittest.TestCase):
-
+class TestImportGenome9(unittest.TestCase):
     def setUp(self):
-
         self.cds1 = cds.Cds()
         self.cds1.id = "L5_001"
         self.cds1.start = 10
@@ -2388,9 +2375,6 @@ class TestImportGenome8(unittest.TestCase):
 
         self.gnm = genome.Genome()
         self.tkt = ticket.ImportTicket()
-
-
-
 
     @patch("pdm_utils.functions.basic.ask_yes_no")
     def test_review_cds_descriptions_1(self, ask_mock):
@@ -2521,9 +2505,6 @@ class TestImportGenome8(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.tkt.description_field, "function")
 
-
-
-
 class TestImportGenomeClass9(unittest.TestCase):
     def setUp(self):
         self.evl1 = evaluation.Evaluation()
@@ -2552,7 +2533,6 @@ class TestImportGenomeClass9(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.base_dir)
 
-
     def test_log_evaluations_1(self):
         """Verify function executes when logfile_path is None."""
         # Nothing really to test.
@@ -2561,7 +2541,6 @@ class TestImportGenomeClass9(unittest.TestCase):
                            2:{"genome": [self.evl3]}}
         import_genome.log_evaluations(evaluation_dict, logfile_path=None)
         self.assertFalse(self.log_file1.exists())
-
 
     def test_log_evaluations_2(self):
         """Verify file-specific log file is created when
@@ -2581,7 +2560,6 @@ class TestImportGenomeClass9(unittest.TestCase):
             self.assertTrue(self.log_file1.exists())
         with self.subTest():
             self.assertEqual(len(lines), 2)
-
 
     def test_log_evaluations_3(self):
         """Verify file-specific log file is created new each time the
@@ -2612,10 +2590,7 @@ class TestImportGenomeClass9(unittest.TestCase):
         with self.subTest():
             self.assertEqual(len(lines2), 1)
 
-
-
 class TestImportGenome10(unittest.TestCase):
-
     def test_get_phagesdb_reference_sets_1(self):
         """Verify data dictionary is constructed properly."""
         dict = import_genome.get_phagesdb_reference_sets()
@@ -2628,9 +2603,6 @@ class TestImportGenome10(unittest.TestCase):
             self.assertTrue(len(dict["cluster_set"]) > 0)
         with self.subTest():
             self.assertTrue(len(dict["subcluster_set"]) > 0)
-
-
-
 
 if __name__ == '__main__':
     unittest.main()

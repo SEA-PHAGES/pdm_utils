@@ -41,26 +41,34 @@ TABLES_QUERY = ("SELECT table_name FROM information_schema.tables "
                 "WHERE table_schema = '{}'")
 
 class TestMysqldbBasic1(unittest.TestCase):
+    @classmethod
+    def setUpClass(self):
+        test_db_utils.create_empty_test_db()
+
+    @classmethod
+    def tearDownClass(self):
+        if test_db_utils.check_if_exists():
+            test_db_utils.remove_db()
+
+        if test_db_utils.check_if_exists(db=DB2):
+            test_db_utils.remove_db(db=DB2)
 
     def setUp(self):
-        test_db_utils.create_filled_test_db()
+        if not test_db_utils.check_if_exists():
+            test_db_utils.create_empty_test_db()
+        else:
+            if len(test_db_utils.execute(TABLES_QUERY.format(DB))) == 0:
+                test_db_utils.install_db(test_db_utils.SCHEMA_FILEPATH)
+
         self.alchemist = AlchemyHandler(username=USER, password=PWD)
         self.alchemist.build_engine()
         self.engine = self.alchemist.engine
 
     def tearDown(self):
-        self.engine.dispose()
-        # Remove 'pdm_test_db'
-        exists = test_db_utils.check_if_exists()
-        if exists:
-            test_db_utils.remove_db()
-
-        # Remove 'pdm_test_2'
-        exists = test_db_utils.check_if_exists(db=DB2)
-        if exists:
+        if test_db_utils.check_if_exists(db=DB2):
             test_db_utils.remove_db(db=DB2)
 
-
+        self.engine.dispose()
 
     def test_drop_db_1(self):
         """Verify existing database is dropped."""
@@ -110,9 +118,6 @@ class TestMysqldbBasic1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(result, 1)
 
-
-
-
     def test_drop_create_db_1(self):
         """Verify already-existing database is dropped and created."""
         before = test_db_utils.check_if_exists()
@@ -146,7 +151,6 @@ class TestMysqldbBasic1(unittest.TestCase):
         with self.subTest():
             self.assertTrue(len(after_tables) == 0)
 
-
     @patch("pdm_utils.functions.mysqldb_basic.drop_db")
     def test_drop_create_db_3(self, drop_mock):
         """Verify database is not created if there is an error during drop."""
@@ -157,6 +161,7 @@ class TestMysqldbBasic1(unittest.TestCase):
         result = mysqldb_basic.drop_create_db(self.engine, DB)
         after = test_db_utils.check_if_exists()
         after_tables = test_db_utils.execute(TABLES_QUERY.format(DB))
+
         with self.subTest():
             self.assertTrue(before)
         with self.subTest():
@@ -172,7 +177,25 @@ class TestMysqldbBasic1(unittest.TestCase):
         with self.subTest():
             drop_mock.assert_called()
 
+class TestMysqldbBasic2(unittest.TestCase):
+    @classmethod
+    def setUpClass(self):
+        test_db_utils.create_empty_test_db()
 
+    @classmethod
+    def tearDownClass(self):
+        test_db_utils.remove_db()
+
+    def setUp(self):
+        if not test_db_utils.check_if_exists():
+            test_db_utils.create_empty_test_db()
+
+        alchemist = AlchemyHandler(username=USER, password=PWD, database=DB)
+        alchemist.connect()
+        self.engine = alchemist.engine
+            
+    def tearDown(self):
+        self.engine.dispose()
 
     def test_db_exists_1(self):
         """Verify db_exists() can detect existing databases.
@@ -198,17 +221,11 @@ class TestMysqldbBasic1(unittest.TestCase):
         databases = mysqldb_basic.get_mysql_dbs(self.engine)
         self.assertTrue(DB in databases)
 
-
-
-
     def test_get_tables_1(self):
         """Verify set of tables is retrieved when engine
         is not connected to a specific database."""
         tables = mysqldb_basic.get_tables(self.engine, DB)
         self.assertTrue(TABLE in tables)
-
-
-
 
     def test_get_columns_1(self):
         """Verify set of columns is retrieved when engine
@@ -216,10 +233,61 @@ class TestMysqldbBasic1(unittest.TestCase):
         columns = mysqldb_basic.get_columns(self.engine, DB, TABLE)
         self.assertTrue(COLUMN in columns)
 
+class TestMySQLdbBasic3(unittest.TestCase):
+    @classmethod
+    def setUpClass(self):
+        test_db_utils.create_filled_test_db()
+        test_db_utils.create_empty_test_db(db=DB2)
 
+    @classmethod
+    def tearDownClass(self):
+        test_db_utils.remove_db()
+        test_db_utils.remove_db(db=DB2)
 
-class TestMysqldbBasic2(unittest.TestCase):
+    def setUp(self):
+        stmt1 = "UPDATE version SET Version = 1"
+        test_db_utils.execute(stmt1)
+        stmt2 = "UPDATE version SET Version = 0"
+        test_db_utils.execute(stmt2, db=DB2)
 
+        self.alchemist = AlchemyHandler(database=DB, username=USER, password=PWD)
+        self.alchemist.build_engine()
+        self.engine = self.alchemist.engine
+
+    def tearDown(self): 
+        self.engine.dispose()
+
+    def test_get_mysql_dbs_2(self):
+        """Verify set of databases is retrieved when engine
+        is connected to a specific database."""
+        databases = mysqldb_basic.get_mysql_dbs(self.engine)
+        self.assertTrue(DB in databases)
+
+    def test_get_tables_2(self):
+        """Verify set of tables is retrieved when engine
+        is connected to the same database."""
+        tables = mysqldb_basic.get_tables(self.engine, DB)
+        self.assertTrue(TABLE in tables)
+
+    def test_get_tables_3(self):
+        """Verify set of tables is retrieved when engine
+        is connected to a different database."""
+        tables = mysqldb_basic.get_tables(self.engine, DB2)
+        self.assertTrue(TABLE in tables)
+
+    def test_get_columns_2(self):
+        """Verify set of columns is retrieved when engine
+        is not connected to the same database."""
+        columns = mysqldb_basic.get_columns(self.engine, DB, TABLE)
+        self.assertTrue(COLUMN in columns)
+
+    def test_get_columns_3(self):
+        """Verify set of columns is retrieved when engine
+        is not connected to a different database."""
+        columns = mysqldb_basic.get_columns(self.engine, DB2, TABLE)
+        self.assertTrue(COLUMN in columns)
+
+class TestMysqldbBasic4(unittest.TestCase):
     def setUp(self):
         test_db_utils.create_filled_test_db()
         test_db_utils.create_empty_test_db(db=DB2)
@@ -237,9 +305,6 @@ class TestMysqldbBasic2(unittest.TestCase):
         self.engine.dispose()
         test_db_utils.remove_db()
         test_db_utils.remove_db(db=DB2)
-
-
-
 
     def test_copy_db_1(self):
         """Verify data from database1 is copied to database2."""
@@ -279,9 +344,6 @@ class TestMysqldbBasic2(unittest.TestCase):
         result = mysqldb_basic.copy_db(self.engine, DB2)
         self.assertEqual(result, 1)
 
-
-
-
     def test_install_db_1(self):
         """Verify new database is installed."""
         stmt1 = "UPDATE version SET Version = 0"
@@ -313,63 +375,24 @@ class TestMysqldbBasic2(unittest.TestCase):
             self.assertTrue(after[0]["Version"] == 0)
         with self.subTest():
             self.assertEqual(result, 1)
+ 
+class TestMysqldbBasic5(unittest.TestCase):
+    @classmethod
+    def setUpClass(self): 
+        test_db_utils.create_empty_test_db()
 
-
-
-
-    def test_get_mysql_dbs_2(self):
-        """Verify set of databases is retrieved when engine
-        is connected to a specific database."""
-        databases = mysqldb_basic.get_mysql_dbs(self.engine)
-        self.assertTrue(DB in databases)
-
-
-
-
-    def test_get_tables_2(self):
-        """Verify set of tables is retrieved when engine
-        is connected to the same database."""
-        tables = mysqldb_basic.get_tables(self.engine, DB)
-        self.assertTrue(TABLE in tables)
-
-    def test_get_tables_3(self):
-        """Verify set of tables is retrieved when engine
-        is connected to a different database."""
-        tables = mysqldb_basic.get_tables(self.engine, DB2)
-        self.assertTrue(TABLE in tables)
-
-
-
-
-    def test_get_columns_2(self):
-        """Verify set of columns is retrieved when engine
-        is not connected to the same database."""
-        columns = mysqldb_basic.get_columns(self.engine, DB, TABLE)
-        self.assertTrue(COLUMN in columns)
-
-    def test_get_columns_3(self):
-        """Verify set of columns is retrieved when engine
-        is not connected to a different database."""
-        columns = mysqldb_basic.get_columns(self.engine, DB2, TABLE)
-        self.assertTrue(COLUMN in columns)
-
-
-
-
-class TestMysqldbBasic3(unittest.TestCase):
+    @classmethod
+    def tearDownClass(self):
+        test_db_utils.remove_db()
 
     def setUp(self):
-        test_db_utils.create_empty_test_db()
         self.alchemist = AlchemyHandler(database=DB, username=USER, password=PWD)
         self.alchemist.build_engine()
         self.engine = self.alchemist.engine
 
     def tearDown(self):
+        test_db_utils.execute("DELETE FROM phage") 
         self.engine.dispose()
-        test_db_utils.remove_db()
-
-
-
 
     def test_get_table_count_1(self):
         """Verify the correct number of phages is returned when
@@ -384,9 +407,6 @@ class TestMysqldbBasic3(unittest.TestCase):
         test_db_utils.insert_data(PHAGE, phage_data)
         count = mysqldb_basic.get_table_count(self.engine, TABLE)
         self.assertEqual(count, 1)
-
-
-
 
     def test_get_first_row_data_1(self):
         """Verify empty dictionary is returned when there is no data."""
@@ -416,9 +436,6 @@ class TestMysqldbBasic3(unittest.TestCase):
         with self.subTest():
             self.assertTrue(COLUMN in data.keys())
 
-
-
-
     def test_first_1(self):
         """Verify dictionary is returned when there are two rows of data."""
         phage_data1 = test_data_utils.get_trixie_phage_data()
@@ -444,7 +461,6 @@ class TestMysqldbBasic3(unittest.TestCase):
         with self.subTest():
             self.assertTrue(len(data) > 1)
 
-
     def test_scalar_1(self):
         """Verify dictionary is returned when there are two rows of data."""
         phage_data1 = test_data_utils.get_trixie_phage_data()
@@ -456,19 +472,12 @@ class TestMysqldbBasic3(unittest.TestCase):
         count = mysqldb_basic.scalar(self.engine, COUNT_QUERY)
         self.assertEqual(count, 2)
 
-
-class TestMysqldbBasic4(unittest.TestCase):
-
-    def setUp(self):
-        test_db_utils.create_empty_test_db(db=DB2)
-        self.alchemist2 = AlchemyHandler(database=DB2, username=USER, password=PWD)
-        self.alchemist2.build_engine()
-        self.engine2 = self.alchemist2.engine
-
+class TestMysqldbBasic6(unittest.TestCase):
+    @classmethod
+    def setUpClass(self):
+        test_db_utils.create_empty_test_db(db=DB2) 
         test_db_utils.create_empty_test_db()
-        self.alchemist1 = AlchemyHandler(database=DB, username=USER, password=PWD)
-        self.alchemist1.build_engine()
-        self.engine1 = self.alchemist1.engine
+        
 
         phage_data1 = test_data_utils.get_trixie_phage_data()
         phage_data2 = test_data_utils.get_trixie_phage_data()
@@ -529,15 +538,23 @@ class TestMysqldbBasic4(unittest.TestCase):
         for gene_data in gene_data_list:
             test_db_utils.insert_data(GENE, gene_data)
 
+    @classmethod
+    def tearDownClass(self): 
+        test_db_utils.remove_db()
+        test_db_utils.remove_db(db=DB2)
+
+    def setUp(self):
+        self.alchemist1 = AlchemyHandler(database=DB, username=USER, password=PWD)
+        self.alchemist1.build_engine()
+        self.engine1 = self.alchemist1.engine
+
+        self.alchemist2 = AlchemyHandler(database=DB2, username=USER, password=PWD)
+        self.alchemist2.build_engine()
+        self.engine2 = self.alchemist2.engine
 
     def tearDown(self):
         self.engine1.dispose()
         self.engine2.dispose()
-        test_db_utils.remove_db()
-        test_db_utils.remove_db(db=DB2)
-
-
-
 
     def test_get_distinct_1(self):
         """Retrieve a set of all distinct values when data is not present."""
@@ -574,9 +591,6 @@ class TestMysqldbBasic4(unittest.TestCase):
             self.assertEqual(result4, exp_cluster)
         with self.subTest():
             self.assertEqual(result5, exp_subcluster)
-
-
-
 
     def test_retrieve_data_1(self):
         """Verify that a dictionary of data is retrieved for a valid PhageID."""
@@ -645,9 +659,6 @@ class TestMysqldbBasic4(unittest.TestCase):
         result_list = mysqldb_basic.retrieve_data(
                                 self.engine1, query=GENE_QUERY)
         self.assertEqual(len(result_list), 4)
-
-
-
 
 if __name__ == '__main__':
     unittest.main()
