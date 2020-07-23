@@ -300,12 +300,18 @@ class TestImportGenome1(unittest.TestCase):
     15. More than one custom eval_mode in ticket table.
     """
 
-    def setUp(self):
+    @classmethod
+    def setUpClass(self):
         test_db_utils.create_empty_test_db()
+
+    @classmethod
+    def tearDownClass(self):
+        test_db_utils.remove_db()
+
+    def setUp(self):
         base_dir.mkdir()
         genome_folder.mkdir()
-        output_folder.mkdir()
-
+        output_folder.mkdir() 
 
         # Construct minimal Alice genome
         # CDS 252 is a wrap-around compound gene.
@@ -407,17 +413,15 @@ class TestImportGenome1(unittest.TestCase):
             "cluster_set": set(),
             "subcluster_set": set()}
 
-
-    def tearDown(self):
+    def tearDown(self): 
+        test_db_utils.execute("DELETE FROM phage")
         shutil.rmtree(base_dir)
-        test_db_utils.remove_db()
 
         # This removes the default output folder in the 'tmp'
         # directory, which gets created if no output folder is
         # indicated at the command line, which occurs in some tests below.
         if default_results_path.exists() == True:
             shutil.rmtree(default_results_path)
-
 
     @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_add_1(self, getpass_mock):
@@ -1995,9 +1999,6 @@ class TestImportGenome1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(len(tmrna_results), 1)
 
-
-
-
 class TestImportGenome2(unittest.TestCase):
     """Tests involving trying to replace a genome in the database.
 
@@ -2024,14 +2025,18 @@ class TestImportGenome2(unittest.TestCase):
     18.  Adding 'final' without replacement.
     19.  Adding 'unknown' using 'misc' eval_mode without replacement.
     """
+    @classmethod
+    def setUpClass(self):    
+        test_db_utils.create_empty_test_db()
 
+    @classmethod
+    def tearDownClass(self):
+        test_db_utils.remove_db()
 
     def setUp(self):
-        test_db_utils.create_empty_test_db()
         base_dir.mkdir()
         genome_folder.mkdir()
         output_folder.mkdir()
-
 
         # Construct minimal Alice genome
         # CDS 252 is a wrap-around compound gene.
@@ -2136,13 +2141,9 @@ class TestImportGenome2(unittest.TestCase):
         self.alice_data_to_insert["DateLastModified"] = \
             datetime.strptime('1/1/2018', '%m/%d/%Y')
 
-
     def tearDown(self):
+        test_db_utils.execute("DELETE FROM phage")
         shutil.rmtree(base_dir)
-        test_db_utils.remove_db()
-
-
-
 
     @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_replacement_1(self, getpass_mock):
@@ -3472,9 +3473,6 @@ class TestImportGenome2(unittest.TestCase):
             self.assertEqual(cds193_errors, 0)
         with self.subTest():
             self.assertTrue(fail_alice_path.exists())
-
-
-
 
 if __name__ == '__main__':
     unittest.main()
