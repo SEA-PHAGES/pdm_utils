@@ -990,7 +990,6 @@ def set_path(path, kind=None, expect=True):
     else:
         return path
 
-
 def make_new_dir(output_dir, new_dir, attempt=1):
     """Make a new directory.
 
@@ -1060,7 +1059,6 @@ def parse_flag_file(flag_file):
                 pass
     return eval_flags
 
-
 def get_user_pwd(user_prompt="Username: ", pwd_prompt="Password: "):
     """Get username and password.
 
@@ -1078,7 +1076,6 @@ def get_user_pwd(user_prompt="Username: ", pwd_prompt="Password: "):
     username = getpass.getpass(prompt=user_prompt)
     password = getpass.getpass(prompt=pwd_prompt)
     return (username, password)
-
 
 def choose_from_list(options):
     """Iterate through a list of values and choose a value.
@@ -1127,7 +1124,6 @@ def truncate_value(value, length, suffix):
         value = value[:length2] + suffix
     return value
 
-
 # TODO this needs to be improved.
 # TODO unittest.
 def select_option(prompt, valid_response_set):
@@ -1159,7 +1155,6 @@ def select_option(prompt, valid_response_set):
             print("Invalid response.")
     return response
 
-
 # TODO unittest.
 def get_values_from_dict_list(list_of_dicts):
     """Convert a list of dictionaries to a set of the dictionary values.
@@ -1188,7 +1183,6 @@ def get_values_from_tuple_list(list_of_tuples):
         output_set.add(tup[0])
     return output_set
 
-
 def convert_list_to_dict(data_list, key):
     """Convert list of dictionaries to a dictionary of dictionaries
 
@@ -1211,6 +1205,31 @@ def convert_list_to_dict(data_list, key):
               "some intended keys are duplicated.")
         data_dict = {}
     return data_dict
+
+#TODO unittest
+def invert_dictionary(dictionary):
+    """Inverts a dictionary, where the values and keys are swapped.
+
+    :param dictionary: A dictionary to be inverted.
+    :type dictionary: dict
+    :returns: Returns an inverted dictionary of the given dictionary.
+    :rtype: dict
+    """
+    new_dict = {}
+    for key, value in dictionary.items():
+        if isinstance(value, list):
+            for subvalue in value:
+                if new_dict.get(subvalue) is None:
+                    new_dict[subvalue] = [key]
+                else:
+                    new_dict[subvalue].append(key)
+        else:
+            if new_dict.get(subvalue) is None:
+                    new_dict[subvalue] = [key]
+            else:
+                new_dict[subvalue].append(key)
+
+    return new_dict
 
 #TODO unittest
 def partition_list(data_list, size):

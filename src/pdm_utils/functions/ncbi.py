@@ -43,7 +43,6 @@ def run_esearch(db="", term="", usehistory=""):
     search_handle.close()
     return search_record
 
-
 # TODO unittest.
 def get_summaries(db="", query_key="", webenv=""):
     """Retrieve record summaries from NCBI for a list of accessions.
@@ -66,8 +65,6 @@ def get_summaries(db="", query_key="", webenv=""):
     summary_handle.close()
     return summary_records
 
-
-
 # TODO test.
 def get_accessions_to_retrieve(summary_records):
     """Extract accessions from summary records.
@@ -84,11 +81,13 @@ def get_accessions_to_retrieve(summary_records):
         accessions.append(doc_sum_accession)
     return accessions
 
+def get_data_handle(accession_list, db="nucleotide", rettype="gb", 
+                                                     retmode="text"):
+    fetch_query = ",".join(accession_list)
+    fetch_handle = Entrez.efetch(db=db, id=fetch_query, rettype=rettype, 
+                                                        retmode=retmode)
 
-
-
-
-
+    return fetch_handle
 
 # TODO unittest.
 def get_records(accession_list, db="nucleotide", rettype="gb", retmode="text"):
@@ -109,7 +108,8 @@ def get_records(accession_list, db="nucleotide", rettype="gb", retmode="text"):
     """
     retrieved_records = []
     fetch_query = ",".join(accession_list)
-    fetch_handle = Entrez.efetch(db=db, id=fetch_query, rettype=rettype, retmode=retmode)
+    fetch_handle = Entrez.efetch(db=db, id=fetch_query, rettype=rettype, 
+                                                        retmode=retmode)
     fetch_records = SeqIO.parse(fetch_handle, "genbank")
     for record in fetch_records:
         retrieved_records.append(record)

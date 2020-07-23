@@ -24,7 +24,7 @@ def main(unparsed_args_list):
     """
     args = parse_pham_finder(unparsed_args_list)
 
-    alchemist = pipelines_basic.build_alchemist(None, db_required=False)
+    alchemist = pipelines_basic.build_alchemist(None, ask_database=False)
     
     values = None
     if args.input:

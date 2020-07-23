@@ -58,9 +58,21 @@ def _(value_list_input):
     return value_list_input
 
 #MYSQL FILTERS AND HANDLER FUNCTIONS
-def build_alchemist(database, db_required=True):
+def build_alchemist(database, ask_database=True, config=None):
+    if not config is None:
+        username = config["mysql"].get("user")
+        password = config["mysql"].get("password") 
+        if not (username is None or password is None):
+            alchemist = AlchemyHandler(username=username, password=password)
+            alchemist.connect(login_attempts=0, pipeline=True)
+
+            alchemist.database = database
+            alchemist.connect(ask_database=ask_database, pipeline=True)
+
+            return alchemist
+
     alchemist = AlchemyHandler(database=database)
-    alchemist.connect(ask_database=db_required, pipeline=True) 
+    alchemist.connect(ask_database=ask_database, pipeline=True) 
 
     return alchemist
 

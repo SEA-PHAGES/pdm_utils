@@ -29,8 +29,7 @@ test_root_dir.mkdir()
 test_folder = Path(test_root_dir, "output")
 
 # How the output folder is named in the get_gb_records pipeline.
-results_folder = Path(get_gb_records.RESULTS_FOLDER)
-results_path = Path(test_folder, results_folder)
+results_path = Path(test_folder, get_gb_records.DEFAULT_FOLDER_NAME)
 
 pipeline = "get_gb_records"
 USER = test_db_utils.USER
@@ -61,7 +60,6 @@ def count_files(path_to_folder):
     return count
 
 class TestGetGBRecords(unittest.TestCase):
-
     @classmethod
     def setUpClass(self):
         test_db_utils.create_filled_test_db()
@@ -90,9 +88,10 @@ class TestGetGBRecords(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(test_folder)
 
-
-    @patch("pdm_utils.pipelines.get_gb_records.AlchemyHandler")
-    def test_main_1(self, alchemy_mock):
+    @patch("pdm_utils.pipelines.get_gb_records.shutil.rmtree")
+    @patch("pdm_utils.pipelines.get_gb_records.sys.exit")
+    @patch("pdm_utils.pipelines.get_gb_records.pipelines_basic.build_alchemist")
+    def test_main_1(self, alchemy_mock, exit_mock, rmtree_mock):
         """Verify no GenBank record is retrieved."""
         alchemy_mock.return_value = self.alchemist
         run.main(self.unparsed_args)
@@ -102,7 +101,7 @@ class TestGetGBRecords(unittest.TestCase):
         with self.subTest():
             self.assertEqual(count, 0)
 
-    @patch("pdm_utils.pipelines.get_gb_records.AlchemyHandler")
+    @patch("pdm_utils.pipelines.get_gb_records.pipelines_basic.build_alchemist")
     def test_main_2(self, alchemy_mock):
         """Verify one GenBank record is retrieved."""
         alchemy_mock.return_value = self.alchemist
@@ -115,13 +114,15 @@ class TestGetGBRecords(unittest.TestCase):
         with self.subTest():
             self.assertEqual(count, 1)
 
-    @patch("pdm_utils.pipelines.get_gb_records.AlchemyHandler")
-    def test_main_3(self, alchemy_mock):
+    @patch("pdm_utils.pipelines.get_gb_records.shutil.rmtree")
+    @patch("pdm_utils.pipelines.get_gb_records.sys.exit")
+    @patch("pdm_utils.pipelines.get_gb_records.pipelines_basic.build_alchemist")
+    def test_main_3(self, alchemy_mock, exit_mock, rmtree_mock):
         """Verify no GenBank record is retrieved based on one filter."""
         alchemy_mock.return_value = self.alchemist
         stmt = create_update("phage", "Accession", TRIXIE_ACC, "Trixie")
         test_db_utils.execute(stmt)
-        self.unparsed_args.extend(["-f", "phage.Status!=draft"])
+        self.unparsed_args.extend(["-f", f"phage.Accession!={TRIXIE_ACC}"])
         run.main(self.unparsed_args)
         count = count_files(results_path)
         with self.subTest():
@@ -129,7 +130,7 @@ class TestGetGBRecords(unittest.TestCase):
         with self.subTest():
             self.assertEqual(count, 0)
 
-    @patch("pdm_utils.pipelines.get_gb_records.AlchemyHandler")
+    @patch("pdm_utils.pipelines.get_gb_records.pipelines_basic.build_alchemist")
     def test_main_4(self, alchemy_mock):
         """Verify one GenBank record is retrieved based on one filter."""
         alchemy_mock.return_value = self.alchemist
