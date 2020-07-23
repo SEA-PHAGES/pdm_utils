@@ -45,8 +45,8 @@ TMRNA = "tmrna"
 VERSION = "version"
 
 class TestMysqldbFunctions1(unittest.TestCase):
-
-    def setUp(self):
+    @classmethod
+    def setUpClass(self):
         self.engine = sqlalchemy.create_engine(ENGINE_STRING, echo=False)
         test_db_utils.create_empty_test_db()
         phage_data1 = test_data_utils.get_trixie_phage_data()
@@ -137,12 +137,16 @@ class TestMysqldbFunctions1(unittest.TestCase):
         for tmrna_data in tmrna_data_list:
             test_db_utils.insert_data(TMRNA, tmrna_data)
 
-    def tearDown(self):
+    @classmethod
+    def tearDownClass(self):
         self.engine.dispose()
         test_db_utils.remove_db()
 
+    def setUp(self):
+        self.engine = sqlalchemy.create_engine(ENGINE_STRING, echo=False)
 
-
+    def tearDown(self):
+        self.engine.dispose()
 
     def test_verify_db_setup(self):
         """Confirm that the database was setup correctly for the tests."""
@@ -159,7 +163,6 @@ class TestMysqldbFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(len(tmrna_data), 2)
 
-
     def test_create_seq_set_1(self):
         """Retrieve a set of all data from Sequence column."""
         result = mysqldb.create_seq_set(self.engine)
@@ -167,9 +170,6 @@ class TestMysqldbFunctions1(unittest.TestCase):
             self.assertEqual(len(result), 3)
         with self.subTest():
             self.assertTrue(Seq("ATCG", IUPAC.ambiguous_dna) in result)
-
-
-
 
     def test_parse_genome_data_1(self):
         """Verify that a Genome object is constructed correctly for a
@@ -279,9 +279,6 @@ class TestMysqldbFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(genome_dict["L5"].tmrna_features[0].id, "L5_1")
 
-
-
-
     def test_parse_feature_data_1(self):
         """Verify that a Cds object is constructed correctly for a
         valid PhageID."""
@@ -352,22 +349,22 @@ class TestMysqldbFunctions1(unittest.TestCase):
         with self.subTest():
             self.assertIsInstance(ftr_list[0], dict)
 
-
-
-
 class TestMysqldbFunctions2(unittest.TestCase):
-
-    def setUp(self):
-        self.engine = sqlalchemy.create_engine(ENGINE_STRING, echo=False)
+    @classmethod
+    def setUpClass(self):
         test_db_utils.create_empty_test_db()
         test_db_utils.execute("TRUNCATE version")
 
-    def tearDown(self):
-        self.engine.dispose()
+    @classmethod
+    def tearDownClass(self):
         test_db_utils.remove_db()
 
+    def setUp(self):
+        self.engine = sqlalchemy.create_engine(ENGINE_STRING, echo=False)
 
-
+    def tearDown(self):
+        test_db_utils.execute("TRUNCATE version") 
+        self.engine.dispose()
 
     def test_create_phage_table_insert_1(self):
         """Verify phage table INSERT statement is created correctly."""
@@ -429,9 +426,6 @@ class TestMysqldbFunctions2(unittest.TestCase):
         with self.subTest():
             self.assertEqual(results["Subcluster"], "A2")
 
-
-
-
     def test_change_version_1(self):
         """Verify the version is incremented by 1."""
         data = {"Version": 10, "SchemaVersion": 1}
@@ -459,14 +453,17 @@ class TestMysqldbFunctions2(unittest.TestCase):
         output_value = result[0]["Version"]
         self.assertEqual(output_value, 5)
 
-
-
-
 class TestMysqldbFunctions3(unittest.TestCase):
+    @classmethod
+    def setUpClass(self):
+        test_db_utils.create_empty_test_db()
+
+    @classmethod
+    def tearDownClass(self):
+        test_db_utils.remove_db()
 
     def setUp(self):
         self.engine = sqlalchemy.create_engine(ENGINE_STRING, echo=False)
-        test_db_utils.create_empty_test_db()
         phage_data = test_data_utils.get_trixie_phage_data()
         phage_data["PhageID"] = "Trixie"
         phage_data["HostGenus"] = "Mycobacterium"
@@ -478,13 +475,9 @@ class TestMysqldbFunctions3(unittest.TestCase):
         phage_data["DateLastModified"] = constants.EMPTY_DATE
         test_db_utils.insert_data(PHAGE, phage_data)
 
-
     def tearDown(self):
-        self.engine.dispose()
-        test_db_utils.remove_db()
-
-
-
+        test_db_utils.execute("DELETE FROM phage WHERE PhageID='Trixie'")
+        self.engine.dispose()  
 
     def test_create_gene_table_insert_1(self):
         """Verify gene table INSERT statement is created correctly when
@@ -845,15 +838,17 @@ class TestMysqldbFunctions3(unittest.TestCase):
         with self.subTest():
             self.assertEqual(results["Notes"].decode("utf-8"), "Repressor")
 
-
-
-
 class TestMysqldbFunctions4(unittest.TestCase):
-
-    def setUp(self):
-        self.engine = sqlalchemy.create_engine(ENGINE_STRING, echo=False)
+    @classmethod
+    def setUpClass(self): 
         test_db_utils.create_empty_test_db()
 
+    @classmethod
+    def tearDownClass(self):
+        test_db_utils.remove_db()
+
+    def setUp(self): 
+        self.engine = sqlalchemy.create_engine(ENGINE_STRING, echo=False)
         phage_data1 = test_data_utils.get_trixie_phage_data()
         phage_data1["PhageID"] = "Trixie"
         phage_data1["HostGenus"] = "Mycobacterium"
@@ -878,11 +873,8 @@ class TestMysqldbFunctions4(unittest.TestCase):
         test_db_utils.insert_data(GENE, gene_data2)
 
     def tearDown(self):
+        test_db_utils.execute("DELETE FROM phage")
         self.engine.dispose()
-        test_db_utils.remove_db()
-
-
-
 
     def test_create_delete_1(self):
         """Verify correct DELETE statement is created
@@ -946,9 +938,6 @@ class TestMysqldbFunctions4(unittest.TestCase):
             self.assertEqual(len(results2_phageids), 1)
         with self.subTest():
             self.assertEqual(len(results2_geneids), 1)
-
-
-
 
     def test_execute_transaction_1(self):
         """Valid everything should result in creation of cursor and execution
