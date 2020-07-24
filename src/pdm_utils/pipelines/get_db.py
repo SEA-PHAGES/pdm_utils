@@ -181,6 +181,8 @@ def request_url():
     pool = urllib3.PoolManager()
     response = pool.request('GET', DB_LINK)
 
+    pool.clear()
+
     return response
 
 
@@ -209,6 +211,7 @@ def interactive():
 
             databases.append(db_dict)
 
+            response.close()
 
         print("Databases available at '", DB_LINK, "':\n")
 
@@ -216,16 +219,14 @@ def interactive():
             #print(i["num"], ".\t", i["name"], "\t", i["date"])
             print("{:10}.\t{:<30} {}".format(i["num"], i["name"], i["date"]))
 
-        db = input("\n\nWhich database would you like to download? (Enter 1-41) " )
+        db = input("\n\nWhich database would you like to download? (Enter 1-{}) ".format(len(databases)) )
 
         selected = databases[int(db)-1]
         return selected["name"]
 
     else:
+        response.close()
         return None
-
-
-
 
 # TODO test.
 def parse_args(unparsed_args_list):

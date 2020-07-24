@@ -52,13 +52,11 @@ def get_unparsed_args(db=None, option=None, download=False, output_folder=None,
     """Returns list of command line arguments to convert database."""
 
     # to make sure that file and new always have a db value - like a default
-    if db == None and option != "server":
-        db = DB
-
     # db is an optional argument when option == "server"
-    unparsed_args = ["run.py", PIPELINE, option, db]
+
 
     if option == "file":
+        unparsed_args = ["run.py", PIPELINE, option, DB]
         unparsed_args.extend([str(test_db_utils.TEST_DB_FILEPATH)])
     elif option == "server":
         if db is None:
@@ -77,6 +75,7 @@ def get_unparsed_args(db=None, option=None, download=False, output_folder=None,
         if interactive:
             unparsed_args.extend(["-i"])
     else:
+        unparsed_args = ["run.py", PIPELINE, option ,DB]
         pass
     return unparsed_args
 
