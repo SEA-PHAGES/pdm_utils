@@ -47,13 +47,25 @@ if exists:
 output_path = Path(test_root_dir, "output")
 results_path = Path(output_path, get_db.RESULTS_FOLDER)
 
-def get_unparsed_args(db=DB, option=None, download=False, output_folder=None,
-                      version=False, url=""):
+def get_unparsed_args(db=None, option=None, download=False, output_folder=None,
+                      version=False, url="", interactive=False):
     """Returns list of command line arguments to convert database."""
-    unparsed_args = ["run.py", PIPELINE, db, option]
+
+    # to make sure that file and new always have a db value - like a default
+    if db == None and option != "server":
+        db = DB
+
+    # db is an optional argument when option == "server"
+    unparsed_args = ["run.py", PIPELINE, option, db]
+
     if option == "file":
         unparsed_args.extend([str(test_db_utils.TEST_DB_FILEPATH)])
     elif option == "server":
+        if db is None:
+        	unparsed_args = ["run.py", PIPELINE, option]
+        else:
+        	unparsed_args = ["run.py", PIPELINE, option, "-db", db]
+
         if download:
             unparsed_args.extend(["-d"])
         if version:
@@ -62,6 +74,8 @@ def get_unparsed_args(db=DB, option=None, download=False, output_folder=None,
             unparsed_args.extend(["-u", url])
         if output_folder is not None:
             unparsed_args.extend(["-o", str(output_folder)])
+        if interactive:
+            unparsed_args.extend(["-i"])
     else:
         pass
     return unparsed_args
@@ -160,11 +174,32 @@ class TestGetDb(unittest.TestCase):
         test_db_utils.create_filled_test_db()
         test_db_utils.execute("DROP TABLE version")
         unparsed_args = get_unparsed_args(option="file")
+
         run.main(unparsed_args)
         # Now query for version data. This verifies that it replaced
         # the first database.
         version_data = test_db_utils.get_data(test_db_utils.version_table_query)
         self.assertEqual(len(version_data), 1)
+
+    @patch("pdm_utils.pipelines.get_db.input")
+    @patch("pdm_utils.classes.alchemyhandler.getpass")
+    def test_main_6(self, getpass_mock, input_mock):
+        """Verify that interactive mode is operational"""
+        getpass_mock.side_effect = [USER, PWD]
+        input_mock.return_value = 1
+        # Need to ensure that there is a good response from the specified request (200)
+        # option has to be server for interactive mode to work
+        unparsed_args = get_unparsed_args(option="server")
+
+        run.main(unparsed_args)
+
+        # Now, ensure that the request returns 200
+        # From get_db function request_url()
+
+        request_data = get_db.request_url().status
+
+        self.assertEqual(request_data, 200)
+
 
 
 if __name__ == '__main__':

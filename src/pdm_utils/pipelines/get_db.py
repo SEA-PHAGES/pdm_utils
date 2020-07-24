@@ -32,35 +32,37 @@ def main(unparsed_args_list):
     or local file are needed.
     """
     args = parse_args(unparsed_args_list)
-    
-    if args.database is None:
-    	database = interactive()
-    else:
-    	database = args.database
 
     # Set values that are shared between all three options.
-    #database = args.database
-    
+
+    database = args.database
+
     option = args.option
     config_file = args.config_file
-    
-   
+
+
     # Create config object with data obtained from file and/or defaults.
     config = configfile.build_complete_config(config_file)
     mysql_creds = config["mysql"]
     server_creds = config["download_server"]
 
+
     install = True
     schema_version = None
     db_filepath = None
-    
+
     if option == "file":
         db_filepath = basic.set_path(args.filename, kind="file", expect=True)
     elif option == "new":
         schema_version = args.schema_version
     else:
+
         # option must be "server"
         # Give priority to config file to define url, although this is arbitrary.
+
+        if database is None:
+            database = interactive()
+
         server_url = server_creds["url"]
         if server_url is None:
             server_url = args.url
@@ -173,44 +175,55 @@ def download_file(file_url, filepath):
         except:
             print(f"Unable to download {filepath.name} from server.")
     return status
-    
+
+def request_url():
+
+    pool = urllib3.PoolManager()
+    response = pool.request('GET', DB_LINK)
+
+    return response
+
+
 def interactive():
 
-	databases = list() #create an empty list
+    databases = list() #create an empty list
 
-	pool = urllib3.PoolManager()
-	
-	response = pool.request('GET', DB_LINK)
-	
-	#get the names of the databases
-	names_regex = re.compile("""<a href="(\w+).sql">""")
-	names = names_regex.findall(response.data.decode('utf-8')) #list of database names
-	
-	#get the dates of the databases
-	dates_regex = re.compile("""<td align="right">(\d+[-]\d+[-]\d+)\s+\d+[:]\d+\s+</td>""")
-	dates = dates_regex.findall(response.data.decode('utf-8')) #list of dates corresponding to the database names
-	
-	
-	#creating a list of dictionaries
-	for i in range(len(names)):
-	    db_dict = dict()
-	    db_dict["num"] = i+1
-	    db_dict["name"] = names[i]
-	    db_dict["date"] = dates[i*2]
-	    
-	    databases.append(db_dict)
-		
-		
-	print("Databases available at '", DB_LINK, "':\n")
-	
-	for i in databases:
-	    print(i["num"], ".\t", i["name"], "\t", i["date"])
-	        
-	db = input("\n\nWhich database would you like to download? (Enter 1-41)" )
-	
-	selected = databases[int(db)-1]
-	return selected["name"]	
-		
+    response = request_url()
+
+    if response.status == 200:
+        #get the names of the databases
+        names_regex = re.compile("""<a href="(\w+).sql">""")
+        names = names_regex.findall(response.data.decode('utf-8')) #list of database names
+
+        #get the dates of the databases
+        dates_regex = re.compile("""<td align="right">(\d+[-]\d+[-]\d+)\s+\d+[:]\d+\s+</td>""")
+        dates = dates_regex.findall(response.data.decode('utf-8')) #list of dates corresponding to the database names
+
+
+        #creating a list of dictionaries
+        for i in range(len(names)):
+            db_dict = dict()
+            db_dict["num"] = i+1
+            db_dict["name"] = names[i]
+            db_dict["date"] = dates[i*2]
+
+            databases.append(db_dict)
+
+
+        print("Databases available at '", DB_LINK, "':\n")
+
+        for i in databases:
+            #print(i["num"], ".\t", i["name"], "\t", i["date"])
+            print("{:10}.\t{:<30} {}".format(i["num"], i["name"], i["date"]))
+
+        db = input("\n\nWhich database would you like to download? (Enter 1-41) " )
+
+        selected = databases[int(db)-1]
+        return selected["name"]
+
+    else:
+        return None
+
 
 
 
@@ -238,12 +251,17 @@ def parse_args(unparsed_args_list):
     config_file_help = "Path to the file containing user-specific login data."
     interactive_help = "List of possible databases."
 
+    #database optional for subparser a and required for b and c
+
     parser = argparse.ArgumentParser(description=get_db_help)
-    parser.add_argument("-db", "--database", type=str, help=database_help, default=None)
+    #parser.add_argument("-db", "--database", type=str, help=database_help, default=None)
 
     subparsers = parser.add_subparsers(dest="option", help=option_help)
 
+    # Command line structure
+    # python3 -m pdm_utils get_db server -db <database>
     parser_a = subparsers.add_parser("server", help=server_help)
+    parser_a.add_argument("-db", "--database", type=str, help=database_help, default=None)
     parser_a.add_argument("-u", "--url", type=str,
         default=constants.DB_WEBSITE, help=url_help)
     parser_a.add_argument("-v", "--version", action="store_true",
@@ -252,15 +270,17 @@ def parse_args(unparsed_args_list):
         default=pathlib.Path(DEFAULT_OUTPUT_FOLDER), help=output_folder_help)
     parser_a.add_argument("-d", "--download_only", action="store_true",
         default=False, help=download_only_help)
-    parser_a.add_argument("-i", "--interactive", action="store_true", 
+    parser_a.add_argument("-i", "--interactive", action="store_true",
         default=False, help=interactive_help)
 
-   
+
     parser_b = subparsers.add_parser("file", help=file_help)
+    parser_b.add_argument("database", type=str, help=database_help)
     parser_b.add_argument("filename", type=pathlib.Path, help=filename_help)
-    
+
 
     parser_c = subparsers.add_parser("new", help=new_help)
+    parser_c.add_argument("database", type=str, help=database_help)
     parser_c.add_argument("-s", "--schema_version", type=int,
         choices=list(convert_db.CHOICES), default=convert_db.CURRENT_VERSION,
         help=schema_version_help)
