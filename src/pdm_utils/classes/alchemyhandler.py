@@ -281,10 +281,12 @@ class AlchemyHandler:
             if not self.has_credentials:
                 raise AttributeError("AlchemyHandler missing credentials.\n"
                                      "Cannot connect to MySQL.")
-
             login_string = self.construct_engine_string(
                                             username=self._username,
                                             password=self._password)
+            
+            self.clear()
+
 
             self._engine = sqlalchemy.create_engine(login_string,
                                                             echo=self.echo)
@@ -297,7 +299,7 @@ class AlchemyHandler:
 
             self.get_mysql_dbs()
 
-        if self.has_database:
+        if self.has_database and (not self.connected_database):
             database = self._database
 
             self.validate_database()
@@ -306,6 +308,8 @@ class AlchemyHandler:
                                         username=self._username,
                                         password=self._password,
                                         database=self._database)
+
+            self.clear()
 
             self._engine = sqlalchemy.create_engine(login_string,
                                                             echo=self.echo)
@@ -400,17 +404,16 @@ class AlchemyHandler:
     def clear(self):
         """Clear properties tied to MySQL credentials/database.
         """
+        if not self._engine is None:
+            self._engine.dispose()
         self._engine = None
+
         self._metadata = None
         self._graph = None
         self._mapper = None
 
         if not self._session is None:
-            try:
-                self._session.close()
-            except:
-                pass
-
+            self._session.close()
         self._session = None
 
         self._databases = []
