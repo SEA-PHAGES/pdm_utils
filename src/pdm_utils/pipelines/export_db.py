@@ -315,7 +315,7 @@ def execute_export(alchemist, folder_path, folder_name, pipeline,
                                       exclude_columns=exclude_columns,
                                       sequence_columns=sequence_columns)
 
-    if pipeline in FILTERABLE_PIPELINES + ["tbl"]: 
+    if pipeline in FILTERABLE_PIPELINES: 
         db_filter = pipelines_basic.build_filter(alchemist, table, filters, 
                                                              values=values,
                                                              verbose=verbose) 
@@ -365,7 +365,7 @@ def execute_export(alchemist, folder_path, folder_name, pipeline,
                 sort_columns = get_sort_columns(alchemist, sort)
                 db_filter.sort(sort_columns)
 
-            if pipeline in BIOPYTHON_PIPELINES:
+            if pipeline in BIOPYTHON_PIPELINES + ["tbl"]:
                 execute_ffx_export(alchemist, mapped_path, export_path,
                                    db_filter.values, pipeline, db_version,
                                    table, concatenate=concatenate,
@@ -477,7 +477,7 @@ def execute_ffx_export(alchemist, export_path, folder_path, values,
         sys.exit(1)
 
     if file_format == "tbl":
-        fileio.write_five_column_table(seqrecords, export_path, verbose=verbose)
+        fileio.write_feature_table(seqrecords, export_path, verbose=verbose)
     else:
         if verbose:
                 print("Appending database version...")	
@@ -486,7 +486,6 @@ def execute_ffx_export(alchemist, export_path, folder_path, values,
         fileio.write_seqrecord(seqrecords, file_format, export_path, 
                                                         verbose=verbose,
                                                         concatenate=concatenate)
-
 
 #-----------------------------------------------------------------------------
 #EXPORT-SPECIFIC HELPER FUNCTIONS

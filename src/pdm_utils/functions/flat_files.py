@@ -582,6 +582,10 @@ def create_fasta_seqrecord(header, sequence_string):
     seqrecord = SeqRecord(seq, description=header)
     return seqrecord
 
+#Needs unittests, however:
+#Seqfeature retrieval and generation is clunky probably requires some
+#over arching seqfeature generation.
+#May delay unittests until structure is revamped
 def genome_to_seqrecord(phage_genome):
     """Creates a SeqRecord object from a pdm_utils Genome object.
 
@@ -603,7 +607,7 @@ def genome_to_seqrecord(phage_genome):
         raise
     record.name = phage_genome.name
     if phage_genome.accession == "" or phage_genome.accession is None:
-        record.id = "".join(["|", phage_genome.name])
+        record.id = "".join(["DRAFT_", phage_genome.name])
     else:
         record.id = phage_genome.accession
     record.features = get_genome_seqrecord_features(phage_genome)
@@ -613,11 +617,6 @@ def genome_to_seqrecord(phage_genome):
 
     return record
 
-
-#Needs unittests, however:
-#Seqfeature retrieval and generation is clunky probably requires some
-#over arching seqfeature generation.
-#May delay unittests until structure is revamped
 def cds_to_seqrecord(cds, parent_genome, gene_domains=[]):
     """Creates a SeqRecord object from a Cds and its parent Genome.
 

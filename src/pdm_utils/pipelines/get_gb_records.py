@@ -300,13 +300,12 @@ def copy_gb_data(ncbi_handle, acc_id_dict, records_path, file_type,
     elif file_type == "tbl":
         file_lines = ncbi_handle.readlines()
 
-        feature_format = re.compile(">Feature ..\|\w+\..\|")
-        accession_format = re.compile("\|(\w+)\..\|")
+        feature_format = re.compile(">Feature ..\|(\w+)(\..)\|\n")
         
         file_handle = None
         for line in file_lines:
             if not re.match(feature_format, line) is None:
-                accession_split = re.split(accession_format, line)
+                accession_split = re.split(feature_format, line)
                 accession = accession_split[1]
                 phage_id = acc_id_dict[accession_split[1]]
 
