@@ -9,6 +9,14 @@ from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, CompoundLocation, FeatureLocation
 from Bio.SeqRecord import SeqRecord
 
+#GLOBAL VARIABLES
+#-----------------------------------------------------------------------------
+TBL_HEADER_FORMAT = re.compile(">Feature ..\|(\w+)\.(.)\|\n") 
+TBL_FEATURE_FORMAT = re.compile("(\d+)\t(\d+)\t(\w+)\n")
+TBL_REGIONS_FORMAT = re.compile("(\d+)\t(\d+)\n")
+TBL_QUALIFIER_FORMAT = re.compile("\t\t\t(.+)\t(.+)\n")
+TBL_OPEN_QUALIFIER_FORMAT = re.compile("\t\t\t(.+)\n")
+
 #READING FUNCTIONS
 #-----------------------------------------------------------------------------
 def retrieve_data_dict(filepath):
@@ -31,126 +39,40 @@ def retrieve_data_dict(filepath):
             data_dicts.append(dict)
     return data_dicts
 
-def read_feature_table(file_path):
-    header_format = re.compile(">Feature ..\|(\w+)\.(.)\|\n") 
-    feature_format = re.compile("(\d+)\t(\d+)\t(\w+)\n")
-    regions_format = re.compile("(\d+)\t(\d+)\n")
-    qualifier_format = re.compile("\t\t\t(.+)\t(.+)\n")
+def read_feature_table(filepath):
+    """Reads a (five-column) feature table and parses the data into a seqrecord.
 
-    file_handle = file_path.open(mode="r") 
+    :param filepath: Path to the five-column formatted feature table file.
+    :type filepath: Path
+    :returns: Returns a Biopython SeqRecord object with the table data.
+    :rtype: list
+    """  
 
-    line = ""
-    while (re.match(header_format, line) is None):
+    file_handle = filepath.open(mode="r") 
+
+    while True:
+        try:
+            line = file_handle.readline()
+        except:
+            return None 
+       
+        if parse_tbl_data_type(line) == "header":
+            break
+
+    tbl_data = [line] 
+    while True:
         try:
             line = file_handle.readline()
         except:
             break
-
-    if re.match(header_format, line) is None:
-        return None
-
-    header_split = re.split(header_format, line) 
-    record = SeqRecord(Seq(''))
-    record.id = header_split[1] 
-    record.annotations = {"sequence_version" : str(header_split[2])}
-
-    features = []
-    try:
-        line = file_handle.readline()
-    except:
-        pass
-    while True: 
-        if line == "\n":
-            break
-        elif (not re.match(header_format, line) is None):
-            raise SyntaxError("Feature table reader does not support reading "
-                              "concatenated files")
-        elif re.match(feature_format, line) is None:
-            raise SyntaxError("Expected feature was not formatted correctly")
-      
-        feature_split = re.split(feature_format, line)
-        start = int(feature_split[1]) - 1
-        stop = int(feature_split[2])
         
-        if start <= stop:
-            strand = 1
+        data_type = parse_tbl_data_type(line)
+        if not (data_type == "header" or data_type is None):
+            tbl_data.append(line)
         else:
-            start = int(feature_split[2]) - 1
-            stop = int(feature_split[1])
-            strand = -1
-
-        location = FeatureLocation(start, stop, strand=strand)
-
-        try:
-            line = file_handle.readline()
-        except:
             break
 
-        if not re.match(regions_format, line) is None:
-            locations = [location]
-            while True: 
-                if line == "\n" or not re.match(qualifier_format, line) is None:
-                    break
-                elif (not re.match(header_format, line) is None):
-                    raise SyntaxError("Feature table reader does not support "
-                                  "reading concatenated files")
-
-                regions_split = re.split(regions_format, line)
-
-                start = int(regions_split[1]) - 1
-                stop = int(regions_split[2])
-        
-                if start <= stop:
-                    strand = 1
-                else:
-                    start = int(regions_split[2]) - 1
-                    stop = int(regions_split[1])
-                    strand = -1
-            
-                locations.append(FeatureLocation(start, stop, strand=strand))
-
-                try: 
-                    line = file_handle.readline()
-                except:
-                    line = "\n"
-                    break
-            
-            feature = SeqFeature(CompoundLocation(locations), 
-                                             type=feature_split[3])
-        else: 
-            feature = SeqFeature(FeatureLocation(start, stop, strand=strand),
-                                             type=feature_split[3])
-
-        qualifiers = {}
-        while True: 
-            if line == "\n" or not re.match(feature_format, line) is None:
-                break
-            elif (not re.match(header_format, line) is None):
-                raise SyntaxError("Feature table reader does not support "
-                                  "reading concatenated files")
-            elif line == ("\t\t\tribosomal_slippage\n"):
-                qualifiers["ribosomal_slippage"] = [""]
-            elif re.match(qualifier_format, line) is None:
-                print(line)
-                raise SyntaxError("Expected qualifier was not formatted "
-                                  "correctly")
-            else:
-                qualifier_split = re.split(qualifier_format, line)
-                qualifiers[qualifier_split[1]] = [qualifier_split[2]]
-
-            try:
-                line = file_handle.readline()
-            except:
-                line = "\n"
-                break
-            
-        feature.qualifiers = qualifiers 
-        features.append(feature)
-        if line == "\n":
-            break
-
-    record.features = features
-
+    record = convert_tbl_data_to_record(tbl_data)   
     return record
 
 #WRITING FUNCTIONS
@@ -335,3 +257,115 @@ def write_feature_table(seqrecord_list, export_path, verbose=False):
         file_handle.write("\n")
         file_handle.close()
 
+#BASE FUNCTIONS
+#-----------------------------------------------------------------------------
+def convert_tbl_data_to_record(tbl_data):
+    """Converts string lines from a five_column feature table to a seqrecord.
+    """
+    header = tbl_data[0]
+    if parse_tbl_data_type(header) != "header":
+        raise ValueError("Five column table data does not have a proper header")
+
+    header_split = re.split(TBL_HEADER_FORMAT, header) 
+    record = SeqRecord(Seq(''))
+    record.id = header_split[1] 
+    record.annotations = {"sequence_version" : str(header_split[2])}
+
+    if len(tbl_data) == 1:
+        return record
+
+    features = []
+    qualifiers = {}
+    coordinates = []
+    last_data_type = None
+    feature_split = []
+    for line in tbl_data[1:]:
+        data_type = parse_tbl_data_type(line)
+
+        if data_type == "header":
+            raise SyntaxError("Found table header within data.")
+        elif data_type == "feature":
+            if coordinates:
+                feature = feature_data_to_seqfeature(coordinates,
+                                                        feature_split[3])
+                feature.qualifiers = qualifiers
+                features.append(feature)
+            coordinates = []
+            qualifiers = {}
+
+            feature_split = re.split(TBL_FEATURE_FORMAT, line)
+            coordinates.append((int(feature_split[1]), int(feature_split[2])))
+        elif data_type == "region":
+            if not last_data_type in ["feature", "region"]:
+                raise SyntaxError(
+                        "Five column feature table not formatted correctly.\n"
+                        "Orphaned multiple region data found.")
+
+            regions_split = re.split(TBL_REGIONS_FORMAT, line)
+            coordinates.append((int(regions_split[1]), int(regions_split[2])))
+        elif data_type == "qualifier":
+            qualifier_split = re.split(TBL_QUALIFIER_FORMAT, line)
+            qualifiers[qualifier_split[1]] = [qualifier_split[2]]
+        elif data_type == "open_qualifier":
+            open_qualifier_split = re.split(TBL_OPEN_QUALIFIER_FORMAT, line)
+            qualifiers[open_qualifier_split[1]] = [""]
+        else:
+            raise SyntaxError(
+                        "Five column feature table not formatted correctly.\n"
+                        "Unrecognized data format.")
+
+        last_data_type = data_type
+
+    if coordinates:
+        feature = feature_data_to_seqfeature(coordinates,
+                                                feature_split[3])
+        feature.qualifiers = qualifiers
+        features.append(feature)
+
+    record.features = features
+    return record
+
+def feature_data_to_seqfeature(coordinates, feature_type):
+    locations = []
+    for coordinate in coordinates:
+        if coordinate[0] <= coordinate[1]:
+            start = int(coordinate[0]) - 1
+            stop = int(coordinate[1])
+            strand = 1
+        else:
+            start = int(coordinate[1]) - 1
+            stop = int(coordinate[0])
+            strand = -1
+        
+        locations.append(FeatureLocation(start, stop, strand=strand))
+
+    if len(locations) == 1:
+        feature = SeqFeature(locations[0], type=feature_type)
+    else:
+        feature = SeqFeature(CompoundLocation(locations), type=feature_type)
+
+    return feature
+
+
+
+def parse_tbl_data_type(data_line):
+    """Parses a five-column table data line and returns it's structure type.
+
+    :param data_line: Line of data from a five-column feature table.
+    :type data_line: str
+    :returns: Returns the type of data line the line is from the table.
+    :rtype: str
+    """
+    data_type = None
+    if not re.match(TBL_HEADER_FORMAT, data_line) is None:
+        data_type = "header"
+    elif not re.match(TBL_FEATURE_FORMAT, data_line) is None:
+        data_type = "feature"
+    elif not re.match(TBL_REGIONS_FORMAT, data_line) is None:
+        data_type = "region"
+    elif not re.match(TBL_QUALIFIER_FORMAT, data_line) is None:
+        data_type = "qualifier"
+    elif not re.match(TBL_OPEN_QUALIFIER_FORMAT, data_line) is None:
+        data_type = "open_qualifier"
+   
+    return data_type 
