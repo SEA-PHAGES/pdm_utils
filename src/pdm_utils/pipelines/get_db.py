@@ -185,38 +185,43 @@ def request_url():
 
     return response
 
+def get_database_list(response):
+    databases = list() # create an empty list
+
+    names_regex = re.compile("""<a href="(\w+).sql">""")
+    names = names_regex.findall(response.data.decode('utf-8')) #list of database names
+
+    #get the dates of the databases
+    dates_regex = re.compile("""<td align="right">(\d+[-]\d+[-]\d+)\s+\d+[:]\d+\s+</td>""")
+    dates = dates_regex.findall(response.data.decode('utf-8')) #list of dates corresponding to the database names
+
+    response.close()
+
+    #creating a list of dictionaries
+    for i in range(len(names)):
+        db_dict = dict()
+        db_dict["num"] = i+1
+        db_dict["name"] = names[i]
+        db_dict["date"] = dates[i*2]
+
+        databases.append(db_dict)
+
+    return databases
+
+
 
 def interactive():
-
-    databases = list() #create an empty list
 
     response = request_url()
 
     if response.status == 200:
         #get the names of the databases
-        names_regex = re.compile("""<a href="(\w+).sql">""")
-        names = names_regex.findall(response.data.decode('utf-8')) #list of database names
 
-        #get the dates of the databases
-        dates_regex = re.compile("""<td align="right">(\d+[-]\d+[-]\d+)\s+\d+[:]\d+\s+</td>""")
-        dates = dates_regex.findall(response.data.decode('utf-8')) #list of dates corresponding to the database names
-
-
-        #creating a list of dictionaries
-        for i in range(len(names)):
-            db_dict = dict()
-            db_dict["num"] = i+1
-            db_dict["name"] = names[i]
-            db_dict["date"] = dates[i*2]
-
-            databases.append(db_dict)
-
-            response.close()
+        databases = get_database_list(response)
 
         print("Databases available at '", DB_LINK, "':\n")
 
         for i in databases:
-            #print(i["num"], ".\t", i["name"], "\t", i["date"])
             print("{:10}.\t{:<30} {}".format(i["num"], i["name"], i["date"]))
 
         db = input("\n\nWhich database would you like to download? (Enter 1-{}) ".format(len(databases)) )

@@ -184,8 +184,20 @@ class TestGetDb(unittest.TestCase):
     @patch("pdm_utils.classes.alchemyhandler.getpass")
     def test_main_6(self, getpass_mock, input_mock):
         """Verify that interactive mode is operational"""
+
+        # find out the number of DB and use it for input_mock
+
+        response = get_db.request_url()
+        database_list = get_db.get_database_list(response)
+
         getpass_mock.side_effect = [USER, PWD]
-        input_mock.return_value = 1
+
+        for i in database_list:
+            if i["name"] == DB:
+                input_mock.return_value = i["num"]
+                break
+            input_mock.return_value = 1
+
         # Need to ensure that there is a good response from the specified request (200)
         # option has to be server for interactive mode to work
         unparsed_args = get_unparsed_args(option="server")
@@ -195,7 +207,7 @@ class TestGetDb(unittest.TestCase):
         # Now, ensure that the request returns 200
         # From get_db function request_url()
 
-        request_data = get_db.request_url().status
+        request_data = response.status
 
         self.assertEqual(request_data, 200)
 
