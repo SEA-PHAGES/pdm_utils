@@ -496,21 +496,15 @@ def get_genome_seqrecords(alchemist, values, data_cache=None, verbose=False):
     if data_cache is None:
         data_cache = {}
 
-    genomes = []
+    seqrecords = []
     for genome_id in values:
         genome = data_cache.get(genome_id)
         if genome is None:
             genome = get_single_genome(alchemist, genome_id, get_features=True,
                                                     data_cache=data_cache)
-
-        genomes.append(genome)
-
-    seqrecords = []
-    for gnm in genomes:
-        if verbose:
-            print(f"Converting {gnm.name}...")
+        
         seqrecord = flat_files.genome_to_seqrecord(gnm)
-        sort_seqrecord_features(seqrecord)
+        flat_files.sort_seqrecord_features(seqrecord)
         seqrecords.append(seqrecord)
 
     return seqrecords
@@ -653,22 +647,6 @@ def decode_results(results, columns, verbose=False):
             for result in results:
                 if not result[column.name] is None:
                     result[column.name] = result[column.name].decode("utf-8")
-
-def sort_seqrecord_features(seqrecord):
-    """Function that sorts and processes the seqfeature objects of a seqrecord.
-
-    :param seqrecord: Phage genome Biopython seqrecord object
-    :type seqrecord: SeqRecord
-    """
-
-    try:
-        def _sorting_key(seqfeature): return seqfeature.location.start
-        seqrecord.features.sort(key=_sorting_key)
-    except:
-        if seqrecord == None:
-            raise TypeError
-        print("Genome seqrecord features unable to be sorted")
-        pass
 
 #---------
 #---------

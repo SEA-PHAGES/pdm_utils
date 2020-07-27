@@ -534,7 +534,7 @@ def format_review_data(row_dict, pham):
     notes = basic.sort_histogram(notes)
     for key in notes.keys():
         if key is None or key == "": 
-            function = "Hypothetical Protein"
+            function = "hypothetical protein"
         else: 
             function = key
 
@@ -579,7 +579,7 @@ def format_gr_data(row_dict, gene):
 
     note = row_dict.pop("Notes")[0]
     if note is None or note == "":
-        note = "Hypothetical Protein"
+        note = "hypothetical protein"
 
     row_dict["Functional Call"] = note
 
@@ -610,7 +610,7 @@ def format_adjacent_annotations(annotation_histogram):
     for note in annotation_histogram.keys():
         count = annotation_histogram[note]
         if (note == "") or (note is None):
-            note = "Hypothetical Protein"
+            note = "hypothetical protein"
         annotation_list.append("".join([note, "(", str(count), ")"]))
 
     annotations = ", ".join(annotation_list)

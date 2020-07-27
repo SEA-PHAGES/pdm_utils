@@ -1,16 +1,19 @@
 """Pipeline to automate product annotation resubmissions to GenBank. """
 import argparse
 import os
+import shutil
 import sys
 import time
 from pathlib import Path
 
-from sqlalchemy import select
-
 from pdm_utils.functions import basic
+from pdm_utils.functions import configfile
 from pdm_utils.functions import fileio
+from pdm_utils.functions import flat_files
+from pdm_utils.functions import ncbi
 from pdm_utils.functions import pipelines_basic
 from pdm_utils.functions import querying
+from pdm_utils.functions import mysqldb
 from pdm_utils.functions import mysqldb_basic
 
 #-----------------------------------------------------------------------------
@@ -18,12 +21,18 @@ from pdm_utils.functions import mysqldb_basic
 
 DEFAULT_FOLDER_NAME = f"{time.strftime('%Y%m%d')}_revise"
 DEFAULT_FOLDER_PATH = Path.cwd()
+
+BASE_CONDITIONALS = ("phage.Status = final AND "
+                     "phage.AnnotationAuthor = 1 AND"
+                     "phage.RetrieveRecord = 1")
+
+REVISE_PIPELINES = ["local", "remote"]
+
 CURATION_NAME = "revise.csv"
 
 CURATION_HEADER = ["Phage", "Accession Number", "Locus Tag", 
                    "Start", "Stop", "Product"]
 FIVE_COLUMN_TABLE_HEADER = []
-
 
 REVISION_COLUMNS = ["phage.PhageID", "phage.Accession", "gene.LocusTag",
                     "gene.Start", "gene.Stop", "gene.Notes"]
@@ -39,11 +48,10 @@ INPUT_FILE_KEYS = {"function_report"   :\
                                         "filter_key" : "gene.GeneID"}
                   }
 
-
-BASE_CONDITIONALS = ("phage.Status = final AND "
-                     "phage.AnnotationAuthor = 1 AND"
-                     "phage.RetrieveRecord = 1")
-
+PHAGE_QUERY = "SELECT * FROM phage"
+GENE_QUERY = "SELECT * FROM gene"
+TRNA_QUERY = "SELECT * FROM trna"
+TMRNA_QUERY = "SELECT * FROM tmrna"
 #-----------------------------------------------------------------------------
 #MAIN FUNCTIONS
 
@@ -54,15 +62,25 @@ def main(unparsed_args_list):
     :type unparsed_args_list: list[str]
     """
     args = parse_revise(unparsed_args_list)
-    
-    alchemist = pipelines_basic.build_alchemist(args.database)
 
-    execute_revise(alchemist, args.revisions_file, args.folder_path, 
+    config = configfile.build_complete_config(args.config_file)
+   
+    alchemist = pipelines_basic.build_alchemist(args.database, config=config)
+
+    if args.pipeline == "local":
+        execute_local_revise(alchemist, args.revisions_file, args.folder_path, 
                                                    args.folder_name,
+                                                   config=config,
                                                    input_type=args.input_type,
                                                    output_type=args.output_type,
                                                    filters=args.filters,
                                                    groups=args.groups,
+                                                   verbose=args.verbose)
+    elif args.pipeline == "remote":
+        values = pipelines_basic.parse_value_input(args.input)
+        execute_remote_revise(alchemist, args.folder_path, args.folder_name,
+                                                   config=config, values=values,
+                                                   filters=args.filters,
                                                    verbose=args.verbose)
 
 def parse_revise(unparsed_args_list):
@@ -75,6 +93,19 @@ def parse_revise(unparsed_args_list):
     DATABASE_HELP = """
         Name of the MySQL database to export from.
         """
+    PIPELINE_HELP = """Pipeline of how to retrieve information to submit to
+        GenBank
+        """
+
+    REMOTE_HELP = """Revise pipeline that accepts changes to submit to GenBank
+        based on differences between data in the database and data retrieved
+        from GenBank.
+        """
+    LOCAL_HELP = """Revise pipeline that accepts changes to submit to GenBank 
+        based on differences between data received from a file and the MySQL
+        database.
+        """
+
     REVISIONS_FILE_HELP = """
         Selection input option that imports values from a csv file.
             Follow selection argument with path to the
@@ -89,17 +120,33 @@ def parse_revise(unparsed_args_list):
             Follow selection argument with a supported file type.
         """
 
+    IMPORT_FILE_HELP = """
+        Selection input option that imports values from a csv file.
+            Follow selection argument with path to the
+            csv file containing the names of each genome in the first column.
+        """
+    SINGLE_GENOMES_HELP = """
+        Selection input option that imports values from cmd line input.
+            Follow selection argument with space separated
+            names of genomes in the database.
+        """
+
+    CONFIG_FILE_HELP = """
+        Revise option that enables use of a config file for sourcing credentials
+            Follow selection argument with the path to the config file
+            specifying MySQL and NCBI credentials.
+        """
     VERBOSE_HELP = """
-        Export option that enables progress print statements.
+        Revise option that enables progress print statements.
         """
     FOLDER_PATH_HELP = """
-        Export option to change the path
+        Revise option to change the path
         of the directory where the exported files are stored.
             Follow selection argument with the path to the
             desired directory.
         """
     FOLDER_NAME_HELP = """
-        Export option to change the name
+        Revise option to change the name
         of the directory where the exported files are stored.
             Follow selection argument with the desired name.
         """
@@ -119,47 +166,70 @@ def parse_revise(unparsed_args_list):
     parser = argparse.ArgumentParser()
 
     parser.add_argument("database", type=str,  help=DATABASE_HELP)
-    parser.add_argument("revisions_file", help=REVISIONS_FILE_HELP,
-                                    type=pipelines_basic.convert_file_path)
 
-    parser.add_argument("-m", "--folder_name", 
+    subparsers = parser.add_subparsers(dest="pipeline", 
+                                               help=PIPELINE_HELP)
+
+    local_parser = subparsers.add_parser("local", 
+                                               help=LOCAL_HELP)
+    remote_parser = subparsers.add_parser("remote", 
+                                               help=REMOTE_HELP)
+
+    local_parser.add_argument("revisions_file", 
+                                    type=pipelines_basic.convert_file_path,
+                                               help=REVISIONS_FILE_HELP)
+ 
+    local_parser.add_argument("-it", "--input_type", choices=INPUT_FILE_TYPES,
+                                               help=INPUT_TYPE_HELP)
+    local_parser.add_argument("-ot", "--output_type", choices=OUTPUT_FILE_TYPES,
+                                               help=OUTPUT_TYPE_HELP)
+    local_parser.add_argument("-g", "--group_by", nargs="*", dest="groups",
+                                               help=GROUP_BY_HELP)
+
+    remote_parser.add_argument("-if", "--import_file", dest="input",
+                                type=pipelines_basic.convert_file_path,
+                                               help=IMPORT_FILE_HELP)
+    remote_parser.add_argument("-in", "--import_names", nargs="*", dest="input",
+                                               help=SINGLE_GENOMES_HELP)
+
+    for subparser in [local_parser, remote_parser]:
+        subparser.add_argument("-c", "--config_file", 
+                                    type=pipelines_basic.convert_file_path,
+                                               help=CONFIG_FILE_HELP)
+        subparser.add_argument("-m", "--folder_name", 
                                     type=str,  help=FOLDER_NAME_HELP)
-    parser.add_argument("-o", "--folder_path", 
+        subparser.add_argument("-o", "--folder_path", 
                                     type=pipelines_basic.convert_dir_path,
                                                help=FOLDER_PATH_HELP)
-    parser.add_argument("-v", "--verbose", action="store_true", 
-                                               help=VERBOSE_HELP)
+        subparser.add_argument("-v", "--verbose", action="store_true", 
+                                               help=VERBOSE_HELP) 
 
-    parser.add_argument("-it", "--input_type", choices=INPUT_FILE_TYPES,
-                                               help=INPUT_TYPE_HELP)
-    parser.add_argument("-ot", "--output_type", choices=OUTPUT_FILE_TYPES,
-                                               help=OUTPUT_TYPE_HELP)
-
-    parser.add_argument("-f", "--filter", nargs="?", dest="filters",
+        subparser.add_argument("-f", "--filter", nargs="?", dest="filters",
                                                help=FILTERS_HELP)
-    parser.add_argument("-g", "--group_by", nargs="*",
-                                help=GROUP_BY_HELP,
-                                dest="groups")
+       
+        subparser.set_defaults(folder_name=DEFAULT_FOLDER_NAME,
+                               folder_path=DEFAULT_FOLDER_PATH, 
+                               config_file=None, input=[],
+                               input_type="function_report", 
+                               output_type="curation", 
+                               filters="", groups=[], verbose=False)
+
     
     date = time.strftime("%Y%m%d")
     default_folder_name = f"{date}_pham_revise"
-    default_folder_path = Path.cwd()
-
-    parser.set_defaults(folder_name=DEFAULT_FOLDER_NAME,
-                        folder_path=DEFAULT_FOLDER_PATH, 
-                        input_type="function_report",
-                        output_type="curation",
-                        filters="", groups=[], verbose=False)
+    default_folder_path = Path.cwd() 
 
     parsed_args = parser.parse_args(unparsed_args_list[2:])
     return parsed_args
 
-def execute_revise(alchemist, revisions_file_path, folder_path, folder_name,
+def execute_local_revise(alchemist, revisions_file_path, folder_path, 
+                                                   folder_name, 
+                                                   config_file=None,
                                                    input_type="function_report",
                                                    output_type="curation",
                                                    filters="", groups=[],
                                                    verbose=False):
-    """Executes the entirety of the genbank revise pipeline.
+    """Executes the entirety of the genbank local revise pipeline.
 
     :param alchemist: A connected and fully built AlchemyHandler object.
     :type alchemist: AlchemyHandler
@@ -228,7 +298,83 @@ def execute_revise(alchemist, revisions_file_path, folder_path, folder_name,
             write_curation_data(export_dicts, mapped_path)
         elif output_type == "five_column":
             write_five_column_table(export_dicts, mapped_path)
-        
+       
+def execute_remote_revise(alchemist, folder_path, folder_name, config=None, 
+                          values=None, filters="", verbose=False):
+    ncbi_creds = {}
+    if not config is None:
+        ncbi_creds = config["ncbi"]
+
+    db_filter = pipelines_basic.build_filter(alchemist, "phage", filters,
+                                                        values=values,
+                                                        verbose=verbose)
+
+    conditionals = db_filter.build_where_clauses()
+    db_filter.values = db_filter.build_values(where=conditionals)
+
+    if db_filter.hits() == 0:
+        print("No database entries retrieved from phage "
+              "for '{mapped_path}'")
+        sys.exit(1)
+
+    revise_path = folder_path.joinpath(folder_name)
+    revise_path = basic.make_new_dir(folder_path, revise_path, attempt=50)
+
+    accession_data = db_filter.select(["phage.PhageID", "phage.Accession"])    
+
+    acc_id_dict = {}
+    for data_dict in accession_data:
+        accession = data_dict["Accession"]
+        if not (accession is None or accession == ""):
+            acc_id_dict[accession] = data_dict["PhageID"]
+
+    filehandle = ncbi.get_verified_data_handle(revise_path, acc_id_dict, 
+                                     ncbi_cred_dict=ncbi_creds, file_type="tbl")
+    record_gen = fileio.parse_feature_table(filehandle)
+
+    tbl_records = []
+    validated_phages = []
+    for tbl_record in record_gen:
+        phage_name = acc_id_dict[tbl_record.id]
+        tbl_record.name = phage_name 
+        flat_files.sort_seqrecord_features(tbl_record)
+        tbl_records.append(tbl_record)
+
+        validated_phages.append(phage_name)
+
+    sql_genomes = mysqldb.parse_genome_data(alchemist.engine, 
+                                                phage_id_list=validated_phages, 
+                                                phage_query=PHAGE_QUERY,
+                                                gene_query=GENE_QUERY,
+                                                trna_query=TRNA_QUERY,
+                                                tmrna_query=TMRNA_QUERY)
+
+    sql_records = {}
+    for genome in sql_genomes:
+        sql_record = flat_files.genome_to_seqrecord(genome) 
+        sql_records[sql_record.id] = sql_record
+
+    reviewed_records = []
+    for tbl_record in tbl_records:
+        sql_record = sql_records.get(tbl_record.id)
+
+        if sql_record is None:
+            raise Exception
+
+        if revise_seqrecord(tbl_record, sql_record, verbose=verbose):
+            reviewed_records.append(tbl_record)
+    
+    if not tbl_records:
+        print("No discrepancies detected between local data and GenBank data.")
+        shutil.rmtree(revise_path)
+        sys.exit(1)
+    else:
+        fileio.write_feature_table(reviewed_records, revise_path, 
+                                                     verbose=verbose)
+
+
+#LOCAL REVISE HELPER FUNCTIONS
+#-----------------------------------------------------------------------------
 def use_function_report_data(db_filter, data_dicts, columns, conditionals,
                                                              verbose=False):
     """Reads in FunctionReport data and pairs it with existing data.
@@ -253,7 +399,7 @@ def use_function_report_data(db_filter, data_dicts, columns, conditionals,
             print(f"...Retrieving data for pham {data_dict['Pham']}...")
 
         final_call = data_dict["Final Call"]
-        if final_call == "Hypothetical Protein":
+        if final_call.lower() == "hypothetical protein":
             final_call = ""
         conditionals.append(querying.build_where_clause(db_filter.graph,
                                 f"gene.Notes!={final_call}"))
@@ -337,9 +483,6 @@ def write_curation_data(data_dicts, export_path, file_name=CURATION_NAME,
     fileio.export_data_dict(data_dicts, file_path, CURATION_HEADER, 
                                                     include_headers=True)
 
-#-----------------------------------------------------------------------------
-#CURATION-SPECIFIC HELPER FUNCTIONS
-
 def format_curation_data(row_dict): 
     """Function to format revise dictionary keys.
 
@@ -352,6 +495,175 @@ def format_curation_data(row_dict):
     row_dict["Accession Number"] = row_dict.pop("Accession")
     row_dict["Locus Tag"] = row_dict.pop("LocusTag")
     row_dict["Product"] = row_dict.pop("Notes")
+
+#REMOTE REVISE HELPER FUNCTIONS
+#-----------------------------------------------------------------------------
+def revise_seqrecord(target_record, template_record, verbose=False):
+    """Function to edit a target record based on data from a template record.
+
+    :param target_record: SeqRecord object to be changed based on the template.
+    :type target_record: SeqRecord
+    :param template_record: SeqRecord object to be used as a source of data.
+    :type template_record: SeqRecord
+    """
+    target_feature_map = create_feature_map(target_record)
+    template_feature_map = create_feature_map(template_record)
+ 
+    edited = False
+
+    for key, temp_feature_dict in template_feature_map.items():
+        if key == "" or key is None:
+            return False
+
+        feature_dict = target_feature_map.get(key)
+        if feature_dict is None:
+            if verbose:
+                print(f"Adding '{key}' feature(s)...")
+            edited = True
+        else:
+            if "CDS" in temp_feature_dict.keys():
+                temp_cds = feature_dict["CDS"]
+                cds = temp_feature_dict.get("CDS")
+                if cds is None:
+                    if verbose:
+                        print(f"Adding '{key}' CDS feature...")
+                    edited = True
+            if "tRNA" in temp_feature_dict.keys():
+                temp_trna = feature_dict["tRNA"]
+                trna = temp_feature_dict.get("tRNA")
+                if trna is None:
+                    if verbose:
+                        print(f"Adding '{key}' CDS feature...")
+                    edited=True
+            if "tmRNA" in feature_dict.keys():
+                pass
+
+    for key, feature_dict in target_feature_map.items():
+        if key == "" or key is None:
+            return False
+
+        temp_feature_dict = template_feature_map.get(key)
+        if temp_feature_dict is None:
+            if verbose:
+                print(f"Removing '{key}' feature(s)...")
+            edited = True
+            for feature in feature_dict.values(): 
+                target_record.features.remove(feature)
+        else:
+            gene = feature_dict["gene"]
+            temp_gene = temp_feature_dict["gene"]
+            if revise_gene_feature(gene, temp_gene, key, verbose=verbose):
+                edited = True
+            if "CDS" in feature_dict.keys():
+                cds = feature_dict["CDS"]
+                temp_cds = temp_feature_dict.get("CDS")
+                if temp_cds is None:
+                    if verbose:
+                        print(f"Removing '{key}' CDS feature...")
+                    edited = True
+                    target_record.features.remove(cds)
+                else:
+                    if revise_cds_feature(cds, temp_cds, key, verbose=verbose):
+                        edited = True
+            if "tRNA" in feature_dict.keys():
+                trna = feature_dict["tRNA"]
+                temp_trna = temp_feature_dict.get("tRNA")
+                if temp_trna is None:
+                    if verbose:
+                        print(f"Removing '{key}' CDS feature...")
+                    edited=True
+                    target_record.features.remove(trna)
+                else:
+                    if revise_cds_feature(trna, temp_trna, key, 
+                                          verbose=verbose):
+                        edited = True
+                pass
+            if "tmRNA" in feature_dict.keys():
+                pass 
+
+    return edited
+
+def revise_gene_feature(target_gene, template_gene, locus_tag, verbose=False):
+    edited = False
+
+    target_start = target_gene.location.start
+    template_start = template_gene.location.start
+    if target_start != template_start:
+        if verbose:
+            print(f"Editing '{locus_tag}' gene feature start from "
+                  f"{target_start} to {template_start}...")
+        target_gene.location = template_gene.location
+        edited = True 
+
+    return edited
+
+def revise_cds_feature(target_cds, template_cds, locus_tag, verbose=False):
+    edited = False
+
+    target_start = target_cds.location.start
+    template_start = template_cds.location.start
+    if target_start != template_start: 
+        if verbose:
+            print(f"Editing '{locus_tag}' CDS feature start from "
+                  f"{target_start} to {template_start}...")
+        target_cds.location = template_cds.location
+        edited = True
+  
+    target_products = target_cds.qualifiers["product"]
+    template_products = template_cds.qualifiers["product"]
+    if target_products != template_products: 
+        if verbose:
+            print(f"Editing '{locus_tag}' CDS feature product from "
+                f"{';'.join(target_products)} to {';'.join(template_products)}")
+        target_cds.qualifiers["product"] = template_products
+        edited = True
+
+    return edited
+
+def revise_trna_feature(target_trna, template_trna, locus_tag, verbose=False):
+    target_start = target_trna.location.start
+    template_start = template_trna.location.start
+    if target_start != template_start:
+        if verbose:
+            print(f"Editing '{locus_tag}' tRNA feature start...")
+        target_trna.location = template_trna.location
+        edited = True
+
+    target_product = target_trna.qualifiers["product"][0]
+    template_product = template_trna.qualifiers["product"][0]
+    if target_product != template_product:
+        if verbose:
+            print(f"Editing '{locus_tag}' tRNA feature product from "
+                  f"{target_product} to {template_product}...")
+            target_trna.qualifiers["product"] = [template_product]
+
+    return edited
+
+def create_feature_map(record):
+    """Revise helper function to map all the qualities of one locus tag.
+
+    :param record: SeqRecord object to map gene features for.
+    :type record: SeqRecord
+    :returns: Returns a dictionary mapping locus_tags to features.
+    :rtype: dict
+    """
+    cds_map = {}
+    for feature in record.features:
+        if feature.type == "gene":
+            locus_tag = feature.qualifiers["locus_tag"][0]
+            cds_map[locus_tag] = {"gene" : feature}
+
+    for locus, feature_dict in cds_map.items():
+        gene_feature = feature_dict["gene"]
+        for feature in record.features:
+            if feature.location.end == gene_feature.location.end:
+                if feature.type == "gene":
+                    continue
+
+                feature_dict[feature.type] = feature
+    
+    return cds_map
+
 
 if __name__ == "__main__":
     args = sys.argv

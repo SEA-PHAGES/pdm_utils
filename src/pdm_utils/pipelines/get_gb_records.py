@@ -31,8 +31,6 @@ DEFAULT_FOLDER_PATH = Path.cwd()
 FILTER_KEY = "phage"
 
 RECORD_FILE_TYPES = ["gb", "tbl"]
-RETTYPE_MAPPINGS  = {"gb"  : "gb",
-                     "tbl" : "ft"}
 
 #MAIN FUNCTIONS
 #-----------------------------------------------------------------------------
@@ -52,7 +50,7 @@ def main(unparsed_args_list):
     values = pipelines_basic.parse_value_input(args.input)
 
     execute_get_gb_records(alchemist, args.folder_path, args.folder_name, 
-                           args.file_type, config=None,
+                           args.file_type, config=config,
                            values=values, verbose=args.verbose, 
                            filters=args.filters, groups=args.groups)
      
@@ -67,7 +65,10 @@ def parse_args(unparsed_args_list):
     DATABASE_HELP = "Name of the MySQL database to export from."
 
     CONFIG_FILE_HELP = """
-        Get gb record to the config file path specifying MySQL and NCBI credentials.
+        Get gb record option that enables use of a config file for sourcing
+        credentials
+            Follow selection argument with the path to the config file
+            specifying MySQL and NCBI credentials.
         """
     VERBOSE_HELP = """
         Get gb record option that enables progress print statements.
@@ -209,8 +210,10 @@ def execute_get_gb_records(alchemist, folder_path, folder_name, file_type,
                 acc_id_dict[accession] = data_dict["PhageID"]
 
         if len(acc_id_dict.keys()) > 0:
-            ncbi_handle = get_verified_data_handle(mapped_path, acc_id_dict, 
-                                 ncbi_cred_dict=ncbi_creds, file_type=file_type)
+            ncbi_handle = ncbi.get_verified_data_handle(
+                                                     mapped_path, acc_id_dict, 
+                                                     ncbi_cred_dict=ncbi_creds, 
+                                                     file_type=file_type)
 
             copy_gb_data(ncbi_handle, acc_id_dict, mapped_path, file_type, 
                                                             verbose=verbose)
@@ -219,66 +222,7 @@ def execute_get_gb_records(alchemist, folder_path, folder_name, file_type,
             shutil.rmtree(records_path)
             sys.exit(1)
 
-# TODO move to ncbi.
-# TODO test.
-def get_verified_data_handle(records_path, acc_id_dict, ncbi_cred_dict={}, 
-                                                batch_size=200, file_type="gb"):
-    """Retrieve genomes from GenBank.
 
-    output_folder = Path to where files will be saved.
-    acc_id_dict = Dictionary where key = Accession and value = List[PhageIDs]
-    """
-
-    # More setup variables if NCBI updates are desired.  NCBI Bookshelf resource
-    # "The E-utilities In-Depth: Parameters, Syntax and More", by Dr. Eric
-    # Sayers, recommends that a single request not contain more than about 200
-    # UIDS so we will use that as our batch size, and all Entrez requests must
-    # include the user's email address and tool name.
-    ncbi.set_entrez_credentials(
-        tool=ncbi_cred_dict.get("tool"),
-        email=ncbi_cred_dict.get("email"),
-        api_key=ncbi_cred_dict.get("api_key"))
-
-
-    # Use esearch to verify the accessions are valid and efetch to retrieve
-    # the record
-    # Create batches of accessions
-    unique_accession_list = list(acc_id_dict.keys())
-
-    # Add [ACCN] field to each accession number
-    appended_accessions = \
-        [accession + "[ACCN]" for accession in unique_accession_list]
-
-
-    # When retrieving in batch sizes, first create the list of values
-    # indicating which indices of the unique_accession_list should be used
-    # to create each batch.
-    # For instace, if there are five accessions, batch size of two produces
-    # indices = 0,2,4
-
-    chunked_accessions = basic.partition_list(appended_accessions, batch_size)
-    for chunk in chunked_accessions:
-        delimiter = " | "
-        esearch_term = delimiter.join(chunk)
-
-        # Use esearch for each accession
-        search_record = ncbi.run_esearch(db="nucleotide", term=esearch_term,
-                            usehistory="y")
-        search_count = int(search_record["Count"])
-        search_webenv = search_record["WebEnv"]
-        search_query_key = search_record["QueryKey"]
-        summary_records = ncbi.get_summaries(db="nucleotide",
-                                             query_key=search_query_key,
-                                             webenv=search_webenv)
-
-        accessions_to_retrieve = ncbi.get_accessions_to_retrieve(
-                                                                summary_records)
-        if len(accessions_to_retrieve) > 0: 
-            fetch_handle = ncbi.get_data_handle(accessions_to_retrieve,
-                                            rettype=RETTYPE_MAPPINGS[file_type])
-            return fetch_handle 
-        else:
-            return None
 
 # TODO test.
 def copy_gb_data(ncbi_handle, acc_id_dict, records_path, file_type, 

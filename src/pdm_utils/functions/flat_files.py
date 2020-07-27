@@ -853,3 +853,19 @@ def get_cds_seqrecord_annotations_comments(cds):
 
     return (pham_comment, auto_generated_comment)
 
+def sort_seqrecord_features(seqrecord):
+    """Function that sorts and processes the seqfeature objects of a seqrecord.
+
+    :param seqrecord: Phage genome Biopython seqrecord object
+    :type seqrecord: SeqRecord
+    """
+
+    try:
+        def _sorting_key(seqfeature): return seqfeature.location.start
+        seqrecord.features.sort(key=_sorting_key)
+    except:
+        if seqrecord is None:
+            raise TypeError
+        print("Genome seqrecord features unable to be sorted")
+        pass
+
