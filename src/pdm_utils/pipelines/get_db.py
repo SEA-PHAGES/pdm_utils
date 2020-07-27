@@ -23,13 +23,18 @@ DB_LINK = "http://phamerator.webfactional.com/databases_Hatfull/"
 
 # TODO test.
 def main(unparsed_args_list):
-    """Run the get_db pipeline.
+    """
+    Run the get_db pipeline.
 
     The database data can be retrieved from three places:
     The server, which needs to be downloaded to a new folder.
     A local file, in which no download and no new folder are needed.
     The empty schema stored within pdm_utils, in which no download, new folder,
     or local file are needed.
+
+    :param unparsed_args_list: list of arguments to run the pipeline unparsed
+    :type unparsed_args_list: list
+
     """
     args = parse_args(unparsed_args_list)
 
@@ -110,7 +115,22 @@ def main(unparsed_args_list):
 # TODO test.
 def install_db(database, username=None, password=None, db_filepath=None,
                schema_version=None, config_file=None):
-    """Install database. If database already exists, it is first removed."""
+    """
+    Install database. If database already exists, it is first removed.
+    :param database: Name of the database to be installed
+    :type database: str
+    :param username: mySQL username
+    :type username: str
+    :param password: mySQL password
+    :type password: str
+    :param db_filepath: Directory for installation
+    :type db_filepath: Path
+    :param schema_version:
+    :type schema_version:
+    :param config_file: Config file with credentials that is available for pipeline use
+    :type config_file:
+    """
+
     # No need to specify database yet, since it needs to first check if the
     # database exists.
     alchemist1 = AlchemyHandler(database="", username=username, password=password)
@@ -145,7 +165,19 @@ def install_db(database, username=None, password=None, db_filepath=None,
 
 # TODO test.
 def prepare_download(local_folder, url_folder, db_name, extension):
-    """Construct filepath and check if it already exists, then download."""
+    """
+    Construct filepath and check if it already exists, then download.
+    :param local_folder:
+    :type local_folder: Path
+    :param url_folder:
+    :type url_folder: Path
+    :param db_name: Name of the database to be downloaded
+    :type db_name:
+    :param extension: file extension for the database
+    :type extension: str
+    :returns: Path to the destination directory and the status of the download
+    :rtype: Path, bool
+    """
     filename = ".".join([db_name, extension])
     url_path = url_folder + filename
     local_path = pathlib.Path(local_folder, filename)
@@ -162,7 +194,16 @@ def prepare_download(local_folder, url_folder, db_name, extension):
 # So this step needs to catch that error.
 # TODO test.
 def download_file(file_url, filepath):
-    """Retrieve a file from the server."""
+    """
+    Retrieve a file from the server.
+    :param file_url: URL for database
+    :type file_url:
+    :param filepath:
+    :type filepath:
+    :returns: Status of the file retrieved from the server
+    :rtype: bool
+    """
+
     print(f"Downloading {filepath.name} file.")
     # Command line structure: curl website > output_file
     command_string = f"curl {file_url}"
@@ -178,6 +219,12 @@ def download_file(file_url, filepath):
 
 def request_url():
 
+    """
+    Create a urllib3 PoolManager to access the url link for list of databases
+    :returns An HTTPResponse object
+    :rtype: urllib3.response.HTTPResponse
+    """
+
     pool = urllib3.PoolManager()
     response = pool.request('GET', DB_LINK)
 
@@ -186,6 +233,15 @@ def request_url():
     return response
 
 def get_database_list(response):
+
+    """
+    Get list of databases from the link using a response object
+    :param response: Response object from the PoolManager with the specified url link
+    :type response: urllib3.response.HTTPResponse
+    :returns: A list of databases
+    :rtype: list
+    """
+
     databases = list() # create an empty list
 
     names_regex = re.compile("""<a href="(\w+).sql">""")
@@ -212,6 +268,13 @@ def get_database_list(response):
 
 def interactive():
 
+    """
+    Interactive mode to display all available databases at specified url link for download from server
+    :returns: Name of the database for download
+    :rtype: str
+
+    """
+
     response = request_url()
 
     if response.status == 200:
@@ -235,7 +298,13 @@ def interactive():
 
 # TODO test.
 def parse_args(unparsed_args_list):
-    """Verify the correct arguments are selected for getting a new database."""
+    """
+    Verify the correct arguments are selected for getting a new database.
+    :param unparsed_args_list: list of arguments to run the pipeline before parsing
+    :type unparsed_args_list: list
+    :returns: A parsed list of arguments
+    :rtype: list
+    """
 
     get_db_help = (
         "Pipeline to retrieve and install a new version of a MySQL database.")
