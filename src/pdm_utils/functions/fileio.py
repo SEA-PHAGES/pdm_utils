@@ -44,7 +44,12 @@ def read_feature_table(filehandle):
     :rtype: SeqRecord
     """ 
     parser = FeatureTableParser(filehandle)
-    record = parser.next()
+
+    try:
+        record = parser.next()
+    except:
+        record = None
+
     return record
 
 def parse_feature_table(filehandle):
@@ -197,9 +202,17 @@ def write_feature_table(seqrecord_list, export_path, verbose=False):
         file_name = f"{record.name}.tbl"
         file_path = export_path.joinpath(file_name)
         file_handle = file_path.open(mode='w')
+        
+        accession = record.id
+        version = record.annotations.get("sequence_version")
+        if version:
+            accession = ".".join([accession, version])
+  
+        prefix = record.annotations.get("tbl_prefix")
+        if not prefix:
+            prefix = ""
 
-        file_handle.write(f">Feature gb|{record.id}."
-                          f"{record.annotations['sequence_version']}|\n")
+        file_handle.write(f">Feature {prefix}|{accession}|\n")
 
         for feature in record.features:
             location = feature.location
@@ -234,8 +247,9 @@ def write_feature_table(seqrecord_list, export_path, verbose=False):
                     file_handle.write(f"\t\t\t{key}\n")
                     continue
 
-                file_handle.write(f"\t\t\t{key}\t"
-                                  f"{feature.qualifiers[key][0]}\n")
+                qualifier_values = feature.qualifiers[key]
+                for value in qualifier_values:
+                    file_handle.write(f"\t\t\t{key}\t{value}\n")
         
         file_handle.write("\n")
         file_handle.close()
