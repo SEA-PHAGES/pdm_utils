@@ -136,7 +136,7 @@ def parse_pham_finder(unparsed_args_list):
                         filters="", groups=[], sort=[],
                         show_percentages=False)
 
-    parsed_args = parser.parse_args(unparsed_args_list[1:])
+    parsed_args = parser.parse_args(unparsed_args_list[2:])
     return parsed_args
 
 #TODO Owen Needs unittests
