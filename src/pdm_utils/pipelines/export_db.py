@@ -503,7 +503,7 @@ def get_genome_seqrecords(alchemist, values, data_cache=None, verbose=False):
             genome = get_single_genome(alchemist, genome_id, get_features=True,
                                                     data_cache=data_cache)
         
-        seqrecord = flat_files.genome_to_seqrecord(gnm)
+        seqrecord = flat_files.genome_to_seqrecord(genome)
         flat_files.sort_seqrecord_features(seqrecord)
         seqrecords.append(seqrecord)
 
