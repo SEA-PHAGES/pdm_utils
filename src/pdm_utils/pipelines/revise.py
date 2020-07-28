@@ -1,11 +1,14 @@
 """Pipeline to automate product annotation resubmissions to GenBank. """
 import argparse
+import logging
 import os
 import shutil
 import sys
 import time
+from datetime import date
 from pathlib import Path
 
+import pdm_utils         # to get the version number
 from pdm_utils.functions import basic
 from pdm_utils.functions import configfile
 from pdm_utils.functions import fileio
@@ -52,6 +55,13 @@ PHAGE_QUERY = "SELECT * FROM phage"
 GENE_QUERY = "SELECT * FROM gene"
 TRNA_QUERY = "SELECT * FROM trna"
 TMRNA_QUERY = "SELECT * FROM tmrna"
+
+
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
+MAIN_LOG_FILE = "REVISE_LOG.log"
+VERSION = pdm_utils.__version__
+CURRENT_DATE = date.today().strftime("%Y%m%d")
 #-----------------------------------------------------------------------------
 #MAIN FUNCTIONS
 
@@ -320,6 +330,16 @@ def execute_remote_revise(alchemist, folder_path, folder_name, config=None,
     revise_path = folder_path.joinpath(folder_name)
     revise_path = basic.make_new_dir(folder_path, revise_path, attempt=50)
 
+    log_file = revise_path.joinpath(MAIN_LOG_FILE)
+    logging.basicConfig(filename=log_file, filemode="w",
+                        level=logging.DEBUG,
+                        format="pdm_utils revise: %(levelname)s: %(message)s")
+
+    logger.info(f"pdm_utils version: {VERSION}")
+    logger.info(f"Revise run date: {CURRENT_DATE}")
+    logger.info(f"Connected to database: {alchemist.database}")
+
+
     accession_data = db_filter.select(["phage.PhageID", "phage.Accession"])    
 
     acc_id_dict = {}
@@ -361,8 +381,13 @@ def execute_remote_revise(alchemist, folder_path, folder_name, config=None,
         if sql_record is None:
             raise Exception
 
-        if revise_seqrecord(tbl_record, sql_record, verbose=verbose):
+        edits = revise_seqrecord(tbl_record, sql_record, verbose=verbose)
+        if len(edits) > 1:
+            flat_files.sort_seqrecord_features(tbl_record) 
             reviewed_records.append(tbl_record)
+        
+        for edit_msg in edits:
+            logger.info(edit_msg)
     
     if not tbl_records:
         print("No discrepancies detected between local data and GenBank data.")
@@ -508,136 +533,179 @@ def revise_seqrecord(target_record, template_record, verbose=False):
     """
     target_feature_map = create_feature_map(target_record)
     template_feature_map = create_feature_map(template_record)
- 
-    edited = False
 
+    record_msg = f"Evaluating {target_record.name} from GenBank..."
+    if verbose:
+        print(record_msg)
+
+    edits = [record_msg]
+ 
     for key, temp_feature_dict in template_feature_map.items():
         if key == "" or key is None:
-            return False
+            abort_msg = ("Invalid Locus Tag detected in the local data for "
+                        f"{template_record.name}, aborting evaluation...")
+            return [abort_msg]
 
         feature_dict = target_feature_map.get(key)
         if feature_dict is None:
+            add_msg = f"\tAdding '{key}' feature(s)..."
             if verbose:
-                print(f"Adding '{key}' feature(s)...")
-            edited = True
+                print(add_msg)
+            for feature in temp_feature_dict.values():
+                target_record.append(feature)
+            edits.append(add_msg)
         else:
             if "CDS" in temp_feature_dict.keys():
                 temp_cds = feature_dict["CDS"]
                 cds = temp_feature_dict.get("CDS")
                 if cds is None:
+                    add_msg = f"\tAdding '{key}' CDS feature..."
                     if verbose:
-                        print(f"Adding '{key}' CDS feature...")
-                    edited = True
+                        print(add_msg)
+                    
+                    target_record.append(temp_cds)
+                    edits.append(add_msg)
             if "tRNA" in temp_feature_dict.keys():
                 temp_trna = feature_dict["tRNA"]
                 trna = temp_feature_dict.get("tRNA")
                 if trna is None:
+                    add_msg = f"\tAdding '{key}' tRNA feature..."
                     if verbose:
-                        print(f"Adding '{key}' CDS feature...")
-                    edited=True
+                        print(add_msg)
+
+                    target_record.append(temp_trna)
+                    edits.append(add_msg)
             if "tmRNA" in feature_dict.keys():
                 pass
 
     for key, feature_dict in target_feature_map.items():
         if key == "" or key is None:
-            return False
+            abort_msg = ("Invalid Locus Tag detected in the GenBank data for "
+                        f"{target_record.name}, aborting evaluation...")
+            return [abort_msg]
 
         temp_feature_dict = template_feature_map.get(key)
         if temp_feature_dict is None:
+
+            remove_msg = f"\tRemoving '{key}' feature(s)..."
             if verbose:
-                print(f"Removing '{key}' feature(s)...")
-            edited = True
+                print(remove_msg)
+            edits.append(remove_msg)
             for feature in feature_dict.values(): 
                 target_record.features.remove(feature)
         else:
             gene = feature_dict["gene"]
             temp_gene = temp_feature_dict["gene"]
-            if revise_gene_feature(gene, temp_gene, key, verbose=verbose):
-                edited = True
+            gene_edits = revise_gene_feature(gene, temp_gene, key, 
+                                             verbose=verbose)
+            if gene_edits:
+                edits = edits + gene_edits
+
             if "CDS" in feature_dict.keys():
                 cds = feature_dict["CDS"]
                 temp_cds = temp_feature_dict.get("CDS")
                 if temp_cds is None:
+                    remove_msg = f"\tRemoving '{key}' CDS feature..."
                     if verbose:
-                        print(f"Removing '{key}' CDS feature...")
-                    edited = True
+                        print(remove_msg)
+                    edits.append(remove_msg)
                     target_record.features.remove(cds)
                 else:
-                    if revise_cds_feature(cds, temp_cds, key, verbose=verbose):
-                        edited = True
+                    cds_edits = revise_cds_feature(cds, temp_cds, key, 
+                                                   verbose=verbose)
+                    if cds_edits:
+                        edits = edits + cds_edits
+
             if "tRNA" in feature_dict.keys():
                 trna = feature_dict["tRNA"]
                 temp_trna = temp_feature_dict.get("tRNA")
                 if temp_trna is None:
+                    remove_msg = f"\tRemoving '{key}' CDS feature..."
                     if verbose:
-                        print(f"Removing '{key}' CDS feature...")
-                    edited=True
+                        print(remove_msg)
+                    edits.append(remove_msg)
                     target_record.features.remove(trna)
                 else:
-                    if revise_cds_feature(trna, temp_trna, key, 
-                                          verbose=verbose):
-                        edited = True
+                    trna_edits = revise_cds_feature(trna, temp_trna, key, 
+                                                    verbose=verbose)
+                    if trna_edits:
+                        edits = edits + trna_edits
                 pass
             if "tmRNA" in feature_dict.keys():
                 pass 
 
-    return edited
+    return edits
 
 def revise_gene_feature(target_gene, template_gene, locus_tag, verbose=False):
-    edited = False
+    edits = []
 
     target_start = target_gene.location.start
     template_start = template_gene.location.start
     if target_start != template_start:
+        start_edit_msg = (f"\tEditing '{locus_tag}' gene feature start from "
+                    f"{target_start} to {template_start}...")
         if verbose:
-            print(f"Editing '{locus_tag}' gene feature start from "
-                  f"{target_start} to {template_start}...")
+            print(start_edit_msg)
+        
+        edits.append(start_edit_msg)
         target_gene.location = template_gene.location
-        edited = True 
 
-    return edited
+    return edits
 
 def revise_cds_feature(target_cds, template_cds, locus_tag, verbose=False):
-    edited = False
+    edits = []
 
     target_start = target_cds.location.start
     template_start = template_cds.location.start
     if target_start != template_start: 
+        start_edit_msg = (f"\tEditing '{locus_tag}' CDS feature start from "
+                          f"{target_start} to {template_start}...")
+
         if verbose:
-            print(f"Editing '{locus_tag}' CDS feature start from "
-                  f"{target_start} to {template_start}...")
+            print(start_edit_msg)
+
+        edits.append(start_edit_msg)
         target_cds.location = template_cds.location
-        edited = True
   
     target_products = target_cds.qualifiers["product"]
     template_products = template_cds.qualifiers["product"]
     if target_products != template_products: 
-        if verbose:
-            print(f"Editing '{locus_tag}' CDS feature product from "
+        product_edit_msg = (f"\tEditing '{locus_tag}' CDS feature product from "
                 f"{';'.join(target_products)} to {';'.join(template_products)}")
-        target_cds.qualifiers["product"] = template_products
-        edited = True
 
-    return edited
+        if verbose:
+            print(product_edit_msg)
+
+        edits.append(product_edit_msg)
+        target_cds.qualifiers["product"] = template_products
+
+    return edits
 
 def revise_trna_feature(target_trna, template_trna, locus_tag, verbose=False):
     target_start = target_trna.location.start
     template_start = template_trna.location.start
     if target_start != template_start:
+        start_edit_msg = (f"Editing '{locus_tag}' tRNA feature start...")
+
         if verbose:
-            print(f"Editing '{locus_tag}' tRNA feature start...")
+            print(start_edit_msg)
+
+        edits.append(start_edit_msg)
         target_trna.location = template_trna.location
-        edited = True
 
     target_product = target_trna.qualifiers["product"][0]
     template_product = template_trna.qualifiers["product"][0]
     if target_product != template_product:
-        if verbose:
-            print(f"Editing '{locus_tag}' tRNA feature product from "
-                  f"{target_product} to {template_product}...")
-            target_trna.qualifiers["product"] = [template_product]
+        product_edit_msg = (f"\tEditing '{locus_tag}' tRNA feature product "
+                            f"from {target_product} to {template_product}...")
 
-    return edited
+        if verbose:
+            print(product_edit_msg)
+
+        edits.append(product_edit_msg)
+        target_trna.qualifiers["product"] = [template_product]
+
+    return edits
 
 def create_feature_map(record):
     """Revise helper function to map all the qualities of one locus tag.
@@ -663,7 +731,6 @@ def create_feature_map(record):
                 feature_dict[feature.type] = feature
     
     return cds_map
-
 
 if __name__ == "__main__":
     args = sys.argv
