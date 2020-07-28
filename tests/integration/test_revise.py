@@ -84,29 +84,29 @@ class TestGenbankRevise(unittest.TestCase):
         if self.revise_test_dir.is_dir():
             shutil.rmtree(str(self.revise_test_dir))
 
-    def test_execute_revise_1(self):
-        """Verify execute_revise() creates new directory as expected.
+    def test_execute_local_revise_1(self):
+        """Verify execute_local_revise() creates new directory as expected.
         """
-        revise.execute_revise(self.alchemist, self.fr_input_file_path, 
+        revise.execute_local_revise(self.alchemist, self.fr_input_file_path, 
                                     self.test_dir,
                                     self.revise_test_dir.name)
 
         self.assertTrue(self.revise_test_dir.is_dir())
 
-    def test_execute_revise_2(self):
-        """Verify execute_revise() filters parameter functions as expected.
+    def test_execute_local_revise_2(self):
+        """Verify execute_local_revise() filters parameter functions as expected.
         """
-        revise.execute_revise(self.alchemist, self.fr_input_file_path, 
+        revise.execute_local_revise(self.alchemist, self.fr_input_file_path, 
                                     self.test_dir,
                                     self.revise_test_dir.name,
                                     filters="phage.Cluster=A")
 
         self.assertTrue(self.revise_test_dir.is_dir())
 
-    def test_execute_revise_3(self):
-        """Verify execute_revise() group parameter functions as expected.
+    def test_execute_local_revise_3(self):
+        """Verify execute_local_revise() group parameter functions as expected.
         """
-        revise.execute_revise(self.alchemist, self.fr_input_file_path,
+        revise.execute_local_revise(self.alchemist, self.fr_input_file_path,
                                     self.test_dir,
                                     self.revise_test_dir.name,
                                     groups=["phage.Cluster"])
@@ -126,20 +126,20 @@ class TestGenbankRevise(unittest.TestCase):
         with self.subTest(cluster="N"):
             self.assertFalse(cluster_N_dir.is_dir())
 
-    def test_execute_revise_4(self):
-        """Verify execute_revise() removes directory lacking needed revisions.
+    def test_execute_local_revise_4(self):
+        """Verify execute_local_revise() removes directory lacking needed revisions.
         """
-        revise.execute_revise(self.alchemist, self.fr_input_file_path, 
+        revise.execute_local_revise(self.alchemist, self.fr_input_file_path, 
                                     self.test_dir,
                                     self.revise_test_dir.name,
                                     filters="phage.Cluster=N")
 
         self.assertFalse(self.revise_test_dir.is_dir())
 
-    def test_execute_revise_5(self):
-        """Verify execute_revise() exports expected data.
+    def test_execute_local_revise_5(self):
+        """Verify execute_local_revise() exports expected data.
         """
-        revise.execute_revise(self.alchemist, self.fr_input_file_path, 
+        revise.execute_local_revise(self.alchemist, self.fr_input_file_path, 
                                     self.test_dir,
                                     self.revise_test_dir.name,
                                     groups=["gene.PhamID"])
