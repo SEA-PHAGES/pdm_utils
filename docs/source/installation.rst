@@ -33,7 +33,6 @@ ________
 
   ./installation/install_mmseqs2
   ./installation/install_ncbi_tools
-  ./installation/install_ncbi_tools
   ./installation/install_mcl
   ./installation/install_pdm_utils_repo
   ./installation/install_trnascan_se
