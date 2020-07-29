@@ -470,8 +470,7 @@ class Trna:
                 amino_acid = self.amino_acid
 
             qualifiers["product"] = [f"tRNA-{amino_acid}"]
-            qualifiers["note"] = [f"tRNA-{self.amino_acid}"
-                                  f"({self.anticodon})"]
+            qualifiers["note"] = [f"tRNA-{amino_acid} ({self.anticodon})"]
         if type == "gene":
             qualifiers["gene"] = [self.name]
             qualifiers["locus_tag"] = [self.locus_tag]

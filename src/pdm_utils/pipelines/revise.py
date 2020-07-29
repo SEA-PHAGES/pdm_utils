@@ -74,7 +74,7 @@ def main(unparsed_args_list):
     args = parse_revise(unparsed_args_list)
 
     config = configfile.build_complete_config(args.config_file)
-   
+
     alchemist = pipelines_basic.build_alchemist(args.database, config=config)
 
     if args.pipeline == "local":
@@ -308,7 +308,8 @@ def execute_local_revise(alchemist, revisions_file_path, folder_path,
             write_curation_data(export_dicts, mapped_path)
         elif output_type == "five_column":
             write_five_column_table(export_dicts, mapped_path)
-       
+
+#TODO Owen unittest
 def execute_remote_revise(alchemist, folder_path, folder_name, config=None, 
                           values=None, filters="", verbose=False):
     ncbi_creds = {}
@@ -319,6 +320,7 @@ def execute_remote_revise(alchemist, folder_path, folder_name, config=None,
                                                         values=values,
                                                         verbose=verbose)
 
+    db_filter.add(BASE_CONDITIONALS)
     conditionals = db_filter.build_where_clauses()
     db_filter.values = db_filter.build_values(where=conditionals)
 
@@ -552,6 +554,7 @@ def revise_seqrecord(target_record, template_record, verbose=False):
             if verbose:
                 print(add_msg)
             for feature in temp_feature_dict.values():
+                clean_feature(feature)
                 target_record.append(feature)
             edits.append(add_msg)
         else:
@@ -562,7 +565,8 @@ def revise_seqrecord(target_record, template_record, verbose=False):
                     add_msg = f"\tAdding '{key}' CDS feature..."
                     if verbose:
                         print(add_msg)
-                    
+                   
+                    clean_feature(temp_cds)
                     target_record.append(temp_cds)
                     edits.append(add_msg)
             if "tRNA" in temp_feature_dict.keys():
@@ -573,6 +577,7 @@ def revise_seqrecord(target_record, template_record, verbose=False):
                     if verbose:
                         print(add_msg)
 
+                    clean_feature(temp_cds)
                     target_record.append(temp_trna)
                     edits.append(add_msg)
             if "tmRNA" in feature_dict.keys():
@@ -641,7 +646,9 @@ def revise_gene_feature(target_gene, template_gene, locus_tag, verbose=False):
 
     target_start = target_gene.location.start
     template_start = template_gene.location.start
-    if target_start != template_start:
+    target_stop = target_gene.location.end
+    template_stop = template_gene.location.end
+    if target_start != template_start and target_stop == template_stop:
         start_edit_msg = (f"\tEditing '{locus_tag}' gene feature start from "
                     f"{target_start} to {template_start}...")
         if verbose:
@@ -657,7 +664,9 @@ def revise_cds_feature(target_cds, template_cds, locus_tag, verbose=False):
 
     target_start = target_cds.location.start
     template_start = template_cds.location.start
-    if target_start != template_start: 
+    target_stop = target_cds.location.end
+    template_stop = template_cds.location.end
+    if target_start != template_start and target_stop == template_stop:
         start_edit_msg = (f"\tEditing '{locus_tag}' CDS feature start from "
                           f"{target_start} to {template_start}...")
 
@@ -684,7 +693,9 @@ def revise_cds_feature(target_cds, template_cds, locus_tag, verbose=False):
 def revise_trna_feature(target_trna, template_trna, locus_tag, verbose=False):
     target_start = target_trna.location.start
     template_start = template_trna.location.start
-    if target_start != template_start:
+    target_stop = target_trna.location.end
+    template_stop = template_trna.location.end
+    if target_start != template_start and target_stop == template_stop:
         start_edit_msg = (f"Editing '{locus_tag}' tRNA feature start...")
 
         if verbose:
@@ -731,6 +742,30 @@ def create_feature_map(record):
                 feature_dict[feature.type] = feature
     
     return cds_map
+
+def clean_feature(feature):
+    """Revise helper function to format a SeqFeature for Feature Table export.
+
+    :param feature: Biopython SeqFeature object populated with MySQL data.
+    :type feature: Biopython
+    """
+    qualifiers = feature.qualifiers
+    temp_qualifiers = {}
+
+    if feature.type == "gene":
+        temp_qualifiers["gene"] = [qualifiers.get("gene")]
+        temp_qualifiers["locus_tag"] = [qualifiers.get("locus_tag")]
+    elif feature.type == "CDS":
+        temp_qualifiers["product"] = [qualifiers.get("product")]
+        temp_qualifiers["transl_table"] = [qualifiers.get("transl_table")]
+        temp_qualifiers["note"] = [qualifiers.get("note")]
+    elif feature.type == "tRNA":
+        temp_qualifiers["product"] = [qualifiers.get("product")]
+        temp_qualifiers["note"] = [qualifiers.get("note")]
+    elif feature.type == "tmRNA":
+        pass
+    
+    feature.qualifiers = temp_qualifiers
 
 if __name__ == "__main__":
     args = sys.argv
