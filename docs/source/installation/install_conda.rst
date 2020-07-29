@@ -47,7 +47,7 @@ Conda is available as part of Anaconda or Miniconda, and complete installation i
 
 #. After installing Conda, create an environment to be able to install and use ``pdm_utils`` (the example below creates a Conda environment named 'pdm_utils', but it can be named anything). Enter 'y' when prompted to install all dependencies::
 
-    > conda create --name pdm_utils python pip biopython pymysql paramiko tabulate curl sqlalchemy networkx
+    > conda create --name pdm_utils curl python pip biopython networkx paramiko pymysql sqlalchemy tabulate urllib3
 
 #. After the Conda environment is created, it needs to be activated using the following command. The command line prompt will now include '(pdm_utils)', indicating it is operating within this environment::
 
