@@ -125,10 +125,10 @@ def install_db(database, username=None, password=None, db_filepath=None,
     :type password: str
     :param db_filepath: Directory for installation
     :type db_filepath: Path
-    :param schema_version:
-    :type schema_version:
+    :param schema_version: Database schema version
+    :type schema_version: int
     :param config_file: Config file with credentials that is available for pipeline use
-    :type config_file:
+    :type config_file: ConfigParser
     """
 
     # No need to specify database yet, since it needs to first check if the
@@ -167,12 +167,12 @@ def install_db(database, username=None, password=None, db_filepath=None,
 def prepare_download(local_folder, url_folder, db_name, extension):
     """
     Construct filepath and check if it already exists, then download.
-    :param local_folder:
+    :param local_folder: Working directory where the database is downloaded
     :type local_folder: Path
-    :param url_folder:
-    :type url_folder: Path
+    :param url_folder: Base url where db_files are located.
+    :type url_folder: str
     :param db_name: Name of the database to be downloaded
-    :type db_name:
+    :type db_name: str
     :param extension: file extension for the database
     :type extension: str
     :returns: Path to the destination directory and the status of the download
@@ -197,9 +197,9 @@ def download_file(file_url, filepath):
     """
     Retrieve a file from the server.
     :param file_url: URL for database
-    :type file_url:
-    :param filepath:
-    :type filepath:
+    :type file_url: str
+    :param filepath: Local path where the file is downloaded to.
+    :type filepath: Path
     :returns: Status of the file retrieved from the server
     :rtype: bool
     """
