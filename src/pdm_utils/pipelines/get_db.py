@@ -6,6 +6,8 @@ import pathlib
 import shutil
 import subprocess
 import sys
+import urllib3
+import re
 
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.constants import constants, db_schema_0
@@ -17,27 +19,38 @@ DEFAULT_OUTPUT_FOLDER = "/tmp/"
 CURRENT_DATE = date.today().strftime("%Y%m%d")
 RESULTS_FOLDER = f"{CURRENT_DATE}_get_db"
 
+DB_LINK = "http://phamerator.webfactional.com/databases_Hatfull/"
+
 # TODO test.
 def main(unparsed_args_list):
-    """Run the get_db pipeline.
+    """
+    Run the get_db pipeline.
 
     The database data can be retrieved from three places:
     The server, which needs to be downloaded to a new folder.
     A local file, in which no download and no new folder are needed.
     The empty schema stored within pdm_utils, in which no download, new folder,
     or local file are needed.
+
+    :param unparsed_args_list: list of arguments to run the pipeline unparsed
+    :type unparsed_args_list: list
+
     """
     args = parse_args(unparsed_args_list)
 
     # Set values that are shared between all three options.
+
     database = args.database
+
     option = args.option
     config_file = args.config_file
+
 
     # Create config object with data obtained from file and/or defaults.
     config = configfile.build_complete_config(config_file)
     mysql_creds = config["mysql"]
     server_creds = config["download_server"]
+
 
     install = True
     schema_version = None
@@ -48,8 +61,13 @@ def main(unparsed_args_list):
     elif option == "new":
         schema_version = args.schema_version
     else:
+
         # option must be "server"
         # Give priority to config file to define url, although this is arbitrary.
+
+        if database is None:
+            database = interactive()
+
         server_url = server_creds["url"]
         if server_url is None:
             server_url = args.url
@@ -97,7 +115,22 @@ def main(unparsed_args_list):
 # TODO test.
 def install_db(database, username=None, password=None, db_filepath=None,
                schema_version=None, config_file=None):
-    """Install database. If database already exists, it is first removed."""
+    """
+    Install database. If database already exists, it is first removed.
+    :param database: Name of the database to be installed
+    :type database: str
+    :param username: mySQL username
+    :type username: str
+    :param password: mySQL password
+    :type password: str
+    :param db_filepath: Directory for installation
+    :type db_filepath: Path
+    :param schema_version: Database schema version
+    :type schema_version: int
+    :param config_file: Config file with credentials that is available for pipeline use
+    :type config_file: ConfigParser
+    """
+
     # No need to specify database yet, since it needs to first check if the
     # database exists.
     alchemist1 = AlchemyHandler(database="", username=username, password=password)
@@ -132,7 +165,19 @@ def install_db(database, username=None, password=None, db_filepath=None,
 
 # TODO test.
 def prepare_download(local_folder, url_folder, db_name, extension):
-    """Construct filepath and check if it already exists, then download."""
+    """
+    Construct filepath and check if it already exists, then download.
+    :param local_folder: Working directory where the database is downloaded
+    :type local_folder: Path
+    :param url_folder: Base url where db_files are located.
+    :type url_folder: str
+    :param db_name: Name of the database to be downloaded
+    :type db_name: str
+    :param extension: file extension for the database
+    :type extension: str
+    :returns: Path to the destination directory and the status of the download
+    :rtype: Path, bool
+    """
     filename = ".".join([db_name, extension])
     url_path = url_folder + filename
     local_path = pathlib.Path(local_folder, filename)
@@ -149,7 +194,16 @@ def prepare_download(local_folder, url_folder, db_name, extension):
 # So this step needs to catch that error.
 # TODO test.
 def download_file(file_url, filepath):
-    """Retrieve a file from the server."""
+    """
+    Retrieve a file from the server.
+    :param file_url: URL for database
+    :type file_url: str
+    :param filepath: Local path where the file is downloaded to.
+    :type filepath: Path
+    :returns: Status of the file retrieved from the server
+    :rtype: bool
+    """
+
     print(f"Downloading {filepath.name} file.")
     # Command line structure: curl website > output_file
     command_string = f"curl {file_url}"
@@ -163,10 +217,94 @@ def download_file(file_url, filepath):
             print(f"Unable to download {filepath.name} from server.")
     return status
 
+def request_url():
+
+    """
+    Create a urllib3 PoolManager to access the url link for list of databases
+    :returns An HTTPResponse object
+    :rtype: urllib3.response.HTTPResponse
+    """
+
+    pool = urllib3.PoolManager()
+    response = pool.request('GET', DB_LINK)
+
+    pool.clear()
+
+    return response
+
+def get_database_list(response):
+
+    """
+    Get list of databases from the link using a response object
+    :param response: Response object from the PoolManager with the specified url link
+    :type response: urllib3.response.HTTPResponse
+    :returns: A list of databases
+    :rtype: list
+    """
+
+    databases = list() # create an empty list
+
+    names_regex = re.compile("""<a href="(\w+).sql">""")
+    names = names_regex.findall(response.data.decode('utf-8')) #list of database names
+
+    #get the dates of the databases
+    dates_regex = re.compile("""<td align="right">(\d+[-]\d+[-]\d+)\s+\d+[:]\d+\s+</td>""")
+    dates = dates_regex.findall(response.data.decode('utf-8')) #list of dates corresponding to the database names
+
+    response.close()
+
+    #creating a list of dictionaries
+    for i in range(len(names)):
+        db_dict = dict()
+        db_dict["num"] = i+1
+        db_dict["name"] = names[i]
+        db_dict["date"] = dates[i*2]
+
+        databases.append(db_dict)
+
+    return databases
+
+
+
+def interactive():
+
+    """
+    Interactive mode to display all available databases at specified url link for download from server
+    :returns: Name of the database for download
+    :rtype: str
+
+    """
+
+    response = request_url()
+
+    if response.status == 200:
+        #get the names of the databases
+
+        databases = get_database_list(response)
+
+        print("Databases available at '", DB_LINK, "':\n")
+
+        for i in databases:
+            print("{:10}.\t{:<30} {}".format(i["num"], i["name"], i["date"]))
+
+        db = input("\n\nWhich database would you like to download? (Enter 1-{}) ".format(len(databases)) )
+
+        selected = databases[int(db)-1]
+        return selected["name"]
+
+    else:
+        response.close()
+        return None
 
 # TODO test.
 def parse_args(unparsed_args_list):
-    """Verify the correct arguments are selected for getting a new database."""
+    """
+    Verify the correct arguments are selected for getting a new database.
+    :param unparsed_args_list: list of arguments to run the pipeline before parsing
+    :type unparsed_args_list: list
+    :returns: A parsed list of arguments
+    :rtype: list
+    """
 
     get_db_help = (
         "Pipeline to retrieve and install a new version of a MySQL database.")
@@ -186,13 +324,19 @@ def parse_args(unparsed_args_list):
     schema_version_help = (
         "Database schema version to which the database should be converted.")
     config_file_help = "Path to the file containing user-specific login data."
+    interactive_help = "List of possible databases."
+
+    #database optional for subparser a and required for b and c
 
     parser = argparse.ArgumentParser(description=get_db_help)
-    parser.add_argument("database", type=str, help=database_help)
+    #parser.add_argument("-db", "--database", type=str, help=database_help, default=None)
 
     subparsers = parser.add_subparsers(dest="option", help=option_help)
 
+    # Command line structure
+    # python3 -m pdm_utils get_db server -db <database>
     parser_a = subparsers.add_parser("server", help=server_help)
+    parser_a.add_argument("-db", "--database", type=str, help=database_help, default=None)
     parser_a.add_argument("-u", "--url", type=str,
         default=constants.DB_WEBSITE, help=url_help)
     parser_a.add_argument("-v", "--version", action="store_true",
@@ -201,11 +345,17 @@ def parse_args(unparsed_args_list):
         default=pathlib.Path(DEFAULT_OUTPUT_FOLDER), help=output_folder_help)
     parser_a.add_argument("-d", "--download_only", action="store_true",
         default=False, help=download_only_help)
+    parser_a.add_argument("-i", "--interactive", action="store_true",
+        default=False, help=interactive_help)
+
 
     parser_b = subparsers.add_parser("file", help=file_help)
+    parser_b.add_argument("database", type=str, help=database_help)
     parser_b.add_argument("filename", type=pathlib.Path, help=filename_help)
 
+
     parser_c = subparsers.add_parser("new", help=new_help)
+    parser_c.add_argument("database", type=str, help=database_help)
     parser_c.add_argument("-s", "--schema_version", type=int,
         choices=list(convert_db.CHOICES), default=convert_db.CURRENT_VERSION,
         help=schema_version_help)
