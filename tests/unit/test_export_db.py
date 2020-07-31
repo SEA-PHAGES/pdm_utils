@@ -35,6 +35,7 @@ class TestExportMain(unittest.TestCase):
         self.mock_input = Mock()
         self.mock_values = Mock()
         self.mock_verbose = Mock() 
+        self.mock_config = Mock()
 
         self.mock_table = Mock()
         self.mock_filters = Mock()
@@ -82,7 +83,8 @@ class TestExportMain(unittest.TestCase):
 
         type(self.mock_args).concatenate = \
                             PropertyMock(return_value=self.mock_concatenate)
-        
+       
+    @patch("pdm_utils.pipelines.revise.configfile.build_complete_config")
     @patch("pdm_utils.pipelines.export_db.execute_export")
     @patch("pdm_utils.pipelines.export_db.pipelines_basic.parse_value_input")
     @patch("pdm_utils.pipelines.export_db.mysqldb.check_schema_compatibility")
@@ -91,17 +93,20 @@ class TestExportMain(unittest.TestCase):
     def test_main_1(self, parse_export_mock, build_alchemist_mock,
                                              check_schema_compatibility_mock,
                                              parse_value_input_mock,
-                                             execute_export_mock):
+                                             execute_export_mock,
+                                             build_complete_config_mock):
         """Verify function structure of main(). 
         """ 
         parse_export_mock.return_value = self.mock_args
         parse_value_input_mock.return_value = self.mock_values
         build_alchemist_mock.return_value = self.mock_alchemist
+        build_complete_config_mock.return_value = self.mock_config
         
         export_db.main(["cmd", "args"])
 
         parse_export_mock.assert_called_with(["cmd", "args"])
-        build_alchemist_mock.assert_called_with(self.mock_database)
+        build_alchemist_mock.assert_called_with(
+                                   self.mock_database, config=self.mock_config)
         check_schema_compatibility_mock.assert_called_with(self.mock_engine,
                                                            "export")
         parse_value_input_mock.assert_called_with(self.mock_input)

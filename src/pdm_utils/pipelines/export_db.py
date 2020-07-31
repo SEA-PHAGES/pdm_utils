@@ -9,6 +9,7 @@ from pdm_utils.classes.filter import Filter
 
 from pdm_utils.functions import basic
 from pdm_utils.functions import cartography
+from pdm_utils.functions import configfile
 from pdm_utils.functions import fileio
 from pdm_utils.functions import flat_files
 from pdm_utils.functions import mysqldb
@@ -77,7 +78,9 @@ def main(unparsed_args_list):
     #Returns after printing appropriate error message from parsing/connecting.
     args = parse_export(unparsed_args_list)
 
-    alchemist = pipelines_basic.build_alchemist(args.database)
+    config = configfile.build_complete_config(args.config_file)
+    
+    alchemist = pipelines_basic.build_alchemist(args.database, config=config)
 
     # Exporting as a SQL file is not constricted by schema version.
     if args.pipeline != "sql":
@@ -122,7 +125,11 @@ def parse_export(unparsed_args_list):
         """
     DATABASE_HELP = "Name of the MySQL database to export from."
 
-
+    CONFIG_FILE_HELP = """
+        Export option that enables use of a config file for sourcing credentials
+            Follow selection argument with the path to the config file
+            specifying MySQL and NCBI credentials.
+        """
     VERBOSE_HELP = """
         Export option that enables progress print statements.
         """
@@ -207,6 +214,9 @@ def parse_export(unparsed_args_list):
 
     optional_parser = argparse.ArgumentParser()
 
+    optional_parser.add_argument("-c", "--config_file",
+                               type=pipelines_basic.convert_file_path,
+                                         help=CONFIG_FILE_HELP)
     optional_parser.add_argument("-m", "--folder_name",
                                type=str, help=FOLDER_NAME_HELP)
     optional_parser.add_argument("-o", "--folder_path", 
@@ -255,7 +265,7 @@ def parse_export(unparsed_args_list):
                                  database=initial.database,
                                  folder_name=DEFAULT_FOLDER_NAME,
                                  folder_path=DEFAULT_FOLDER_PATH,
-                                 verbose=False, input=[],
+                                 config_file=None, verbose=False, input=[],
                                  table=DEFAULT_TABLE,
                                  filters="", groups=[], sort=[],
                                  include_columns=[], exclude_columns=[],

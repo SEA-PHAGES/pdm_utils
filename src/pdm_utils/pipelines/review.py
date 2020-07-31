@@ -12,6 +12,7 @@ from sqlalchemy.sql import func
 
 from pdm_utils.functions import annotation
 from pdm_utils.functions import basic
+from pdm_utils.functions import configfile
 from pdm_utils.functions import fileio
 from pdm_utils.functions import mysqldb_basic
 from pdm_utils.functions import pipelines_basic
@@ -58,7 +59,9 @@ def main(unparsed_args_list):
     """
     args = parse_review(unparsed_args_list)
 
-    alchemist = pipelines_basic.build_alchemist(args.database)
+    config = configfile.build_complete_config(args.config_file)
+
+    alchemist = pipelines_basic.build_alchemist(args.database, config=config)
 
     values = pipelines_basic.parse_value_input(args.input)
    
@@ -86,6 +89,12 @@ def parse_review(unparsed_args_list):
     """
     DATABASE_HELP = """
         Name of the MySQL database to export from.
+        """
+
+    CONFIG_FILE_HELP = """
+        Review option that enables use of a config file for sourcing credentials
+            Follow selection argument with the path to the config file
+            specifying MySQL and NCBI credentials.
         """
     VERBOSE_HELP = """
         Export option that enables progress print statements.
@@ -153,6 +162,10 @@ def parse_review(unparsed_args_list):
     parser = argparse.ArgumentParser()
 
     parser.add_argument("database", type=str,  help=DATABASE_HELP)
+
+    parser.add_argument("-c", "--config_file", 
+                                    type=pipelines_basic.convert_file_path,
+                                               help=CONFIG_FILE_HELP)
     parser.add_argument("-m", "--folder_name", 
                                     type=str,  help=FOLDER_NAME_HELP)
     parser.add_argument("-o", "--folder_path", 
@@ -191,7 +204,8 @@ def parse_review(unparsed_args_list):
 
     parser.set_defaults(folder_name=default_folder_name,
                         folder_path=default_folder_path,
-                        input=[], filters="", groups=[], sort=[],
+                        input=[], filters="", groups=[], sort=[], 
+                        config_file=None,
                         no_review=False, gene_report=False, 
                         summary_report=False, verbose=False)
 

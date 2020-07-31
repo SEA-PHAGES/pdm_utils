@@ -6,6 +6,7 @@ import time
 from pathlib import Path
 
 from pdm_utils.functions import basic
+from pdm_utils.functions import configfile
 from pdm_utils.functions import fileio
 from pdm_utils.functions import pipelines_basic
 
@@ -24,7 +25,10 @@ def main(unparsed_args_list):
     """
     args = parse_pham_finder(unparsed_args_list)
 
-    alchemist = pipelines_basic.build_alchemist(None, ask_database=False)
+    config = configfile.build_complete_config(args.config_file)
+
+    alchemist = pipelines_basic.build_alchemist(None, ask_database=False,
+                                                config=config)
     
     values = None
     if args.input:
@@ -50,6 +54,11 @@ def parse_pham_finder(unparsed_args_list):
         Name of the MySQL database to find phams for.
         """
 
+    CONFIG_FILE_HELP = """
+        Find option that enables use of a config file for sourcing credentials
+            Follow selection argument with the path to the config file
+            specifying MySQL and NCBI credentials.
+        """
     VERBOSE_HELP = """
         Export option that enables progress print statements.
         """
@@ -105,6 +114,9 @@ def parse_pham_finder(unparsed_args_list):
     parser.add_argument("bdatabase", type=str, 
                         help=B_DATABASE_HELP)
 
+    parser.add_argument("-c", "--config_file", 
+                        type=pipelines_basic.convert_file_path,
+                        help=CONFIG_FILE_HELP)
     parser.add_argument("-m", "--folder_name", type=str,
                         help=FOLDER_NAME_HELP)
     parser.add_argument("-o", "--folder_path", 
@@ -132,7 +144,7 @@ def parse_pham_finder(unparsed_args_list):
 
     parser.set_defaults(folder_name=DEFAULT_FOLDER_NAME,
                         folder_path=DEFAULT_FOLDER_PATH,
-                        verbose=False, input=[],
+                        config_file=None, verbose=False, input=[],
                         filters="", groups=[], sort=[],
                         show_percentages=False)
 

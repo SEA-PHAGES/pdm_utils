@@ -26,6 +26,7 @@ class TestMain(unittest.TestCase):
         self.mock_summary_report = Mock()
         self.mock_pham_summary_report = Mock()
         self.mock_verbose = Mock()
+        self.mock_config = Mock()
 
 
         type(self.args).database = PropertyMock(
@@ -55,22 +56,27 @@ class TestMain(unittest.TestCase):
                                                 self.mock_pham_summary_report)
         type(self.args).all_reports = PropertyMock(
                                         return_value=False)
+   
+    @patch("pdm_utils.pipelines.revise.configfile.build_complete_config")
     @patch("pdm_utils.pipelines.review.execute_review")
     @patch("pdm_utils.pipelines.review.parse_review")
     @patch("pdm_utils.pipelines.review.pipelines_basic.build_alchemist")
     @patch("pdm_utils.pipelines.review.pipelines_basic.parse_value_input")
     def test_main_1(self, parse_value_input_mock, build_alchemist_mock, 
-                                        parse_review_mock, execute_review_mock):
+                                        parse_review_mock, execute_review_mock,
+                                        build_complete_config_mock):
         """Verify the function structure of main().
         """
         parse_review_mock.return_value = self.args
         build_alchemist_mock.return_value = self.mock_alchemist
         parse_value_input_mock.return_value = self.mock_values
+        build_complete_config_mock.return_value = self.mock_config
 
         review.main(self.test_args_list)     
 
         parse_review_mock.assert_called_with(self.test_args_list)
-        build_alchemist_mock.assert_called_with(self.mock_database)
+        build_alchemist_mock.assert_called_with(self.mock_database, 
+                                                config=self.mock_config)
         parse_value_input_mock.assert_called_with(self.mock_input)
         execute_review_mock.assert_called_with(
                             self.mock_alchemist, self.mock_folder_path, 
