@@ -315,6 +315,7 @@ class AlchemyHandler:
                                                             echo=self.echo)
             self._engine.connect()
 
+            self.connected = True
             self.connected_database = True
 
     def connect(self, ask_database=False, login_attempts=5, pipeline=False):
@@ -415,7 +416,9 @@ class AlchemyHandler:
         if not self._session is None:
             self._session.close()
         self._session = None
-
+        
+        self.connected = False
+        self.connected_database = False
         self._databases = []
 
 #-----------------------------------------------------------------------------
@@ -427,7 +430,7 @@ class AlchemyHandler:
         if not self.has_database:
             self.ask_database()
 
-        if not self.connected:
+        if not self.connected_database:
             self.build_engine()
 
         self._metadata = MetaData(bind=self._engine)

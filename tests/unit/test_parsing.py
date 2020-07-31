@@ -261,6 +261,7 @@ class TestParsing(unittest.TestCase):
    
         self.assertTrue(isinstance(parsed_filter[3], list))
         self.assertTrue(isinstance(parsed_filter[3][0], str))
+        self.assertTrue(len(parsed_filter[3]) == 3)
 
         self.assertTrue("Trixie" in parsed_filter[3])
         self.assertTrue("D29" in parsed_filter[3])
@@ -272,8 +273,27 @@ class TestParsing(unittest.TestCase):
         filter = "gene.Notes IN ('terminase, small subunit', terminase)"
         parsed_filter = parsing.parse_filter(filter)
 
+        self.assertTrue(len(parsed_filter[3]) == 2)
         self.assertTrue("terminase" in parsed_filter[3])
         self.assertTrue("terminase, small subunit" in parsed_filter[3])
+
+    def test_parse_filter_9(self):
+        """Verify parse_filter() excludes quotations in quoted values.
+        """
+        filter = "phage.PhageID IN ('D29', 'Trixie')"
+        parsed_filter = parsing.parse_filter(filter)
+
+        self.assertTrue(len(parsed_filter[3]) == 2)
+        self.assertTrue("D29" in parsed_filter[3])
+        self.assertTrue("Trixie" in parsed_filter[3])
+       
+    def test_parse_filter_10(self):
+        """Verify parse_filter() handles hyphen characters.
+        """
+        filter = "gene.Notes LIKE 'MerR-like%'"
+        parsed_filter = parsing.parse_filter(filter)
+        
+        self.assertTrue("MerR-like%" in parsed_filter[3])
 
     @patch("pdm_utils.functions.parsing.parse_filter")
     def test_create_filter_key_1(self, parse_filter_mock):

@@ -142,12 +142,14 @@ def parse_filter(unparsed_filter):
     :rtype: list[str]
     """
     filter_format = re.compile(" *\w+\.\w+ *([=<>!]+ *| +LIKE +| +IS NOT +) *"
-                               "([\w\W]+|'[ \w\W]*') *")
+                               "([\w\d\-_%]+|'[ \w\d,\-_%]*') *")
     in_format = re.compile(" *\w+\.\w+ *( +IN +| +NOT IN +)+"
-                           "\(( *[\w\W]+ *,{1} *| *'[ \w\W]' *,{1} *)*"
-                           "( *[\w\W]+ *| *'[ \w\W]' *])\)")
+                           "\(( *[\w\d\-_%]+ *,{1} *| *'[ \w\d,\-_%]*' *,{1} *)*"
+                           "( *[\w\d\-_%]+ *| *'[ \w\d,\-_%]*' *)\)")
 
-    quote_value_format = re.compile("('[ \w\W]*')")
+    value_format = re.compile("([\w\d\-_%]+|'[ \w\d,\-_%]*')")
+    quote_value_format = re.compile("('[ \w\d,\-_%]*')")
+    whitespace = re.compile(" +")
 
     if not re.match(filter_format, unparsed_filter) is None:
         operators = re.compile("( *[=<>!]+ *| +LIKE +| +IS NOT +)")
@@ -175,19 +177,21 @@ def parse_filter(unparsed_filter):
         parenthesized = operator_split[2]
         parenthesized = parenthesized.replace("(", "")
         parenthesized = parenthesized.replace(")", "")
-        parenthesized = re.split(quote_value_format, parenthesized)
+        parenthesized = re.split(value_format, parenthesized)
 
         in_values = []
         for value in parenthesized:
             if not re.match(quote_value_format, value) is None:
                 value = value.replace("'", "")
                 in_values.append(parse_out_ends(value))
-            else:
-                quoteless_values = value.split(",")        
-                for quoteless_value in quoteless_values:
-                    in_values.append(parse_out_ends(quoteless_value))
+            else: 
+                value = value.replace(",", "")        
+                if value == "" or not re.match(whitespace, value) is None:
+                    continue
+                in_values.append(parse_out_ends(value))
 
         operator_split[2] = in_values
+        #print(in_values)
         parsed_filter = parsed_column + operator_split[1:]
 
     else:
