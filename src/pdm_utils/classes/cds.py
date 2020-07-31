@@ -548,7 +548,7 @@ class Cds:
 
         strand = basic.reformat_strand(self.orientation, "numeric")
 
-        self.seqfeature = self.create_seqfeature(type, new_start, new_stop, 
+        self.seqfeature = self.create_seqfeature(type, new_start, new_stop,
                                                                   strand)
 
     def create_seqfeature(self, type, start, stop, strand):
@@ -594,7 +594,7 @@ class Cds:
         elif type == "Protein":
             qualifiers["product"] = [product]
         elif type == "gene":
-           qualifiers["gene"] = [self.name] 
+           qualifiers["gene"] = [self.name]
            qualifiers["locus_tag"] = [self.locus_tag]
 
         return qualifiers
@@ -662,7 +662,7 @@ class Cds:
         else:
             result = f"'{attribute}' is not a valid attribute to be evaluated."
             status = "untested"
-        definition = f"Check the value of the '{attribute}' attribute for {self.id}."
+        definition = f"Check the value of the '{attribute}' attribute for {self.locus_tag} ({self.id})."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
@@ -709,7 +709,7 @@ class Cds:
         else:
             result = f"'{attribute}' is not a valid attribute to be evaluated."
             status = "untested"
-        definition = f"Check the magnitude of the '{attribute}' attribute for {self.id}."
+        definition = f"Check the magnitude of the '{attribute}' attribute for {self.locus_tag} ({self.id})."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
@@ -741,7 +741,7 @@ class Cds:
         else:
             result = result + "and sequence are correct."
             status = success
-        definition = f"Check that {self.id} contains the expected translation."
+        definition = f"Check that {self.locus_tag} ({self.id}) contains the expected translation."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
@@ -768,7 +768,7 @@ class Cds:
             result = result + "no unexpected amino acids."
             status = success
 
-        definition = f"Check if all amino acids in the translation are expected for {self.id}."
+        definition = f"Check if all amino acids in the translation are expected for {self.locus_tag} ({self.id})."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
@@ -798,7 +798,7 @@ class Cds:
         else:
             result = result + "incorrectly."
             status = fail
-        definition = f"Check if the orientation is set correctly for {self.id}."
+        definition = f"Check if the orientation is set correctly for {self.locus_tag} ({self.id})."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
@@ -858,7 +858,7 @@ class Cds:
         else:
             result = result + "not structured correctly. " + " ".join(results)
             status = fail
-        definition = f"Check if the locus_tag qualifier is structured correctly for {self.id}."
+        definition = f"Check if the locus_tag qualifier is structured correctly for {self.locus_tag} ({self.id})."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
@@ -884,7 +884,7 @@ class Cds:
         else:
             result = result + "does not contain an integer, which is not expected."
             status = fail
-        definition = f"Check if the gene qualifier contains an integer for {self.id}."
+        definition = f"Check if the gene qualifier contains an integer for {self.locus_tag} ({self.id})."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
@@ -907,7 +907,7 @@ class Cds:
         else:
             result = result + "not consistent."
             status = fail
-        definition = f"Check if the gene and locus_tag numbers are consistent for {self.id}."
+        definition = f"Check if the gene and locus_tag numbers are consistent for {self.locus_tag} ({self.id})."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
@@ -961,7 +961,7 @@ class Cds:
             result = result + "as expected."
             status = success
         definition = ("Check if there is a discrepancy "
-                      f"between description fields for {self.id}.")
+                      f"between description fields for {self.locus_tag} ({self.id}).")
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
@@ -1000,7 +1000,7 @@ class Cds:
         else:
             result = f"The '{attribute}' field is not correct."
             status = fail
-        definition = f"Check if the '{attribute}' field contains generic data for {self.id}."
+        definition = f"Check if the '{attribute}' field contains generic data for {self.locus_tag} ({self.id})."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 

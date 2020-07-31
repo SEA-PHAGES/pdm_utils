@@ -435,7 +435,7 @@ class Trna:
         # SeqFeature orientation is (-1, 1) instead of ("R", "F")
         strand = basic.reformat_strand(self.orientation, "numeric")
 
-        self.seqfeature = self.create_seqfeature(type, start, stop, strand) 
+        self.seqfeature = self.create_seqfeature(type, start, stop, strand)
 
     def create_seqfeature(self, type, start, stop, strand):
         # Standard genes will have start < stop
@@ -669,7 +669,7 @@ class Trna:
             status = "untested"
 
         definition = f"Check the value of the '{attribute}' attribute for " \
-                     f"{self.id}."
+                     f"{self.locus_tag} ({self.id})."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
@@ -724,7 +724,7 @@ class Trna:
             status = "untested"
 
         definition = f"Check the magnitude of the '{attribute}' attribute " \
-                     f"for {self.id}."
+                     f"for {self.locus_tag} ({self.id})."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
@@ -776,7 +776,7 @@ class Trna:
             print(f"Invalid tRNA validation source in ({self.sources}).")
 
         definition = f"Check that there is bioinformatic support for the " \
-                     f"existence of {self.id}."
+                     f"existence of {self.locus_tag} ({self.id})."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
@@ -811,7 +811,7 @@ class Trna:
             result += "incorrectly."
             status = fail
 
-        definition = f"Check if the orientation is set correctly for {self.id}."
+        definition = f"Check if the orientation is set correctly for {self.locus_tag} ({self.id})."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
@@ -888,7 +888,7 @@ class Trna:
             result += "is at odds with expectations (no tRNA)."
             status = fail
 
-        definition = f"Check whether the annotated orientation for {self.id}" \
+        definition = f"Check whether the annotated orientation for {self.locus_tag} ({self.id})" \
                      f" matches the Aragorn/tRNAscan-SE prediction(s)."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
@@ -919,7 +919,7 @@ class Trna:
             status = fail
 
         definition = f"Check that the annotated amino acid is in the allowed" \
-                     f" set for {self.id}."
+                     f" set for {self.locus_tag} ({self.id})."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
@@ -1022,7 +1022,7 @@ class Trna:
 
         definition = f"Check that the annotated amino acid is consistent " \
                      f"with the prediction(s) made by Aragorn and/or " \
-                     f"tRNAscan-SE for {self.id}."
+                     f"tRNAscan-SE for {self.locus_tag} ({self.id})."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
@@ -1065,7 +1065,7 @@ class Trna:
             result += "invalid."
             status = fail
 
-        definition = f"Check that the anticodon is valid for {self.id}."
+        definition = f"Check that the anticodon is valid for {self.locus_tag} ({self.id})."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
@@ -1134,7 +1134,7 @@ class Trna:
             status = fail
 
         definition = f"Check that the annotated anticodon agrees with the " \
-                     f"Aragorn or tRNAscan-SE anticodon for {self.id}."
+                     f"Aragorn or tRNAscan-SE anticodon for {self.locus_tag} ({self.id})."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
@@ -1194,7 +1194,7 @@ class Trna:
         else:
             result = result + "not structured correctly. " + " ".join(results)
             status = fail
-        definition = f"Check if the locus_tag qualifier is structured correctly for {self.id}."
+        definition = f"Check if the locus_tag qualifier is structured correctly for {self.locus_tag} ({self.id})."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
@@ -1228,7 +1228,7 @@ class Trna:
             status = fail
 
         definition = f"Check if the gene qualifier contains an integer for " \
-                     f"{self.id}."
+                     f"{self.locus_tag}({self.id})."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
@@ -1259,7 +1259,7 @@ class Trna:
             status = fail
 
         definition = f"Check if the gene and locus_tag numbers are " \
-                     f"consistent for {self.id}."
+                     f"consistent for {self.locus_tag} ({self.id})."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
@@ -1291,7 +1291,7 @@ class Trna:
             status = fail
 
         definition = f"Check if the tRNA length is in the expected range " \
-                     f"for {self.id}."
+                     f"for {self.locus_tag} ({self.id})."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
@@ -1378,7 +1378,7 @@ class Trna:
         self.structure = structure
 
         definition = f"Check if the tRNA coordinates appear to match the " \
-                     f"Aragorn or tRNAscan-SE prediction(s) for {self.id}."
+                     f"Aragorn or tRNAscan-SE prediction(s) for {self.locus_tag} ({self.id})."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
@@ -1418,7 +1418,7 @@ class Trna:
             status = "unchecked"
 
         definition = f"Check that the correct terminal nucleotide(s) are " \
-                     f"present for {self.id}."
+                     f"present for {self.locus_tag} ({self.id})."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
@@ -1469,7 +1469,7 @@ class Trna:
             status = fail
 
         definition = f"Check that the product is formatted properly for " \
-                     f"{self.id}."
+                     f"{self.locus_tag} ({self.id})."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
@@ -1514,6 +1514,6 @@ class Trna:
             status = "unchecked"
 
         definition = f"Check that the note is formatted properly for " \
-                     f"{self.id}."
+                     f"{self.locus_tag} ({self.id})."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
