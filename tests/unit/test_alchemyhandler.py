@@ -410,6 +410,7 @@ class TestAlchemyHandler(unittest.TestCase):
         """
         self.alchemist.has_database = True
         self.alchemist.connected = True
+        self.alchemist.connected_database = True
         
         self.alchemist.build_metadata()
 
