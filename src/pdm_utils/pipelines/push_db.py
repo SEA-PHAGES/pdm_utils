@@ -17,17 +17,17 @@ def main(unparsed_args_list):
     local_file = args.file
 
     # Create config object with data obtained from file and/or defaults.
-    # For server host and dir, give priority to config file over command line.
-    # But this is arbitrary.
+    # For server host and dir, give priority to command line over config file.
+    # So that overriding "default" option is easier
     config = configfile.build_complete_config(args.config_file)
     server_host = config["upload_server"]["host"]
     remote_dir = config["upload_server"]["dest"]
     user = config["upload_server"]["user"]
     pwd = config["upload_server"]["password"]
 
-    if server_host is None:
+    if server_host is None or args.server_host is not None:
         server_host = args.server_host
-    if remote_dir is None:
+    if remote_dir is None or args.remote_directory is not None:
         remote_dir = args.remote_directory
 
     if server_host is None or remote_dir is None:
@@ -42,21 +42,18 @@ def main(unparsed_args_list):
         print("There are no files to upload.")
         status = False
 
-    if status == True:
+    if status is True:
         server.set_log_file(str(args.log_file))
         transport = server.get_transport(server_host)
         if transport is None:
             status = False
 
-    if status == True:
-        # TODO attempts should be higher, but there is a bug in the code,
-        # such that if the incorrect user/pwd is provided, it won't let you
-        # try to connect again with a new user/pwd.
+    if status is True:
         sftp = server.setup_sftp_conn(transport, user, pwd, attempts=1)
         if sftp is None:
             status = False
 
-    if status == True:
+    if status is True:
         success, fail = upload(sftp, remote_dir, file_list)
         sftp.close()
         transport.close()
@@ -101,8 +98,6 @@ def parse_args(unparsed_args_list):
     return args
 
 
-
-
 # TODO test.
 def get_files(directory, file, ignore_set):
     """Get the list of file(s) that need to be uploaded."""
@@ -119,7 +114,6 @@ def get_files(directory, file, ignore_set):
         file_list.append(file)
 
     return file_list
-
 
 
 # TODO test.
