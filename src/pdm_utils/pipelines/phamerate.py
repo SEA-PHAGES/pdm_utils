@@ -75,7 +75,7 @@ def setup_argparser():
                                help="number of threads to use")
     mmseqs_parser.add_argument("--tmp-dir", type=str, default="/tmp/phamerate",
                                help="temporary directory for file I/O")
-    mmseqs_parser.add_argument("-c", "--config_file", type=str, default=None,
+    mmseqs_parser.add_argument("-c", "--config_file", type=pathlib.Path, default=None,
                                help="path to file containing login details")
     mmseqs_parser.formatter_class = argparse.RawTextHelpFormatter
 
@@ -95,7 +95,7 @@ def setup_argparser():
                               help="blastp instances to run in parallel")
     blast_parser.add_argument("--tmp-dir", type=str, default="/tmp/phamerate",
                               help="temporary directory for file I/O")
-    blast_parser.add_argument("-c", "--config_file", type=str, default=None,
+    blast_parser.add_argument("-c", "--config_file", type=pathlib.Path, default=None,
                               help="path to file containing login details")
     blast_parser.formatter_class = argparse.RawTextHelpFormatter
     return parser
