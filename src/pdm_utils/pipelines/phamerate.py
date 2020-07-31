@@ -145,7 +145,7 @@ def main(argument_list):
 
     # Initialize SQLAlchemy engine with database provided at CLI
     alchemist = AlchemyHandler(database=args["db"],
-                               username=mysql_creds["username"],
+                               username=mysql_creds["user"],
                                password=mysql_creds["password"])
     alchemist.connect(login_attempts=5, pipeline=True)
     engine = alchemist.engine
