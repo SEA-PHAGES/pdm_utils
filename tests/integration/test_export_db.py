@@ -175,7 +175,7 @@ class TestFileExport(unittest.TestCase):
         export_db.execute_export(self.alchemist, self.test_dir,
                                  self.export_test_dir.name, "csv",
                                  sort=sort_columns)
-    
+
     def test_execute_export_8(self):
         """Verify execute_export() concatenate parameter functions as expected.
         """
@@ -183,11 +183,11 @@ class TestFileExport(unittest.TestCase):
                                  self.export_test_dir.name, "fasta",
                                  concatenate=True)
 
-        fasta_path = self.test_dir.joinpath(
+        fasta_path = self.export_test_dir.joinpath(
                                         f"{self.export_test_dir.name}.fasta")
 
+        self.assertTrue(self.export_test_dir.is_dir())
         self.assertTrue(fasta_path.is_file())
-        self.assertFalse(self.export_test_dir.is_file())
 
     def test_execute_export_9(self):
         """Verify execute_export() include_columns functions as expected.
@@ -262,6 +262,33 @@ class TestFileExport(unittest.TestCase):
                 self.assertTrue(flat_file_path.is_file())
 
                 shutil.rmtree(str(self.export_test_dir))
- 
+
+    def test_execute_export_13(self):
+        """Verify execute_export() dump parameter functions as expected.
+        """
+        export_db.execute_export(self.alchemist, self.test_dir,
+                                 self.export_test_dir.name, "fasta",
+                                 concatenate=True, dump=True)
+
+        fasta_path = self.test_dir.joinpath(
+                                        f"{self.export_test_dir.name}.fasta")
+
+        self.assertFalse(self.export_test_dir.is_dir())
+        self.assertTrue(fasta_path.is_file())
+
+    def test_execute_export_14(self): 
+        """Verify execute_export() db_name parameter functions as expected.
+        """
+        export_db.execute_export(self.alchemist, self.test_dir,
+                                 self.export_test_dir.name, "sql",
+                                 db_name="Actino_Draft")
+
+        sql_path = self.export_test_dir.joinpath("Actino_Draft.sql")
+        vsn_path = self.export_test_dir.joinpath("Actino_Draft.version")
+
+        self.assertTrue(sql_path.is_file())
+        self.assertTrue(vsn_path.is_file())
+
+
 if __name__ == "__main__":
     unittest.main()

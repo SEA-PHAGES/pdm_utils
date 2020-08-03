@@ -105,8 +105,8 @@ def main(unparsed_args_list):
                        exclude_columns=args.exclude_columns,
                        sequence_columns=args.sequence_columns,
                        raw_bytes=args.raw_bytes,
-                       concatenate=args.concatenate,
-                       verbose=args.verbose)
+                       concatenate=args.concatenate, db_name=args.db_name,
+                       verbose=args.verbose, dump=args.dump)
     else:
         pass
 
@@ -129,6 +129,10 @@ def parse_export(unparsed_args_list):
         Export option that enables use of a config file for sourcing credentials
             Follow selection argument with the path to the config file
             specifying MySQL and NCBI credentials.
+        """
+    DUMP_HELP = """
+        Export option that dumps exported files directly to the desired
+        working directory.
         """
     VERBOSE_HELP = """
         Export option that enables progress print statements.
@@ -175,6 +179,10 @@ def parse_export(unparsed_args_list):
                 {Table}.{Column}={Value}
         """
 
+    DB_NAME_HELP = """
+        MySQL export option to allow renaming of the exported database.
+            Follow selection argument with the name of the desired database.
+        """
 
     CONCATENATE_HELP = """
         SeqRecord export option to toggle concatenation of files.
@@ -224,7 +232,8 @@ def parse_export(unparsed_args_list):
                                help=FOLDER_PATH_HELP)
     optional_parser.add_argument("-v", "--verbose", action="store_true",
                                help=VERBOSE_HELP)
-
+    optional_parser.add_argument("-d", "--dump", action="store_true",
+                               help=DUMP_HELP)
 
     if initial.pipeline in FILTERABLE_PIPELINES:
         table_choices = dict.fromkeys(BIOPYTHON_PIPELINES, FLAT_FILE_TABLES)
@@ -260,6 +269,9 @@ def parse_export(unparsed_args_list):
                                 help=EXCLUDE_COLUMNS_HELP)
             optional_parser.add_argument("-rb", "--raw_bytes",
                                 help=RAW_BYTES_HELP, action="store_true")
+    elif initial.pipeline == "sql":
+        optional_parser.add_argument("-dbm", "--db_name", type=str,
+                                help=DB_NAME_HELP)
 
     optional_parser.set_defaults(pipeline=initial.pipeline,
                                  database=initial.database,
@@ -270,18 +282,18 @@ def parse_export(unparsed_args_list):
                                  filters="", groups=[], sort=[],
                                  include_columns=[], exclude_columns=[],
                                  sequence_columns=False, concatenate=False,
-                                 raw_bytes=False)
+                                 raw_bytes=False, db_name=None)
 
     parsed_args = optional_parser.parse_args(unparsed_args_list[4:])
 
     return parsed_args
 
 def execute_export(alchemist, folder_path, folder_name, pipeline,
-                        values=None, verbose=False, table=DEFAULT_TABLE,
-                        filters="", groups=[], sort=[],
+                        values=None, verbose=False, dump=False,
+                        table=DEFAULT_TABLE, filters="", groups=[], sort=[],
                         include_columns=[], exclude_columns=[],
                         sequence_columns=False, raw_bytes=False,
-                        concatenate=False):
+                        concatenate=False, db_name=None):
     """Executes the entirety of the file export pipeline.
 
     :param alchemist: A connected and fully built AlchemyHandler object.
@@ -296,6 +308,8 @@ def execute_export(alchemist, folder_path, folder_name, pipeline,
     :type values: list[str]
     :param verbose: A boolean value to toggle progress print statements.
     :type verbose: bool
+    :param dump: A boolean value to toggle dump in current working dir.
+    :type dump: bool
     :param table: MySQL table name.
     :type table: str
     :param filters: A list of lists with filter values, grouped by ORs.
@@ -323,7 +337,7 @@ def execute_export(alchemist, folder_path, folder_name, pipeline,
         csv_columns = filter_csv_columns(alchemist, table,
                                       include_columns=include_columns,
                                       exclude_columns=exclude_columns,
-                                      sequence_columns=sequence_columns)
+                                          sequence_columns=sequence_columns)
 
     if pipeline in FILTERABLE_PIPELINES: 
         db_filter = pipelines_basic.build_filter(alchemist, table, filters, 
@@ -339,16 +353,20 @@ def execute_export(alchemist, folder_path, folder_name, pipeline,
                       f"{', '.join(sort)}")
                 sys.exit(1)
 
-    if verbose:
-        print("Creating export folder...")
-    export_path = folder_path.joinpath(folder_name)
-    export_path = basic.make_new_dir(folder_path, export_path, attempt=50)
+    if not dump:
+        if verbose:
+            print("Creating export folder...")
+        export_path = folder_path.joinpath(folder_name)
+        export_path = basic.make_new_dir(folder_path, export_path, attempt=50)
+    else:
+        export_path = folder_path
  
     data_cache = {}
     if pipeline == "sql":
         if verbose:
             print("Writing SQL database file...")
-        fileio.write_database(alchemist, db_version["Version"], export_path)
+        fileio.write_database(alchemist, db_version["Version"], export_path,
+                                                                db_name=db_name)
     elif pipeline in FILTERABLE_PIPELINES:
         conditionals_map = {}
         pipelines_basic.build_groups_map(db_filter, export_path, 
@@ -365,6 +383,15 @@ def execute_export(alchemist, folder_path, folder_name, pipeline,
 
             conditionals = conditionals_map[mapped_path]
             db_filter.values = db_filter.build_values(where=conditionals)
+          
+            export_name = None
+            if dump:
+                if mapped_path != export_path:
+                    export_name = mapped_path.name
+                    mapped_path = mapped_path.parent
+                    mapped_path.rmdir()
+                else:
+                    export_name = folder_name
 
             if db_filter.hits() == 0:
                 print(f"No database entries received from {table} "
@@ -379,18 +406,22 @@ def execute_export(alchemist, folder_path, folder_name, pipeline,
                 execute_ffx_export(alchemist, mapped_path, export_path,
                                    db_filter.values, pipeline, db_version,
                                    table, concatenate=concatenate,
-                                   data_cache=data_cache, verbose=verbose)
+                                   data_cache=data_cache, 
+                                   export_name=export_name,
+                                   verbose=verbose, dump=dump)
             elif pipeline == "csv":
                 execute_csv_export(db_filter, mapped_path, export_path,
                                    csv_columns, table, raw_bytes=raw_bytes,
-                                   data_cache=data_cache, verbose=verbose)
+                                   data_cache=data_cache, 
+                                   verbose=verbose, dump=dump)
     else:
         print("Unrecognized export pipeline, aborting export")
         sys.exit(1)
 
 def execute_csv_export(db_filter, export_path, folder_path, columns, csv_name,
                                         data_cache=None, sort=[], 
-                                        raw_bytes=False, verbose=False):
+                                        raw_bytes=False, 
+                                        verbose=False, dump=False):
     """Executes csv export of a MySQL database table with select columns.
 
     :param db_filter: A connected and fully built Filter object.
@@ -409,6 +440,8 @@ def execute_csv_export(db_filter, export_path, folder_path, columns, csv_name,
     :type values: list[str]
     :param verbose: A boolean value to toggle progress print statements.
     :type verbose: bool
+    :param dump: A boolean value to toggle dump in current working dir.
+    :type dump: bool
     """
     if data_cache is None:
         data_cache = {}
@@ -429,9 +462,13 @@ def execute_csv_export(db_filter, export_path, folder_path, columns, csv_name,
 
     if len(results) == 0:
         print(f"No database entries received for {csv_name}.")
-        export_path.rmdir()
-
+        if not dump:
+            export_path.rmdir()
     else:
+        if dump:
+            if export_path != folder_path:
+                export_path.rmdir()
+                export_path = export_path.parent
         if verbose:
             print(f"...Writing csv {csv_name}.csv in '{export_path.name}'...")
 
@@ -441,8 +478,9 @@ def execute_csv_export(db_filter, export_path, folder_path, columns, csv_name,
 
 def execute_ffx_export(alchemist, export_path, folder_path, values,
                        file_format, db_version, table, concatenate=False, 
-                       data_cache=None, verbose=False):
-    """Executes SeqRecord export of the compilation of data from a MySQL emtry.
+                       data_cache=None, verbose=False, dump=False,
+                       export_name=None):
+    """Executes SeqRecord export of the compilation of data from a MySQL entry.
 
     :param alchemist: A connected and fully build AlchemyHandler object.
     :type alchemist: AlchemyHandler
@@ -469,9 +507,12 @@ def execute_ffx_export(alchemist, export_path, folder_path, values,
     """
     if data_cache is None:
         data_cache = {}
+  
+    if export_name is None:
+        export_name = export_path.name
 
     if verbose:
-        print(f"Retrieving {export_path.name} data...")
+        print(f"Retrieving {export_name} data...")
 
     if table == "phage":
         seqrecords = get_genome_seqrecords(alchemist, values,
@@ -494,6 +535,7 @@ def execute_ffx_export(alchemist, export_path, folder_path, values,
         for record in seqrecords:
             append_database_version(record, db_version)
         fileio.write_seqrecord(seqrecords, file_format, export_path, 
+                                                        export_name=export_name,
                                                         verbose=verbose,
                                                         concatenate=concatenate)
 

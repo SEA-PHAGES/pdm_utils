@@ -35,7 +35,10 @@ class TestExportMain(unittest.TestCase):
         self.mock_input = Mock()
         self.mock_values = Mock()
         self.mock_verbose = Mock() 
+        self.mock_dump = Mock()
         self.mock_config = Mock()
+
+        self.mock_db_name = Mock()
 
         self.mock_table = Mock()
         self.mock_filters = Mock()
@@ -62,7 +65,12 @@ class TestExportMain(unittest.TestCase):
                             PropertyMock(return_value=self.mock_input)
         type(self.mock_args).verbose = \
                             PropertyMock(return_value=self.mock_verbose)
+        type(self.mock_args).dump = \
+                            PropertyMock(return_value=self.mock_dump)
 
+        type(self.mock_args).db_name = \
+                            PropertyMock(return_value=self.mock_db_name)
+    
         type(self.mock_args).table = \
                             PropertyMock(return_value=self.mock_table)
         type(self.mock_args).filters = \
@@ -126,7 +134,9 @@ class TestExportMain(unittest.TestCase):
                                     raw_bytes=self.mock_raw_bytes,
                                     sequence_columns=self.mock_sequence_columns,
                                     concatenate=self.mock_concatenate,
-                                    verbose=self.mock_verbose)
+                                    verbose=self.mock_verbose,
+                                    dump=self.mock_dump,
+                                    db_name=self.mock_db_name)
 
 
 
