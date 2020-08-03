@@ -194,7 +194,7 @@ def send_successful_emails(username, password, phage_ids):
         # Get submitter's email address
         reply_to = get_reply_to(username, password, phage_id)
         # If email address retrieved, send automated email
-        if reply_to is not None:
+        if reply_to is not None and reply_to != "":
             to_addr = list({reply_to, "djs@pitt.edu",
                             "phamerator.qc@gmail.com"})
             send_to_submitter(username, password, to_addr, phage_id, status)
@@ -227,7 +227,7 @@ def send_failed_emails(username, password, phage_ids):
         # Get submitter's email address
         reply_to = get_reply_to(username, password, phage_id)
         # If email address retrieved, send automated email
-        if reply_to is not None:
+        if reply_to is not None and reply_to != "":
             to_addr = list({reply_to, "djs@pitt.edu",
                             "phamerator.qc@gmail.com"})
             attach = phage_ids[phage_id]
