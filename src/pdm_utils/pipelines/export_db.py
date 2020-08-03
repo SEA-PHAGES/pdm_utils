@@ -270,7 +270,7 @@ def parse_export(unparsed_args_list):
             optional_parser.add_argument("-rb", "--raw_bytes",
                                 help=RAW_BYTES_HELP, action="store_true")
     elif initial.pipeline == "sql":
-        optional_parser.add_argument("-dbm", "--db_name", type=str,
+        optional_parser.add_argument("-n", "--db_name", type=str,
                                 help=DB_NAME_HELP)
 
     optional_parser.set_defaults(pipeline=initial.pipeline,

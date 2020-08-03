@@ -323,7 +323,6 @@ def parse_args(unparsed_args_list):
     schema_version_help = "Database schema version to which the database " \
                           "should be converted."
     config_file_help = "Path to the file containing user-specific login data."
-    interactive_help = "List of possible databases."
 
     # database optional for subparser a and required for b and c
 
@@ -347,8 +346,6 @@ def parse_args(unparsed_args_list):
                           help=output_folder_help)
     parser_a.add_argument("-d", "--download_only", action="store_true",
                           default=False, help=download_only_help)
-    parser_a.add_argument("-i", "--interactive", action="store_true",
-                          default=False, help=interactive_help)
 
     parser_b = subparsers.add_parser("file", help=file_help)
     parser_b.add_argument("database", type=str, help=database_help)
