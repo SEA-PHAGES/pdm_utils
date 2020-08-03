@@ -59,7 +59,7 @@ def get_submission_files():
             print("Cannot reach submission files link")
             return
 
-    # Unzip the file
+    # Unzip the file, with stdout suppressed
     command = f"unzip -qq {ZIP_FILE}"
     sp.check_call(shlex.split(command))
 
@@ -102,13 +102,13 @@ def get_reply_to(username, password, phage_id):
     status, message = server.login(username, password)
     if status != "OK":
         print(f"Could not log into {username} with the given password")
-        return
+        return None
 
     # Select the inbox
     status, message = server.select("INBOX")
     if status != "OK":
         print("Could not connect to inbox")
-        return
+        return None
 
     # Search the inbox for emails from no-reply@phagesdb.org AND with
     # phage_id in the subject line
@@ -116,21 +116,20 @@ def get_reply_to(username, password, phage_id):
     status, message = server.search(None, search)
     if status != "OK":
         print("Could not search the inbox")
-        return
+        return None
 
     # Get the index of the first hit
     indexes = message[0].decode("utf-8").split()
     if len(indexes) == 0:
         print("No emails match search criteria")
-        return
-    else:
-        fetch = indexes[0]
+        return None
+    fetch = indexes[0]
 
     # Fetch the email
     status, message = server.fetch(fetch, "(RFC822)")
     if status != "OK":
         print("Could not fetch the email")
-        return
+        return None
 
     # Convert the message to an email.message.Message object
     message = email.message_from_bytes(message[0][1])
@@ -195,7 +194,7 @@ def send_successful_emails(username, password, phage_ids):
         # Get submitter's email address
         reply_to = get_reply_to(username, password, phage_id)
         # If email address retrieved, send automated email
-        if reply_to != "":
+        if reply_to is not None:
             to_addr = list({reply_to, "djs@pitt.edu",
                             "phamerator.qc@gmail.com"})
             send_to_submitter(username, password, to_addr, phage_id, status)
@@ -228,7 +227,7 @@ def send_failed_emails(username, password, phage_ids):
         # Get submitter's email address
         reply_to = get_reply_to(username, password, phage_id)
         # If email address retrieved, send automated email
-        if reply_to != "":
+        if reply_to is not None:
             to_addr = list({reply_to, "djs@pitt.edu",
                             "phamerator.qc@gmail.com"})
             attach = phage_ids[phage_id]
@@ -303,13 +302,12 @@ def submit_to_genbank(username, password, to_addr, phage_ids):
         return
 
     phage_string = "\n"
-    for phage_id, submission_file in phage_ids.items():
+    while len(phage_ids.keys()) > 0:
+        phage_id, submission_file = phage_ids.popitem()
         if submission_file is not None:
             phage_string += f"{phage_id} - (attached)\n"
         else:
             phage_string += f"{phage_id} - (not attached)\n"
-            # Pop element out of dictionary so we don't try attaching None
-            phage_ids.pop(phage_id)
 
     # Build the email
     message = MIMEMultipart()
