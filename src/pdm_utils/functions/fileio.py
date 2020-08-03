@@ -121,7 +121,7 @@ def write_fasta(ids_seqs, infile_path):
 
     file_handle.close()
 
-def write_database(alchemist, version, export_path):
+def write_database(alchemist, version, export_path, db_name=None):
     """Output .sql file from the selected database.
 
     :param alchemist: A connected and fully built AlchemyHandler object.
@@ -131,14 +131,18 @@ def write_database(alchemist, version, export_path):
     :param export_path: Path to a valid dir for file creation.
     :type export_path: Path
     """
-    sql_path = export_path.joinpath(f"{alchemist.database}.sql")
+    if db_name is None:
+        db_name = alchemist.database
+
+    sql_path = export_path.joinpath(f"{db_name}.sql")
     os.system(f"mysqldump -u {alchemist.username} -p{alchemist.password} "
               f"--skip-comments {alchemist.database} > {str(sql_path)}")
-    version_path = sql_path.with_name(f"{alchemist.database}.version")
+    version_path = sql_path.with_name(f"{db_name}.version")
     version_path.touch()
     version_path.write_text(f"{version}")
 
-def write_seqrecord(seqrecord_list, file_format, export_path, concatenate=False,
+def write_seqrecord(seqrecord_list, file_format, export_path, export_name=None,
+                                                              concatenate=False,
                                                               verbose=False):
     """Outputs files with a particuar format from a SeqRecord list.
 
@@ -158,7 +162,10 @@ def write_seqrecord(seqrecord_list, file_format, export_path, concatenate=False,
 
     record_dictionary = {}
     if concatenate:
-        record_dictionary.update({export_path.name:seqrecord_list})
+        if export_name is None:
+            record_dictionary.update({export_path.name:seqrecord_list})
+        else:
+            record_dictionary.update({export_name:seqrecord_list})
     else:
         for record in seqrecord_list:
             record_dictionary.update({record.name:record})
@@ -167,11 +174,7 @@ def write_seqrecord(seqrecord_list, file_format, export_path, concatenate=False,
         if verbose:
             print(f"...Writing {record_name}...")
         file_name = f"{record_name}.{file_format}"
-        if concatenate:
-            file_path = export_path.parent.joinpath(file_name)
-            export_path.rmdir()
-        else:
-            file_path = export_path.joinpath(file_name)
+        file_path = export_path.joinpath(file_name)
 
         file_handle = file_path.open(mode='w')
         records = record_dictionary[record_name]
