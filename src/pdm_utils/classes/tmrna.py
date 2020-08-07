@@ -528,7 +528,7 @@ class Tmrna:
             status = "untested"
 
         definition = f"Check the value of the '{attribute}' attribute for " \
-                     f"{self.id}."
+                     f"{self.locus_tag}({self.id})."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
@@ -583,7 +583,7 @@ class Tmrna:
             status = "untested"
 
         definition = f"Check the magnitude of the '{attribute}' attribute " \
-                     f"for {self.id}."
+                     f"for {self.locus_tag} ({self.id})."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
@@ -617,7 +617,7 @@ class Tmrna:
             result += "incorrectly."
             status = fail
 
-        definition = f"Check if the orientation is set correctly for {self.id}."
+        definition = f"Check if the orientation is set correctly for {self.locus_tag} ({self.id})."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
@@ -670,7 +670,7 @@ class Tmrna:
             result += "is at odds with expectations (NO tmRNA HERE)."
             status = fail
 
-        definition = f"Check whether the annotated orientation for {self.id}" \
+        definition = f"Check whether the annotated orientation for {self.locus_tag} ({self.id})" \
                      f" matches the Aragorn prediction."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
@@ -732,7 +732,7 @@ class Tmrna:
         else:
             result = result + "not structured correctly. " + " ".join(results)
             status = fail
-        definition = f"Check if the locus_tag qualifier is structured correctly for {self.id}."
+        definition = f"Check if the locus_tag qualifier is structured correctly for {self.locus_tag} ({self.id})."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
@@ -766,7 +766,7 @@ class Tmrna:
             status = fail
 
         definition = f"Check if the gene qualifier contains an integer for " \
-                     f"{self.id}."
+                     f"{self.locus_tag} ({self.id})."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
@@ -796,7 +796,7 @@ class Tmrna:
             status = fail
 
         definition = f"Check if the gene and locus_tag numbers are " \
-                     f"consistent for {self.id}."
+                     f"consistent for {self.locus_tag} ({self.id})."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
@@ -843,7 +843,7 @@ class Tmrna:
             status = "unchecked"
 
         definition = f"Check that the peptide tag appears to be structured " \
-                     f"correctly and fits the protein alphabet for {self.id}."
+                     f"correctly and fits the protein alphabet for {self.locus_tag} ({self.id})."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
@@ -881,7 +881,7 @@ class Tmrna:
             status = "unchecked"
 
         definition = f"Check that the annotated peptide tag matches the " \
-                     f"Aragorn output for {self.id}."
+                     f"Aragorn output for {self.locus_tag} {(self.id)}."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
@@ -907,6 +907,6 @@ class Tmrna:
             result += "unexpected."
             status = fail
 
-        definition = f"Make sure there is only one region for {self.id}."
+        definition = f"Make sure there is only one region for {self.locus_tag} ({self.id})."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)

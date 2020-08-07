@@ -1656,7 +1656,7 @@ def check_cds(cds_ftr, eval_flags, description_field="product"):
     :param description_field: Description field to check against.
     :type description_field: str
     """
-    logger.info(f"Checking CDS feature: {cds_ftr.id}.")
+    logger.info(f"Checking CDS feature: {cds_ftr.locus_tag} ({cds_ftr.id}).")
 
     cds_ftr.check_attribute("translation", {constants.EMPTY_PROTEIN_SEQ},
                             expect=False, eval_id="CDS-EVAL-003",
@@ -1802,7 +1802,7 @@ def check_trna(trna_ftr, eval_flags):
     :param eval_flags: Dictionary of boolean evaluation flags.
     :type eval_flags: dicts
     """
-    logger.info(f"Checking tRNA feature: {trna_ftr.id}.")
+    logger.info(f"Checking tRNA feature: {trna_ftr.locus_tag} ({trna_ftr.id}).")
 
     # Start can be 0 since coordinate_format = 0_half_open
     trna_ftr.check_magnitude("start", ">", -1, eval_id="TRNA-EVAL-001",
@@ -1884,7 +1884,7 @@ def check_tmrna(tmrna_ftr, eval_flags):
     :param eval_flags: Dictionary of boolean evaluation flags.
     :type eval_flags: dicts
     """
-    logger.info(f"Checking tRNA feature: {tmrna_ftr.id}.")
+    logger.info(f"Checking tRNA feature: {tmrna_ftr.locus_tag} ({tmrna_ftr.id}).")
 
     # Start can be 0 since coordinate_format = 0_half_open
     tmrna_ftr.check_magnitude("start", ">", -1, eval_id="TMRNA-EVAL-001",
