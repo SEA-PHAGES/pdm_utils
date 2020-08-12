@@ -54,8 +54,6 @@ class AlchemyHandler:
         if database != None:
             self.has_database = True
 
-
-
 #-----------------------------------------------------------------------------
 #ALCHEMYHANDLER PROPERTIES
 #-----------------------------------------------------------------------------
@@ -166,20 +164,50 @@ class AlchemyHandler:
 
     @engine.setter
     def engine(self, engine):
+        self.clear()
+
         if engine is None:
             self.connected = False
             self._engine = None
-            self.clear()
             return
 
         if not isinstance(engine, Engine):
             raise TypeError
 
-        self.clear()
         self._engine = engine
+        self.extract_engine_credentials(engine)
         self.get_mysql_dbs()
-        self.connected = True
 
+    @property
+    def URI(self):
+        """Returns a SQLAlchemy URI string from stored credentials.
+        """
+        if not self.connected:
+            return ""
+
+        return self.construct_engine_string(username=self._username,
+                                            password=self._password,
+                                            database=self._database)
+
+    @URI.setter
+    def URI(self, URI): 
+        self.clear()
+
+        if URI is None:
+            self._engine = None
+            self._username = None
+            self._password = None
+            self._database = None
+            self.has_credentials = False
+            self.has_database = False
+            return 
+
+        if not isinstance(URI, str):
+            raise TypeError
+
+        self._engine = create_engine(URI)
+        self.extract_engine_credentials(self._engine)
+    
     @property
     def session(self):
         """Returns the AlchemyHandler's stored session object.
@@ -258,6 +286,21 @@ class AlchemyHandler:
 
         self.has_credentials = True
         self.connected = False
+
+    def extract_engine_credentials(self, engine):
+        """Extract username, password, and/or database from a SQLAlchemy engine.
+        """
+        url = engine.url 
+        self.connected = True
+
+        self._username = url.username
+        self._password = url.password
+        self.has_credentials = True
+
+        if url.database != "":
+            self._database = url.database
+            self.has_database = True
+            self.connected_database = True
 
     def validate_database(self):
         """Validate access to database using stored MySQL credentials.
@@ -385,10 +428,15 @@ class AlchemyHandler:
         :type password: str
         :param database: Name of the database to connect to.
         :type database: str
-        :returns: URL string to create SQLAlchemy engine.
+        :returns: URI string to create SQLAlchemy engine.
         :rtype: str
         """
-        engine_string = f"{db_type}+{driver}://{username}:{password}@localhost/{database}"
+        if driver != "":
+            driver = "+".join([db_type, driver])
+        else:
+            driver = db_type
+
+        engine_string = f"{driver}://{username}:{password}@localhost/{database}"
         return engine_string
 
     def get_mysql_dbs(self):

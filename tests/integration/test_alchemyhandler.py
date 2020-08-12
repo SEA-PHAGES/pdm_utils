@@ -4,6 +4,7 @@ from pathlib import Path
 from unittest.mock import patch, Mock, PropertyMock
 
 from networkx import Graph
+from sqlalchemy import create_engine
 from sqlalchemy import MetaData
 from sqlalchemy.engine.base import Engine
 from sqlalchemy.exc import OperationalError
@@ -129,6 +130,20 @@ class TestAlchemyHandler(unittest.TestCase):
 
         self.assertTrue(self.alchemist._session is None)
         self.assertTrue(self.alchemist._graph is None)
+
+    def test_engine_1(self):
+        """Verify AlchemyHandler extracts credentials from engine.
+        """
+        engine = create_engine(self.alchemist.construct_engine_string(
+                                                    username=user,
+                                                    password=pwd,
+                                                    database=db))
+
+        self.alchemist.engine = engine
+
+        self.assertEqual(self.alchemist.username, user)
+        self.assertEqual(self.alchemist.password, pwd)
+        self.assertEqual(self.alchemist.database, db)
 
     @classmethod
     def tearDownClass(self):

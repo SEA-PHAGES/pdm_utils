@@ -88,6 +88,23 @@ class TestAlchemyHandler(unittest.TestCase):
 
         clear_mock.assert_called()
 
+    def test_construct_engine_string_1(self):
+        """Verify construct_engine_string generates an expected URI.
+        """
+        URI = self.alchemist.construct_engine_string(username="pdm_user",
+                                                     password="pdm_pass")
+        self.assertEqual(URI, "mysql+pymysql://pdm_user:pdm_pass@localhost/")
+
+    def test_construct_engine_string_2(self):
+        """Verify construct_engine_string accepts use of different drivers.
+        """
+        URI = self.alchemist.construct_engine_string(driver="mysqlconnector",
+                                                    username="pdm_user",
+                                                    password="pdm_pass")
+
+        self.assertEqual(URI, 
+                         "mysql+mysqlconnector://pdm_user:pdm_pass@localhost/")
+
     def test_engine_1(self):
         """Verify engine property sets connected.
         """
@@ -101,13 +118,16 @@ class TestAlchemyHandler(unittest.TestCase):
         """
         with self.assertRaises(TypeError):
             self.alchemist.engine = "Test"
- 
+
     @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.build_engine")
     def test_engine_3(self, build_engine_mock):
         """Verify engine property calls build_engine() selectively.
         """
+        mock_engine = Mock()
+        build_engine_mock.return_value = mock_engine
+
         self.alchemist._engine = "Test"
-        self.alchemist.engine
+        self.assertEqual(self.alchemist.engine, "Test")
 
         build_engine_mock.assert_not_called()
 
@@ -115,6 +135,20 @@ class TestAlchemyHandler(unittest.TestCase):
         self.alchemist.engine
 
         build_engine_mock.assert_called()
+
+    @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler"
+                                            ".extract_engine_credentials")
+    @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.get_mysql_dbs")
+    def test_engine_4(self, get_mysql_dbs_mock, 
+                            extract_engine_credentials_mock):
+        """Verify call structure of engine property setter.
+        """
+        mock_engine = Mock(spec=Engine) 
+
+        self.alchemist.engine = mock_engine
+
+        get_mysql_dbs_mock.assert_called()
+        extract_engine_credentials_mock.assert_called_with(mock_engine)
 
     @patch("pdm_utils.classes.alchemyhandler.AlchemyHandler.build_metadata")
     def test_metadata_1(self, build_metadata_mock):
