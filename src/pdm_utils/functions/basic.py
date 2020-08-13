@@ -990,7 +990,7 @@ def set_path(path, kind=None, expect=True):
     else:
         return path
 
-def make_new_dir(output_dir, new_dir, attempt=1):
+def make_new_dir(output_dir, new_dir, attempt=1, mkdir=True):
     """Make a new directory.
 
     Checks to verify the new directory name is valid and does not
@@ -1020,7 +1020,8 @@ def make_new_dir(output_dir, new_dir, attempt=1):
         new_path = Path(output_dir, new_dir_mod)
         if not new_path.is_dir():
             valid = True
-            new_path.mkdir()
+            if mkdir:
+                new_path.mkdir()
         count += 1
     if not valid:
         return None

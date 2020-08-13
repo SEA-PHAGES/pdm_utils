@@ -27,7 +27,6 @@ from pdm_utils.functions import querying
 #GLOBAL VARIABLES
 #-----------------------------------------------------------------------------
 DEFAULT_FOLDER_NAME = f"{time.strftime('%Y%m%d')}_gb_records"
-DEFAULT_FOLDER_PATH = Path.cwd()
 FILTER_KEY = "phage"
 
 RECORD_FILE_TYPES = ["gb", "tbl"]
@@ -49,8 +48,10 @@ def main(unparsed_args_list):
     
     values = pipelines_basic.parse_value_input(args.input)
 
-    execute_get_gb_records(alchemist, args.folder_path, args.folder_name, 
-                           args.file_type, config=config,
+    execute_get_gb_records(alchemist, args.file_type,
+                           folder_path=args.folder_path, 
+                           folder_name=args.folder_name, 
+                           config=config,
                            values=values, verbose=args.verbose, 
                            filters=args.filters, groups=args.groups)
      
@@ -64,6 +65,10 @@ def parse_args(unparsed_args_list):
     """
     DATABASE_HELP = "Name of the MySQL database to export from."
 
+    FORCE_HELP = """
+        Get gb record option that aggresively creates and overwrites 
+        directories.
+        """
     CONFIG_FILE_HELP = """
         Get gb record option that enables use of a config file for sourcing
         credentials
@@ -123,7 +128,7 @@ def parse_args(unparsed_args_list):
     parser.add_argument("-m", "--folder_name",
                                 type=str, help=FOLDER_NAME_HELP)
     parser.add_argument("-o", "--folder_path", 
-                                type=pipelines_basic.convert_dir_path,
+                                type=Path,
                                 help=FOLDER_PATH_HELP)
     parser.add_argument("-v", "--verbose", action="store_true",
                                 help=VERBOSE_HELP)
@@ -144,16 +149,17 @@ def parse_args(unparsed_args_list):
 
     parser.set_defaults(file_type="gb",
                         folder_name=DEFAULT_FOLDER_NAME,
-                        folder_path=DEFAULT_FOLDER_PATH,
+                        folder_path=None,
                         verbose=False, input=[],
                         filters="", groups=[], sort=[])
 
     parsed_args = parser.parse_args(unparsed_args_list[2:])    
     return parsed_args
 
-def execute_get_gb_records(alchemist, folder_path, folder_name, file_type, 
+def execute_get_gb_records(alchemist, file_type, folder_path=None, 
+                           folder_name=DEFAULT_FOLDER_NAME, 
                            config=None, values=None, verbose=False, 
-                           filters="", groups=[]):
+                           force=False, filters="", groups=[]):
     """Executes the entirety of the get_gb_records pipeline
 
     :param alchemist: A connected and fully build AlchemyHandler object.
@@ -166,6 +172,8 @@ def execute_get_gb_records(alchemist, folder_path, folder_name, file_type,
     :type file_type: str
     :param config: ConfigParser object containing NCBI credentials.
     :type config: ConfigParser
+    :param force: A boolean to toggle aggresive building of directories.
+    :type force: bool
     :param values: List of values to filter database results.
     :type values: list[str]
     :param verbose: A boolean value to toggle progress print statemtns.
@@ -183,12 +191,15 @@ def execute_get_gb_records(alchemist, folder_path, folder_name, file_type,
                                                         values=values,
                                                         verbose=verbose) 
 
-    records_path = folder_path.joinpath(folder_name)
-    records_path = basic.make_new_dir(folder_path, records_path, attempt=50)
-
-    conditionals_map = {}
-    pipelines_basic.build_groups_map(db_filter, records_path, conditionals_map,
-                                     groups=groups, verbose=verbose)
+    if verbose:
+        print("Creating records folder...")
+    records_path = pipelines_basic.create_working_path(folder_path, folder_name,
+                                                       force=force)
+    
+    conditionals_map = pipelines_basic.build_groups_map(
+                                                db_filter, records_path, 
+                                                groups=groups, verbose=verbose,
+                                                force=force)
 
     values = db_filter.values
     for mapped_path in conditionals_map.keys():
@@ -209,6 +220,7 @@ def execute_get_gb_records(alchemist, folder_path, folder_name, file_type,
             if not (accession is None or accession == ""):
                 acc_id_dict[accession] = data_dict["PhageID"]
 
+        pipelines_basic.create_working_dir(mapped_path, force=force) 
         if len(acc_id_dict.keys()) > 0:
             ncbi_handle = ncbi.get_verified_data_handle(
                                                      mapped_path, acc_id_dict, 
@@ -218,9 +230,8 @@ def execute_get_gb_records(alchemist, folder_path, folder_name, file_type,
             copy_gb_data(ncbi_handle, acc_id_dict, mapped_path, file_type, 
                                                             verbose=verbose)
         else:
-            print("There are no records to retrieve.")
-            shutil.rmtree(records_path)
-            sys.exit(1)
+            print(f"There are no records to retrieve for '{mapped_path}'.")
+            continue
 
 
 

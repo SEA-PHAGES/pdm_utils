@@ -23,7 +23,6 @@ from pdm_utils.functions import mysqldb_basic
 #GLOBAL VARIABLES
 
 DEFAULT_FOLDER_NAME = f"{time.strftime('%Y%m%d')}_revise"
-DEFAULT_FOLDER_PATH = Path.cwd()
 
 BASE_CONDITIONALS = ("phage.Status = final AND "
                      "phage.AnnotationAuthor = 1 AND"
@@ -78,20 +77,24 @@ def main(unparsed_args_list):
     alchemist = pipelines_basic.build_alchemist(args.database, config=config)
 
     if args.pipeline == "local":
-        execute_local_revise(alchemist, args.revisions_file, args.folder_path, 
-                                                   args.folder_name,
+        execute_local_revise(alchemist, args.revisions_file, 
+                                                   folder_path=args.folder_path, 
+                                                   folder_name=args.folder_name,
                                                    config=config,
                                                    input_type=args.input_type,
                                                    output_type=args.output_type,
                                                    filters=args.filters,
                                                    groups=args.groups,
-                                                   verbose=args.verbose)
+                                                   verbose=args.verbose,
+                                                   force=args.force)
     elif args.pipeline == "remote":
         values = pipelines_basic.parse_value_input(args.input)
-        execute_remote_revise(alchemist, args.folder_path, args.folder_name,
+        execute_remote_revise(alchemist, folder_path=args.folder_path, 
+                                                   folder_name=args.folder_name,
                                                    config=config, values=values,
                                                    filters=args.filters,
-                                                   verbose=args.verbose)
+                                                   verbose=args.verbose,
+                                                   force=args.force)
 
 def parse_revise(unparsed_args_list):
     """Parses revise arguments and stores them with an argparse object.
@@ -141,6 +144,9 @@ def parse_revise(unparsed_args_list):
             names of genomes in the database.
         """
 
+    FORCE_HELP = """
+        Revise option that aggresively creates and overwrites directories.
+        """
     CONFIG_FILE_HELP = """
         Revise option that enables use of a config file for sourcing credentials
             Follow selection argument with the path to the config file
@@ -203,22 +209,24 @@ def parse_revise(unparsed_args_list):
                                                help=SINGLE_GENOMES_HELP)
 
     for subparser in [local_parser, remote_parser]:
+        subparser.add_argument("-f", "--force", action="store_true",
+                                               help=FORCE_HELP)
         subparser.add_argument("-c", "--config_file", 
                                     type=pipelines_basic.convert_file_path,
                                                help=CONFIG_FILE_HELP)
         subparser.add_argument("-m", "--folder_name", 
                                     type=str,  help=FOLDER_NAME_HELP)
         subparser.add_argument("-o", "--folder_path", 
-                                    type=pipelines_basic.convert_dir_path,
+                                    type=Path,
                                                help=FOLDER_PATH_HELP)
         subparser.add_argument("-v", "--verbose", action="store_true", 
                                                help=VERBOSE_HELP) 
 
-        subparser.add_argument("-f", "--filter", nargs="?", dest="filters",
+        subparser.add_argument("-w", "--where", nargs="?", dest="filters",
                                                help=FILTERS_HELP)
        
         subparser.set_defaults(folder_name=DEFAULT_FOLDER_NAME,
-                               folder_path=DEFAULT_FOLDER_PATH, 
+                               folder_path=None, 
                                config_file=None, input=[],
                                input_type="function_report", 
                                output_type="curation", 
@@ -232,13 +240,14 @@ def parse_revise(unparsed_args_list):
     parsed_args = parser.parse_args(unparsed_args_list[2:])
     return parsed_args
 
-def execute_local_revise(alchemist, revisions_file_path, folder_path, 
-                                                   folder_name, 
-                                                   config_file=None,
-                                                   input_type="function_report",
-                                                   output_type="curation",
-                                                   filters="", groups=[],
-                                                   verbose=False):
+def execute_local_revise(alchemist, revisions_file_path, 
+                                                folder_path=None, 
+                                                folder_name=DEFAULT_FOLDER_NAME, 
+                                                config_file=None,
+                                                input_type="function_report",
+                                                output_type="curation",
+                                                filters="", groups=[],
+                                                force=False, verbose=False):
     """Executes the entirety of the genbank local revise pipeline.
 
     :param alchemist: A connected and fully built AlchemyHandler object.
@@ -251,6 +260,8 @@ def execute_local_revise(alchemist, revisions_file_path, folder_path,
     :type folder_name: str
     :param verbose: A boolean value to toggle progress print statements.
     :type verbose: bool
+    :param force: A boolean to toggle aggresive building of directories.
+    :type force: bool
     """
     keys = INPUT_FILE_KEYS.get(input_type)
     if keys is None: 
@@ -272,13 +283,13 @@ def execute_local_revise(alchemist, revisions_file_path, folder_path,
      
     if verbose:
         print("Creating export folder...")
-    export_path = folder_path.joinpath(folder_name)
-    export_path = basic.make_new_dir(folder_path, export_path, attempt=50)
+    export_path = pipelines_basic.create_working_path(folder_path, folder_name,
+                                                      force=force)
 
-    conditionals_map = {}
-    pipelines_basic.build_groups_map(db_filter, export_path, conditionals_map,
-                                                         groups=groups,
-                                                         verbose=verbose)
+    conditionals_map = pipelines_basic.build_groups_map(db_filter, export_path, 
+                                                        force=force,
+                                                        groups=groups,
+                                                        verbose=verbose)
 
     if verbose:
         print("Prepared query and path structure, beginning review export...")
@@ -301,8 +312,9 @@ def execute_local_revise(alchemist, revisions_file_path, folder_path,
                 print("'{mapped_path.name}' data selected does not require "
                       "revision; no file exported...")
 
-            mapped_path.rmdir()
             continue
+
+        pipelines_basic.create_working_dir(mapped_path, force=force)
 
         if output_type == "curation":
             write_curation_data(export_dicts, mapped_path)
@@ -310,8 +322,9 @@ def execute_local_revise(alchemist, revisions_file_path, folder_path,
             write_five_column_table(export_dicts, mapped_path)
 
 #TODO Owen unittest
-def execute_remote_revise(alchemist, folder_path, folder_name, config=None, 
-                          values=None, filters="", verbose=False):
+def execute_remote_revise(alchemist, folder_path=None, 
+                          folder_name=DEFAULT_FOLDER_NAME, config=None, 
+                          values=None, filters="", verbose=False, force=False):
     ncbi_creds = {}
     if not config is None:
         ncbi_creds = config["ncbi"]
@@ -329,8 +342,9 @@ def execute_remote_revise(alchemist, folder_path, folder_name, config=None,
               "for '{mapped_path}'")
         sys.exit(1)
 
-    revise_path = folder_path.joinpath(folder_name)
-    revise_path = basic.make_new_dir(folder_path, revise_path, attempt=50)
+    revise_path = pipelines_basic.create_working_path(folder_path, folder_name,
+                                                      force=force)
+    pipelines_basic.create_working_dir(revise_path, force=force)
 
     log_file = revise_path.joinpath(MAIN_LOG_FILE)
     logging.basicConfig(filename=log_file, filemode="w",

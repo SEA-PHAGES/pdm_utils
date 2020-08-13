@@ -25,6 +25,7 @@ class TestReviseMain(unittest.TestCase):
         self.mock_groups = Mock()
         self.mock_verbose = Mock()
         self.mock_config = Mock()
+        self.mock_force = Mock()
 
         type(self.mock_args).database = PropertyMock(
                                     return_value=self.mock_database)
@@ -44,6 +45,8 @@ class TestReviseMain(unittest.TestCase):
                                     return_value=self.mock_groups)
         type(self.mock_args).verbose = PropertyMock(
                                     return_value=self.mock_verbose)
+        type(self.mock_args).force = PropertyMock(
+                                    return_value=self.mock_force)
 
     @patch("pdm_utils.pipelines.revise.configfile.build_complete_config")
     @patch("pdm_utils.pipelines.revise.execute_local_revise")
@@ -69,12 +72,13 @@ class TestReviseMain(unittest.TestCase):
 
         execute_local_revise_mock.assert_called_with(
                             self.mock_alchemist, self.mock_revisions_file,
-                            self.mock_folder_path, self.mock_folder_name,
+                            folder_path=self.mock_folder_path, 
+                            folder_name=self.mock_folder_name,
                             config=self.mock_config,
                             input_type=self.mock_input_type,
                             output_type=self.mock_output_type,
                             filters=self.mock_filters, groups=self.mock_groups,
-                            verbose=self.mock_verbose)
+                            verbose=self.mock_verbose, force=self.mock_force)
 
 if __name__ == "__main__":
     unittest.main()

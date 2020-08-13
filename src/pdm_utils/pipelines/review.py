@@ -23,8 +23,6 @@ from pdm_utils.functions import querying
 #GLOBAL VARIABLES
 
 DEFAULT_FOLDER_NAME = f"{time.strftime('%Y%m%d')}_review"
-DEFAULT_FOLDER_PATH = Path.cwd()
-
 
 REVIEW_HEADER = ["Pham", 
              "Final Call",
@@ -74,8 +72,9 @@ def main(unparsed_args_list):
         s_report = True
         psr_reports = True
 
-    execute_review(alchemist, args.folder_path, args.folder_name,
-                   no_review=args.no_review, values=values,
+    execute_review(alchemist, 
+                   folder_path=args.folder_path, folder_name=args.folder_name,
+                   no_review=args.no_review, values=values, force=args.force,
                    filters=args.filters, groups=args.groups, sort=args.sort,
                    s_report=s_report, gr_reports=gr_reports, 
                    psr_reports=psr_reports, verbose=args.verbose)
@@ -91,6 +90,9 @@ def parse_review(unparsed_args_list):
         Name of the MySQL database to export from.
         """
 
+    FORCE_HELP = """
+        Review option that aggresively creates and overwrites directories.
+        """
     CONFIG_FILE_HELP = """
         Review option that enables use of a config file for sourcing credentials
             Follow selection argument with the path to the config file
@@ -163,13 +165,15 @@ def parse_review(unparsed_args_list):
 
     parser.add_argument("database", type=str,  help=DATABASE_HELP)
 
+    parser.add_argument("-f", "--force", action="store_true",
+                                               help=FORCE_HELP)
     parser.add_argument("-c", "--config_file", 
                                     type=pipelines_basic.convert_file_path,
                                                help=CONFIG_FILE_HELP)
     parser.add_argument("-m", "--folder_name", 
                                     type=str,  help=FOLDER_NAME_HELP)
     parser.add_argument("-o", "--folder_path", 
-                                    type=pipelines_basic.convert_dir_path,
+                                    type=Path,
                                                help=FOLDER_PATH_HELP)
     parser.add_argument("-v", "--verbose", action="store_true", 
                                                help=VERBOSE_HELP)
@@ -191,19 +195,17 @@ def parse_review(unparsed_args_list):
     parser.add_argument("-in", "--import_names", nargs="*", dest="input",
                                                help=IMPORT_NAMES_HELP)
 
-    parser.add_argument("-f", "--where", nargs="?", dest="filters",
+    parser.add_argument("-w", "--where", nargs="?", dest="filters",
                                                help=WHERE_HELP)
     parser.add_argument("-g", "--group_by", nargs="*", dest="groups",
                                                help=GROUP_BY_HELP)
     parser.add_argument("-s", "--order_by", nargs="*", dest="sort",
                                                help=ORDER_BY_HELP)
-    
-    
+        
     default_folder_name = DEFAULT_FOLDER_NAME
-    default_folder_path = DEFAULT_FOLDER_PATH
 
     parser.set_defaults(folder_name=default_folder_name,
-                        folder_path=default_folder_path,
+                        folder_path=None,
                         input=[], filters="", groups=[], sort=[], 
                         config_file=None,
                         no_review=False, gene_report=False, 
@@ -212,11 +214,11 @@ def parse_review(unparsed_args_list):
     parsed_args = parser.parse_args(unparsed_args_list[2:])
     return parsed_args
 
-def execute_review(alchemist, folder_path, folder_name, 
+def execute_review(alchemist, folder_path=None, folder_name=DEFAULT_FOLDER_NAME,
                               no_review=False, values=[],
                               filters="", groups=[], sort=[], s_report=False, 
                               gr_reports=False, psr_reports=False,
-                              verbose=False):
+                              verbose=False, force=False):
     """Executes the entirety of the pham review pipeline.
     
     :param alchemist: A connected and fully built AlchemyHandler object.
@@ -231,6 +233,8 @@ def execute_review(alchemist, folder_path, folder_name,
     :type review: bool
     :param values: List of values to filter database results.
     :type values: list[str]
+    :param force: A boolean to toggle aggresive building of directories.
+    :type force: bool
     :param filters: A list of lists with filter values, grouped by ORs.
     :type filters: list[list[str]]
     :param groups: A list of supported MySQL column names to group by.
@@ -263,13 +267,14 @@ def execute_review(alchemist, folder_path, folder_name,
 
     if verbose:
         print("Creating export folder...")
-    export_path = folder_path.joinpath(folder_name)
-    export_path = basic.make_new_dir(folder_path, export_path, attempt=50)
+    export_path = pipelines_basic.create_working_path(folder_path, folder_name,
+                                                      force=force)
 
-    conditionals_map = {}
-    pipelines_basic.build_groups_map(db_filter, export_path, conditionals_map, 
-                                                       groups=groups,
-                                                       verbose=verbose)
+
+    conditionals_map = pipelines_basic.build_groups_map(db_filter, export_path, 
+                                                        groups=groups,
+                                                        verbose=verbose,
+                                                        force=force)
 
     if verbose:
         print("Prepared query and path structure, beginning review export...")
@@ -280,6 +285,8 @@ def execute_review(alchemist, folder_path, folder_name,
         conditionals = conditionals_map[mapped_path]
         db_filter.values = original_phams
         db_filter.values = db_filter.build_values(where=conditionals)
+
+        pipelines_basic.create_working_dir(mapped_path, force=force)
 
         review_data = get_review_data(alchemist, db_filter, verbose=verbose) 
         write_report(review_data, mapped_path, REVIEW_HEADER,

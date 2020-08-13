@@ -27,6 +27,7 @@ class TestMain(unittest.TestCase):
         self.mock_pham_summary_report = Mock()
         self.mock_verbose = Mock()
         self.mock_config = Mock()
+        self.mock_force = Mock()
 
 
         type(self.args).database = PropertyMock(
@@ -51,6 +52,8 @@ class TestMain(unittest.TestCase):
                                         return_value=self.mock_summary_report)
         type(self.args).verbose = PropertyMock(
                                         return_value=self.mock_verbose)
+        type(self.args).force = PropertyMock(
+                                        return_value=self.mock_force)
         type(self.args).pham_summary_reports = PropertyMock(
                                         return_value=\
                                                 self.mock_pham_summary_report)
@@ -79,9 +82,11 @@ class TestMain(unittest.TestCase):
                                                 config=self.mock_config)
         parse_value_input_mock.assert_called_with(self.mock_input)
         execute_review_mock.assert_called_with(
-                            self.mock_alchemist, self.mock_folder_path, 
-                            self.mock_folder_name, 
+                            self.mock_alchemist, 
+                            folder_path=self.mock_folder_path, 
+                            folder_name=self.mock_folder_name, 
                             no_review=self.mock_no_review,
+                            force=self.mock_force,
                             values=self.mock_values, filters=self.mock_filters,
                             groups=self.mock_groups, sort=self.mock_sort, 
                             gr_reports=self.mock_gene_report, 

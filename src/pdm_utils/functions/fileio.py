@@ -158,7 +158,7 @@ def write_seqrecord(seqrecord_list, file_format, export_path, export_name=None,
     :type verbose: bool
     """
     if verbose:
-        print("Writing selected data to files...")
+        print(f"Writing selected data to files at '{export_path}'...")
 
     record_dictionary = {}
     if concatenate:

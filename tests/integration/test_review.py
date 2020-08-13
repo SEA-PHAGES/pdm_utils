@@ -59,16 +59,16 @@ class TestPhamReview(unittest.TestCase):
     def test_execute_review_1(self):
         """Verify execute_review() creates new directory as expected.
         """
-        review.execute_review(self.alchemist, self.test_dir,
-                                            self.review_test_dir.name)
+        review.execute_review(self.alchemist, folder_path=self.test_dir,
+                              folder_name=self.review_test_dir.name)
 
         self.assertTrue(self.review_test_dir.is_dir())
 
     def test_execute_review_2(self):
         """Verify execute_review() filter parameter functions as expected.
         """
-        review.execute_review(self.alchemist, self.test_dir,
-                              self.review_test_dir.name,
+        review.execute_review(self.alchemist, folder_path=self.test_dir,
+                              folder_name=self.review_test_dir.name,
                               filters=("phage.Cluster='A' "
                                        "AND phage.Subcluster='A2'"))
 
@@ -77,8 +77,8 @@ class TestPhamReview(unittest.TestCase):
     def test_execute_review_3(self):
         """Verify execute_review() group parameter functions as expected.
         """
-        review.execute_review(self.alchemist, self.test_dir,
-                              self.review_test_dir.name,
+        review.execute_review(self.alchemist, folder_path=self.test_dir,
+                              folder_name=self.review_test_dir.name,
                               groups=["phage.Cluster"])
 
         self.assertTrue(self.review_test_dir.is_dir())
@@ -89,8 +89,8 @@ class TestPhamReview(unittest.TestCase):
     def test_execute_review_4(self):
         """Verify execute_review() sort parameter functions as expected.
         """
-        review.execute_review(self.alchemist, self.test_dir,
-                              self.review_test_dir.name,
+        review.execute_review(self.alchemist, folder_path=self.test_dir,
+                              folder_name=self.review_test_dir.name,
                               sort=["gene.Name"])
 
         self.assertTrue(self.review_test_dir.is_dir())
@@ -98,8 +98,8 @@ class TestPhamReview(unittest.TestCase):
     def test_execute_review_5(self):
         """Verify execute_review() review parameter functions as expected.
         """
-        review.execute_review(self.alchemist, self.test_dir,
-                              self.review_test_dir.name,
+        review.execute_review(self.alchemist, folder_path=self.test_dir,
+                              folder_name=self.review_test_dir.name,
                               no_review=True)
 
         self.assertTrue(self.review_test_dir.is_dir())
@@ -107,8 +107,8 @@ class TestPhamReview(unittest.TestCase):
     def test_execute_review_6(self):
         """Verify execute_review() gr_reports parameter functions as expected.
         """
-        review.execute_review(self.alchemist, self.test_dir,
-                              self.review_test_dir.name,
+        review.execute_review(self.alchemist, folder_path=self.test_dir,
+                              folder_name=self.review_test_dir.name,
                               gr_reports=True)
 
         self.assertTrue(self.review_test_dir.is_dir())
@@ -119,8 +119,8 @@ class TestPhamReview(unittest.TestCase):
     def test_execute_review_7(self):
         """Verify execute_review() s_report parameter functions as expected.
         """
-        review.execute_review(self.alchemist, self.test_dir,
-                              self.review_test_dir.name,
+        review.execute_review(self.alchemist, folder_path=self.test_dir,
+                              folder_name=self.review_test_dir.name,
                               s_report=True)
 
         self.assertTrue(self.review_test_dir.is_dir())
@@ -131,8 +131,8 @@ class TestPhamReview(unittest.TestCase):
     def test_execute_review_8(self):
         """Verify execute_review() psr_reports parameter functions as expected.
         """
-        review.execute_review(self.alchemist, self.test_dir,
-                              self.review_test_dir.name,
+        review.execute_review(self.alchemist, folder_path=self.test_dir,
+                              folder_name=self.review_test_dir.name,
                               psr_reports=True)
 
         self.assertTrue(self.review_test_dir.is_dir())

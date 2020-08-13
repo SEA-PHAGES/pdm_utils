@@ -36,6 +36,7 @@ class TestExportMain(unittest.TestCase):
         self.mock_values = Mock()
         self.mock_verbose = Mock() 
         self.mock_dump = Mock()
+        self.mock_force = Mock()
         self.mock_config = Mock()
 
         self.mock_db_name = Mock()
@@ -67,6 +68,8 @@ class TestExportMain(unittest.TestCase):
                             PropertyMock(return_value=self.mock_verbose)
         type(self.mock_args).dump = \
                             PropertyMock(return_value=self.mock_dump)
+        type(self.mock_args).force = \
+                            PropertyMock(return_value=self.mock_force)
 
         type(self.mock_args).db_name = \
                             PropertyMock(return_value=self.mock_db_name)
@@ -120,10 +123,10 @@ class TestExportMain(unittest.TestCase):
         parse_value_input_mock.assert_called_with(self.mock_input)
 
         execute_export_mock.assert_called_with(
-                                    self.mock_alchemist,
-                                    self.mock_folder_path,
-                                    self.mock_folder_name,
+                                    self.mock_alchemist, 
                                     self.mock_pipeline,
+                                    folder_path=self.mock_folder_path,
+                                    folder_name=self.mock_folder_name,
                                     table=self.mock_table,
                                     values=self.mock_values,
                                     filters=self.mock_filters,
@@ -136,6 +139,7 @@ class TestExportMain(unittest.TestCase):
                                     concatenate=self.mock_concatenate,
                                     verbose=self.mock_verbose,
                                     dump=self.mock_dump,
+                                    force=self.mock_force,
                                     db_name=self.mock_db_name)
 
 

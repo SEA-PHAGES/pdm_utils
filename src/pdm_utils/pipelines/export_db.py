@@ -1,29 +1,22 @@
 """Pipeline for exporting database information into files."""
 import argparse
-import shutil
 import sys
 import time
 from pathlib import Path
 
 from pdm_utils.classes.filter import Filter
-
-from pdm_utils.functions import basic
-from pdm_utils.functions import cartography
 from pdm_utils.functions import configfile
 from pdm_utils.functions import fileio
 from pdm_utils.functions import flat_files
 from pdm_utils.functions import mysqldb
 from pdm_utils.functions import mysqldb_basic
 from pdm_utils.functions import pipelines_basic
-from pdm_utils.functions import parsing
 from pdm_utils.functions import querying
 
 
-#GLOBAL VARIABLES
-#-----------------------------------------------------------------------------
+# GLOBAL VARIABLES
+# -----------------------------------------------------------------------------
 DEFAULT_FOLDER_NAME = f"{time.strftime('%Y%m%d')}_export"
-DEFAULT_FOLDER_PATH = Path.cwd()
-
 DEFAULT_TABLE = "phage"
 
 PHAGE_QUERY = "SELECT * FROM phage"
@@ -48,22 +41,22 @@ PIPELINES = FILTERABLE_PIPELINES + ["sql"]
 FLAT_FILE_TABLES = ["phage", "gene"]
 FIVE_COLUMN_TABLES = ["phage"]
 
-CDD_DATA_COLUMNS = ["gene_domain.QueryStart", "gene_domain.QueryEnd", 
+CDD_DATA_COLUMNS = ["gene_domain.QueryStart", "gene_domain.QueryEnd",
                     "domain.DomainID", "domain.Name", "domain.Description"]
 
-#Once trna has data, these tables can be reintroduced.
+# Once trna has data, these tables can be reintroduced.
 TABLES = ["phage", "gene", "domain", "gene_domain", "pham",
-          #"trna", "tmrna", "trna_structures",
+          # "trna", "tmrna", "trna_structures",
           "version"]
-SEQUENCE_COLUMNS = {"phage"           : ["Sequence"],
-                    "gene"            : ["Translation"],
-                    "domain"          : [],
-                    "gene_domain"     : [],
-                    "pham"            : [],
-                    "trna"            : ["Sequence"],
-                    "tmrna"           : [],
-                    "trna_structures" : [],
-                    "version"         : []}
+SEQUENCE_COLUMNS = {"phage": ["Sequence"],
+                     "gene": ["Translation"],
+                   "domain": [],
+              "gene_domain": [],
+                     "pham": [],
+                     "trna": ["Sequence"],
+                    "tmrna": [],
+          "trna_structures": [],
+                  "version": []}
 
 #-----------------------------------------------------------------------------
 #MAIN FUNCTIONS
@@ -98,15 +91,16 @@ def main(unparsed_args_list):
         sys.exit(1)
 
     if args.pipeline != "I":
-        execute_export(alchemist, args.folder_path, args.folder_name,
-                       args.pipeline, table=args.table, values=values,
+        execute_export(alchemist, args.pipeline, folder_path=args.folder_path, 
+                       folder_name=args.folder_name, table=args.table, 
+                       values=values,
                        filters=args.filters, groups=args.groups, sort=args.sort,
                        include_columns=args.include_columns,
                        exclude_columns=args.exclude_columns,
                        sequence_columns=args.sequence_columns,
                        raw_bytes=args.raw_bytes,
                        concatenate=args.concatenate, db_name=args.db_name,
-                       verbose=args.verbose, dump=args.dump)
+                       verbose=args.verbose, dump=args.dump, force=args.force)
     else:
         pass
 
@@ -133,6 +127,9 @@ def parse_export(unparsed_args_list):
     DUMP_HELP = """
         Export option that dumps exported files directly to the desired
         working directory.
+        """
+    FORCE_HELP = """
+        Export option that aggresively creates and overwrites directories.
         """
     VERBOSE_HELP = """
         Export option that enables progress print statements.
@@ -228,12 +225,14 @@ def parse_export(unparsed_args_list):
     optional_parser.add_argument("-m", "--folder_name",
                                type=str, help=FOLDER_NAME_HELP)
     optional_parser.add_argument("-o", "--folder_path", 
-                               type=pipelines_basic.convert_dir_path,
+                               type=Path,
                                help=FOLDER_PATH_HELP)
     optional_parser.add_argument("-v", "--verbose", action="store_true",
                                help=VERBOSE_HELP)
     optional_parser.add_argument("-d", "--dump", action="store_true",
                                help=DUMP_HELP)
+    optional_parser.add_argument("-f", "--force", action="store_true",
+                               help=FORCE_HELP)
 
     if initial.pipeline in FILTERABLE_PIPELINES:
         table_choices = dict.fromkeys(BIOPYTHON_PIPELINES, FLAT_FILE_TABLES)
@@ -248,7 +247,7 @@ def parse_export(unparsed_args_list):
                                 default=[])
         optional_parser.add_argument("-in", "--import_names", nargs="*",
                                 help=SINGLE_GENOMES_HELP, dest="input")
-        optional_parser.add_argument("-f", "--where", nargs="?",
+        optional_parser.add_argument("-w", "--where", nargs="?",
                                 help=WHERE_HELP,
                                 dest="filters")
         optional_parser.add_argument("-g", "--group_by", nargs="*",
@@ -275,8 +274,8 @@ def parse_export(unparsed_args_list):
 
     optional_parser.set_defaults(pipeline=initial.pipeline,
                                  database=initial.database,
-                                 folder_name=DEFAULT_FOLDER_NAME,
-                                 folder_path=DEFAULT_FOLDER_PATH,
+                                 folder_name=DEFAULT_FOLDER_NAME, 
+                                 folder_path=None,
                                  config_file=None, verbose=False, input=[],
                                  table=DEFAULT_TABLE,
                                  filters="", groups=[], sort=[],
@@ -288,8 +287,9 @@ def parse_export(unparsed_args_list):
 
     return parsed_args
 
-def execute_export(alchemist, folder_path, folder_name, pipeline,
-                        values=None, verbose=False, dump=False,
+def execute_export(alchemist, pipeline, 
+                        folder_path=None, folder_name=DEFAULT_FOLDER_NAME,
+                        values=None, verbose=False, dump=False, force=False,
                         table=DEFAULT_TABLE, filters="", groups=[], sort=[],
                         include_columns=[], exclude_columns=[],
                         sequence_columns=False, raw_bytes=False,
@@ -298,12 +298,14 @@ def execute_export(alchemist, folder_path, folder_name, pipeline,
 
     :param alchemist: A connected and fully built AlchemyHandler object.
     :type alchemist: AlchemyHandler
+    :param pipeline: File type that dictates data processing.
+    :type pipeline: str
     :param folder_path: Path to a valid dir for new dir creation.
     :type folder_path: Path
     :param folder_name: A name for the export folder.
     :type folder_name: str
-    :param pipeline: File type that dictates data processing.
-    :type pipeline: str
+    :param force: A boolean to toggle aggresive building of directories.
+    :type force: bool
     :param values: List of values to filter database results.
     :type values: list[str]
     :param verbose: A boolean value to toggle progress print statements.
@@ -353,25 +355,24 @@ def execute_export(alchemist, folder_path, folder_name, pipeline,
                       f"{', '.join(sort)}")
                 sys.exit(1)
 
-    if not dump:
-        if verbose:
-            print("Creating export folder...")
-        export_path = folder_path.joinpath(folder_name)
-        export_path = basic.make_new_dir(folder_path, export_path, attempt=50)
-    else:
-        export_path = folder_path
- 
+    if verbose:
+        print("Creating export folder...")
+    export_path = pipelines_basic.create_working_path(folder_path, folder_name,
+                                                     dump=dump, force=force)
+
     data_cache = {}
     if pipeline == "sql":
         if verbose:
             print("Writing SQL database file...")
+        pipelines_basic.create_working_dir(export_path, dump=dump, force=force) 
+
         fileio.write_database(alchemist, db_version["Version"], export_path,
                                                                 db_name=db_name)
     elif pipeline in FILTERABLE_PIPELINES:
-        conditionals_map = {}
-        pipelines_basic.build_groups_map(db_filter, export_path, 
-                                                conditionals_map,
-                                                groups=groups, verbose=verbose)
+        conditionals_map = pipelines_basic.build_groups_map(
+                                                db_filter, export_path, 
+                                                groups=groups, 
+                                                verbose=verbose, force=force)
 
         if verbose:
             print("Prepared query and path structure, beginning export...")
@@ -383,24 +384,23 @@ def execute_export(alchemist, folder_path, folder_name, pipeline,
 
             conditionals = conditionals_map[mapped_path]
             db_filter.values = db_filter.build_values(where=conditionals)
-          
-            export_name = None
-            if dump:
-                if mapped_path != export_path:
-                    export_name = mapped_path.name
-                    mapped_path = mapped_path.parent
-                    mapped_path.rmdir()
-                else:
-                    export_name = folder_name
-
+         
             if db_filter.hits() == 0:
                 print(f"No database entries received from {table} "
                       f"for '{mapped_path}'.")
                 continue
-
+            
             if sort:
                 sort_columns = get_sort_columns(alchemist, sort)
                 db_filter.sort(sort_columns)
+
+            export_name = None
+            if dump:
+                if mapped_path == export_path:
+                    export_name = folder_name
+
+            pipelines_basic.create_working_dir(mapped_path, dump=dump, 
+                                                                force=force)
 
             if pipeline in BIOPYTHON_PIPELINES + ["tbl"]:
                 execute_ffx_export(alchemist, mapped_path, export_path,

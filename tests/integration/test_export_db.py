@@ -72,16 +72,18 @@ class TestFileExport(unittest.TestCase):
         """
         for pipeline in export_db.PIPELINES:
             with self.subTest(pipeline=pipeline):
-                export_db.execute_export(self.alchemist, self.test_dir, 
-                                         self.export_test_dir.name, pipeline)
+                export_db.execute_export(self.alchemist, pipeline,
+                                         folder_path=self.test_dir, 
+                                         folder_name=self.export_test_dir.name)
                 self.assertTrue(self.export_test_dir.is_dir())
                 shutil.rmtree(str(self.export_test_dir))
 
     def test_execute_export_2(self):
         """Verify execute_export() 'sql' pipeline functions as expected.
         """
-        export_db.execute_export(self.alchemist, self.test_dir,
-                                  self.export_test_dir.name, "sql")
+        export_db.execute_export(self.alchemist, "sql",
+                                  folder_path=self.test_dir,
+                                  folder_name=self.export_test_dir.name)
 
         self.assertTrue(self.export_test_dir.is_dir())
         
@@ -94,8 +96,9 @@ class TestFileExport(unittest.TestCase):
         """
         for table in export_db.TABLES:
             with self.subTest(table=table):
-                export_db.execute_export(self.alchemist, self.test_dir,
-                                          self.export_test_dir.name, "csv",
+                export_db.execute_export(self.alchemist, "csv", 
+                                          folder_path=self.test_dir,
+                                          folder_name=self.export_test_dir.name,
                                           table=table)
                 self.assertTrue(self.export_test_dir.is_dir())
 
@@ -111,8 +114,9 @@ class TestFileExport(unittest.TestCase):
         """
         for file_type in export_db.BIOPYTHON_PIPELINES:
             with self.subTest(file_type=file_type):
-                export_db.execute_export(self.alchemist, self.test_dir,
-                                         self.export_test_dir.name, file_type)
+                export_db.execute_export(self.alchemist, file_type,
+                                         folder_path=self.test_dir,
+                                         folder_name=self.export_test_dir.name)
                 self.assertTrue(self.export_test_dir.is_dir())
 
                 flat_file_path = self.export_test_dir.joinpath(
@@ -125,8 +129,9 @@ class TestFileExport(unittest.TestCase):
         """Verify execute_export() filter parameter functions as expected.
         """
         filters = "phage.PhageID!=Trixie AND phage.Cluster=A"
-        export_db.execute_export(self.alchemist, self.test_dir,
-                                 self.export_test_dir.name, "fasta",
+        export_db.execute_export(self.alchemist, "fasta",
+                                 folder_path=self.test_dir,
+                                 folder_name=self.export_test_dir.name,
                                  filters=filters)
 
         D29_file_path = self.export_test_dir.joinpath("D29.fasta")
@@ -139,8 +144,9 @@ class TestFileExport(unittest.TestCase):
         """Verify execute_export() group parameter functions as expected.
         """
         groups = ["phage.Cluster", "phage.Subcluster"]
-        export_db.execute_export(self.alchemist, self.test_dir,
-                                 self.export_test_dir.name, "fasta",
+        export_db.execute_export(self.alchemist, "fasta",
+                                 folder_path=self.test_dir,
+                                 folder_name=self.export_test_dir.name, 
                                  groups=groups)
 
         A_path = self.export_test_dir.joinpath("A")
@@ -172,15 +178,17 @@ class TestFileExport(unittest.TestCase):
         """Verify execute_export() sort parameter is functional.
         """
         sort_columns = ["phage.Subcluster"]
-        export_db.execute_export(self.alchemist, self.test_dir,
-                                 self.export_test_dir.name, "csv",
+        export_db.execute_export(self.alchemist, "csv",
+                                 folder_path=self.test_dir,
+                                 folder_name=self.export_test_dir.name, 
                                  sort=sort_columns)
 
     def test_execute_export_8(self):
         """Verify execute_export() concatenate parameter functions as expected.
         """
-        export_db.execute_export(self.alchemist, self.test_dir,
-                                 self.export_test_dir.name, "fasta",
+        export_db.execute_export(self.alchemist, "fasta",
+                                 folder_path=self.test_dir,
+                                 folder_name=self.export_test_dir.name,
                                  concatenate=True)
 
         fasta_path = self.export_test_dir.joinpath(
@@ -193,9 +201,10 @@ class TestFileExport(unittest.TestCase):
         """Verify execute_export() include_columns functions as expected.
         """
         include_columns = ["phage.Cluster"]
-        export_db.execute_export(self.alchemist, self.test_dir,
-                                 self.export_test_dir.name, "csv", table="gene",
-                                 include_columns=include_columns)
+        export_db.execute_export(self.alchemist, "csv",
+                                 folder_path=self.test_dir,
+                                 folder_name=self.export_test_dir.name, 
+                                 table="gene", include_columns=include_columns)
 
         csv_path = self.export_test_dir.joinpath(
                                         f"gene.csv")
@@ -212,8 +221,9 @@ class TestFileExport(unittest.TestCase):
         """Verify execute_export() exclude_columns functions as expected.
         """
         exclude_columns = ["phage.Subcluster"]
-        export_db.execute_export(self.alchemist, self.test_dir,
-                                 self.export_test_dir.name, "csv",
+        export_db.execute_export(self.alchemist, "csv",
+                                 folder_path=self.test_dir,
+                                 folder_name=self.export_test_dir.name,
                                  exclude_columns=exclude_columns)
         
         csv_path = self.export_test_dir.joinpath(
@@ -231,8 +241,9 @@ class TestFileExport(unittest.TestCase):
     def test_execute_export_11(self):
         """Verify execute_export() sequence_columns functions as expected.
         """
-        export_db.execute_export(self.alchemist, self.test_dir,
-                                 self.export_test_dir.name, "csv",
+        export_db.execute_export(self.alchemist, "csv",
+                                 folder_path=self.test_dir,
+                                 folder_name=self.export_test_dir.name, 
                                  sequence_columns=True)
 
         csv_path = self.export_test_dir.joinpath(
@@ -251,8 +262,9 @@ class TestFileExport(unittest.TestCase):
         """
         for file_type in export_db.BIOPYTHON_PIPELINES:
             with self.subTest(file_type=file_type):
-                export_db.execute_export(self.alchemist, self.test_dir,
-                                         self.export_test_dir.name, file_type,
+                export_db.execute_export(self.alchemist, file_type,
+                                         folder_path=self.test_dir,
+                                         folder_name=self.export_test_dir.name, 
                                          table="gene")
 
                 self.assertTrue(self.export_test_dir.is_dir())
@@ -266,8 +278,9 @@ class TestFileExport(unittest.TestCase):
     def test_execute_export_13(self):
         """Verify execute_export() dump parameter functions as expected.
         """
-        export_db.execute_export(self.alchemist, self.test_dir,
-                                 self.export_test_dir.name, "fasta",
+        export_db.execute_export(self.alchemist, "fasta",
+                                 folder_path=self.test_dir,
+                                 folder_name=self.export_test_dir.name,
                                  concatenate=True, dump=True)
 
         fasta_path = self.test_dir.joinpath(
@@ -279,8 +292,9 @@ class TestFileExport(unittest.TestCase):
     def test_execute_export_14(self): 
         """Verify execute_export() db_name parameter functions as expected.
         """
-        export_db.execute_export(self.alchemist, self.test_dir,
-                                 self.export_test_dir.name, "sql",
+        export_db.execute_export(self.alchemist, "sql", 
+                                 folder_path=self.test_dir,
+                                 folder_name=self.export_test_dir.name, 
                                  db_name="Actino_Draft")
 
         sql_path = self.export_test_dir.joinpath("Actino_Draft.sql")
