@@ -302,8 +302,7 @@ def submit_to_genbank(username, password, to_addr, phage_ids):
         return
 
     phage_string = "\n"
-    while len(phage_ids.keys()) > 0:
-        phage_id, submission_file = phage_ids.popitem()
+    for phage_id, submission_file in phage_ids.items():
         if submission_file is not None:
             phage_string += f"{phage_id} - (attached)\n"
         else:
