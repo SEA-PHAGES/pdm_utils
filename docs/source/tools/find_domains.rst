@@ -9,7 +9,7 @@ The NCBI maintains a :cdd:`conserved domain database (CDD) <>` in which the func
 
 To identify conserved domains::
 
-    > python3 -m pdm_utils find_domains Actinobacteriophage /path/to/CDD/
+    > python3 -m pdm_utils find_domains Actinobacteriophage -d /path/to/CDD/
 
 The argument 'Actinobacteriophage' indicates the name of the database that will be evaluated. The '/path/to/CDD/' indicates where the NCBI conserved domain database is stored on your local computer.
 

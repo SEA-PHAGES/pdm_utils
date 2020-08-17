@@ -7,7 +7,7 @@ In general, data pertaining to a complete phage genome is managed within a MySQL
 
 ``pdm_utils import`` is used to manage the addition or replacement of genomes::
 
-    > python3 -m pdm_utils import Actinobacteriophage ./genomes/ ./import_table.csv -o ./ -c config_file.txt
+    > python3 -m pdm_utils import Actinobacteriophage ./genomes/ ./import_table.csv -o ./ -p -c config_file.txt
 
 The first argument ('Actinobacteriophage') following 'import' indicates the database to be used. The next argument ('./genomes/') indicates the directory where the flat files are located. The next argument ('./import_table.csv') indicates the location of the import table. The optional '-o ./' argument indicates the directory where the import results should be stored (if omitted, the default is the working directory from where the pipeline is called). As with other pipelines, use of the :ref:`config_file` option can automate accessing MySQL.
 

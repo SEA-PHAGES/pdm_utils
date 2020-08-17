@@ -61,7 +61,7 @@ The most up-to-date version of Actinobacteriophage is stored on the Hatfull lab'
 
     #. **Retrieve the newest version of Actinobacteriophage.** Ensure the newest version of the database is locally installed::
 
-        > python3 -m pdm_utils get_db Actinobacteriophage server
+        > python3 -m pdm_utils get_db server -d Actinobacteriophage
 
     #. **Retrieve new data to import into the database.** New data that needs to be added to the database is retrieved from various sources and staged in a structured local directory for import. *get_data* creates separate staged directories and import tables for different types of data to be imported to minimize potential ticket conflicts::
 
@@ -98,11 +98,11 @@ The most up-to-date version of Actinobacteriophage is stored on the Hatfull lab'
 
     #. **Group gene products into phamilies.** Phamilies are created using MMseqs and stored in the *gene* and *pham* tables::
 
-        > python3 -m pdm_utils phamerate Actinobacteriophage --steps 2
+        > python3 -m pdm_utils phamerate mmseqs Actinobacteriophage
 
     #. **Identifying conserved domains.** Conserved domain data is retrieved from a local copy of the NCBI CDD and stored in the *gene*, *domain*, and *gene_domain* tables::
 
-        > python3 -m pdm_utils find_domains Actinobacteriophage ./cdd/
+        > python3 -m pdm_utils find_domains Actinobacteriophage -d ./cdd/
 
     #. **Increment database version.** After the database's content has changed, the database version number is updated in the *version* table::
 

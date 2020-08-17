@@ -4,7 +4,7 @@
 Infernal
 ========
 
-:infernal:`Infernal <>` (:ref:`Nawrocki & Eddy, 2013 <bibliography>`) is used to evaluate tRNA features when importing data into the database.
+:infernal:`Infernal <>` (:ref:`Nawrocki & Eddy, 2013 <bibliography>`) is required to properly run tRNAscan-SE.
 
 MacOS and Ubuntu installation
 *****************************
