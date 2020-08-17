@@ -21,3 +21,7 @@ This tool relies upon the NCBI E-utilities (using a Biopython wrapper), and NCBI
 
 
 The ``get_gb_records`` tool will determine which accessions from the MySQL database are valid, will retrieve all live records from GenBank, and store them locally in GenBank-formatted flat file format.
+
+Genome data retrieved from GenBank can also be retrieved in five-column feature table format for a more streamlined view of gene products, notes, and coordinates::
+
+    > python3 -m pdm_utils get_gb_records Actinobacteriophage -ft tbl

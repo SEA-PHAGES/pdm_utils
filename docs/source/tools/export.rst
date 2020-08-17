@@ -20,7 +20,7 @@ _______________
 
 Export the entire database as a SQL file::
 
-    > python3 pdm_utils export Actinobacteriophage sql
+    > python3 -m pdm_utils export Actinobacteriophage sql
 
 Database information stored in a SQL database may need to be uploaded to a server for end-users.  This option allows a file to be exported from MySQL into a single file that can be easily uploaded to a server (e.g. Actinobacteriophage.sql). 
 The database version is tracked as an integer in the Version field of the *version* table, and a version file is also generated (e.g. Actinobacteriophage.version), which is a text file that contains a single integer corresponding to the database version.
@@ -32,7 +32,7 @@ _______________
 
 Export specific tables from the database into CSV-formatted files::
 
-    > python3 pdm_utils export Actinobacteriophage csv ...
+    > python3 -m pdm_utils export Actinobacteriophage csv ...
 
 Database information stored in a SQL database may need to be viewed in a more universal file.  This option exports database information from a table in a comma-separated-values file that can be viewed in common spreadsheet or text-editing softwares (e.g. phage.sql).
 
@@ -42,7 +42,7 @@ _____________________
 
 Export genomes into biologically-relevant formatted files::
 
-    > python3 pdm_utils export Actinobacteriophage gb ...
+    > python3 -m pdm_utils export Actinobacteriophage gb ...
 
 Database information stored in a SQL database may be representative of biological constructs, and common bio-file currencies are often used to exchange and update information in the SQL database.  This option exports database information to a formatted file that are common for bio-softwares (e.g. Trixie.gb, Trixie.fasta etc.)
 
@@ -55,9 +55,9 @@ _______________________________
 
 Change the path where a new directory containing exported files will be created::
 
-    > python3 pdm_utils export Actinobacteriophage gb -o /new/folder/path
+    > python3 -m pdm_utils export Actinobacteriophage gb -o /new/folder/path
 
-    > python3 pdm_utils export Actinobacteriophage csv --folder_path /new/folder/path
+    > python3 -m pdm_utils export Actinobacteriophage csv --folder_path /new/folder/path
 
 The command-line flag **-o** or **--folder_path** followed by the path to a desired directory will set the path where a the new directory will be created.
 
@@ -66,9 +66,9 @@ _______________________________
 
 Change the path where a new directory containing exported files will be created::
 
-    > python3 pdm_utils export Actinobacteriophage fasta -m new_folder_name
+    > python3 -m pdm_utils export Actinobacteriophage fasta -m new_folder_name
 
-    > python3 pdm_utils export Actinobacteriophage sql --folder_name new_folder_name
+    > python3 -m pdm_utils export Actinobacteriophage sql --folder_name new_folder_name
 
 The command-line flag **-m** or **--folder_name** followed by a name will set the name of the new directory to be created.
 
@@ -77,11 +77,33 @@ ________________________________
 
 Toggle on export progress statements::
 
-    > python3 pdm_utils export Actinobacteriophage csv -v
+    > python3 -m pdm_utils export Actinobacteriophage csv -v
 
-    > python3 pdm_utils export Actinobacteriophage sql --verbose 
+    > python3 -m pdm_utils export Actinobacteriophage sql --verbose 
 
-The command-line flag **-v** or **--verbose** followed by the path to a desired directory will toggle on progress report and status statements (verbosity).
+The command-line flag **-v** or **--verbose** will toggle on progress report and status statements (verbosity).
+
+Dumping created files into an existing directory
+________________________________________________
+
+Dump created files into the current working directory or the specified folder path (see *Changing the export folder name*) avoiding the creation of a new directory::
+
+    > python3 -m pdm_utils export Actinobacteriophage sql -d
+
+    > python3 -m pdm_utils export Actinobacteriophage csv --dump
+
+The command-line flag **-d** or **--dump** will toggle on file export dumping.  
+
+Forcing aggressive exports
+__________________________
+
+Toggle on aggressive file and directory overwritting, avoiding cowardly responses to encountering pre-existing directories during export::
+
+    > python3 -m pdm_utils export Actinobacteriophage sql -f
+    
+    > python3 -m pdm_utils export Actinobacteriophage gb --force
+
+The command-line flag **-f** or **--force** will toggle on forced file export.
 
 Import and Selection Export Options
 -----------------------------------
@@ -91,9 +113,9 @@ __________________
 
 Csv or SeqIO option to change the database table centered on for data export.::
 
-    > python3 pdm_utils export Actinobacteriophage gb -t phage
+    > python3 -m pdm_utils export Actinobacteriophage gb -t phage
 
-    > python3 pdm_utils export Actinobacteriophage csv --table gene
+    > python3 -m pdm_utils export Actinobacteriophage csv --table gene
 
 The command-line flag **-t** or **--table** followed by a valid table from the selected MySQL database from which data is selected to be exported.  
 Changing the table for csv export will change which columns are selected for export while changing the table for BioPython SeqIO file types will determine the data the formatted file will present.
@@ -152,7 +174,7 @@ ________________
 
 Csv or SeqIO option to filter data retrieved from the database.::
 
-    > python3 pdm_utils export Actinobacteriophage gb -f "phage.Cluster = A AND phage.Subcluster IS NOT NULL"
+    > python3 pdm_utils export Actinobacteriophage gb -w "phage.Cluster = A AND phage.Subcluster IS NOT NULL"
 
     > python3 pdm_utils export Actinobacteriophage csv --where "domain.Description LIKE %helix-turn-helix% OR gene.Notes = 'helix-turn-helix DNA binding protein'"
 
@@ -185,6 +207,16 @@ Order by columns must follow the format *table*.\ *column* and can be columns fr
 
 Additional Export Options
 -------------------------
+
+Renaming exported sql files
+___________________________
+Sql option to rename the exported database file::
+
+    > python3 pdm_utils export Actinobacteriophage sql -n Actino_Draft
+
+    > python3 pdm_utils export Actinobacteriophage sql --name Actino_Draft
+
+The command line flag **-n** or **--name** followed by a desired file name exports a sql file and version file named accordingly.
 
 Concatenating SeqIO files
 _________________________
