@@ -5,7 +5,7 @@ import re
 from sqlalchemy import Column
 #----------------------------------------------------------------------------
 #GLOBAL VARIABLES
-VALUE_CHARACTERS      = "\w\d\-_%/(),'"
+VALUE_CHARACTERS      = "\w\d\-_%/(),"
 VC = VALUE_CHARACTERS
 
 NUMERIC_OPERATORS     = [">", ">=", "<", "<="]
@@ -146,15 +146,13 @@ def parse_filter(unparsed_filter):
     """
 
     filter_format = re.compile(" *\w+\.\w+ *([=<>!]+ *| +LIKE +| +IS NOT +) *"
-                               f"([{VC}]+|'[ {VC}]*') *")
+                               f"('[ {VC}]*'|[{VC}]+) *")
     in_format = re.compile(" *\w+\.\w+ *( +IN +| +NOT IN +)+"
-                           f"\(( *[{VC}]+ *" 
-                           ",{1} *| *"
-                           f"'[ \w\d,\-_%/()]*'" 
-                           " *,{1} *)*"
-                           f"( *[{VC}]+ *| *'[ {VC}]*' *)\)")
+                           f"\(( *'[ {VC}]*'" " *,{1} *|"
+                           f" *[{VC}]+ *" ",{1} *)*"
+                           f"( *'[ {VC}]*' *| *[{VC}]+ *)\)")
 
-    value_format = re.compile(f"([{VC}]+|'[ {VC}]*')")
+    value_format = re.compile(f"('[ {VC}]*'|[{VC}]+)")
     quote_value_format = re.compile(f"('[ {VC}]*')")
     whitespace = re.compile(" +")
 
@@ -168,7 +166,8 @@ def parse_filter(unparsed_filter):
         operator_split[2] = parse_out_ends(operator_split[2])
 
         if re.match(quote_value_format, operator_split[2]) != None:
-            operator_split[2] = operator_split[2].replace("'", "")
+            operator_split[2] = operator_split[2].rstrip("'")
+            operator_split[2] = operator_split[2].lstrip("'")
 
         parsed_filter = parsed_column + operator_split[1:] 
 
