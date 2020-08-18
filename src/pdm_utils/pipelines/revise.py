@@ -309,7 +309,7 @@ def execute_local_revise(alchemist, revisions_file_path,
         
         if not export_dicts:
             if verbose:
-                print("'{mapped_path.name}' data selected does not require "
+                print(f"'{mapped_path.name}' data selected does not require "
                       "revision; no file exported...")
 
             continue
@@ -443,7 +443,7 @@ def use_function_report_data(db_filter, data_dicts, columns, conditionals,
         if final_call.lower() == "hypothetical protein":
             final_call = ""
         conditionals.append(querying.build_where_clause(db_filter.graph,
-                                f"gene.Notes!={final_call}"))
+                                f"gene.Notes!='{final_call}'"))
 
         query = querying.build_select(db_filter.graph, columns, 
                                                        where=conditionals)

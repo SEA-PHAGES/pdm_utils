@@ -5,6 +5,9 @@ import re
 from sqlalchemy import Column
 #----------------------------------------------------------------------------
 #GLOBAL VARIABLES
+VALUE_CHARACTERS      = "\w\d\-_%/(),'"
+VC = VALUE_CHARACTERS
+
 NUMERIC_OPERATORS     = [">", ">=", "<", "<="]
 NONNUMERIC_OPERATORS  = ["=", "!=", "IS NOT", "LIKE", "IN", "NOT IN"]
 OPERATORS             = NUMERIC_OPERATORS + NONNUMERIC_OPERATORS
@@ -24,7 +27,7 @@ def parse_out_ends(unparsed_string):
     :rtype: str
     """
     if not isinstance(unparsed_string, str):
-        raise TypeError(f"Paremeter type required is of type list.")
+        raise TypeError(f"Parameter type required is of type list.")
 
     beginning_trimmed = unparsed_string.lstrip()
     trimmed_string = beginning_trimmed.rstrip()
@@ -141,14 +144,18 @@ def parse_filter(unparsed_filter):
     :returns: List containing segments of a MySQL WHERE clause.
     :rtype: list[str]
     """
-    filter_format = re.compile(" *\w+\.\w+ *([=<>!]+ *| +LIKE +| +IS NOT +) *"
-                               "([\w\d\-_%]+|'[ \w\d,\-_%]*') *")
-    in_format = re.compile(" *\w+\.\w+ *( +IN +| +NOT IN +)+"
-                           "\(( *[\w\d\-_%]+ *,{1} *| *'[ \w\d,\-_%]*' *,{1} *)*"
-                           "( *[\w\d\-_%]+ *| *'[ \w\d,\-_%]*' *)\)")
 
-    value_format = re.compile("([\w\d\-_%]+|'[ \w\d,\-_%]*')")
-    quote_value_format = re.compile("('[ \w\d,\-_%]*')")
+    filter_format = re.compile(" *\w+\.\w+ *([=<>!]+ *| +LIKE +| +IS NOT +) *"
+                               f"([{VC}]+|'[ {VC}]*') *")
+    in_format = re.compile(" *\w+\.\w+ *( +IN +| +NOT IN +)+"
+                           f"\(( *[{VC}]+ *" 
+                           ",{1} *| *"
+                           f"'[ \w\d,\-_%/()]*'" 
+                           " *,{1} *)*"
+                           f"( *[{VC}]+ *| *'[ {VC}]*' *)\)")
+
+    value_format = re.compile(f"([{VC}]+|'[ {VC}]*')")
+    quote_value_format = re.compile(f"('[ {VC}]*')")
     whitespace = re.compile(" +")
 
     if not re.match(filter_format, unparsed_filter) is None:
