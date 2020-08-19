@@ -31,7 +31,7 @@ The first step of ``import`` is to parse and prepare tickets from the import tab
 Process flat files
 ------------------
 
-After preparing import tickets from the import table, flat files are processed one at a time, matched to the corresponding import ticket, evaluated, and implemented.
+After preparing import tickets from the import table, flat files (:ref:`flatfile`) are processed one at a time, matched to the corresponding import ticket, evaluated, and implemented.
 For replace tickets, the current genome data in the database is removed and the data from the flat file is parsed and inserted. Two types of data are parsed from the flat file and evaluated: genome-specific and gene-specific data.
 
 Genome-specific data
