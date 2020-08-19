@@ -7,13 +7,22 @@ from sqlalchemy import Column
 #GLOBAL VARIABLES
 VALUE_CHARACTERS      = "\w\d\-_%/(),"
 VC = VALUE_CHARACTERS
+VALUE_EXPRESSION      = f"[{VC}]+|'[ {VC}]*'"
+VE = VALUE_EXPRESSION
+FILTER_FORMAT         = (" *\w+\.\w+ *([=<>!]+ *| +LIKE +| +IS NOT +){1} *"
+                        f"({VE}) *")
+
+IN_FORMAT             = (" *\w+\.\w+ *( +IN +| +NOT IN +)"
+                        f"\(([\s\w\W\d]+)\)")
+
+
 
 NUMERIC_OPERATORS     = [">", ">=", "<", "<="]
 NONNUMERIC_OPERATORS  = ["=", "!=", "IS NOT", "LIKE", "IN", "NOT IN"]
 OPERATORS             = NUMERIC_OPERATORS + NONNUMERIC_OPERATORS
 COMPARABLE_TYPES      = [int, Decimal, float, datetime]
 TYPES                 = [str, bytes] + COMPARABLE_TYPES
-GROUP_OPTIONS = ["limited_set", "num_set", "str_set"]
+GROUP_OPTIONS         = ["limited_set", "num_set", "str_set"]
 
 #----------------------------------------------------------------------------
 #SPACE HANDLING
@@ -145,15 +154,12 @@ def parse_filter(unparsed_filter):
     :rtype: list[str]
     """
 
-    filter_format = re.compile(" *\w+\.\w+ *([=<>!]+ *| +LIKE +| +IS NOT +) *"
-                               f"('[ {VC}]*'|[{VC}]+) *")
-    in_format = re.compile(" *\w+\.\w+ *( +IN +| +NOT IN +)+"
-                           f"\(( *'[ {VC}]*'" " *,{1} *|"
-                           f" *[{VC}]+ *" ",{1} *)*"
-                           f"( *'[ {VC}]*' *| *[{VC}]+ *)\)")
+    filter_format = re.compile(FILTER_FORMAT) 
+    in_format = re.compile(IN_FORMAT) 
 
-    value_format = re.compile(f"('[ {VC}]*'|[{VC}]+)")
-    quote_value_format = re.compile(f"('[ {VC}]*')")
+    value_format = re.compile(f"({VE})")
+    quote_value_format = re.compile(f"('[ {VC}]*'|'[ {VC}]+'s')")
+    in_delimiter = re.compile("' *,")
     whitespace = re.compile(" +")
 
     if not re.match(filter_format, unparsed_filter) is None:
@@ -181,23 +187,27 @@ def parse_filter(unparsed_filter):
         operator_split[2] = parse_out_ends(operator_split[2])  
  
         parenthesized = operator_split[2]
-        parenthesized = parenthesized.replace("(", "")
-        parenthesized = parenthesized.replace(")", "")
-        parenthesized = re.split(value_format, parenthesized)
+        parenthesized = parenthesized.lstrip("(")
+        parenthesized = parenthesized.rstrip(")")
 
         in_values = []
-        for value in parenthesized:
-            if not re.match(quote_value_format, value) is None:
-                value = value.replace("'", "")
+        if not re.search(in_delimiter, parenthesized) is None:
+            parenthesized = re.split(in_delimiter, parenthesized)     
+            for value in parenthesized:
+                value = parse_out_ends(value)
+                value = value.lstrip("'")
+                value = value.rstrip("'")
+                print(value)
                 in_values.append(parse_out_ends(value))
-            else: 
-                value = value.replace(",", "")        
+        else:
+            parenthesized = parenthesized.split(",")
+            for value in parenthesized:
+                value = parse_out_ends(value)
                 if value == "" or not re.match(whitespace, value) is None:
                     continue
-                in_values.append(parse_out_ends(value))
+                in_values.append(value)
 
         operator_split[2] = in_values
-        #print(in_values)
         parsed_filter = parsed_column + operator_split[1:]
 
     else:

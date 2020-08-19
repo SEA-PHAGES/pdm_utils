@@ -258,7 +258,7 @@ class TestParsing(unittest.TestCase):
         """
         filter = "phage.PhageID IN (Trixie, D29, Myrna)"
         parsed_filter = parsing.parse_filter(filter)
-   
+    
         self.assertTrue(isinstance(parsed_filter[3], list))
         self.assertTrue(isinstance(parsed_filter[3][0], str))
         self.assertTrue(len(parsed_filter[3]) == 3)
@@ -282,12 +282,28 @@ class TestParsing(unittest.TestCase):
         """
         filter = "phage.PhageID IN ('D29', 'Trixie')"
         parsed_filter = parsing.parse_filter(filter)
+        print(parsed_filter)
 
         self.assertTrue(len(parsed_filter[3]) == 2)
         self.assertTrue("D29" in parsed_filter[3])
         self.assertTrue("Trixie" in parsed_filter[3])
-       
+      
     def test_parse_filter_10(self):
+        """Verify parse_filter() recognizes values with apostrophes.
+        """
+        filter = "gene.Notes = 'Cro (control of repressor's operator)'"
+        parsed_filter = parsing.parse_filter(filter)
+
+        self.assertEqual(parsed_filter[3], 
+                        "Cro (control of repressor's operator)")
+
+        filter = "gene.Notes = '5' nucleotidase'"
+        parsed_filter = parsing.parse_filter(filter)
+
+        self.assertEqual(parsed_filter[3],
+                         "5' nucleotidase")
+
+    def test_parse_filter_11(self):
         """Verify parse_filter() handles hyphen characters.
         """
         filter = "gene.Notes LIKE 'MerR-like%'"
@@ -295,6 +311,38 @@ class TestParsing(unittest.TestCase):
         
         self.assertTrue("MerR-like%" in parsed_filter[3])
 
+    def test_parse_filter_12(self):
+        """Verify parse_filter() IN clauses handle apostrophes
+        """
+        filter = "gene.Notes IN ('5' nucleotidase', 'G-I-Y Y-I-G endonuclease')"
+        parsed_filter = parsing.parse_filter(filter)
+
+        self.assertTrue(len(parsed_filter[3]) == 2)
+
+        self.assertTrue("5' nucleotidase" in parsed_filter[3])
+        self.assertTrue("G-I-Y Y-I-G endonuclease" in parsed_filter[3])
+
+    def test_parse_filter_13(self):
+        """Verify IN clauses is robust in handling edge-cases.
+        """
+        pass
+        filter = ("gene.Notes NOT IN ("
+                        "'Cro (control of repressor's operator)', "
+                        "'terminase, small subunit', "
+                        "'G-I-Y Y-I-G endonuclease', "
+                        "'5' nucleotidase', "
+                        "'DnaE-like DNA polymerase III (alpha)')")
+        parsed_filter = parsing.parse_filter(filter)
+
+        self.assertTrue(len(parsed_filter[3]) == 5)
+        self.assertTrue("Cro (control of repressor's operator)" \
+                         in parsed_filter[3])
+        self.assertTrue("terminase, small subunit" in parsed_filter[3])
+        self.assertTrue("G-I-Y Y-I-G endonuclease" in parsed_filter[3])
+        self.assertTrue("5' nucleotidase" in parsed_filter[3])
+        self.assertTrue("DnaE-like DNA polymerase III (alpha)" \
+                        in parsed_filter[3])
+    
     @patch("pdm_utils.functions.parsing.parse_filter")
     def test_create_filter_key_1(self, parse_filter_mock):
         """Verify create_filter_key() calls parse_filter()
