@@ -34,13 +34,15 @@ CURATION_NAME = "revise.csv"
 
 CURATION_HEADER = ["Phage", "Accession Number", "Locus Tag", 
                    "Start", "Stop", "Product"]
+TICKET_HEADER = ["table", "field", "value", "key_name", "key_value"]
+
 FIVE_COLUMN_TABLE_HEADER = []
 
 REVISION_COLUMNS = ["phage.PhageID", "phage.Accession", "gene.LocusTag",
-                    "gene.Start", "gene.Stop", "gene.Notes"]
+                    "gene.Start", "gene.Stop", "gene.Notes", "gene.GeneID"]
 
 INPUT_FILE_TYPES = ["function_report", "csv"]
-OUTPUT_FILE_TYPES = ["curation"]
+OUTPUT_FILE_TYPES = ["ticket", "gb_curation"]
 
 INPUT_FILE_KEYS = {"function_report"   :\
                                        {"data_key"   : "Pham",
@@ -197,7 +199,7 @@ def parse_revise(unparsed_args_list):
  
     local_parser.add_argument("-it", "--input_type", choices=INPUT_FILE_TYPES,
                                                help=INPUT_TYPE_HELP)
-    local_parser.add_argument("-ot", "--output_type", choices=OUTPUT_FILE_TYPES,
+    local_parser.add_argument("-ft", "--output_type", choices=OUTPUT_FILE_TYPES,
                                                help=OUTPUT_TYPE_HELP)
     local_parser.add_argument("-g", "--group_by", nargs="*", dest="groups",
                                                help=GROUP_BY_HELP)
@@ -229,7 +231,7 @@ def parse_revise(unparsed_args_list):
                                folder_path=None, 
                                config_file=None, input=[],
                                input_type="function_report", 
-                               output_type="curation", 
+                               output_type="gb_curation", 
                                filters="", groups=[], verbose=False)
 
     
@@ -243,9 +245,9 @@ def parse_revise(unparsed_args_list):
 def execute_local_revise(alchemist, revisions_file_path, 
                                                 folder_path=None, 
                                                 folder_name=DEFAULT_FOLDER_NAME, 
-                                                config_file=None,
+                                                config=None,
                                                 input_type="function_report",
-                                                output_type="curation",
+                                                output_type="gb_curation",
                                                 filters="", groups=[],
                                                 force=False, verbose=False):
     """Executes the entirety of the genbank local revise pipeline.
@@ -316,10 +318,9 @@ def execute_local_revise(alchemist, revisions_file_path,
 
         pipelines_basic.create_working_dir(mapped_path, force=force)
 
-        if output_type == "curation":
-            write_curation_data(export_dicts, mapped_path)
-        elif output_type == "five_column":
-            write_five_column_table(export_dicts, mapped_path)
+
+        write_revise_file(export_dicts, mapped_path, file_format=output_type,
+                                                     verbose=verbose)
 
 #TODO Owen unittest
 def execute_remote_revise(alchemist, folder_path=None, 
@@ -495,18 +496,22 @@ def use_csv_data(db_filter, data_dicts, columns, conditionals,
         if result_dict is None: 
             continue 
         elif result_dict["Notes"].decode("utf-8") != data_dict["Notes"]:
-            export_dicts.append(data_dict)
+            result_dict["Notes"] = data_dict["Notes"]
+            export_dicts.append(result_dict)
 
     return export_dicts
 
-def write_curation_data(data_dicts, export_path, file_name=CURATION_NAME,
+def write_revise_file(data_dicts, output_path, file_format="gb_curation",
+                                                 file_name=CURATION_NAME,
                                                  verbose=False):
-    """Writes a curation submission csv.
+    """Writes a revision csv in the desired file format with necessary changes.
 
     :param data_dicts: List of data dictionaries to convert to curation format.
     :type data_dicts: list[dict]
-    :param export_path: Path to a dir for file creation.
-    :type export_path: Path
+    :param output_path: Path to a dir for file creation.
+    :type output_path: Path
+    :param file_format: Format of the csv to be written.
+    :type file_format: str
     :param file_name: Name of the file to write curation data to.
     :type file_name: str
     :param verbose: A boolean value to toggle progress print statements.
@@ -515,28 +520,68 @@ def write_curation_data(data_dicts, export_path, file_name=CURATION_NAME,
     data_dicts = sorted(data_dicts, 
                               key=lambda data_dict: data_dict["PhageID"])
 
+    if file_format == "gb_curation":
+        format_data = format_curation_data
+    elif file_format == "ticket":
+        format_data = format_update_ticket_data
+    else:
+        raise ValueError(
+            f"File format '{file_format}' is not recognized for revise output.")
+
     for d in data_dicts:
-        format_curation_data(d)
+        format_data(d)
 
     if verbose:
-        print(f"Writing {file_name} in {export_path.name}...")
-    file_path = export_path.joinpath(file_name)
-    fileio.export_data_dict(data_dicts, file_path, CURATION_HEADER, 
+        print(f"Writing {file_name} in {output_path.name}...")
+    file_path = output_path.joinpath(file_name)
+    
+    if file_format == "gb_curation":
+        header = CURATION_HEADER
+    elif file_format == "ticket":
+        header = TICKET_HEADER
+
+    fileio.export_data_dict(data_dicts, file_path, header, 
                                                     include_headers=True)
 
 def format_curation_data(row_dict): 
-    """Function to format revise dictionary keys.
+    """Function to format revise dictionary keys to gb curation format.
 
     :param row_dict: Data dictionary for a revise file.
     :type row_dict: dict
     :param product: Gene product to append to the revise data dictionary.
     :type product: str
     """
+    row_dict.pop("GeneID")
+
     row_dict["Phage"] = row_dict.pop("PhageID")
     row_dict["Accession Number"] = row_dict.pop("Accession")
     row_dict["Locus Tag"] = row_dict.pop("LocusTag")
     row_dict["Product"] = row_dict.pop("Notes")
 
+def format_update_ticket_data(row_dict):
+    """Function to format revise dictionary keys to update ticket format.
+
+    :param row_dict: Data dictionary for a revise file.
+    :type row_dict: dict
+    :param product: Gene product to append to the revise data dictionary.
+    :type product: str
+    """
+    row_dict.pop("PhageID")
+    row_dict.pop("Accession")
+    row_dict.pop("LocusTag")
+    row_dict.pop("Start")
+    row_dict.pop("Stop")
+
+    product = row_dict.pop("Notes")
+    if product.lower() == "hypothetical protein":
+        product = ""
+
+    row_dict["table"] = "gene"
+    row_dict["field"] = "Notes"
+    row_dict["value"] = product
+    row_dict["key_name"] = "GeneID"
+    row_dict["key_value"] = row_dict.pop("GeneID") 
+        
 #REMOTE REVISE HELPER FUNCTIONS
 #-----------------------------------------------------------------------------
 def revise_seqrecord(target_record, template_record, verbose=False):
