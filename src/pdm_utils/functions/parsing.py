@@ -5,9 +5,9 @@ import re
 from sqlalchemy import Column
 #----------------------------------------------------------------------------
 #GLOBAL VARIABLES
-VALUE_CHARACTERS      = "\w\d\-_%/(),"
+VALUE_CHARACTERS      = "\w\d\-_%/(),'"
 VC = VALUE_CHARACTERS
-VALUE_EXPRESSION      = f"[{VC}]+|'[ {VC}]*'"
+VALUE_EXPRESSION      = f"'[ {VC}]*'|[{VC}]+"
 VE = VALUE_EXPRESSION
 FILTER_FORMAT         = (" *\w+\.\w+ *([=<>!]+ *| +LIKE +| +IS NOT +){1} *"
                         f"({VE}) *")
