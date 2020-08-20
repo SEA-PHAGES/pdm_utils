@@ -330,6 +330,10 @@ def reformat_description(raw_description):
         processed_description = ""
     elif is_float(processed_description):
         processed_description = ""
+    elif processed_description.startswith("Original Glimmer"):
+        processed_description = ""
+    elif processed_description.startswith("Original Genemark"):
+        processed_description = ""
     elif len(split_description) == 1:
 
         # Check if similar to gp10, ORF10, ORF10.1
