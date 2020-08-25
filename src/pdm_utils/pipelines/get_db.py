@@ -68,6 +68,10 @@ def main(unparsed_args_list):
         server_url = server_creds["url"]
         if server_url is None:
             server_url = args.url
+        
+        if args.remote_directory != "":
+            server_url = "/".join([server_url, str(args.remote_directory)])
+
         version_file = args.version
         output_folder = basic.set_path(args.output_folder, kind="dir", expect=True)
         download = True
@@ -108,6 +112,89 @@ def main(unparsed_args_list):
         if remove:
             print("Removing downloaded data.")
             shutil.rmtree(results_path)
+
+
+# TODO test.
+def parse_args(unparsed_args_list):
+    """
+    Verify the correct arguments are selected for getting a new database.
+    :param unparsed_args_list: arguments in sys.argv format
+    :type unparsed_args_list: list
+    :returns: A parsed list of arguments
+    :rtype: argparse.Namespace
+    """
+
+    get_db_help = "Pipeline to retrieve and install a new version of a MySQL " \
+                  "database."
+    database_help = "Name of the MySQL database."
+    option_help = "Source of data to create database."
+    server_help = "Download database from server."
+    url_help = "Server URL from which to retrieve files."
+    REMOTE_DIRECTORY_HELP = """
+        Remote directory at the server URL from which to retrieve files.
+        """
+    version_help = "Indicates that a .version file should be downloaded."
+    output_folder_help = f"Path to the folder to create the folder for " \
+                         f"downloading the database. Default is " \
+                         f"{DEFAULT_OUTPUT_FOLDER}"
+    download_only_help = "The database should be downloaded but not " \
+                         "installed locally."
+    file_help = "Install database from a SQL file."
+    filename_help = "Name of the SQL file and version file."
+    new_help = "Create a new empty database."
+    schema_version_help = "Database schema version to which the database " \
+                          "should be converted."
+    config_file_help = "Path to the file containing user-specific login data."
+
+    # database optional for subparser a and required for b and c
+
+    parser = argparse.ArgumentParser(description=get_db_help)
+    # parser.add_argument("-db", "--database", type=str, help=database_help,
+    # default=None)
+
+    subparsers = parser.add_subparsers(dest="option", help=option_help)
+
+    # Command line structure
+    # python3 -m pdm_utils get_db server -db <database>
+    parser_a = subparsers.add_parser("server", help=server_help)
+    parser_a.add_argument("-db", "--database", type=str, help=database_help,
+                          default=None)
+    parser_a.add_argument("-u", "--url", type=str,
+                          default=constants.DB_WEBSITE, help=url_help)
+    parser_a.add_argument("-v", "--version", action="store_true",
+                          default=False, help=version_help)
+    parser_a.add_argument("-o", "--output_folder", type=pathlib.Path,
+                          default=pathlib.Path(DEFAULT_OUTPUT_FOLDER),
+                          help=output_folder_help)
+    parser_a.add_argument("-d", "--download_only", action="store_true",
+                          default=False, help=download_only_help)
+    parser_a.add_argument("-rd", "--remote_directory", type=pathlib.Path,
+                                      help=REMOTE_DIRECTORY_HELP, default="")
+
+    parser_b = subparsers.add_parser("file", help=file_help)
+    parser_b.add_argument("database", type=str, help=database_help)
+    parser_b.add_argument("filename", type=pathlib.Path, help=filename_help)
+
+    parser_c = subparsers.add_parser("new", help=new_help)
+    parser_c.add_argument("database", type=str, help=database_help)
+    parser_c.add_argument("-s", "--schema_version", type=int,
+                          choices=list(convert_db.CHOICES),
+                          default=convert_db.CURRENT_VERSION,
+                          help=schema_version_help)
+
+    # Add config file option to all subparsers.
+    # It could be added after database, but then the optional argument is
+    # required to be placed before the required subparser option, which
+    # doesn't make sense.
+    for p in [parser_a, parser_b, parser_c]:
+        p.add_argument("-c", "--config_file", type=pathlib.Path,
+                       help=config_file_help, default=None)
+
+    # Assumed command line arg structure:
+    # python3 -m pdm_utils.run <pipeline> <additional args...>
+    # sys.argv:      [0]            [1]         [2...]
+    args = parser.parse_args(unparsed_args_list[2:])
+    return args
 
 
 # TODO test.
@@ -295,79 +382,3 @@ def interactive():
         return None
 
 
-# TODO test.
-def parse_args(unparsed_args_list):
-    """
-    Verify the correct arguments are selected for getting a new database.
-    :param unparsed_args_list: arguments in sys.argv format
-    :type unparsed_args_list: list
-    :returns: A parsed list of arguments
-    :rtype: argparse.Namespace
-    """
-
-    get_db_help = "Pipeline to retrieve and install a new version of a MySQL " \
-                  "database."
-    database_help = "Name of the MySQL database."
-    option_help = "Source of data to create database."
-    server_help = "Download database from server."
-    url_help = "Server URL from which to retrieve files."
-    version_help = "Indicates that a .version file should be downloaded."
-    output_folder_help = f"Path to the folder to create the folder for " \
-                         f"downloading the database. Default is " \
-                         f"{DEFAULT_OUTPUT_FOLDER}"
-    download_only_help = "The database should be downloaded but not " \
-                         "installed locally."
-    file_help = "Install database from a SQL file."
-    filename_help = "Name of the SQL file and version file."
-    new_help = "Create a new empty database."
-    schema_version_help = "Database schema version to which the database " \
-                          "should be converted."
-    config_file_help = "Path to the file containing user-specific login data."
-
-    # database optional for subparser a and required for b and c
-
-    parser = argparse.ArgumentParser(description=get_db_help)
-    # parser.add_argument("-db", "--database", type=str, help=database_help,
-    # default=None)
-
-    subparsers = parser.add_subparsers(dest="option", help=option_help)
-
-    # Command line structure
-    # python3 -m pdm_utils get_db server -db <database>
-    parser_a = subparsers.add_parser("server", help=server_help)
-    parser_a.add_argument("-db", "--database", type=str, help=database_help,
-                          default=None)
-    parser_a.add_argument("-u", "--url", type=str,
-                          default=constants.DB_WEBSITE, help=url_help)
-    parser_a.add_argument("-v", "--version", action="store_true",
-                          default=False, help=version_help)
-    parser_a.add_argument("-o", "--output_folder", type=pathlib.Path,
-                          default=pathlib.Path(DEFAULT_OUTPUT_FOLDER),
-                          help=output_folder_help)
-    parser_a.add_argument("-d", "--download_only", action="store_true",
-                          default=False, help=download_only_help)
-
-    parser_b = subparsers.add_parser("file", help=file_help)
-    parser_b.add_argument("database", type=str, help=database_help)
-    parser_b.add_argument("filename", type=pathlib.Path, help=filename_help)
-
-    parser_c = subparsers.add_parser("new", help=new_help)
-    parser_c.add_argument("database", type=str, help=database_help)
-    parser_c.add_argument("-s", "--schema_version", type=int,
-                          choices=list(convert_db.CHOICES),
-                          default=convert_db.CURRENT_VERSION,
-                          help=schema_version_help)
-
-    # Add config file option to all subparsers.
-    # It could be added after database, but then the optional argument is
-    # required to be placed before the required subparser option, which
-    # doesn't make sense.
-    for p in [parser_a, parser_b, parser_c]:
-        p.add_argument("-c", "--config_file", type=pathlib.Path,
-                       help=config_file_help, default=None)
-
-    # Assumed command line arg structure:
-    # python3 -m pdm_utils.run <pipeline> <additional args...>
-    # sys.argv:      [0]            [1]         [2...]
-    args = parser.parse_args(unparsed_args_list[2:])
-    return args
