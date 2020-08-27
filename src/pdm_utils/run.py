@@ -6,7 +6,6 @@ import argparse
 
 from pdm_utils.pipelines import compare_db
 from pdm_utils.pipelines import convert_db
-from pdm_utils.pipelines import email_submitters
 from pdm_utils.pipelines import export_db
 from pdm_utils.pipelines import find_domains
 from pdm_utils.pipelines import freeze_db
@@ -21,10 +20,10 @@ from pdm_utils.pipelines import revise
 from pdm_utils.pipelines import review
 from pdm_utils.pipelines import update_field
 
-VALID_PIPELINES = {
-    "compare", "convert", "email_submitters", "export", "find_domains",
-    "find_phams", "freeze", "get_data", "get_db", "get_gb_records", "import", 
-    "phamerate", "push", "revise", "review", "update"}
+VALID_PIPELINES = {"compare", "convert", "export", "find_domains",
+                   "find_phams", "freeze", "get_data", "get_db",
+                   "get_gb_records", "import", "phamerate", "push",
+                   "revise", "review", "update"}
 
 
 def main(unparsed_args):
@@ -35,8 +34,6 @@ def main(unparsed_args):
         compare_db.main(unparsed_args)
     elif args.pipeline == "convert":
         convert_db.main(unparsed_args)
-    elif args.pipeline == "email_submitters":
-        email_submitters.main(unparsed_args)
     elif args.pipeline == "export":
         export_db.main(unparsed_args)
     elif args.pipeline == "find_domains":
