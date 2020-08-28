@@ -697,7 +697,7 @@ def retrieve_records(accession_dict, ncbi_folder, batch_size=200):
             # record, this is redundant.
             tup = check_record_date(output_list, accession_dict)
             new_record_list = tup[0]
-            #list of results dictionaries
+            # list of results dictionaries
             results.extend(tup[1])
 
             if len(new_record_list) > 0:
