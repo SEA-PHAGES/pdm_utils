@@ -307,6 +307,11 @@ def compare_data(gnm_pair):
 
     # Compare Cluster
     if mysqldb_gnm.cluster != phagesdb_gnm.cluster:
+        # "Singleton" is not a valid cluster in MySQL (should be NULL)
+        if phagesdb_gnm.cluster == "Singleton":
+            # Convert to "NULL" so pipelines.update_field.update_field()
+            # can convert to None
+            phagesdb_gnm.cluster = "NULL"
         d1 = create_update_ticket("Cluster", phagesdb_gnm.cluster,
                                   mysqldb_gnm.id)
         tkt_list.append(d1)
