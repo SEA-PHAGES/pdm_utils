@@ -330,9 +330,9 @@ def reformat_description(raw_description):
         processed_description = ""
     elif is_float(processed_description):
         processed_description = ""
-    elif processed_description.startswith("Original Glimmer"):
+    elif processed_description.startswith("original glimmer"):
         processed_description = ""
-    elif processed_description.startswith("Original Genemark"):
+    elif processed_description.startswith("original genemark"):
         processed_description = ""
     elif len(split_description) == 1:
 
