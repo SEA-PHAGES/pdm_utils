@@ -69,8 +69,8 @@ def main(unparsed_args_list):
         if server_url is None:
             server_url = args.url
         
-        if args.remote_directory != "":
-            server_url = "/".join([server_url, str(args.remote_directory)])
+        if args.remote_directory:
+            server_url = "".join([server_url, str(args.remote_directory)])
 
         version_file = args.version
         output_folder = basic.set_path(args.output_folder, kind="dir", expect=True)
@@ -169,7 +169,7 @@ def parse_args(unparsed_args_list):
     parser_a.add_argument("-d", "--download_only", action="store_true",
                           default=False, help=download_only_help)
     parser_a.add_argument("-rd", "--remote_directory", type=pathlib.Path,
-                                      help=REMOTE_DIRECTORY_HELP, default="")
+                                      help=REMOTE_DIRECTORY_HELP, default=None)
 
     parser_b = subparsers.add_parser("file", help=file_help)
     parser_b.add_argument("database", type=str, help=database_help)
