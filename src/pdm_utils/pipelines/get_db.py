@@ -70,7 +70,7 @@ def main(unparsed_args_list):
             server_url = args.url
         
         if args.remote_directory:
-            server_url = "".join([server_url, str(args.remote_directory)])
+            server_url = "".join([server_url, str(args.remote_directory), "/"])
 
         version_file = args.version
         output_folder = basic.set_path(args.output_folder, kind="dir", expect=True)
