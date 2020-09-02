@@ -1,38 +1,30 @@
-"""Pipeline to retrieve GenBank records using accessions stored in the MySQL database."""
+"""Pipeline to retrieve GenBank records using accessions stored
+in the MySQL database.
+"""
 
 import argparse
-import configparser
-import os
 import re
-import shutil
-import sys
 import time
-from datetime import date
 from pathlib import Path
 
 from Bio import SeqIO
 
-from pdm_utils.classes.filter import Filter
-from pdm_utils.classes.alchemyhandler import AlchemyHandler
-from pdm_utils.functions import basic
 from pdm_utils.functions import configfile
 from pdm_utils.functions import fileio
 from pdm_utils.functions import ncbi
 from pdm_utils.functions import mysqldb
-from pdm_utils.functions import mysqldb_basic
 from pdm_utils.functions import pipelines_basic
-from pdm_utils.functions import parsing
-from pdm_utils.functions import querying
 
-#GLOBAL VARIABLES
-#-----------------------------------------------------------------------------
+# GLOBAL VARIABLES
+# -----------------------------------------------------------------------------
 DEFAULT_FOLDER_NAME = f"{time.strftime('%Y%m%d')}_gb_records"
 FILTER_KEY = "phage"
 
 RECORD_FILE_TYPES = ["gb", "tbl"]
 
-#MAIN FUNCTIONS
-#-----------------------------------------------------------------------------
+
+# MAIN FUNCTIONS
+# -----------------------------------------------------------------------------
 # TODO unittest.
 def main(unparsed_args_list):
     """Run main get_gb_records pipeline."""
@@ -40,12 +32,12 @@ def main(unparsed_args_list):
     args = parse_args(unparsed_args_list)
 
     # Create config object with data obtained from file and/or defaults.
-    config = configfile.build_complete_config(args.config_file) 
-    
+    config = configfile.build_complete_config(args.config_file)
+
     alchemist = pipelines_basic.build_alchemist(args.database, config=config)
-    mysqldb.check_schema_compatibility(alchemist.engine, 
+    mysqldb.check_schema_compatibility(alchemist.engine,
                                        "the get_gb_records pipeline")
-    
+
     values = pipelines_basic.parse_value_input(args.input)
 
     execute_get_gb_records(alchemist, args.file_type,
@@ -53,8 +45,9 @@ def main(unparsed_args_list):
                            folder_name=args.folder_name, 
                            config=config,
                            values=values, verbose=args.verbose, 
-                           filters=args.filters, groups=args.groups)
-     
+                           filters=args.filters, groups=args.groups) 
+
+
 # TODO unittest.
 def parse_args(unparsed_args_list):
     """Parses export_db arguments and stores them with an argparse object.
@@ -156,7 +149,8 @@ def parse_args(unparsed_args_list):
     parsed_args = parser.parse_args(unparsed_args_list[2:])    
     return parsed_args
 
-def execute_get_gb_records(alchemist, file_type, folder_path=None, 
+
+def execute_get_gb_records(alchemist, file_type, folder_path=None,
                            folder_name=DEFAULT_FOLDER_NAME, 
                            config=None, values=None, verbose=False, 
                            force=False, filters="", groups=[]):
@@ -184,20 +178,20 @@ def execute_get_gb_records(alchemist, file_type, folder_path=None,
     :type groups: list[str]
     """
     ncbi_creds = {}
-    if not config is None:
-        ncbi_creds = config["ncbi"] 
+    if config is not None:
+        ncbi_creds = config["ncbi"]
 
     db_filter = pipelines_basic.build_filter(alchemist, FILTER_KEY, filters,
-                                                        values=values,
-                                                        verbose=verbose) 
+                                             values=values, verbose=verbose)
 
     if verbose:
         print("Creating records folder...")
-    records_path = pipelines_basic.create_working_path(folder_path, folder_name,
+    records_path = pipelines_basic.create_working_path(folder_path,
+                                                       folder_name,
                                                        force=force)
-    
+
     conditionals_map = pipelines_basic.build_groups_map(
-                                                db_filter, records_path, 
+                                                db_filter, records_path,
                                                 groups=groups, verbose=verbose,
                                                 force=force)
 
@@ -220,28 +214,27 @@ def execute_get_gb_records(alchemist, file_type, folder_path=None,
             if not (accession is None or accession == ""):
                 acc_id_dict[accession] = data_dict["PhageID"]
 
-        pipelines_basic.create_working_dir(mapped_path, force=force) 
+        pipelines_basic.create_working_dir(mapped_path, force=force)
         if len(acc_id_dict.keys()) > 0:
             ncbi_handle = ncbi.get_verified_data_handle(
-                                                     mapped_path, acc_id_dict, 
-                                                     ncbi_cred_dict=ncbi_creds, 
+                                                     acc_id_dict,
+                                                     ncbi_cred_dict=ncbi_creds,
                                                      file_type=file_type)
 
-            copy_gb_data(ncbi_handle, acc_id_dict, mapped_path, file_type, 
-                                                            verbose=verbose)
+            copy_gb_data(ncbi_handle, acc_id_dict, mapped_path, file_type,
+                         verbose=verbose)
         else:
             print(f"There are no records to retrieve for '{mapped_path}'.")
             continue
 
 
-
 # TODO test.
-def copy_gb_data(ncbi_handle, acc_id_dict, records_path, file_type, 
-                                                        verbose=False): 
-    """Save retrieved records to file.""" 
+def copy_gb_data(ncbi_handle, acc_id_dict, records_path, file_type,
+                 verbose=False):
+    """Save retrieved records to file."""
     if file_type == "gb":
         record_parser = SeqIO.parse(ncbi_handle, "genbank")
-       
+
         seqrecords = []
         for record in record_parser:
             accession = record.annotations["accessions"][0]
@@ -256,7 +249,7 @@ def copy_gb_data(ncbi_handle, acc_id_dict, records_path, file_type,
         file_lines = ncbi_handle.readlines()
 
         feature_format = re.compile(">Feature ..\|(\w+)(\..)\|\n")
-        
+
         file_handle = None
         for line in file_lines:
             if not re.match(feature_format, line) is None:
@@ -264,7 +257,7 @@ def copy_gb_data(ncbi_handle, acc_id_dict, records_path, file_type,
                 accession = accession_split[1]
                 phage_id = acc_id_dict[accession_split[1]]
 
-                file_name = (f"{phage_id}.tbl") 
+                file_name = (f"{phage_id}.tbl")
                 file_path = records_path.joinpath(file_name)
                 file_handle = file_path.open(mode="w")
 
@@ -272,6 +265,6 @@ def copy_gb_data(ncbi_handle, acc_id_dict, records_path, file_type,
             else:
                 if file_handle is None:
                     continue
-                file_handle.write(line) 
- 
+                file_handle.write(line)
+
         ncbi_handle.close()
