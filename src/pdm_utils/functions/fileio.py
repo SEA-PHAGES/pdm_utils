@@ -8,13 +8,14 @@ from Bio.SeqFeature import CompoundLocation
 
 from pdm_utils.classes.fileio import FeatureTableParser
 
-#GLOBAL VARIABLES
-#-----------------------------------------------------------------------------
+# GLOBAL VARIABLES
+# -----------------------------------------------------------------------------
 TBL_EXCLUDED_QUALIFIERS = ["translation"]
 TBL_SPECIAL_QUALIFIERS = ["ribosomal_slippage"]
 
-#READING FUNCTIONS
-#-----------------------------------------------------------------------------
+
+# READING FUNCTIONS
+# -----------------------------------------------------------------------------
 def retrieve_data_dict(filepath):
     """Open file and retrieve a dictionary of data.
 
@@ -35,6 +36,7 @@ def retrieve_data_dict(filepath):
             data_dicts.append(dict)
     return data_dicts
 
+
 def read_feature_table(filehandle):
     """Reads a (five-column) feature table and parses the data into a seqrecord.
 
@@ -52,6 +54,7 @@ def read_feature_table(filehandle):
 
     return record
 
+
 def parse_feature_table(filehandle):
     """Takes a (five-column) feature table(s) file handle and parses the data.
 
@@ -59,11 +62,11 @@ def parse_feature_table(filehandle):
     :returns: Returns a feature table file parser generator.
     :rtype: FeatureTableFileParser
     """
-    return FeatureTableParser(filehandle)
-    
-#WRITING FUNCTIONS
-#-----------------------------------------------------------------------------
+    return FeatureTableParser(filehandle)    
 
+
+# WRITING FUNCTIONS
+# -----------------------------------------------------------------------------
 def export_data_dict(data_dicts, file_path, headers, include_headers=False):
     """Save a dictionary of data to file using specified column headers.
 
@@ -97,6 +100,7 @@ def export_data_dict(data_dicts, file_path, headers, include_headers=False):
         for data_dict in data_dicts:
             file_writer.writerow(data_dict)
 
+
 def write_fasta(ids_seqs, infile_path):
     """
     Writes the input genes to the indicated file in FASTA multiple
@@ -121,6 +125,7 @@ def write_fasta(ids_seqs, infile_path):
 
     file_handle.close()
 
+
 def write_database(alchemist, version, export_path, db_name=None):
     """Output .sql file from the selected database.
 
@@ -140,6 +145,7 @@ def write_database(alchemist, version, export_path, db_name=None):
     version_path = sql_path.with_name(f"{db_name}.version")
     version_path.touch()
     version_path.write_text(f"{version}")
+
 
 def write_seqrecord(seqrecord_list, file_format, export_path, export_name=None,
                                                               concatenate=False,
@@ -187,6 +193,7 @@ def write_seqrecord(seqrecord_list, file_format, export_path, export_name=None,
 
         file_handle.close()
 
+
 def write_feature_table(seqrecord_list, export_path, verbose=False):
     """Outputs files as five_column tab-delimited text files.
 
@@ -205,12 +212,12 @@ def write_feature_table(seqrecord_list, export_path, verbose=False):
         file_name = f"{record.name}.tbl"
         file_path = export_path.joinpath(file_name)
         file_handle = file_path.open(mode='w')
-        
+
         accession = record.id
         version = record.annotations.get("sequence_version")
         if version:
             accession = ".".join([accession, version])
-  
+
         prefix = record.annotations.get("tbl_prefix")
         if not prefix:
             prefix = ""
@@ -253,7 +260,6 @@ def write_feature_table(seqrecord_list, export_path, verbose=False):
                 qualifier_values = feature.qualifiers[key]
                 for value in qualifier_values:
                     file_handle.write(f"\t\t\t{key}\t{value}\n")
-        
+
         file_handle.write("\n")
         file_handle.close()
-
