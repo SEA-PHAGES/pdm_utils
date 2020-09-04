@@ -111,7 +111,7 @@ def update_field(alchemist, update_ticket):
     key_value_count = mysqldb_basic.scalar(alchemist.engine, key_value_query)
 
     if key_value_count != 1:
-        print(f"\nInvalid selection value '{update_field['key_value']}' "
+        print(f"\nInvalid selection value '{update_ticket['key_value']}' "
               f"for key '{key_field.name}' in table '{table_obj.name}'")
         return 0
 
