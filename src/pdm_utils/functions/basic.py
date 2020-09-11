@@ -433,79 +433,53 @@ def trim_characters(string):
     return string
 
 
-# TODO this function needs to be improved.
 def parse_names_from_record_field(description):
-    """Parse string of text to identify the phage name and host genus.
-
-    :param description: Input value to be parsed.
-    :type description: str
-    :returns:
-        tuple (name, host_genus)
-        WHERE
-        name(str) is the parsed phage name.
-        host_genus(str) is the parsed host_genus.
-    :rtype: tuple
     """
-    generic_words = {"complete", "genome", "sequence", "phage", "unclassified"}
+    Attempts to parse the phage/plasmid/prophage name and host genus
+    from a given string.
+    :param description: the input string to be parsed
+    :type description: str
+    :return: name, host_genus
+    """
+    generic_words = ("phage", "unclassified", "complete", "genome", "sequence")
     host_genus = ""
     name = ""
-    description = description.strip()
-    split_description = description.split()
 
-    # Trim leading and trailing generic characters.
-    for index in range(len(split_description)):
-        split_description[index] = trim_characters(split_description[index])
+    # Split description into list, and trim leading and trailing generic chars
+    description = [trim_characters(x) for x in description.strip().split()]
 
-    # Iterate through the list of processed words and attempt to
-    # identify the host_genus name and phage name.
-
-    for index in range(len(split_description)):
-        word = split_description[index]
-        word_lower = word.lower()
-
-        # Attempt to identify the host_genus.
-
-        # Sometimes the host_genus name is the word preceding 'phage' or 'virus'.
-        # e.g. 'Mycobacterium phage'.
-        if index > 0:
-            if (word_lower == "phage" or word_lower == "virus"):
-                host_genus = split_description[index - 1]
-        # Sometimes the host_genus name is merged with 'phage'.
-        # e.g. 'Mycobacteriophage'.
-        elif (len(word) > 5 and word_lower[-5:] == "phage"):
-            host_genus = word[:-5]
+    # If there's only a non-generic word in the description, take that as name
+    if len(description) == 1 and description[0].lower() not in generic_words:
+        if description[0].lower().endswith("phage"):
+            host_genus = description[0][:-5]
         else:
-            pass
+            name = description[0]
 
-        # Attempt to identify the phage.
+    # If there are two words in the description, look for two options:
+    elif len(description) == 2:
+        # Parses format: Mycobacteriophage Trixie or phage Trixie or virus Trixie
+        if description[0].lower().endswith('phage') or \
+                description[0].lower().endswith('virus'):
+            host_genus = description[0][:-5]
+            name = description[1]
+        # Parses format: Trixie_Draft Unclassified
+        elif description[0].lower() not in generic_words and \
+                description[1].lower() == "unclassified":
+            name = description[0]
+        # Parses format: Mycobacterium phage
+        elif description[1].lower() in ("phage", "prophage", "plasmid", "virus"):
+            host_genus = description[0]
+    # If there are multiple words in the description, look for replicon type
+    else:
+        for i, value in enumerate(description):
+            # Parses format: Mycobacterium phage Trixie
+            if value.lower() in ("phage", "prophage", "plasmid", "virus"):
+                if i > 0:
+                    host_genus = description[i-1]
+                if i + 1 < len(description):
+                    name = description[i+1]
 
-        # If there is one non-generic word in the string, assign it as the
-        # phage name.
-        if len(split_description) == 1:
-            if (len(word) > 5 and word_lower[-5:] == "phage"):
-                host_genus = word[:-5]
-            elif word_lower not in generic_words:
-                name = word
-            else:
-                pass
-        else:
-            if index < (len(split_description) - 1):
-                if (word_lower[-5:] == "phage" or
-                        word_lower[-5:] == "virus"):
-                    # Sometimes the phage name follows 'phage' or 'virus'.
-                    # e.g. 'Mycobacterium phage Trixie' or
-                    # 'Mycobacteriophage Trixie'
-                    name = split_description[index + 1]
-                elif len(split_description) == 2:
-                    # Sometimes phage name precedes 'Unclassified'.
-                    # e.g. 'Trixie_Draft Unclassified'
-                    next_lower = split_description[index + 1].lower()
-                    if (word_lower not in generic_words and
-                            next_lower == "unclassified"):
-                        name = word
-                else:
-                    pass
-    return (name, host_genus)
+    return name, host_genus
 
 
 def compare_sets(set1, set2):
@@ -526,7 +500,7 @@ def compare_sets(set1, set2):
     set_intersection = set1 & set2
     set1_diff = set1 - set2
     set2_diff = set2 - set1
-    return (set_intersection, set1_diff, set2_diff)
+    return set_intersection, set1_diff, set2_diff
 
 
 def match_items(list1, list2):
@@ -575,10 +549,9 @@ def is_float(string):
     """Check if string can be converted to float."""
     try:
         float(string)
-    except:
-        return False
-    else:
         return True
+    except ValueError:
+        return False
 
 
 def split_string(string):
@@ -616,7 +589,7 @@ def split_string(string):
                 right = string[x:]
                 value = True
             x += 1
-    return (left, right)
+    return left, right
 
 
 # TODO this function is specific to genome-level data, so should
@@ -640,7 +613,7 @@ def compare_cluster_subcluster(cluster, subcluster):
     # If Singleton or Unknown Cluster, there should be no Subcluster.
     # Subcluster = '' is considered an error since it is the default
     # attribute value when the Genome class is instantiated.
-    if (cluster.capitalize() == "Singleton" or cluster == "UNK"):
+    if cluster.capitalize() == "Singleton" or cluster == "UNK":
         if subcluster != "none":
             result = False
 
@@ -649,7 +622,7 @@ def compare_cluster_subcluster(cluster, subcluster):
     # of Subcluster data and the remainder should be a digit
     elif subcluster != "none":
         left, right = split_string(subcluster)
-        if (left != cluster or right.isdigit() == False):
+        if left != cluster or right.isdigit() == False:
             result = False
     else:
         pass
@@ -712,9 +685,9 @@ def check_value_expected_in_set(value, set1, expect=True):
     else:
         present = False
     # Compare the presence/absence with what was expected.
-    if (expect and present):
+    if expect and present:
         result = True
-    elif (not expect and not present):
+    elif not expect and not present:
         result = True
     else:
         result = False
@@ -748,11 +721,11 @@ def check_value_in_two_sets(value, set1, set2):
         present1 = True
     if value in set2:
         present2 = True
-    if (present1 and present2):
+    if present1 and present2:
         result = "both"
-    elif (present1 and not present2):
+    elif present1 and not present2:
         result = "first"
-    elif (not present1 and present2):
+    elif not present1 and present2:
         result = "second"
     else:
         result = "neither"
@@ -769,7 +742,7 @@ def lower_case(value):
         'none', 'retrieve', or 'retain'.
     :rtype: str
     """
-    lower_set = set(["none", "retrieve", "retain"])
+    lower_set = {"none", "retrieve", "retain"}
     if isinstance(value, str):
         if value.lower() in lower_set:
             value = value.lower()
@@ -802,13 +775,13 @@ def ask_yes_no(prompt="", response_attempt=1):
     while response_valid is False and response_attempt > 0:
         response = input(prompt)
         response_attempt -= 1
-        if response.lower() in set(["yes", "y", "t", "true"]):
+        if response.lower() in ("yes", "y", "t", "true"):
             response = True
             response_valid = True
-        elif response.lower() in set(["no", "n", "f", "false", ""]):
+        elif response.lower() in ("no", "n", "f", "false", ""):
             response = False
             response_valid = True
-        elif response.lower() in set(["exit", "quit", "q"]):
+        elif response.lower() in ("exit", "quit", "q"):
             response = None
             response_valid = True
         else:
@@ -837,12 +810,12 @@ def identify_contents(path_to_folder, kind=None, ignore_set=set()):
     for item in path_to_folder.iterdir():
         item_path = Path(path_to_folder, item)
         if kind == "file":
-            if (item_path.is_file() and item.name not in ignore_set):
+            if item_path.is_file() and item.name not in ignore_set:
                 contents.append(item)
         elif kind == "dir":
-            if (item_path.is_dir() and item.name not in ignore_set):
+            if item_path.is_dir() and item.name not in ignore_set:
                 contents.append(item)
-        elif kind == None:
+        elif kind is None:
             if item.name not in ignore_set:
                 contents.append(item)
         else:
