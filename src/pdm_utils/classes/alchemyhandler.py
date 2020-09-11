@@ -1,23 +1,19 @@
 import sys
 
 import sqlalchemy
-import pymysql
 from getpass import getpass
-from networkx import Graph
 from sqlalchemy import create_engine
 from sqlalchemy import MetaData
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.engine.base import Engine
-from sqlalchemy.exc import OperationalError
 from sqlalchemy.ext.automap import automap_base
 
-from pdm_utils.functions import cartography
 from pdm_utils.functions import querying
 from pdm_utils.functions import mysqldb_basic
 from pdm_utils.functions import parsing
 
-#-----------------------------------------------------------------------------
-#GLOBAL VARIABLES
+# -----------------------------------------------------------------------------
+# GLOBAL VARIABLES
 CREDENTIALS_MSG = ("Credentials invalid and maximum login attempts reached. "
                    "Please check your MySQL credentials and try again.")
 
@@ -25,14 +21,15 @@ DATABASE_MSG = ("Unable to connect to database with valid credentials.\n"
                 "Please check your MySQL database access, "
                 "and/or your database availability.")
 
+
 class AlchemyHandler:
     def __init__(self, database=None, username=None, password=None):
         self._database = database
         self._username = username
         self._password = password
-        #Username, password, and database are included for two reasons:
-        #The ability to set credentials 'pythonically'
-        #An understanding of whether the credentials are valid for the engine.
+        # Username, password, and database are included for two reasons:
+        # The ability to set credentials 'pythonically'
+        # An understanding of whether the credentials are valid for the engine.
 
         self._engine = None
         self._metadata = None
@@ -44,19 +41,19 @@ class AlchemyHandler:
         self.connected = False
         self.has_credentials = False
 
-        if username != None and password != None:
+        if (username is not None) and (password is not None):
             self.has_credentials = True
 
         self.has_database = False
         self.connected_database = False
         self._databases = []
 
-        if database != None:
+        if database is not None:
             self.has_database = True
 
-#-----------------------------------------------------------------------------
-#ALCHEMYHANDLER PROPERTIES
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# ALCHEMYHANDLER PROPERTIES
+# -----------------------------------------------------------------------------
 
     @property
     def database(self):
@@ -70,7 +67,7 @@ class AlchemyHandler:
 
     @database.setter
     def database(self, database):
-        if database == None:
+        if database is None:
             self.has_database = False
             self.connected_database = False
             return
@@ -95,7 +92,7 @@ class AlchemyHandler:
 
     @username.setter
     def username(self, username):
-        if username == None:
+        if username is None:
             self.has_credentials = False
             self.connected = False
             return
@@ -105,7 +102,7 @@ class AlchemyHandler:
 
         self._username = username
 
-        if self._password != None:
+        if self._password is not None:
             self.has_credentials = True
         self.connected = False
 
@@ -123,7 +120,7 @@ class AlchemyHandler:
 
     @password.setter
     def password(self, password):
-        if password == None:
+        if password is None:
             self.has_credentials = False
             self.connected = False
             return
@@ -133,7 +130,7 @@ class AlchemyHandler:
 
         self._password = password
 
-        if self._username != None:
+        if self._username is not None:
             self.has_credentials = True
         self.connected = False
 
@@ -190,7 +187,7 @@ class AlchemyHandler:
                                             database=self._database)
 
     @URI.setter
-    def URI(self, URI): 
+    def URI(self, URI):
         self.clear()
 
         if URI is None:
@@ -200,14 +197,14 @@ class AlchemyHandler:
             self._database = None
             self.has_credentials = False
             self.has_database = False
-            return 
+            return
 
         if not isinstance(URI, str):
             raise TypeError
 
         self._engine = create_engine(URI)
         self.extract_engine_credentials(self._engine)
-    
+
     @property
     def session(self):
         """Returns the AlchemyHandler's stored session object.
@@ -266,9 +263,9 @@ class AlchemyHandler:
         databases = self._databases.copy()
         return databases
 
-#-----------------------------------------------------------------------------
-#CONNECTION METHODS
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# CONNECTION METHODS
+# -----------------------------------------------------------------------------
 
     def ask_database(self):
         """Ask for database input to store in AlchemyHandler.
@@ -290,7 +287,7 @@ class AlchemyHandler:
     def extract_engine_credentials(self, engine):
         """Extract username, password, and/or database from a SQLAlchemy engine.
         """
-        url = engine.url 
+        url = engine.url
         self.connected = True
 
         self._username = url.username
@@ -306,16 +303,16 @@ class AlchemyHandler:
         """Validate access to database using stored MySQL credentials.
         """
         if not self.connected:
-            raise ValueError("AlchemyHandler currently not connected to MySQL.")
+            raise ValueError(
+                    "AlchemyHandler currently not connected to MySQL.")
         if not self.has_database:
             raise AttributeError("No database in AlchemyHandler to validate")
 
-        if not self._databases:
-            self.get_mysql_dbs()
+        self.get_mysql_dbs()
 
         if self._database not in self._databases:
             raise ValueError("User does not have access to "
-                            f"database {self._database}")
+                             f"database {self._database}")
 
     def build_engine(self):
         """Create and store SQLAlchemy Engine object.
@@ -327,12 +324,11 @@ class AlchemyHandler:
             login_string = self.construct_engine_string(
                                             username=self._username,
                                             password=self._password)
-            
+
             self.clear()
 
-
             self._engine = sqlalchemy.create_engine(login_string,
-                                                            echo=self.echo)
+                                                    echo=self.echo)
             self._engine.connect()
 
             self.connected = True
@@ -343,8 +339,6 @@ class AlchemyHandler:
             self.get_mysql_dbs()
 
         if self.has_database and (not self.connected_database):
-            database = self._database
-
             self.validate_database()
 
             login_string = self.construct_engine_string(
@@ -355,7 +349,7 @@ class AlchemyHandler:
             self.clear()
 
             self._engine = sqlalchemy.create_engine(login_string,
-                                                            echo=self.echo)
+                                                    echo=self.echo)
             self._engine.connect()
 
             self.connected = True
@@ -415,7 +409,7 @@ class AlchemyHandler:
                     sys.exit(1)
 
     def construct_engine_string(self, db_type="mysql", driver="pymysql",
-                            username="", password="", database=""):
+                                username="", password="", database=""):
         """Construct a SQLAlchemy engine URL.
 
         :param db_type: Type of SQL database.
@@ -436,7 +430,8 @@ class AlchemyHandler:
         else:
             driver = db_type
 
-        engine_string = f"{driver}://{username}:{password}@localhost/{database}"
+        engine_string = (f"{driver}://{username}:"
+                         "{password}@localhost/{database}")
         return engine_string
 
     def get_mysql_dbs(self):
@@ -446,14 +441,15 @@ class AlchemyHandler:
         :rtype: list
         """
         if not self.connected:
-            raise ValueError("AlchemyHandler currently not connected to MySQL.")
+            raise ValueError(
+                        "AlchemyHandler currently not connected to MySQL.")
         databases = mysqldb_basic.get_mysql_dbs(self._engine)
         self._databases = list(databases)
 
     def clear(self):
         """Clear properties tied to MySQL credentials/database.
         """
-        if not self._engine is None:
+        if self._engine is not None:
             self._engine.dispose()
         self._engine = None
 
@@ -461,16 +457,16 @@ class AlchemyHandler:
         self._graph = None
         self._mapper = None
 
-        if not self._session is None:
+        if self._session is not None:
             self._session.close()
         self._session = None
-        
+
         self.connected = False
         self.connected_database = False
         self._databases = []
 
-#-----------------------------------------------------------------------------
-#SQLALCHEMY-RELATED OBJECT GENERATION METHODS
+# -----------------------------------------------------------------------------
+# SQLALCHEMY-RELATED OBJECT GENERATION METHODS
 
     def build_metadata(self):
         """Create and store SQLAlchemy MetaData object.
@@ -493,7 +489,7 @@ class AlchemyHandler:
         if not self.connected:
             self.build_engine()
 
-        if not self._session is None:
+        if self._session is not None:
             try:
                 self._session.close()
             except:
@@ -526,8 +522,8 @@ class AlchemyHandler:
         self.build_graph()
         self.build_mapper()
 
-#-----------------------------------------------------------------------------
-#SQLALCHEMY QUALITY-OF-LIFE FUNCTIONS
+# -----------------------------------------------------------------------------
+# SQLALCHEMY QUALITY-OF-LIFE FUNCTIONS
 
     def get_map(self, table):
         """Get SQLAlchemy ORM map object.
