@@ -431,7 +431,7 @@ class AlchemyHandler:
             driver = db_type
 
         engine_string = (f"{driver}://{username}:"
-                         "{password}@localhost/{database}")
+                         f"{password}@localhost/{database}")
         return engine_string
 
     def get_mysql_dbs(self):
