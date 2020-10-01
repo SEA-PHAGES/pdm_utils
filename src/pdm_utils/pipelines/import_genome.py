@@ -1809,7 +1809,7 @@ def check_trna(trna_ftr, eval_flags):
                              eval_def=EDD["TRNA-EVAL-001"])
     trna_ftr.check_magnitude("stop", ">", 0, eval_id="TRNA-EVAL-002",
                              eval_def=EDD["TRNA-EVAL-002"])
-    trna_ftr.check_magnitude("parts", "=", 1, eval_id="TRNA-EVAL-003",
+    trna_ftr.check_magnitude("parts", ">", 0, eval_id="TRNA-EVAL-003",
                              eval_def=EDD["TRNA-EVAL-003"])
     trna_ftr.check_orientation(eval_id="TRNA-EVAL-004",
                                eval_def=EDD["TRNA-EVAL-004"])
