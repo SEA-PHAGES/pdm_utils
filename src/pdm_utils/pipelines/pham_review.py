@@ -17,7 +17,7 @@ from pdm_utils.functions import querying
 # -----------------------------------------------------------------------------
 # GLOBAL VARIABLES
 
-DEFAULT_FOLDER_NAME = f"{time.strftime('%Y%m%d')}_review"
+DEFAULT_FOLDER_NAME = f"{time.strftime('%Y%m%d')}_pham_review"
 
 REVIEW_HEADER = ["Pham", "Final Call", "#Members", "Clusters", "#Functions",
                  "Functional Calls"]
@@ -42,12 +42,12 @@ BASE_CONDITIONALS = ("phage.Status = final AND "
 
 
 def main(unparsed_args_list):
-    """Uses parsed args to run the entirety of the review pipeline.
+    """Uses parsed args to run the entirety of the pham_review pipeline.
 
     :param unparsed_args_list: Input a list of command line args.
     :type unparsed_args_list: list[str]
     """
-    args = parse_review(unparsed_args_list)
+    args = parse_pham_review(unparsed_args_list)
 
     config = configfile.build_complete_config(args.config_file)
 
@@ -64,7 +64,8 @@ def main(unparsed_args_list):
         s_report = True
         psr_reports = True
 
-    execute_review(alchemist,
+    execute_pham_review(
+                   alchemist,
                    folder_path=args.folder_path, folder_name=args.folder_name,
                    no_review=args.no_review, values=values, force=args.force,
                    filters=args.filters, groups=args.groups, sort=args.sort,
@@ -73,7 +74,7 @@ def main(unparsed_args_list):
                    verbose=args.verbose)
 
 
-def parse_review(unparsed_args_list):
+def parse_pham_review(unparsed_args_list):
     """Parses review arguments and stores them with an argparse object.
 
     :param unparsed_args_list: Input a list of command line args.
@@ -215,7 +216,8 @@ def parse_review(unparsed_args_list):
     return parsed_args
 
 
-def execute_review(alchemist, folder_path=None,
+def execute_pham_review(
+                   alchemist, folder_path=None,
                    folder_name=DEFAULT_FOLDER_NAME, no_review=False, values=[],
                    filters="", groups=[], sort=[], s_report=False,
                    gr_reports=False, psr_reports=False, production=False,

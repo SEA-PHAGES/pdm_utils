@@ -2,15 +2,11 @@ from pathlib import Path
 import shutil
 import sys
 import unittest
-from unittest.mock import Mock
-from unittest.mock import patch
-from unittest.mock import PropertyMock
 
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
-from pdm_utils.classes.filter import Filter
 from pdm_utils.functions import fileio
 from pdm_utils.pipelines import revise
-from pdm_utils.pipelines.review import REVIEW_HEADER
+from pdm_utils.pipelines.pham_review import REVIEW_HEADER
 
 # Import helper functions to build mock database
 unittest_file = Path(__file__)
@@ -25,21 +21,21 @@ DB = test_db_utils.DB
 TEST_DIR = "/tmp/pdm_utils_tests_revise"
 
 TEST_FR_DATA = \
-            [{"Pham" : 40481,"#Members" : 4,"Clusters" : "A", "#Functions" : 3,
-              "Functional Calls" : "Hypothetical Protein;terminase;Terminase",
-              "Final Call" : "terminase"},
-             {"Pham" : 25050,"#Members" : 4,"Clusters" : "A;N;None",
-              "#Functions" : 2,
-              "Functional Calls" : "Hypothetical Protein;minor tail protein",
-              "Final Call" : "minor tail protein"},
-             {"Pham" : 40880,"#Members" : 4,"Clusters" : "A;N","#Functions" : 3,
-              "Functional Calls" : "Hypothetical Protein;Holin;holin",
-              "Final Call" : "holin"},
-             {"Pham" : 39529,"#Members" : 5,"Clusters" : "A;None",
-              "#Functions" : 5,
-              "Functional Calls" : ("Hypothetical Protein;endonuclease;"
-                                    "Endo VII;EndoVII;endonuclease VII"),
-              "Final Call" : "endonuclease VII"}]
+            [{"Pham": 40481, "#Members": 4, "Clusters": "A", "#Functions": 3,
+              "Functional Calls": "Hypothetical Protein;terminase;Terminase",
+              "Final Call": "terminase"},
+             {"Pham": 25050, "#Members": 4, "Clusters": "A;N;None",
+              "#Functions": 2,
+              "Functional Calls": "Hypothetical Protein;minor tail protein",
+              "Final Call": "minor tail protein"},
+             {"Pham": 40880, "#Members": 4, "Clusters": "A;N", "#Functions": 3,
+              "Functional Calls": "Hypothetical Protein;Holin;holin",
+              "Final Call": "holin"},
+             {"Pham": 39529, "#Members": 5, "Clusters": "A;None",
+              "#Functions": 5,
+              "Functional Calls": ("Hypothetical Protein;endonuclease;"
+                                   "Endo VII;EndoVII;endonuclease VII"),
+              "Final Call": "endonuclease VII"}]
 
 
 class TestGenbankRevise(unittest.TestCase):
@@ -55,7 +51,7 @@ class TestGenbankRevise(unittest.TestCase):
         self.revise_form = self.test_dir.joinpath("revise_form.txt")
 
         fileio.export_data_dict(TEST_FR_DATA, self.revise_form, REVIEW_HEADER,
-                                                        include_headers=True)
+                                include_headers=True)
 
     @classmethod
     def tearDownClass(self):
@@ -76,7 +72,7 @@ class TestGenbankRevise(unittest.TestCase):
                                                       "gene.csv")
 
         fileio.export_data_dict(TEST_FR_DATA, self.fr_input_file_path,
-                               REVIEW_HEADER, include_headers=True)
+                                REVIEW_HEADER, include_headers=True)
 
         self.assertTrue(self.fr_input_file_path.is_file())
 
@@ -87,7 +83,7 @@ class TestGenbankRevise(unittest.TestCase):
     def test_execute_local_revise_1(self):
         """Verify execute_local_revise() creates new directory as expected.
         """
-        revise.execute_local_revise(self.alchemist, self.fr_input_file_path, 
+        revise.execute_local_revise(self.alchemist, self.fr_input_file_path,
                                     self.test_dir,
                                     self.revise_test_dir.name)
 
@@ -96,7 +92,7 @@ class TestGenbankRevise(unittest.TestCase):
     def test_execute_local_revise_2(self):
         """Verify execute_local_revise() filters parameter functions as expected.
         """
-        revise.execute_local_revise(self.alchemist, self.fr_input_file_path, 
+        revise.execute_local_revise(self.alchemist, self.fr_input_file_path,
                                     self.test_dir,
                                     self.revise_test_dir.name,
                                     filters="phage.Cluster=A")
@@ -129,7 +125,7 @@ class TestGenbankRevise(unittest.TestCase):
     def test_execute_local_revise_4(self):
         """Verify execute_local_revise() removes directory lacking needed revisions.
         """
-        revise.execute_local_revise(self.alchemist, self.fr_input_file_path, 
+        revise.execute_local_revise(self.alchemist, self.fr_input_file_path,
                                     self.test_dir,
                                     self.revise_test_dir.name,
                                     filters="phage.Cluster=N")
@@ -139,7 +135,7 @@ class TestGenbankRevise(unittest.TestCase):
     def test_execute_local_revise_5(self):
         """Verify execute_local_revise() exports expected data.
         """
-        revise.execute_local_revise(self.alchemist, self.fr_input_file_path, 
+        revise.execute_local_revise(self.alchemist, self.fr_input_file_path,
                                     self.test_dir,
                                     self.revise_test_dir.name,
                                     groups=["gene.PhamID"])
@@ -152,7 +148,7 @@ class TestGenbankRevise(unittest.TestCase):
         pham_39529_dir = self.revise_test_dir.joinpath("39529")
 
         pham_directories = [pham_40481_dir, pham_25050_dir, pham_40880_dir,
-                                                            pham_39529_dir]
+                            pham_39529_dir]
 
         for dir_path in pham_directories:
             with self.subTest(cluster=dir_path.name):
@@ -211,7 +207,6 @@ class TestGenbankRevise(unittest.TestCase):
             for function in functions:
                 self.assertEqual(function, "holin")
 
-
         with self.subTest(cluster=39529):
             pham_39529_file = pham_39529_dir.joinpath("revise.csv")
             data_dicts = fileio.retrieve_data_dict(pham_39529_file)
@@ -230,6 +225,7 @@ class TestGenbankRevise(unittest.TestCase):
 
             for function in functions:
                 self.assertEqual(function, "endonuclease VII")
+
 
 if __name__ == "__main__":
     unittest.main()

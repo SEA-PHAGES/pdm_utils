@@ -82,7 +82,8 @@ def main(unparsed_args_list):
                              config=config, input_type=args.input_type,
                              output_type=args.output_type,
                              filters=args.filters, groups=args.groups,
-                             verbose=args.verbose, force=args.force)
+                             verbose=args.verbose, force=args.force,
+                             production=args.production)
     elif args.pipeline == "remote":
         values = pipelines_basic.parse_value_input(args.input)
         execute_remote_revise(alchemist, folder_path=args.folder_path,
@@ -127,6 +128,10 @@ def parse_revise(unparsed_args_list):
     OUTPUT_TYPE_HELP = """
         Revision option that selects the output_file_type.
             Follow selection argument with a supported file type.
+        """
+    PRODUCTION_HELP = """
+        Revise option to toggle additional filters to support production-level
+        revision.
         """
 
     IMPORT_FILE_HELP = """
@@ -174,6 +179,7 @@ def parse_revise(unparsed_args_list):
             Follow selection argument with formatted column expressions:
                 {Table}.{Column}={Value}
         """
+
     parser = argparse.ArgumentParser()
 
     parser.add_argument("database", type=str,  help=DATABASE_HELP)
@@ -190,6 +196,8 @@ def parse_revise(unparsed_args_list):
                               choices=LOCAL_INPUT_FILE_TYPES)
     local_parser.add_argument("-ft", "--output_type", help=OUTPUT_TYPE_HELP,
                               choices=LOCAL_OUTPUT_FILE_TYPES)
+    local_parser.add_argument("-p", "--production", help=PRODUCTION_HELP,
+                              action="store_true")
 
     remote_parser.add_argument("-if", "--import_file", dest="input",
                                type=pipelines_basic.convert_file_path,
@@ -230,7 +238,8 @@ def parse_revise(unparsed_args_list):
 def execute_local_revise(alchemist, revisions_file_path, folder_path=None,
                          folder_name=DEFAULT_FOLDER_NAME, config=None,
                          input_type="function_report",
-                         output_type="p_curation", filters="", groups=[],
+                         output_type="p_curation", production=False,
+                         filters="", groups=[],
                          force=False, verbose=False):
     """Executes the entirety of the genbank local revise pipeline.
 
@@ -242,6 +251,12 @@ def execute_local_revise(alchemist, revisions_file_path, folder_path=None,
     :type folder_path: Path
     :param folder_name: A name for the export folder.
     :type folder_name: str
+    :param input_type: Specifies the file format of the input file
+    :type input_type: str
+    :param output_type: Specifies the file format of the outputted file
+    :type output_type: str
+    :param production: Toggles additional filters for production-level revision
+    :type production: bool
     :param verbose: A boolean value to toggle progress print statements.
     :type verbose: bool
     :param force: A boolean to toggle aggresive building of directories.
@@ -260,7 +275,9 @@ def execute_local_revise(alchemist, revisions_file_path, folder_path=None,
     db_filter = pipelines_basic.build_filter(alchemist, keys['filter_key'],
                                              filters, values=values,
                                              verbose=verbose)
-    db_filter.add(BASE_CONDITIONALS)
+
+    if production:
+        db_filter.add(BASE_CONDITIONALS)
 
     revise_columns = db_filter.get_columns(REVISION_COLUMNS)
 
@@ -275,7 +292,7 @@ def execute_local_revise(alchemist, revisions_file_path, folder_path=None,
                                                         verbose=verbose)
 
     if verbose:
-        print("Prepared query and path structure, beginning review export...")
+        print("Prepared query and path structure, beginning revise export...")
 
     for mapped_path in conditionals_map.keys():
         conditionals = conditionals_map[mapped_path]

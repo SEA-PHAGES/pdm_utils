@@ -17,13 +17,13 @@ from pdm_utils.pipelines import phamerate
 from pdm_utils.pipelines import pham_finder
 from pdm_utils.pipelines import push_db
 from pdm_utils.pipelines import revise
-from pdm_utils.pipelines import review
+from pdm_utils.pipelines import pham_review
 from pdm_utils.pipelines import update_field
 
 VALID_PIPELINES = {"compare", "convert", "export", "find_domains",
                    "find_phams", "freeze", "get_data", "get_db",
                    "get_gb_records", "import", "phamerate", "push",
-                   "revise", "review", "update"}
+                   "revise", "pham_review", "update"}
 
 
 def main(unparsed_args):
@@ -39,7 +39,7 @@ def main(unparsed_args):
     elif args.pipeline == "find_domains":
         find_domains.main(unparsed_args)
     elif args.pipeline == "find_phams":
-        pham_finder.main(unparsed_args) 
+        pham_finder.main(unparsed_args)
     elif args.pipeline == "freeze":
         freeze_db.main(unparsed_args)
     elif args.pipeline == "get_data":
@@ -56,8 +56,8 @@ def main(unparsed_args):
         push_db.main(unparsed_args)
     elif args.pipeline == "revise":
         revise.main(unparsed_args)
-    elif args.pipeline == "review":
-        review.main(unparsed_args)
+    elif args.pipeline == "pham_review":
+        pham_review.main(unparsed_args)
     elif args.pipeline == "update":
         update_field.main(unparsed_args)
     else:

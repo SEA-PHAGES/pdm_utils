@@ -5,6 +5,7 @@ from unittest.mock import PropertyMock
 
 from pdm_utils.pipelines import revise
 
+
 class TestReviseMain(unittest.TestCase):
     def setUp(self):
         self.mock_args = Mock()
@@ -18,6 +19,7 @@ class TestReviseMain(unittest.TestCase):
 
         self.mock_input_type = Mock()
         self.mock_output_type = Mock()
+        self.mock_production = Mock()
 
         self.mock_folder_path = Mock()
         self.mock_folder_name = Mock()
@@ -39,6 +41,8 @@ class TestReviseMain(unittest.TestCase):
                                     return_value=self.mock_input_type)
         type(self.mock_args).output_type = PropertyMock(
                                     return_value=self.mock_output_type)
+        type(self.mock_args).production = PropertyMock(
+                                    return_value=self.mock_production)
         type(self.mock_args).filters = PropertyMock(
                                     return_value=self.mock_filters)
         type(self.mock_args).groups = PropertyMock(
@@ -53,8 +57,7 @@ class TestReviseMain(unittest.TestCase):
     @patch("pdm_utils.pipelines.revise.pipelines_basic.build_alchemist")
     @patch("pdm_utils.pipelines.revise.parse_revise")
     def test_main_1(self, parse_revise_mock, build_alchemist_mock,
-                                             execute_local_revise_mock,
-                                             build_complete_config_mock):
+                    execute_local_revise_mock, build_complete_config_mock):
         """Verfiy function structure of main().
         """
         type(self.mock_args).pipeline = PropertyMock(
@@ -67,18 +70,20 @@ class TestReviseMain(unittest.TestCase):
         revise.main(self.test_args_list)
 
         parse_revise_mock.assert_called_with(self.test_args_list)
-        build_alchemist_mock.assert_called_with(self.mock_database, 
+        build_alchemist_mock.assert_called_with(self.mock_database,
                                                 config=self.mock_config)
 
         execute_local_revise_mock.assert_called_with(
                             self.mock_alchemist, self.mock_revisions_file,
-                            folder_path=self.mock_folder_path, 
+                            folder_path=self.mock_folder_path,
                             folder_name=self.mock_folder_name,
                             config=self.mock_config,
                             input_type=self.mock_input_type,
                             output_type=self.mock_output_type,
+                            production=self.mock_production,
                             filters=self.mock_filters, groups=self.mock_groups,
                             verbose=self.mock_verbose, force=self.mock_force)
+
 
 if __name__ == "__main__":
     unittest.main()
