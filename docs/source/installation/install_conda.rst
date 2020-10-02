@@ -12,6 +12,10 @@ Anaconda
     - :sqlalchemy:`SQLAlchemy <>`
     - :tabulate:`Tabulate <>`
 
+.. note::
+
+    The most recent version of Biopython introduces some problems for the current pdm_utils. We are working on fixing it, but in the meantime, we have edited the conda environment creation command to install the latest non-code-breaking version of Biopython.
+
 Some of them also have Python or non-Python dependencies. Manual installation of these dependencies can be tricky, but the Conda environment manager is a simple, automated alternative. First install Conda, then use Conda to install Python and other dependencies.
 
 Conda is available as part of Anaconda or Miniconda, and complete installation instructions are available in the Conda :conda_docs:`user guide <>`. ``pdm_utils`` has been developed and tested using Conda >=4.5. The directions below highlight installation of Anaconda, but either of these tools is fine since they both install Conda:
@@ -47,7 +51,7 @@ Conda is available as part of Anaconda or Miniconda, and complete installation i
 
 #. After installing Conda, create an environment to be able to install and use ``pdm_utils`` (the example below creates a Conda environment named 'pdm_utils', but it can be named anything). Enter 'y' when prompted to install all dependencies::
 
-    > conda create --name pdm_utils curl python pip biopython networkx paramiko pymysql sqlalchemy tabulate urllib3
+    > conda create --name pdm_utils curl python pip biopython==1.77 networkx paramiko pymysql sqlalchemy tabulate urllib3
 
 #. After the Conda environment is created, it needs to be activated using the following command. The command line prompt will now include '(pdm_utils)', indicating it is operating within this environment::
 
