@@ -25,7 +25,7 @@ Most tools provide functionality without respect to SEA-PHAGES-specific assumpti
    import <./tools/import>
    phamerate <./tools/phamerate>
    push <./tools/push>
-   review <./tools/review>
+   pham_review <./tools/pham_review>
    revise <./tools/revise>
    update <./tools/update>
 
