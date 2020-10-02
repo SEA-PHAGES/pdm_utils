@@ -10,6 +10,7 @@ from pathlib import Path
 import sys
 
 from pdm_utils.constants import constants
+from pdm_utils.classes.progress import Progress
 
 
 def find_expression(expression, list_of_items):
@@ -1301,10 +1302,10 @@ def show_progress(current, end, width=50):
         progress - the integer percent completion calculated
         as the ratio of current to end multiplied by 100
     """
-    progress = int(float(current)/end * 100)
-    ratio = int(100/width)
-    print("\r[{}{}] {}%".format('#' * int(progress / ratio), ' ' * (width - int(progress / ratio)), progress), end="")
+    progress = Progress(current, end, width)
+    print(f"\r{progress}", end="")
     return progress
+
 
 def join_strings(input_list, delimiter=" "):
     """Open file and retrieve a dictionary of data.

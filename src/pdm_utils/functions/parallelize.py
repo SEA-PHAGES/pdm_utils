@@ -6,18 +6,20 @@ Adapted from https://docs.python.org/3/library/multiprocessing.html
 import multiprocessing as mp
 
 from pdm_utils.functions.basic import show_progress
+from pdm_utils.classes.progress import Progress
 
 # Make sure new processes are forked, not spawned
 mp.set_start_method("fork")
 
 
-def parallelize(inputs, num_processors, task):
+def parallelize(inputs, num_processors, task, verbose=True):
     """
     Parallelizes some task on an input list across the specified number
     of processors
     :param inputs: list of inputs
     :param num_processors: number of processor cores to use
     :param task: name of the function to run
+    :param verbose: updating progress bar output?
     :return: results
     """
     results = []
@@ -35,7 +37,7 @@ def parallelize(inputs, num_processors, task):
         tasks.append((task, item))
 
     # Start working on the jobs
-    results = start_processes(tasks, num_processors)
+    results = start_processes(tasks, num_processors, verbose)
 
     return results
 
@@ -65,31 +67,36 @@ def worker(input_queue, output_queue):
     return
 
 
-def start_processes(inputs, num_processors):
+def start_processes(inputs, num_processors, verbose):
     """
     Creates input and output queues, and runs the jobs
     :param inputs: jobs to run
     :param num_processors: optimized number of processors
+    :param verbose: updating progress bar output?
     :return: results
     """
-    # # Make sure new processes are forked, not spawned
-    # mp.set_start_method("fork")
-
     job_queue = mp.Queue()
     done_queue = mp.Queue()
 
     # Counter so we know how many tasks we have in all (input + show_progress tasks)
-    task_count = 0
+    tasks = 0
 
-    # Put inputs into job queue
-    for i in range(len(inputs)):
-        task_count += 1
-        if i % 10 == 0:
-            job_queue.put((show_progress, (i, len(inputs))))
-            task_count += 1
-        job_queue.put(inputs[i])
-    task_count += 1
-    job_queue.put((show_progress, (len(inputs), len(inputs))))
+    if verbose is True:
+        interval = max([1, len(inputs)//100])
+
+        # Put inputs into job queue
+        for i in range(len(inputs)):
+            tasks += 1
+            if i % interval == 0:
+                job_queue.put((show_progress, (i, len(inputs))))
+                tasks += 1
+            job_queue.put(inputs[i])
+        tasks += 1
+        job_queue.put((show_progress, (len(inputs), len(inputs))))
+    else:
+        for i in range(len(inputs)):
+            tasks += 1
+            job_queue.put(inputs[i])
 
     # Put a bunch of 'STOP' signals at the end of the queue
     for i in range(num_processors):
@@ -105,10 +112,10 @@ def start_processes(inputs, num_processors):
     # Grab results from done queue
     results = []
 
-    # Remove non-list results (e.g. progress results)
-    for i in range(task_count):
+    # Remove non-Progress results
+    for i in range(tasks):
         result = done_queue.get()
-        if isinstance(result, list):
+        if not isinstance(result, Progress):
             results.append(result)
 
     [worker_n.join() for worker_n in worker_pool]
