@@ -2,8 +2,34 @@
 Functions to multithread process a list of inputs.
 """
 
-from queue import LifoQueue
+from queue import Queue
 import threading
+
+
+class MixedThread(threading.Thread):
+    def __init__(self, thread_id, target, work_queue, queue_lock):
+        threading.Thread.__init__(self)
+
+        self.name = thread_id
+
+        # Function for thread to call
+        self.target = target
+        # Queue filled with tuples containing target function args
+        self.queue = work_queue
+        # Lock controlling access to queue accross multiple threads
+        self.lock = queue_lock
+
+    def run(self):
+        while not self.stack.empty():
+            # Tell other threads "I'm accessing the queue right now"
+            self.lock.acquire()
+
+            work_item = self.queue.get()
+            # Let other threads have a turn
+            self.lock.release()
+
+            # Run target function with args retrieved from queue
+            self.target(*work_item)
 
 
 def create_threads(target, work_stack, stack_lock, num_threads):
@@ -20,25 +46,6 @@ def create_threads(target, work_stack, stack_lock, num_threads):
     :returns: Returns a list of MixIn Thread objects with target function
     :rtype: list[Thread]
     """
-    class MixedThread(threading.Thread):
-        def __init__(self, threadid):
-            threading.Thread.__init__(self)
-
-            self.name = threadid
-
-            self.target = target
-            self.stack = work_stack
-            self.lock = stack_lock
-
-        def run(self):
-            while not self.stack.empty():
-                self.lock.acquire()
-
-                work_item = self.stack.get()
-                self.lock.release()
-
-                self.target(*work_item)
-
     threads = []
     for x in range(num_threads):
         threads.append(MixedThread(x+1))
@@ -56,16 +63,19 @@ def multithread(target, work_items, threads=1):
     :param threads: Number of threads to be created to process work_stack.
     :type threads: int
     """
+    # Create lock which prevents queue access deadlocks
     lock = threading.Lock()
-    stack = LifoQueue()
+    queue = Queue()
 
     for item in work_items:
-        stack.put(item)
+        queue.put(item)
 
-    threads = create_threads(target, stack, lock, threads)
+    threads = create_threads(target, queue, lock, threads)
 
     for thread in threads:
+        # Calls thread run()
         thread.start()
 
     for thread in threads:
+        # Blocks and waits for threads to finish
         thread.join()
