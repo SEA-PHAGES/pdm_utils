@@ -14,6 +14,8 @@ from pdm_utils.functions import parsing
 
 # -----------------------------------------------------------------------------
 # GLOBAL VARIABLES
+SUPPORTED_DIALECTS = ["mysql", "postgresql", "sqlite"]
+
 CREDENTIALS_MSG = ("Credentials invalid and maximum login attempts reached. "
                    "Please check your MySQL credentials and try again.")
 
@@ -23,7 +25,8 @@ DATABASE_MSG = ("Unable to connect to database with valid credentials.\n"
 
 
 class AlchemyHandler:
-    def __init__(self, database=None, username=None, password=None):
+    def __init__(self, database=None, username=None, password=None,
+                 dialect="mysql", driver="pymysql"):
         self._database = database
         self._username = username
         self._password = password
@@ -37,6 +40,12 @@ class AlchemyHandler:
         self._mapper = None
         self._session = None
         self.echo = False
+
+        if dialect not in SUPPORTED_DIALECTS:
+            raise NotImplementedError(
+                            f"SQL SqlAlchemy dialect {dialect} not supported.")
+        self._dialect = dialect
+        self._driver = driver
 
         self.connected = False
         self.has_credentials = False
@@ -184,7 +193,9 @@ class AlchemyHandler:
 
         return self.construct_engine_string(username=self._username,
                                             password=self._password,
-                                            database=self._database)
+                                            database=self._database,
+                                            dialect=self._dialect,
+                                            driver=self._driver)
 
     @URI.setter
     def URI(self, URI):
@@ -323,7 +334,9 @@ class AlchemyHandler:
                                      "Cannot connect to MySQL.")
             login_string = self.construct_engine_string(
                                             username=self._username,
-                                            password=self._password)
+                                            password=self._password,
+                                            dialect=self._dialect,
+                                            driver=self._driver)
 
             self.clear()
 
@@ -344,7 +357,9 @@ class AlchemyHandler:
             login_string = self.construct_engine_string(
                                         username=self._username,
                                         password=self._password,
-                                        database=self._database)
+                                        database=self._database,
+                                        dialect=self._dialect,
+                                        driver=self._driver)
 
             self.clear()
 
@@ -408,12 +423,12 @@ class AlchemyHandler:
                     print(DATABASE_MSG)
                     sys.exit(1)
 
-    def construct_engine_string(self, db_type="mysql", driver="pymysql",
+    def construct_engine_string(self, dialect="mysql", driver="pymysql",
                                 username="", password="", database=""):
         """Construct a SQLAlchemy engine URL.
 
-        :param db_type: Type of SQL database.
-        :type db_type: str
+        :param dialect: Type of SQL database.
+        :type dialect: str
         :param driver: Name of the Python DBAPI used to connect.
         :type driver: str
         :param username: Username to login to SQL database.
@@ -426,12 +441,18 @@ class AlchemyHandler:
         :rtype: str
         """
         if driver != "":
-            driver = "+".join([db_type, driver])
+            dbapi = "+".join([dialect, driver])
         else:
-            driver = db_type
+            dbapi = dialect
 
-        engine_string = (f"{driver}://{username}:"
-                         f"{password}@localhost/{database}")
+        if dialect in ("mysql", "postgresql"):
+            engine_string = (f"{dbapi}://{username}:"
+                             f"{password}@localhost/{database}")
+        elif dialect == "sqlite":
+            engine_string = (f"{dbapi}:///{database}")
+        else:
+            raise NotImplementedError(
+                            f"SQL SqlAlchemy dialect {dialect} not supported.")
         return engine_string
 
     def get_mysql_dbs(self):
