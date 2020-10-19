@@ -322,8 +322,8 @@ class AlchemyHandler:
         self.get_mysql_dbs()
 
         if self._database not in self._databases:
-            raise ValueError("User does not have access to "
-                             f"database {self._database}")
+            raise SQLCredentialsError("User does not have access to "
+                                      f"database {self._database}")
 
     def build_engine(self):
         """Create and store SQLAlchemy Engine object.
@@ -382,7 +382,9 @@ class AlchemyHandler:
         if self.has_credentials:
             try:
                 self.build_engine()
-            except:
+            except AttributeError:
+                pass
+            except SQLCredentialsError:
                 pass
 
         while(not self.connected and attempts < login_attempts):
@@ -391,7 +393,9 @@ class AlchemyHandler:
 
             try:
                 self.build_engine()
-            except:
+            except AttributeError:
+                pass
+            except SQLCredentialsError:
                 pass
 
         if not self.connected:
@@ -404,7 +408,9 @@ class AlchemyHandler:
         if ask_database:
             try:
                 self.build_engine()
-            except:
+            except AttributeError:
+                pass
+            except SQLCredentialsError:
                 pass
 
             while(not self.connected_database and attempts < login_attempts):
@@ -413,7 +419,9 @@ class AlchemyHandler:
 
                 try:
                     self.build_engine()
-                except:
+                except AttributeError:
+                    pass
+                except SQLCredentialsError:
                     pass
 
             if not self.connected_database:
@@ -511,10 +519,7 @@ class AlchemyHandler:
             self.build_engine()
 
         if self._session is not None:
-            try:
-                self._session.close()
-            except:
-                pass
+            self._session.close()
 
         session_maker_obj = sessionmaker(bind=self._engine)
         self._session = session_maker_obj()
@@ -554,3 +559,7 @@ class AlchemyHandler:
 
         table = parsing.translate_table(self._metadata, table)
         return self._mapper.classes[table]
+
+
+class SQLCredentialsError(Exception):
+    pass
