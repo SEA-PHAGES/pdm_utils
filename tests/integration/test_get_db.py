@@ -47,6 +47,7 @@ if exists:
 output_path = Path(test_root_dir, "output")
 results_path = Path(output_path, get_db.RESULTS_FOLDER)
 
+
 def get_unparsed_args(db=None, option=None, download=False, output_folder=None,
                       version=False, url="", interactive=False):
     """Returns list of command line arguments to convert database."""
@@ -54,15 +55,14 @@ def get_unparsed_args(db=None, option=None, download=False, output_folder=None,
     # to make sure that file and new always have a db value - like a default
     # db is an optional argument when option == "server"
 
-
     if option == "file":
         unparsed_args = ["run.py", PIPELINE, option, DB]
         unparsed_args.extend([str(test_db_utils.TEST_DB_FILEPATH)])
     elif option == "server":
         if db is None:
-        	unparsed_args = ["run.py", PIPELINE, option]
+            unparsed_args = ["run.py", PIPELINE, option]
         else:
-        	unparsed_args = ["run.py", PIPELINE, option, "-db", db]
+            unparsed_args = ["run.py", PIPELINE, option, "-db", db]
 
         if download:
             unparsed_args.extend(["-d"])
@@ -75,7 +75,7 @@ def get_unparsed_args(db=None, option=None, download=False, output_folder=None,
         if interactive:
             unparsed_args.extend(["-i"])
     else:
-        unparsed_args = ["run.py", PIPELINE, option ,DB]
+        unparsed_args = ["run.py", PIPELINE, option, DB]
         pass
     return unparsed_args
 
@@ -100,7 +100,8 @@ class TestGetDb(unittest.TestCase):
         run.main(unparsed_args)
         # Query for version data. This verifies that the databases exists
         # and that it contains a pdm_utils schema with data.
-        version_data = test_db_utils.get_data(test_db_utils.version_table_query)
+        version_data = test_db_utils.get_data(
+                                        test_db_utils.version_table_query)
         self.assertEqual(len(version_data), 1)
 
     @patch("pdm_utils.classes.alchemyhandler.getpass")
@@ -114,7 +115,8 @@ class TestGetDb(unittest.TestCase):
 
         # Query for version data. This verifies that the databases exists
         # and that it contains a pdm_utils schema with data.
-        version_data = test_db_utils.get_data(test_db_utils.version_table_query)
+        version_data = test_db_utils.get_data(
+                                test_db_utils.version_table_query)
         self.assertEqual(len(version_data), 1)
 
 

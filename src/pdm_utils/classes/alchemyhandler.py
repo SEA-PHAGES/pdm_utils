@@ -416,6 +416,8 @@ class AlchemyHandler:
                     pass
                 except SQLCredentialsError:
                     pass
+                except MySQLDatabaseError:
+                    pass
 
             while(not self.connected and attempts < login_attempts):
                 attempts += 1
@@ -429,10 +431,12 @@ class AlchemyHandler:
                     pass
                 except SQLCredentialsError:
                     pass
+                except MySQLDatabaseError:
+                    pass
 
             if not self.connected:
                 if not pipeline:
-                    raise ValueError(CREDENTIALS_MSG)
+                    raise SQLCredentialsError(CREDENTIALS_MSG)
                 else:
                     print(CREDENTIALS_MSG)
                     sys.exit(1)
@@ -444,7 +448,7 @@ class AlchemyHandler:
                     pass
                 except AttributeError:
                     pass
-                except SQLCredentialsError:
+                except MySQLDatabaseError:
                     pass
 
                 while(not self.connected_database and
@@ -458,12 +462,12 @@ class AlchemyHandler:
                         pass
                     except AttributeError:
                         pass
-                    except SQLCredentialsError:
+                    except MySQLDatabaseError:
                         pass
 
                 if not self.connected_database:
                     if not pipeline:
-                        raise ValueError(DATABASE_MSG)
+                        raise MySQLDatabaseError(DATABASE_MSG)
                     else:
                         print(DATABASE_MSG)
                         sys.exit(1)
@@ -493,12 +497,12 @@ class AlchemyHandler:
                     pass
                 except AttributeError:
                     pass
-                except SQLCredentialsError:
+                except SQLiteDatabaseError:
                     pass
 
             if not self.connected_database:
                 if not pipeline:
-                    raise ValueError(DATABASE_MSG)
+                    raise SQLiteDatabaseError(DATABASE_MSG)
                 else:
                     print(DATABASE_MSG)
                     sys.exit(1)

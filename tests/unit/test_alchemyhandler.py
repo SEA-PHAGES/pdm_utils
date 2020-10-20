@@ -6,7 +6,7 @@ from sqlalchemy.engine.base import Engine
 from sqlalchemy.exc import OperationalError
 
 from pdm_utils.classes.alchemyhandler import (
-                    AlchemyHandler, MySQLDatabaseError)
+                    AlchemyHandler, SQLCredentialsError, MySQLDatabaseError)
 
 
 class TestAlchemyHandler(unittest.TestCase):
@@ -412,7 +412,7 @@ class TestAlchemyHandler(unittest.TestCase):
         self.alchemist.connected = False
         build_engine_mock.side_effect = OperationalError("", "", "")
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(SQLCredentialsError):
             self.alchemist.connect()
 
         build_engine_mock.assert_called()
