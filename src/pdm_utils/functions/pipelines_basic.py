@@ -16,16 +16,17 @@ def create_working_dir(working_path, dump=False, force=False):
         if not force:
             if working_path.is_dir():
                 print("COWARDLY ABORTING PIPELINE: "
-                     f"Directory '{working_path}' already exists.")
+                      f"Directory '{working_path}' already exists.")
                 sys.exit(1)
-    
+
     working_path.mkdir(parents=True, exist_ok=True)
 
-def create_working_path(folder_path, folder_name, dump=False, force=False, 
-                                                              attempt=50):
+
+def create_working_path(folder_path, folder_name, dump=False, force=False,
+                        attempt=50):
     if folder_path is None:
         working_path = create_default_path(folder_name, force=force,
-                                                       attempt=attempt)
+                                           attempt=attempt)
     else:
         working_path = folder_path.joinpath(folder_name)
 
@@ -34,13 +35,15 @@ def create_working_path(folder_path, folder_name, dump=False, force=False,
 
     return working_path
 
+
 def create_default_path(name, force=False, attempt=50):
     default_path = Path.cwd().joinpath(name)
     if not force:
-        default_path = basic.make_new_dir(Path.cwd(), default_path, 
-                                               attempt=attempt, mkdir=False)
-    
+        default_path = basic.make_new_dir(Path.cwd(), default_path,
+                                          attempt=attempt, mkdir=False)
+
     return default_path
+
 
 def convert_dir_path(path):
     """Function to convert argparse input to a working directory path.
@@ -51,6 +54,7 @@ def convert_dir_path(path):
     :rtype: Path
     """
     return basic.set_path(Path(path), kind="dir")
+
 
 def convert_file_path(path):
     """Function to convert argparse input to a working file path.
@@ -79,26 +83,30 @@ def parse_value_input(value_list_input):
     print("Value list input is of an unexpected type.")
     sys.exit(1)
 
+
 @parse_value_input.register(Path)
 def _(value_list_input):
     value_list = []
-    with open(value_list_input, newline = '') as csv_file:
-        csv_reader = csv.reader(csv_file, delimiter = ",")
+    with open(value_list_input, newline='') as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter=",")
         for name in csv_reader:
             value_list.append(name[0])
     return value_list
+
 
 @parse_value_input.register(list)
 def _(value_list_input):
     return value_list_input
 
+
 # MYSQL FILTERS AND HANDLER FUNCTIONS
-def build_alchemist(database, ask_database=True, config=None):
-    if not config is None:
+def build_alchemist(database, ask_database=True, config=None, dialect="mysql"):
+    if config is not None:
         username = config["mysql"].get("user")
-        password = config["mysql"].get("password") 
+        password = config["mysql"].get("password")
         if not (username is None or password is None):
-            alchemist = AlchemyHandler(username=username, password=password)
+            alchemist = AlchemyHandler(username=username, password=password,
+                                       dialect=dialect)
             alchemist.connect(login_attempts=0, pipeline=True)
 
             alchemist.database = database
@@ -107,12 +115,12 @@ def build_alchemist(database, ask_database=True, config=None):
             return alchemist
 
     alchemist = AlchemyHandler(database=database)
-    alchemist.connect(ask_database=ask_database, pipeline=True) 
+    alchemist.connect(ask_database=ask_database, pipeline=True)
 
     return alchemist
 
-def build_filter(alchemist, key, filters, values=None,
-                                                     verbose=False):
+
+def build_filter(alchemist, key, filters, values=None, verbose=False):
     """Applies MySQL WHERE clause filters using a Filter.
 
     :param alchemist: A connected and fully built AlchemyHandler object.
@@ -135,15 +143,16 @@ def build_filter(alchemist, key, filters, values=None,
             db_filter.add(filters)
         except:
             print("Please check your syntax for the conditional string: "
-                 f"{filters}")
+                  f"{filters}")
             exit(1)
 
         db_filter.parenthesize()
 
     return db_filter
 
-def build_groups_map(db_filter, export_path, groups=[], verbose=False, 
-                                             force=False, dump=False):
+
+def build_groups_map(db_filter, export_path, groups=[], verbose=False,
+                     force=False, dump=False):
     """Function that generates a map between conditionals and grouping paths.
 
     :param db_filter: A connected and fully loaded Filter object.
@@ -156,7 +165,7 @@ def build_groups_map(db_filter, export_path, groups=[], verbose=False,
     :type conditionals_map: dict{Path:list}
     :param verbose: A boolean value to toggle progress print statements.
     :type verbose: bool
-    :param previous: Value set by function to provide info for print statements.
+    :param previous: Value set by function to provide info for print statements
     :type previous: str
     :param depth: Value set by function to provide info for print statements.
     :type depth: int
@@ -165,9 +174,8 @@ def build_groups_map(db_filter, export_path, groups=[], verbose=False,
     """
     conditionals_map = {}
     try:
-        build_groups_tree(db_filter, export_path, conditionals_map, 
-                                                  groups=groups,
-                                                  verbose=False, force=False)
+        build_groups_tree(db_filter, export_path, conditionals_map,
+                          groups=groups, verbose=False, force=False)
     except:        
         print("COWARDLY ABORTING PIPELINE: "
               "Found duplicate directories during path structuring.")
@@ -175,9 +183,9 @@ def build_groups_map(db_filter, export_path, groups=[], verbose=False,
 
     return conditionals_map
 
+
 def build_groups_tree(db_filter, export_path, conditionals_map, groups=[],
-                                             verbose=False, force=False,
-                                             previous=None, depth=0):
+                      verbose=False, force=False, previous=None, depth=0):
     """Recursive function that generates directories based on groupings.
 
     :param db_filter: A connected and fully loaded Filter object.
@@ -190,7 +198,7 @@ def build_groups_tree(db_filter, export_path, conditionals_map, groups=[],
     :type conditionals_map: dict{Path:list}\
     :param verbose: A boolean value to toggle progress print statements.
     :type verbose: bool
-    :param previous: Value set by function to provide info for print statements.
+    :param previous: Value set by function to provide info for print statements
     :type previous: str
     :param depth: Value set by function to provide info for print statements.
     :type depth: int
@@ -200,7 +208,7 @@ def build_groups_tree(db_filter, export_path, conditionals_map, groups=[],
     groups = groups.copy()
     conditionals = db_filter.build_where_clauses()
     if not groups:
-        conditionals_map.update({export_path : conditionals})
+        conditionals_map.update({export_path: conditionals})
         return
 
     current_group = groups.pop(0)
@@ -217,7 +225,7 @@ def build_groups_tree(db_filter, export_path, conditionals_map, groups=[],
         print(f"Group '{current_group}' is not a valid group.")
         sys.exit(1)
 
-    transposed_values = db_filter.build_values(column=group_column, 
+    transposed_values = db_filter.build_values(column=group_column,
                                                where=conditionals)
 
     for group in transposed_values:
@@ -227,17 +235,13 @@ def build_groups_tree(db_filter, export_path, conditionals_map, groups=[],
                 shutil.rmtree(group_path)
             else:
                 raise OSError("COWARDLY ABORTING PIPELINE: "
-                                        "Found pre-existing directories during "
-                                        "group path stucturing.")
+                              "Found pre-existing directories during "
+                              "group path stucturing.")
 
         db_filter_copy = db_filter.copy()
         db_filter_copy.add(f"{current_group}={group}")
 
         previous = f"{current_group} {group}"
         build_groups_tree(db_filter_copy, group_path, conditionals_map,
-                                                     groups=groups,
-                                                     verbose=verbose, 
-                                                     force=force,
-                                                     previous=previous,
-                                                     depth=depth+1)
-
+                          groups=groups, verbose=verbose,
+                          force=force, previous=previous, depth=depth+1)

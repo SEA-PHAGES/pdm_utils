@@ -1,3 +1,4 @@
+from pathlib import Path
 import sys
 
 import sqlalchemy
@@ -6,6 +7,7 @@ from sqlalchemy import create_engine
 from sqlalchemy import MetaData
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.engine.base import Engine
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.ext.automap import automap_base
 
 from pdm_utils.functions import querying
@@ -14,19 +16,24 @@ from pdm_utils.functions import parsing
 
 # -----------------------------------------------------------------------------
 # GLOBAL VARIABLES
-SUPPORTED_DIALECTS = ["mysql", "postgresql", "sqlite"]
+SUPPORTED_DIALECTS = ["mysql", "sqlite"]
+SUPPORTED_DRIVERS = {"mysql": ["pymysql"],
+                     "sqlite": ["pysqlite"]}
+
+DEFAULT_DRIVER = {"mysql": "pymysql",
+                  "sqlite": "pysqlite"}
 
 CREDENTIALS_MSG = ("Credentials invalid and maximum login attempts reached. "
                    "Please check your MySQL credentials and try again.")
 
 DATABASE_MSG = ("Unable to connect to database with valid credentials.\n"
-                "Please check your MySQL database access, "
+                "Please check your SQL database access, "
                 "and/or your database availability.")
 
 
 class AlchemyHandler:
     def __init__(self, database=None, username=None, password=None,
-                 dialect="mysql", driver="pymysql"):
+                 dialect="mysql", driver=None):
         self._database = database
         self._username = username
         self._password = password
@@ -45,6 +52,13 @@ class AlchemyHandler:
             raise NotImplementedError(
                             f"SQL SqlAlchemy dialect {dialect} not supported.")
         self._dialect = dialect
+
+        if driver is None:
+            driver = DEFAULT_DRIVER[dialect]
+
+        if driver not in SUPPORTED_DRIVERS[dialect]:
+            raise NotImplementedError(
+                            f"SQL SqlAlchemy driver {driver} not supported.")
         self._driver = driver
 
         self.connected = False
@@ -281,7 +295,11 @@ class AlchemyHandler:
     def ask_database(self):
         """Ask for database input to store in AlchemyHandler.
         """
-        self._database = input("MySQL database: ")
+        if self._dialect == "mysql":
+            self._database = input("MySQL database: ")
+
+        elif self._dialect == "sqlite":
+            self._database = str(Path(input("SQLite database: ")))
 
         self.has_database = True
         self.connected = False
@@ -289,8 +307,9 @@ class AlchemyHandler:
     def ask_credentials(self):
         """Ask for username and password input to store in AlchemyHandler.
         """
-        self._username = getpass(prompt="MySQL username: ")
-        self._password = getpass(prompt="MySQL password: ")
+        if self._dialect == "mysql":
+            self._username = getpass(prompt="MySQL username: ")
+            self._password = getpass(prompt="MySQL password: ")
 
         self.has_credentials = True
         self.connected = False
@@ -311,7 +330,7 @@ class AlchemyHandler:
             self.connected_database = True
 
     def validate_database(self):
-        """Validate access to database using stored MySQL credentials.
+        """Validate access to database using stored SQL credentials.
         """
         if not self.connected:
             raise ValueError(
@@ -319,37 +338,45 @@ class AlchemyHandler:
         if not self.has_database:
             raise AttributeError("No database in AlchemyHandler to validate")
 
-        self.get_mysql_dbs()
+        if self._dialect == "mysql":
+            self.get_mysql_dbs()
 
-        if self._database not in self._databases:
-            raise SQLCredentialsError("User does not have access to "
-                                      f"database {self._database}")
+            if self._database not in self._databases:
+                raise MySQLDatabaseError("User does not have access to "
+                                         f"database {self._database}")
+
+        elif self._dialect == "sqlite":
+            if not Path(self._database).is_file():
+                raise SQLiteDatabaseError(
+                                "Specified sqlite database does not exist.")
 
     def build_engine(self):
         """Create and store SQLAlchemy Engine object.
         """
-        if not self.connected:
-            if not self.has_credentials:
-                raise AttributeError("AlchemyHandler missing credentials.\n"
-                                     "Cannot connect to MySQL.")
-            login_string = self.construct_engine_string(
+        if self._dialect == "mysql":
+            if not self.connected:
+                if not self.has_credentials:
+                    raise AttributeError(
+                                "AlchemyHandler missing credentials.\n"
+                                "Cannot connect to MySQL.")
+                login_string = self.construct_engine_string(
                                             username=self._username,
                                             password=self._password,
                                             dialect=self._dialect,
                                             driver=self._driver)
 
-            self.clear()
+                self.clear()
 
-            self._engine = sqlalchemy.create_engine(login_string,
-                                                    echo=self.echo)
-            self._engine.connect()
+                self._engine = sqlalchemy.create_engine(login_string,
+                                                        echo=self.echo)
+                self._engine.connect()
 
+                self.connected = True
+
+                self.get_mysql_dbs()
+
+        elif self._dialect == "sqlite":
             self.connected = True
-
-            self._metadata = None
-            self._graph = None
-
-            self.get_mysql_dbs()
 
         if self.has_database and (not self.connected_database):
             self.validate_database()
@@ -379,46 +406,91 @@ class AlchemyHandler:
         :type login_attempts: int
         """
         attempts = 0
-        if self.has_credentials:
-            try:
-                self.build_engine()
-            except AttributeError:
-                pass
-            except SQLCredentialsError:
-                pass
+        if self._dialect == "mysql":
+            if self.has_credentials:
+                try:
+                    self.build_engine()
+                except OperationalError:
+                    pass
+                except AttributeError:
+                    pass
+                except SQLCredentialsError:
+                    pass
 
-        while(not self.connected and attempts < login_attempts):
-            attempts += 1
-            self.ask_credentials()
+            while(not self.connected and attempts < login_attempts):
+                attempts += 1
+                self.ask_credentials()
 
-            try:
-                self.build_engine()
-            except AttributeError:
-                pass
-            except SQLCredentialsError:
-                pass
+                try:
+                    self.build_engine()
+                except OperationalError:
+                    pass
+                except AttributeError:
+                    pass
+                except SQLCredentialsError:
+                    pass
 
-        if not self.connected:
-            if not pipeline:
-                raise ValueError(CREDENTIALS_MSG)
-            else:
-                print(CREDENTIALS_MSG)
-                sys.exit(1)
+            if not self.connected:
+                if not pipeline:
+                    raise ValueError(CREDENTIALS_MSG)
+                else:
+                    print(CREDENTIALS_MSG)
+                    sys.exit(1)
 
-        if ask_database:
-            try:
-                self.build_engine()
-            except AttributeError:
-                pass
-            except SQLCredentialsError:
-                pass
+            if ask_database:
+                try:
+                    self.build_engine()
+                except OperationalError:
+                    pass
+                except AttributeError:
+                    pass
+                except SQLCredentialsError:
+                    pass
 
-            while(not self.connected_database and attempts < login_attempts):
+                while(not self.connected_database and
+                      attempts < login_attempts):
+                    attempts += 1
+                    self.ask_database()
+
+                    try:
+                        self.build_engine()
+                    except OperationalError:
+                        pass
+                    except AttributeError:
+                        pass
+                    except SQLCredentialsError:
+                        pass
+
+                if not self.connected_database:
+                    if not pipeline:
+                        raise ValueError(DATABASE_MSG)
+                    else:
+                        print(DATABASE_MSG)
+                        sys.exit(1)
+
+        elif self._dialect == "sqlite":
+            self.connected = True
+            self.has_credentials = True
+
+            if self.has_database:
+                try:
+                    self.build_engine()
+                except OperationalError:
+                    pass
+                except AttributeError:
+                    pass
+                except SQLiteDatabaseError:
+                    pass
+
+            while(not self.connected_database and
+                  attempts < login_attempts):
                 attempts += 1
                 self.ask_database()
 
                 try:
                     self.build_engine()
+                except OperationalError:
+                    pass
                 except AttributeError:
                     pass
                 except SQLCredentialsError:
@@ -562,4 +634,12 @@ class AlchemyHandler:
 
 
 class SQLCredentialsError(Exception):
+    pass
+
+
+class MySQLDatabaseError(Exception):
+    pass
+
+
+class SQLiteDatabaseError(Exception):
     pass

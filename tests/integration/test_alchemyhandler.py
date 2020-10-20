@@ -1,18 +1,16 @@
 import sys
 import unittest
 from pathlib import Path
-from unittest.mock import patch, Mock, PropertyMock
 
 from networkx import Graph
 from sqlalchemy import create_engine
 from sqlalchemy import MetaData
 from sqlalchemy.engine.base import Engine
-from sqlalchemy.exc import OperationalError
 from sqlalchemy.ext.declarative.api import DeclarativeMeta
 from sqlalchemy.orm.session import Session
 
-from pdm_utils.functions import querying
-from pdm_utils.classes.alchemyhandler import AlchemyHandler
+from pdm_utils.classes.alchemyhandler import (
+                                AlchemyHandler, MySQLDatabaseError)
 
 # Import helper functions to build mock database
 unittest_file = Path(__file__)
@@ -25,6 +23,7 @@ import test_db_utils
 user = test_db_utils.USER
 pwd = test_db_utils.PWD
 db = test_db_utils.DB
+
 
 class TestAlchemyHandler(unittest.TestCase):
     @classmethod
@@ -52,7 +51,7 @@ class TestAlchemyHandler(unittest.TestCase):
         self.alchemist.build_engine()
 
         self.alchemist.database = "not_database"
-        with self.assertRaises(ValueError):
+        with self.assertRaises(MySQLDatabaseError):
             self.alchemist.validate_database()
 
     def test_build_engine_1(self):
@@ -148,6 +147,7 @@ class TestAlchemyHandler(unittest.TestCase):
     @classmethod
     def tearDownClass(self):
         test_db_utils.remove_db()
+
 
 if __name__ == "__main__":
     unittest.main()
