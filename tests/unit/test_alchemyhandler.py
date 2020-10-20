@@ -6,7 +6,7 @@ from sqlalchemy.engine.base import Engine
 from sqlalchemy.exc import OperationalError
 
 from pdm_utils.classes.alchemyhandler import (
-                    AlchemyHandler, SQLCredentialsError)
+                    AlchemyHandler, MySQLDatabaseError)
 
 
 class TestAlchemyHandler(unittest.TestCase):
@@ -285,7 +285,7 @@ class TestAlchemyHandler(unittest.TestCase):
         self.alchemist.database = "test db"
         self.alchemist._engine = mock_engine
 
-        with self.assertRaises(SQLCredentialsError):
+        with self.assertRaises(MySQLDatabaseError):
             self.alchemist.validate_database()
 
         mock_engine.execute.assert_called_once()
