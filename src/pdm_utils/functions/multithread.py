@@ -5,42 +5,59 @@ Functions to multithread process a list of inputs.
 from queue import Queue
 import threading
 
+from pdm_utils.classes.progress import Progress
+from pdm_utils.functions.basic import show_progress
+
 
 class MixedThread(threading.Thread):
-    def __init__(self, thread_id, target, work_queue, queue_lock):
+    def __init__(self, thread_id, work_queue, work_lock,
+                 result_queue, result_lock):
         threading.Thread.__init__(self)
 
         self.name = thread_id
 
-        # Function for thread to call
-        self.target = target
         # Queue filled with tuples containing target function args
-        self.queue = work_queue
+        self.work_queue = work_queue
+        self.result_queue = result_queue
         # Lock controlling access to queue accross multiple threads
-        self.lock = queue_lock
+        self.work_lock = work_lock
+        self.result_lock = result_lock
 
     def run(self):
-        while not self.stack.empty():
+        while not self.work_queue.empty():
             # Tell other threads "I'm accessing the queue right now"
-            self.lock.acquire()
+            self.work_lock.acquire()
 
-            work_item = self.queue.get()
+            job = self.work_queue.get()
             # Let other threads have a turn
-            self.lock.release()
+            self.work_lock.release()
+
+            target = job[0]
+            work_item = job[1]
 
             # Run target function with args retrieved from queue
-            self.target(*work_item)
+            result = target(*work_item)
+
+            # Repeat with the result queue/lock
+            self.result_lock.acquire()
+            self.result_queue.put(result)
+            self.result_lock.release()
 
 
-def create_threads(target, work_stack, stack_lock, num_threads):
+def create_threads(work_queue, work_lock, result_queue, result_lock,
+                   num_threads):
     """Function to create a pseudo-MixIn Thread class for multithreading.
 
     :param target: Function used by the thread to process work items.
     :type target: Function
-    :param work_stack: Stack containing tuples of target function args.
-    :type work_stack: LifoQueue
-    :param stack_lock: Lock for controlling access of stack accross threads.
-    :type stack_lock: Lock
+    :param work_queue: Queue containing tuples of target function args.
+    :type work_queue: Queue
+    :param work_lock: Lock for controlling access of work queue accross threads
+    :type work_lock: Lock
+    :param result_queue: Queue to place results into
+    :type result_queue: Queue
+    :param result_lock: Lock for controlling result queue accross threads.
+    :type result_lock: Lock
     :param num_threads: Number of threads to be created to process work stack.
     :type num_threads: int
     :returns: Returns a list of MixIn Thread objects with target function
@@ -48,12 +65,13 @@ def create_threads(target, work_stack, stack_lock, num_threads):
     """
     threads = []
     for x in range(num_threads):
-        threads.append(MixedThread(x+1))
+        threads.append(MixedThread(x+1, work_queue, work_lock,
+                                   result_queue, result_lock))
 
     return threads
 
 
-def multithread(target, work_items, threads=1):
+def multithread(target, work_items, threads=1, verbose=False):
     """Runs list of work items with specified number of threads.
 
     :param target: Function used by the thread to process work items.
@@ -63,14 +81,35 @@ def multithread(target, work_items, threads=1):
     :param threads: Number of threads to be created to process work_stack.
     :type threads: int
     """
-    # Create lock which prevents queue access deadlocks
-    lock = threading.Lock()
-    queue = Queue()
+    # Create lock which prevents work queue access deadlocks
+    work_lock = threading.Lock()
+    work_queue = Queue()
 
-    for item in work_items:
-        queue.put(item)
+    # Create lock which prevents result queue access deadlocks
+    result_lock = threading.Lock()
+    result_queue = Queue()
 
-    threads = create_threads(target, queue, lock, threads)
+    tasks = 0
+    if verbose:
+        interval = max([1, len(work_items) // 100])
+
+        for i in range(len(work_items)):
+            if i % interval == 0:
+                tasks += 1
+                work_queue.put((show_progress, (i, len(work_items))))
+
+            tasks += 1
+            work_queue.put((target, work_items[i]))
+
+        tasks += 1
+        work_queue.put((show_progress, (len(work_items), len(work_items))))
+    else:
+        for item in work_items:
+            tasks += 1
+            work_queue.put((target, item))
+
+    threads = create_threads(work_queue, work_lock, result_queue, result_lock,
+                             threads)
 
     for thread in threads:
         # Calls thread run()
@@ -79,3 +118,14 @@ def multithread(target, work_items, threads=1):
     for thread in threads:
         # Blocks and waits for threads to finish
         thread.join()
+
+    # Remove non-Progress results
+    results = []
+    for i in range(tasks):
+        result = result_queue.get()
+        if not isinstance(result, Progress):
+            results.append(result)
+
+    if verbose:
+        # Leave the progress bar line
+        print("\n")

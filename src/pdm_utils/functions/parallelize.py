@@ -120,7 +120,8 @@ def start_processes(inputs, num_processors, verbose):
 
     [worker_n.join() for worker_n in worker_pool]
 
-    # Leave the progress bar line
-    print("\n")
+    if verbose:
+        # Leave the progress bar line
+        print("\n")
 
     return results
