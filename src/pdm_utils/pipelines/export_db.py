@@ -4,6 +4,8 @@ import sys
 import time
 from pathlib import Path
 
+from Bio.SeqRecord import SeqRecord
+
 from pdm_utils.classes.filter import Filter
 from pdm_utils.functions import configfile
 from pdm_utils.functions import fileio
@@ -49,18 +51,18 @@ TABLES = ["phage", "gene", "domain", "gene_domain", "pham",
           # "trna", "tmrna", "trna_structures",
           "version"]
 SEQUENCE_COLUMNS = {"phage": ["Sequence"],
-                     "gene": ["Translation"],
-                   "domain": [],
-              "gene_domain": [],
-                     "pham": [],
-                     "trna": ["Sequence"],
+                    "gene": ["Translation"],
+                    "domain": [],
+                    "gene_domain": [],
+                    "pham": [],
+                    "trna": ["Sequence"],
                     "tmrna": [],
-          "trna_structures": [],
-                  "version": []}
+                    "trna_structures": [],
+                    "version": []}
 
-#-----------------------------------------------------------------------------
-#MAIN FUNCTIONS
-#-----------------------------------------------------------------------------
+
+# MAIN FUNCTIONS
+# -----------------------------------------------------------------------------
 
 def main(unparsed_args_list):
     """Uses parsed args to run the entirety of the file export pipeline.
@@ -68,11 +70,11 @@ def main(unparsed_args_list):
     :param unparsed_args_list: Input a list of command line args.
     :type unparsed_args_list: list[str]
     """
-    #Returns after printing appropriate error message from parsing/connecting.
+    # Returns after printing appropriate error message from parsing/connecting.
     args = parse_export(unparsed_args_list)
 
     config = configfile.build_complete_config(args.config_file)
-    
+
     alchemist = pipelines_basic.build_alchemist(args.database, config=config)
 
     # Exporting as a SQL file is not constricted by schema version.
@@ -85,17 +87,16 @@ def main(unparsed_args_list):
         if not values:
             values = None
 
-    if not args.pipeline in PIPELINES:
+    if args.pipeline not in PIPELINES:
         print("ABORTED EXPORT: Unknown pipeline option discrepency.\n"
               "Pipeline parsed from command line args is not supported")
         sys.exit(1)
 
     if args.pipeline != "I":
-        execute_export(alchemist, args.pipeline, folder_path=args.folder_path, 
-                       folder_name=args.folder_name, table=args.table, 
-                       values=values,
-                       filters=args.filters, groups=args.groups, sort=args.sort,
-                       include_columns=args.include_columns,
+        execute_export(alchemist, args.pipeline, folder_path=args.folder_path,
+                       folder_name=args.folder_name, table=args.table,
+                       values=values, filters=args.filters, groups=args.groups,
+                       sort=args.sort, include_columns=args.include_columns,
                        exclude_columns=args.exclude_columns,
                        sequence_columns=args.sequence_columns,
                        raw_bytes=args.raw_bytes,
@@ -103,6 +104,7 @@ def main(unparsed_args_list):
                        verbose=args.verbose, dump=args.dump, force=args.force)
     else:
         pass
+
 
 def parse_export(unparsed_args_list):
     """Parses export_db arguments and stores them with an argparse object.
@@ -120,7 +122,8 @@ def parse_export(unparsed_args_list):
     DATABASE_HELP = "Name of the MySQL database to export from."
 
     CONFIG_FILE_HELP = """
-        Export option that enables use of a config file for sourcing credentials
+        Export option that enables use of a config file for sourcing
+        credentials
             Follow selection argument with the path to the config file
             specifying MySQL and NCBI credentials.
         """
@@ -186,7 +189,6 @@ def parse_export(unparsed_args_list):
             Toggle to enable concatenation of files.
         """
 
-
     SEQUENCE_COLUMNS_HELP = """
         Csv export option to toggle removal of sequence-based data.
             Toggle to include sequence based data.
@@ -213,68 +215,68 @@ def parse_export(unparsed_args_list):
     initial_parser.add_argument("database", type=str, help=DATABASE_HELP)
 
     initial_parser.add_argument("pipeline", type=str, choices=PIPELINES,
-                               help=EXPORT_SELECT_HELP)
+                                help=EXPORT_SELECT_HELP)
 
     initial = initial_parser.parse_args(unparsed_args_list[2:4])
 
     optional_parser = argparse.ArgumentParser()
 
     optional_parser.add_argument("-c", "--config_file",
-                               type=pipelines_basic.convert_file_path,
-                                         help=CONFIG_FILE_HELP)
+                                 type=pipelines_basic.convert_file_path,
+                                 help=CONFIG_FILE_HELP)
     optional_parser.add_argument("-m", "--folder_name",
-                               type=str, help=FOLDER_NAME_HELP)
-    optional_parser.add_argument("-o", "--folder_path", 
-                               type=Path,
-                               help=FOLDER_PATH_HELP)
+                                 type=str, help=FOLDER_NAME_HELP)
+    optional_parser.add_argument("-o", "--folder_path", type=Path,
+                                 help=FOLDER_PATH_HELP)
     optional_parser.add_argument("-v", "--verbose", action="store_true",
-                               help=VERBOSE_HELP)
+                                 help=VERBOSE_HELP)
     optional_parser.add_argument("-d", "--dump", action="store_true",
-                               help=DUMP_HELP)
+                                 help=DUMP_HELP)
     optional_parser.add_argument("-f", "--force", action="store_true",
-                               help=FORCE_HELP)
+                                 help=FORCE_HELP)
 
     if initial.pipeline in FILTERABLE_PIPELINES:
         table_choices = dict.fromkeys(BIOPYTHON_PIPELINES, FLAT_FILE_TABLES)
         table_choices["csv"] = TABLES
         table_choices["tbl"] = FIVE_COLUMN_TABLES
         optional_parser.add_argument("-t", "--table", help=TABLE_HELP,
-                                choices=table_choices[initial.pipeline])
+                                     choices=table_choices[initial.pipeline])
 
         optional_parser.add_argument("-if", "--import_file",
-                                type=pipelines_basic.convert_file_path,
-                                help=IMPORT_FILE_HELP, dest="input",
-                                default=[])
+                                     type=pipelines_basic.convert_file_path,
+                                     help=IMPORT_FILE_HELP, dest="input",
+                                     default=[])
         optional_parser.add_argument("-in", "--import_names", nargs="*",
-                                help=SINGLE_GENOMES_HELP, dest="input")
+                                     help=SINGLE_GENOMES_HELP, dest="input")
         optional_parser.add_argument("-w", "--where", nargs="?",
-                                help=WHERE_HELP,
-                                dest="filters")
+                                     help=WHERE_HELP, dest="filters")
         optional_parser.add_argument("-g", "--group_by", nargs="*",
-                                help=GROUP_BY_HELP,
-                                dest="groups")
+                                     help=GROUP_BY_HELP, dest="groups")
         optional_parser.add_argument("-s", "--order_by", nargs="*",
-                                help=ORDER_BY_HELP)
+                                     help=ORDER_BY_HELP)
 
         if initial.pipeline in BIOPYTHON_PIPELINES:
             optional_parser.add_argument("-cc", "--concatenate",
-                                help=CONCATENATE_HELP, action="store_true")
+                                         help=CONCATENATE_HELP,
+                                         action="store_true")
         elif initial.pipeline == "csv":
             optional_parser.add_argument("-sc", "--sequence_columns",
-                                help=SEQUENCE_COLUMNS_HELP, action="store_true")
+                                         help=SEQUENCE_COLUMNS_HELP,
+                                         action="store_true")
             optional_parser.add_argument("-ic", "--include_columns", nargs="*",
-                                help=INCLUDE_COLUMNS_HELP)
+                                         help=INCLUDE_COLUMNS_HELP)
             optional_parser.add_argument("-ec", "--exclude_columns", nargs="*",
-                                help=EXCLUDE_COLUMNS_HELP)
+                                         help=EXCLUDE_COLUMNS_HELP)
             optional_parser.add_argument("-rb", "--raw_bytes",
-                                help=RAW_BYTES_HELP, action="store_true")
+                                         help=RAW_BYTES_HELP,
+                                         action="store_true")
     elif initial.pipeline == "sql":
         optional_parser.add_argument("-n", "--db_name", type=str,
-                                help=DB_NAME_HELP)
+                                     help=DB_NAME_HELP)
 
     optional_parser.set_defaults(pipeline=initial.pipeline,
                                  database=initial.database,
-                                 folder_name=DEFAULT_FOLDER_NAME, 
+                                 folder_name=DEFAULT_FOLDER_NAME,
                                  folder_path=None,
                                  config_file=None, verbose=False, input=[],
                                  table=DEFAULT_TABLE,
@@ -287,13 +289,13 @@ def parse_export(unparsed_args_list):
 
     return parsed_args
 
-def execute_export(alchemist, pipeline, 
-                        folder_path=None, folder_name=DEFAULT_FOLDER_NAME,
-                        values=None, verbose=False, dump=False, force=False,
-                        table=DEFAULT_TABLE, filters="", groups=[], sort=[],
-                        include_columns=[], exclude_columns=[],
-                        sequence_columns=False, raw_bytes=False,
-                        concatenate=False, db_name=None):
+
+def execute_export(alchemist, pipeline, folder_path=None,
+                   folder_name=DEFAULT_FOLDER_NAME, values=None, verbose=False,
+                   dump=False, force=False, table=DEFAULT_TABLE, filters="",
+                   groups=[], sort=[], include_columns=[], exclude_columns=[],
+                   sequence_columns=False, raw_bytes=False, concatenate=False,
+                   db_name=None):
     """Executes the entirety of the file export pipeline.
 
     :param alchemist: A connected and fully built AlchemyHandler object.
@@ -337,14 +339,14 @@ def execute_export(alchemist, pipeline,
         if verbose:
             print("Processing columns for csv export...")
         csv_columns = filter_csv_columns(alchemist, table,
-                                      include_columns=include_columns,
-                                      exclude_columns=exclude_columns,
-                                          sequence_columns=sequence_columns)
+                                         include_columns=include_columns,
+                                         exclude_columns=exclude_columns,
+                                         sequence_columns=sequence_columns)
 
-    if pipeline in FILTERABLE_PIPELINES: 
-        db_filter = pipelines_basic.build_filter(alchemist, table, filters, 
-                                                             values=values,
-                                                             verbose=verbose) 
+    if pipeline in FILTERABLE_PIPELINES:
+        db_filter = pipelines_basic.build_filter(alchemist, table, filters,
+                                                 values=values,
+                                                 verbose=verbose)
         if sort:
             if verbose:
                 print("Processing columns for sorting...")
@@ -358,20 +360,20 @@ def execute_export(alchemist, pipeline,
     if verbose:
         print("Creating export folder...")
     export_path = pipelines_basic.create_working_path(folder_path, folder_name,
-                                                     dump=dump, force=force)
+                                                      dump=dump, force=force)
 
     data_cache = {}
     if pipeline == "sql":
         if verbose:
             print("Writing SQL database file...")
-        pipelines_basic.create_working_dir(export_path, dump=dump, force=force) 
+        pipelines_basic.create_working_dir(export_path, dump=dump, force=force)
 
         fileio.write_database(alchemist, db_version["Version"], export_path,
-                                                                db_name=db_name)
+                              db_name=db_name)
     elif pipeline in FILTERABLE_PIPELINES:
         conditionals_map = pipelines_basic.build_groups_map(
-                                                db_filter, export_path, 
-                                                groups=groups, 
+                                                db_filter, export_path,
+                                                groups=groups,
                                                 verbose=verbose, force=force)
 
         if verbose:
@@ -384,12 +386,12 @@ def execute_export(alchemist, pipeline,
 
             conditionals = conditionals_map[mapped_path]
             db_filter.values = db_filter.build_values(where=conditionals)
-         
+
             if db_filter.hits() == 0:
                 print(f"No database entries received from {table} "
                       f"for '{mapped_path}'.")
                 continue
-            
+
             if sort:
                 sort_columns = get_sort_columns(alchemist, sort)
                 db_filter.sort(sort_columns)
@@ -399,29 +401,29 @@ def execute_export(alchemist, pipeline,
                 if mapped_path == export_path:
                     export_name = folder_name
 
-            pipelines_basic.create_working_dir(mapped_path, dump=dump, 
-                                                                force=force)
+            pipelines_basic.create_working_dir(mapped_path, dump=dump,
+                                               force=force)
 
             if pipeline in BIOPYTHON_PIPELINES + ["tbl"]:
                 execute_ffx_export(alchemist, mapped_path, export_path,
                                    db_filter.values, pipeline, db_version,
                                    table, concatenate=concatenate,
-                                   data_cache=data_cache, 
+                                   data_cache=data_cache,
                                    export_name=export_name,
                                    verbose=verbose, dump=dump)
             elif pipeline == "csv":
                 execute_csv_export(db_filter, mapped_path, export_path,
                                    csv_columns, table, raw_bytes=raw_bytes,
-                                   data_cache=data_cache, 
+                                   data_cache=data_cache,
                                    verbose=verbose, dump=dump)
     else:
         print("Unrecognized export pipeline, aborting export")
         sys.exit(1)
 
+
 def execute_csv_export(db_filter, export_path, folder_path, columns, csv_name,
-                                        data_cache=None, sort=[], 
-                                        raw_bytes=False, 
-                                        verbose=False, dump=False):
+                       data_cache=None, sort=[], raw_bytes=False,
+                       verbose=False, dump=False):
     """Executes csv export of a MySQL database table with select columns.
 
     :param db_filter: A connected and fully built Filter object.
@@ -474,10 +476,11 @@ def execute_csv_export(db_filter, export_path, folder_path, columns, csv_name,
 
         file_path = export_path.joinpath(f"{csv_name}.csv")
         fileio.export_data_dict(results, file_path, headers,
-                                               include_headers=True)
+                                include_headers=True)
+
 
 def execute_ffx_export(alchemist, export_path, folder_path, values,
-                       file_format, db_version, table, concatenate=False, 
+                       file_format, db_version, table, concatenate=False,
                        data_cache=None, verbose=False, dump=False,
                        export_name=None):
     """Executes SeqRecord export of the compilation of data from a MySQL entry.
@@ -507,7 +510,7 @@ def execute_ffx_export(alchemist, export_path, folder_path, values,
     """
     if data_cache is None:
         data_cache = {}
-  
+
     if export_name is None:
         export_name = export_path.name
 
@@ -516,34 +519,32 @@ def execute_ffx_export(alchemist, export_path, folder_path, values,
 
     if table == "phage":
         seqrecords = get_genome_seqrecords(alchemist, values,
-                                                        data_cache=data_cache,
-                                                        verbose=verbose)
+                                           data_cache=data_cache,
+                                           verbose=verbose)
     elif table == "gene":
         seqrecords = get_cds_seqrecords(alchemist, values,
-                                                        data_cache=data_cache,
-                                                        verbose=verbose)
+                                        data_cache=data_cache, verbose=verbose)
     else:
         print(f"Unknown error occured, table '{table}' is not recognized "
-               "for SeqRecord export pipelines.")
+              "for SeqRecord export pipelines.")
         sys.exit(1)
 
     if file_format == "tbl":
         fileio.write_feature_table(seqrecords, export_path, verbose=verbose)
     else:
         if verbose:
-                print("Appending database version...")	
+            print("Appending database version...")
         for record in seqrecords:
             append_database_version(record, db_version)
-        fileio.write_seqrecord(seqrecords, file_format, export_path, 
-                                                        export_name=export_name,
-                                                        verbose=verbose,
-                                                        concatenate=concatenate)
+        fileio.write_seqrecord(seqrecords, file_format, export_path,
+                               export_name=export_name, verbose=verbose,
+                               concatenate=concatenate)
 
-#-----------------------------------------------------------------------------
-#EXPORT-SPECIFIC HELPER FUNCTIONS
-#-----------------------------------------------------------------------------
 
-#TODO Document and Unittest
+# EXPORT-SPECIFIC HELPER FUNCTIONS
+# -----------------------------------------------------------------------------
+
+# TODO Document and Unittest
 def get_genome_seqrecords(alchemist, values, data_cache=None, verbose=False):
     if data_cache is None:
         data_cache = {}
@@ -553,36 +554,35 @@ def get_genome_seqrecords(alchemist, values, data_cache=None, verbose=False):
         genome = data_cache.get(genome_id)
         if genome is None:
             genome = get_single_genome(alchemist, genome_id, get_features=True,
-                                                    data_cache=data_cache)
-        
+                                       data_cache=data_cache)
+
         seqrecord = flat_files.genome_to_seqrecord(genome)
         flat_files.sort_seqrecord_features(seqrecord)
         seqrecords.append(seqrecord)
 
     return seqrecords
 
-#TODO Document and Unittest
-def get_cds_seqrecords(alchemist, values, data_cache=None, nucleotide=False, 
-                                                                 verbose=False):
+
+# TODO Document and Unittest
+def get_cds_seqrecords(alchemist, values, data_cache=None, nucleotide=False,
+                       verbose=False):
     if data_cache is None:
         data_cache = {}
 
     cds_list = parse_feature_data(alchemist, values=values)
 
-	
     db_filter = Filter(alchemist)
     db_filter.key = 'gene.GeneID'
 
     seqrecords = []
     for cds in cds_list:
         parent_genome = data_cache.get(cds.genome_id)
-        
-                
+
         if parent_genome is None:
-            if verbose: 
+            if verbose:
                 print(f"...Retrieving parent genome for {cds.id}...")
-            parent_genome = get_single_genome(alchemist, cds.genome_id, 
-                                                         data_cache=data_cache)
+            parent_genome = get_single_genome(alchemist, cds.genome_id,
+                                              data_cache=data_cache)
 
         if verbose:
             print(f"Converting {cds.id}...")
@@ -593,10 +593,11 @@ def get_cds_seqrecords(alchemist, values, data_cache=None, nucleotide=False,
         gene_domains = db_filter.select(CDD_DATA_COLUMNS)
 
         record = flat_files.cds_to_seqrecord(cds, parent_genome,
-                                                  gene_domains=gene_domains)
+                                             gene_domains=gene_domains)
         seqrecords.append(record)
 
     return seqrecords
+
 
 def get_sort_columns(alchemist, sort_inputs):
     """Function that converts input for sorting to SQLAlchemy Columns.
@@ -621,8 +622,9 @@ def get_sort_columns(alchemist, sort_inputs):
 
     return sort_columns
 
-def filter_csv_columns(alchemist, table, include_columns=[], exclude_columns=[],
-                                                    sequence_columns=False):
+
+def filter_csv_columns(alchemist, table, include_columns=[],
+                       exclude_columns=[], sequence_columns=False):
     """Function that filters and constructs a list of Columns to select.
 
     :param alchemist: A connected and fully built AlchemyHandler object.
@@ -684,6 +686,7 @@ def filter_csv_columns(alchemist, table, include_columns=[], exclude_columns=[],
 
     return columns
 
+
 def decode_results(results, columns, verbose=False):
     """Function that decodes encoded results from SQLAlchemy generated data.
 
@@ -700,14 +703,13 @@ def decode_results(results, columns, verbose=False):
                 if not result[column.name] is None:
                     result[column.name] = result[column.name].decode("utf-8")
 
-#---------
-#---------
-#Functions to be evaluated for another module:
-#-----------------------------------------------------------------------------
 
-#Copy of mysqldb.parse_feature_data() with value subquerying.
-#Value subquerying needed for +300000 GeneID entries.
-#Unsure about function redundancy.
+# Functions to be evaluated for another module:
+# -----------------------------------------------------------------------------
+
+# Copy of mysqldb.parse_feature_data() with value subquerying.
+# Value subquerying needed for +300000 GeneID entries.
+# Unsure about function redundancy.
 def parse_feature_data(alchemist, values=[], limit=8000):
     """Returns Cds objects containing data parsed from a MySQL database.
 
@@ -723,9 +725,8 @@ def parse_feature_data(alchemist, values=[], limit=8000):
     cds_data_query = querying.build_select(alchemist.graph, cds_data_columns)
 
     cds_data = querying.execute(alchemist.engine, cds_data_query,
-                                                  in_column=primary_key,
-                                                  values=values,
-                                                  limit=limit)
+                                in_column=primary_key, values=values,
+                                limit=limit)
 
     cds_list = []
     for data_dict in cds_data:
@@ -733,6 +734,7 @@ def parse_feature_data(alchemist, values=[], limit=8000):
         cds_list.append(cds_ftr)
 
     return cds_list
+
 
 def append_database_version(genome_seqrecord, version_data):
     """Function that appends the database version to the SeqRecord comments.
@@ -750,7 +752,6 @@ def append_database_version(genome_seqrecord, version_data):
     if "SchemaVersion" in version_keys:
         schema_version = version_data["SchemaVersion"]
 
-
     try:
         genome_seqrecord.annotations["comment"] =\
                 genome_seqrecord.annotations["comment"] + (
@@ -762,10 +763,11 @@ def append_database_version(genome_seqrecord, version_data):
             return
 
         raise TypeError("Object must be of type SeqRecord."
-                       f"Object was of type {type}.")
+                        f"Object was of type {type}.")
 
-#TODO Document
-#TODO Evaluate for redundancy
+
+# TODO Document
+# TODO Evaluate for redundancy
 def get_single_genome(alchemist, phageid, get_features=False, data_cache=None):
     gene_query = None
     trna_query = None
@@ -780,8 +782,7 @@ def get_single_genome(alchemist, phageid, get_features=False, data_cache=None):
                             phage_query=PHAGE_QUERY, gene_query=gene_query,
                             trna_query=trna_query, tmrna_query=tmrna_query)[0]
 
-    if not data_cache is None:
+    if data_cache is not None:
         data_cache[phageid] = genome
 
     return genome
-
