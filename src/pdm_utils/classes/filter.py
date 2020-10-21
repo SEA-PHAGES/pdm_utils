@@ -1,7 +1,5 @@
-"""Object to provide a formatted filtering query 
+"""Object to provide a formatted filtering query
 for retrieving data from a SQL database."""
-from collections import OrderedDict
-
 from networkx import Graph
 from sqlalchemy import Column
 from sqlalchemy import and_
@@ -18,8 +16,8 @@ from pdm_utils.functions import cartography
 from pdm_utils.functions import parsing
 from pdm_utils.functions import querying as q
 
-#-----------------------------------------------------------------------------
-#GLOBAL VARIABLES
+# -----------------------------------------------------------------------------
+# GLOBAL VARIABLES
 
 COLUMN_TYPES = [Column, Label]
 
@@ -31,7 +29,7 @@ class Filter:
         self._session = None
         self._mapper = None
 
-        self._connected = False 
+        self._connected = False
 
         if isinstance(alchemist, AlchemyHandler):
             if not alchemist.connected:
@@ -44,25 +42,22 @@ class Filter:
 
             self._connected = True
 
-
         if isinstance(key, Column):
             self._key = key
         else:
-            self._key = None        
-
+            self._key = None
 
         self._values = []
         self._values_valid = True
 
-
         self._filters = []
-        self._updated = True 
+        self._updated = True
         self._or_index = -1
 
         self.verbose = False
 
-#-----------------------------------------------------------------------------
-#FILTER CONNECTION HANDLING
+# -----------------------------------------------------------------------------
+# FILTER CONNECTION HANDLING
 
     def connect(self, alchemist=None):
         """Connect Filter object to a database with an AlchemyHandler.
@@ -70,7 +65,7 @@ class Filter:
         :param alchemist: An AlchemyHandler object.
         :type alchemist: AlchemyHandler
         """
-        if alchemist != None:
+        if alchemist is not None:
             self.link(alchemist)
             return
 
@@ -89,7 +84,7 @@ class Filter:
 
     def link(self, alchemist):
         """Connect Filter object to a database with an existing AlchemyHandler.
-       
+
         :param alchemist: An AlchemyHandler object.
         :type alchemist: AlchemyHandler
         """
@@ -114,8 +109,8 @@ class Filter:
         """
         if not self._connected:
             self.connect()
-        else: 
-            if not isinstance(self._engine, Engine): 
+        else:
+            if not isinstance(self._engine, Engine):
                 raise AttributeError("Filter object is missing valid Engine.")
             if not isinstance(self._graph, Graph):
                 raise AttributeError("Filter object is missing valid Graph.")
@@ -125,8 +120,8 @@ class Filter:
         if not isinstance(self._key, Column):
             raise AttributeError("Filter object is missing valid column key.")
 
-#-----------------------------------------------------------------------------
-#FILTER CONNECTION HANDLING PROPERTIES
+# -----------------------------------------------------------------------------
+# FILTER CONNECTION HANDLING PROPERTIES
 
     @property
     def connected(self):
@@ -153,8 +148,8 @@ class Filter:
         mapper = self._mapper
         return mapper
 
-#-----------------------------------------------------------------------------
-#FILTER VALUE HANDLING
+# -----------------------------------------------------------------------------
+# FILTER VALUE HANDLING
 
     def refresh(self):
         """Re-queries for the Filter's values.
@@ -185,10 +180,10 @@ class Filter:
 
         self._updated = True
         self._values_valid = True
- 
+
     def sort(self, raw_columns):
         """Re-queries for the Filter's values, applying a ORDER BY clause.
-       
+
         :param raw_column: SQLAlchemy Column object(s) or object name(s).
         :type raw_columns: Column
         :type raw_columns: str
@@ -198,25 +193,25 @@ class Filter:
         self.check()
 
         columns = self.get_columns(raw_columns)
-        
+
         query = q.build_select(self._graph, self._key, order_by=columns)
 
         values = q.first_column(self._engine, query, in_column=self._key,
-                                                     values=self._values)
+                                values=self._values)
         self._values = values
-        self._values_valid = True 
+        self._values_valid = True
 
-#-----------------------------------------------------------------------------
-#FILTER VALUE HANDLING PROPERTIES
+# -----------------------------------------------------------------------------
+# FILTER VALUE HANDLING PROPERTIES
 
-    @property 
+    @property
     def values(self):
-        if self._values != None:
-            values = self._values.copy()  
+        if self._values is not None:
+            values = self._values.copy()
             return values
         else:
             return []
- 
+
     @values.setter
     def values(self, values):
         if not (isinstance(values, list) or values is None):
@@ -228,14 +223,14 @@ class Filter:
     @property
     def key(self):
         key = self._key
-        return key 
+        return key
 
     @key.setter
     def key(self, key):
         if isinstance(key, Column):
             self._key = key
         elif isinstance(key, str):
-            if self.graph == None:
+            if self.graph is None:
                 raise ValueError("String key input requires MySQL connection.")
 
             metadata = self.graph.graph["metadata"]
@@ -253,19 +248,19 @@ class Filter:
 
         else:
             raise TypeError("Filter key value is invalid."
-                            "Filter key must be one of the following: \n" 
+                            "Filter key must be one of the following: \n"
                             "SQLAlchemy Column\n"
                             "MySQL column string\n"
-                            "MySQL table string\n") 
+                            "MySQL table string\n")
 
     @property
     def values_valid(self):
         values_valid = self._values_valid
         return values_valid
 
-#-----------------------------------------------------------------------------
-#FILTER CLAUSE HANDLING
- 
+# FILTER CLAUSE HANDLING
+# -----------------------------------------------------------------------------
+
     def reset(self):
         """Resets all filters, values, and Filter state conditions.
         """
@@ -290,10 +285,9 @@ class Filter:
             self.new_or_()
             or_block = self._filters[self._or_index]
 
-            or_block.update({"parenthetical" : conditionals})
+            or_block.update({"parenthetical": conditionals})
 
             self._updated = False
-
 
     def and_(self, filter):
         """Add an and conditional to the Filter object class.
@@ -306,12 +300,12 @@ class Filter:
 
         where_clause = q.build_where_clause(self.graph, filter)
         filter_key = parsing.create_filter_key(filter)
-     
+
         or_block = self._filters[self._or_index]
 
-        #Stores the BinaryExpression with a key of the Column/Operator pairing.
-        or_block.update({filter_key : where_clause}) 
-           
+        # Stores the BinaryExpression with a key of the Column/Operator pairing
+        or_block.update({filter_key: where_clause})
+
         self._updated = False
 
     def new_or_(self):
@@ -323,7 +317,7 @@ class Filter:
 
         self._filters.append({})
         self._or_index += 1
-        
+
     def remove(self, filter):
         """Remove an and filter from the current block of and conditionals.
 
@@ -334,12 +328,12 @@ class Filter:
 
         or_block = self._filters[self._or_index]
 
-        #Indexes into the dictionary using the Column/Operator pairing.
+        # Indexes into the dictionary using the Column/Operator pairing.
         if filter_key in or_block.keys():
             or_block.pop(filter_key)
         else:
-            raise IndexError(f"Filter {filter} is not within the current block "
-                              "of and conditionals.")
+            raise IndexError(f"Filter {filter} is not within the current "
+                             "block of and conditionals.")
 
         self._updated = False
 
@@ -348,15 +342,15 @@ class Filter:
 
         :param filter: Formatted MySQL WHERE clause.
         :type filter: str
-        """    
+        """
         filters = parsing.parse_cmd_string(filter_string)
         while(filters):
             and_filters = filters[0]
             for filter in and_filters:
                 self.and_(filter)
-           
-            filters.pop(0) 
-            
+
+            filters.pop(0)
+
             if filters:
                 self.new_or_()
 
@@ -372,11 +366,11 @@ class Filter:
             where_clauses = []
             for filter_key in or_block.keys():
                 where_clauses.append(or_block[filter_key])
-            
+
             if where_clauses:
                 and_conditionals.append(and_(*where_clauses))
-          
-        if len(and_conditionals) > 1 :
+
+        if len(and_conditionals) > 1:
             conditionals = or_(*and_conditionals)
         elif len(and_conditionals) == 1:
             conditionals = and_conditionals
@@ -385,9 +379,9 @@ class Filter:
 
         return conditionals
 
-#-----------------------------------------------------------------------------
-#FILTER CLAUSE HANDLING PROPERTIES
-     
+# -----------------------------------------------------------------------------
+# FILTER CLAUSE HANDLING PROPERTIES
+
     @property
     def filters(self):
         filters = self.copy_filters()
@@ -412,16 +406,13 @@ class Filter:
                              f"Current or_ blocks stored are {or_count}.")
 
         self._or_index = index
-    
-        
 
-#-----------------------------------------------------------------------------
-#FILTER QUERYING
-
-    def build_values(self, where=None, column=None, raw_bytes=False, 
-                                                    limit=8000):
+# -----------------------------------------------------------------------------
+# FILTER QUERYING
+    def build_values(self, where=None, column=None, raw_bytes=False,
+                     limit=8000):
         """Queries for values from stored WHERE clauses and Filter key.
-        
+
         :param where: MySQL WHERE clause_related SQLAlchemy object(s).
         :type where: BinaryExpression
         :type where: list
@@ -442,8 +433,8 @@ class Filter:
             column_obj = self._key
         else:
             column_obj = self.get_column(column)
- 
-        if not where is None:
+
+        if where is not None:
             if isinstance(where, list) or isinstance(where, BooleanClauseList):
                 base_clauses = where
             else:
@@ -451,12 +442,11 @@ class Filter:
         else:
             base_clauses = []
 
-        query = q.build_distinct(self.graph, column_obj, where=base_clauses, 
-                                                         add_in=self._key)
+        query = q.build_distinct(self.graph, column_obj, where=base_clauses,
+                                 add_in=self._key)
 
         values = q.first_column(self.engine, query, in_column=self._key,
-                                                    values=self._values,
-                                                    limit=limit) 
+                                values=self._values, limit=limit)
 
         if not raw_bytes:
             if column_obj.type.python_type is bytes:
@@ -483,9 +473,8 @@ class Filter:
         columns = self.get_columns(raw_columns)
 
         query = q.build_select(self._graph, columns, add_in=self._key)
-        results = q.execute(self._engine, query, in_column=self._key, 
-                                                 values=self._values,
-                                                 return_dict=return_dict)
+        results = q.execute(self._engine, query, in_column=self._key,
+                            values=self._values, return_dict=return_dict)
 
         return results
 
@@ -513,13 +502,12 @@ class Filter:
 
         in_clause = self._key.in_(self._values)
 
-        instances = q.query(self._session, self._graph, table_map, 
-                                                        where=in_clause)
+        instances = q.query(self._session, self._graph, table_map,
+                            where=in_clause)
         return instances
 
     def transpose(self, raw_column, return_dict=False, set_values=False,
-                                                       raw_bytes=False,
-                                                       filter=False):
+                  raw_bytes=False, filter=False):
         """Queries for distinct values from stored values and a MySQL Column.
 
         :param raw_column: SQLAlchemy Column object or object name.
@@ -534,30 +522,29 @@ class Filter:
         :rtype: dict
         """
         self.check()
-        
+
         if not self._values:
             if return_dict:
                 return {}
             else:
-                return [] 
+                return []
 
         column = self.get_column(raw_column)
         name = column.name
- 
+
         where_clauses = None
         if filter:
-            where_clauses = self.build_where_clauses()    
+            where_clauses = self.build_where_clauses()
 
         values = self.build_values(column=column, where=where_clauses,
-                                                  raw_bytes=raw_bytes)
+                                   raw_bytes=raw_bytes)
 
         if set_values:
             self._key = column
             self._values = values
-            values_valid = True
 
         if return_dict:
-            values = {name : values}
+            values = {name: values}
 
         return values
 
@@ -571,14 +558,14 @@ class Filter:
         :rtype: dict
         """
         self.check()
-        
+
         if not self._values:
             return {}
 
         if not isinstance(raw_columns, list):
             raw_columns = [raw_columns]
-        
-        values={}
+
+        values = {}
         for column in raw_columns:
             column_values = self.transpose(column, return_dict=True,
                                            raw_bytes=raw_bytes,
@@ -587,7 +574,7 @@ class Filter:
 
         return values
 
-    def group(self, raw_column, raw_bytes=False, filter=False): 
+    def group(self, raw_column, raw_bytes=False, filter=False):
         """Queries and separates Filter object's values based on a Column.
 
         :param raw_column: SQLAlchemy Column object or object name.
@@ -599,7 +586,7 @@ class Filter:
         column = self.get_column(raw_column)
 
         groups = self.transpose(column)
-       
+
         where_clauses = []
         if filter:
             where_clauses = self.build_where_clauses()
@@ -612,8 +599,9 @@ class Filter:
             else:
                 group_clauses = where_clauses + [(column == group)]
 
-            values = self.build_values(where=group_clauses, raw_bytes=raw_bytes)
-            group_results.update({group : values})
+            values = self.build_values(where=group_clauses,
+                                       raw_bytes=raw_bytes)
+            group_results.update({group: values})
 
         return group_results
 
@@ -633,7 +621,7 @@ class Filter:
         if not self._values:
             return {}
 
-        columns = self.get_columns(raw_columns)        
+        columns = self.get_columns(raw_columns)
 
         where_clauses = []
         if filter:
@@ -642,26 +630,26 @@ class Filter:
         values = {}
         for value in self._values:
             compare_value = value
-            if self._key.type.python_type == bytes and not value is None:
+            if self._key.type.python_type == bytes and value is not None:
                 compare_value = value.encode("utf-8")
 
             value_clauses = where_clauses + [(self._key == compare_value)]
-            values.update({value : {}}) 
+            values.update({value: {}})
 
-            #For each column for each value, add the respective data to a dict.
+            # For each column for each value, add the respective data to a dict
             for i in range(len(columns)):
-                query = q.build_distinct(self._graph, columns[i], 
-                                                        where=value_clauses)
+                query = q.build_distinct(self._graph, columns[i],
+                                         where=value_clauses)
                 value_data = q.first_column(self._engine, query)
 
                 if not raw_bytes:
                     if columns[i].type.python_type == bytes:
                         value_data = basic.convert_to_decoded(value_data)
 
-                values[value].update({columns[i].name : value_data})
+                values[value].update({columns[i].name: value_data})
 
         return values
-  
+
     def get_column(self, raw_column):
         """Converts a column input, string or Column, to a Column.
 
@@ -676,12 +664,11 @@ class Filter:
         elif type(raw_column) in COLUMN_TYPES:
             column = raw_column
         else:
-            raise TypeError("Column must be either a string or a Column object")
-
-
+            raise TypeError(
+                        "Column must be either a string or a Column object")
 
         return column
-    
+
     def get_columns(self, raw_columns):
         """Converts a column input list, string or Column, to a list of Columns.
 
@@ -690,26 +677,26 @@ class Filter:
         :type raw_column: list[str]
         :returns: Returns SQLAlchemy Columns
         :rtype: list[Column]
-        """ 
+        """
         if not isinstance(raw_columns, list):
             raw_columns = [raw_columns]
 
         columns = []
         for raw_column in raw_columns:
-            columns.append(self.get_column(raw_column)) 
+            columns.append(self.get_column(raw_column))
 
         return columns
 
-#-----------------------------------------------------------------------------
-#FILTER QUALITY-OF-LIFE
+# -----------------------------------------------------------------------------
+# FILTER QUALITY-OF-LIFE
 
     def hits(self):
         """Gets the number of a Filter object's values.
         """
-        if self.values == None:
+        if self.values is None:
             return 0
 
-        return len(self._values)    
+        return len(self._values)
 
     def copy(self):
         """Returns a copy of a Filter object.
@@ -726,24 +713,24 @@ class Filter:
         copy._values = self.values
 
         return copy
- 
+
     def copy_filters(self):
         """Returns a copy of a Filter object's filter dictionary.
         """
         filters_copy = []
-        #Copies of each list are required so that multiple filter copies
-        #are not adding and removing from the same space in memory.
+        # Copies of each list are required so that multiple filter copies
+        # are not adding and removing from the same space in memory.
         for or_block in self._filters:
             new_block = {}
-           
+
             for clause in or_block.keys():
-                new_block.update({clause : or_block[clause]})
+                new_block.update({clause: or_block[clause]})
 
             filters_copy.append(new_block)
 
         return filters_copy
 
-    def print_results(self): 
+    def print_results(self):
         """Prints the Filter object's values in a formatted way.
         """
         if not self._values:
@@ -753,23 +740,22 @@ class Filter:
             self.refresh()
 
         print(" " + "_"*57 + " ")
-        print("| %-20s" % \
-             (f"{self.key.name} Results:") \
-             + " "*36 + "|")
+        print("| %-20s" %
+              (f"{self.key.name} Results:")
+              + " "*36 + "|")
         print("|" + "-"*57 + "|")
         for row in range(0, len(self._values), 3):
             result_row = self._values[row:row+3]
             if len(result_row) == 3:
-                print("| %-20s %-20s %-13s |" % \
-                     (result_row[0], result_row[1], result_row[2]))
+                print("| %-20s %-20s %-13s |" %
+                      (result_row[0], result_row[1], result_row[2]))
             elif len(result_row) == 2:
-                print("| %-20s %-20s %-13s" % \
-                     (result_row[0], result_row[1], "") \
-                     + " " + "|")
+                print("| %-20s %-20s %-13s" %
+                      (result_row[0], result_row[1], "")
+                      + " " + "|")
 
             elif len(result_row) == 1:
-                print("| %-20s %-20s %-13s" % \
-                     (result_row[0], "", "") \
-                     + " " + "|")
+                print("| %-20s %-20s %-13s" %
+                      (result_row[0], "", "")
+                      + " " + "|")
         print("|" + "_"*57 + "|")
-   

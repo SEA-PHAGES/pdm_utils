@@ -1,5 +1,8 @@
 """Pipeline for exporting database information into files."""
 import argparse
+import shlex
+import shutil
+from subprocess import Popen, DEVNULL
 import sys
 import time
 from pathlib import Path
@@ -10,8 +13,10 @@ from pdm_utils.classes.filter import Filter
 from pdm_utils.functions import configfile
 from pdm_utils.functions import fileio
 from pdm_utils.functions import flat_files
+from pdm_utils.functions import multithread
 from pdm_utils.functions import mysqldb
 from pdm_utils.functions import mysqldb_basic
+from pdm_utils.functions import parallelize
 from pdm_utils.functions import pipelines_basic
 from pdm_utils.functions import querying
 
@@ -20,6 +25,8 @@ from pdm_utils.functions import querying
 # -----------------------------------------------------------------------------
 DEFAULT_FOLDER_NAME = f"{time.strftime('%Y%m%d')}_export"
 DEFAULT_TABLE = "phage"
+
+TEMP_DIR = "/tmp/pdm_utils_export_temp"
 
 PHAGE_QUERY = "SELECT * FROM phage"
 GENE_QUERY = "SELECT * FROM gene"
@@ -101,7 +108,8 @@ def main(unparsed_args_list):
                        sequence_columns=args.sequence_columns,
                        raw_bytes=args.raw_bytes,
                        concatenate=args.concatenate, db_name=args.db_name,
-                       verbose=args.verbose, dump=args.dump, force=args.force)
+                       verbose=args.verbose, dump=args.dump, force=args.force,
+                       threads=args.number_processes, phams_out=args.phams_out)
     else:
         pass
 
@@ -211,81 +219,96 @@ def parse_export(unparsed_args_list):
             Toggle to leave conserve format of bytes-type data.
         """
 
-    initial_parser = argparse.ArgumentParser()
-    initial_parser.add_argument("database", type=str, help=DATABASE_HELP)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("database", type=str, help=DATABASE_HELP)
 
-    initial_parser.add_argument("pipeline", type=str, choices=PIPELINES,
-                                help=EXPORT_SELECT_HELP)
+    subparsers = parser.add_subparsers(dest="pipeline",
+                                       help=EXPORT_SELECT_HELP)
 
-    initial = initial_parser.parse_args(unparsed_args_list[2:4])
+    filterable_parsers = []
+    biopython_parsers = []
+    subparser_list = []
+    for pipeline in BIOPYTHON_PIPELINES:
+        bio_parser = (subparsers.add_parser(pipeline))
+        biopython_parsers.append(bio_parser)
+        filterable_parsers.append(bio_parser)
+        subparser_list.append(bio_parser)
 
-    optional_parser = argparse.ArgumentParser()
+    tbl_parser = subparsers.add_parser("tbl")
+    subparser_list.append(tbl_parser)
+    csv_parser = subparsers.add_parser("csv")
+    subparser_list.append(csv_parser)
+    sql_parser = subparsers.add_parser("sql")
+    subparser_list.append(sql_parser)
 
-    optional_parser.add_argument("-c", "--config_file",
-                                 type=pipelines_basic.convert_file_path,
-                                 help=CONFIG_FILE_HELP)
-    optional_parser.add_argument("-m", "--folder_name",
-                                 type=str, help=FOLDER_NAME_HELP)
-    optional_parser.add_argument("-o", "--folder_path", type=Path,
-                                 help=FOLDER_PATH_HELP)
-    optional_parser.add_argument("-v", "--verbose", action="store_true",
-                                 help=VERBOSE_HELP)
-    optional_parser.add_argument("-d", "--dump", action="store_true",
-                                 help=DUMP_HELP)
-    optional_parser.add_argument("-f", "--force", action="store_true",
-                                 help=FORCE_HELP)
+    for subparser in subparser_list:
+        subparser.add_argument("-c", "--config_file",
+                               type=pipelines_basic.convert_file_path,
+                               help=CONFIG_FILE_HELP)
+        subparser.add_argument("-m", "--folder_name", type=str,
+                               help=FOLDER_NAME_HELP)
+        subparser.add_argument("-o", "--folder_path", type=Path,
+                               help=FOLDER_PATH_HELP)
+        subparser.add_argument("-v", "--verbose", action="store_true",
+                               help=VERBOSE_HELP)
+        subparser.add_argument("-d", "--dump", action="store_true",
+                               help=DUMP_HELP)
+        subparser.add_argument("-f", "--force", action="store_true",
+                               help=FORCE_HELP)
+        subparser.add_argument("-np", "--number_processes", type=int)
 
-    if initial.pipeline in FILTERABLE_PIPELINES:
+    for subparser in filterable_parsers:
         table_choices = dict.fromkeys(BIOPYTHON_PIPELINES, FLAT_FILE_TABLES)
         table_choices["csv"] = TABLES
         table_choices["tbl"] = FIVE_COLUMN_TABLES
-        optional_parser.add_argument("-t", "--table", help=TABLE_HELP,
-                                     choices=table_choices[initial.pipeline])
 
-        optional_parser.add_argument("-if", "--import_file",
-                                     type=pipelines_basic.convert_file_path,
-                                     help=IMPORT_FILE_HELP, dest="input",
-                                     default=[])
-        optional_parser.add_argument("-in", "--import_names", nargs="*",
-                                     help=SINGLE_GENOMES_HELP, dest="input")
-        optional_parser.add_argument("-w", "--where", nargs="?",
-                                     help=WHERE_HELP, dest="filters")
-        optional_parser.add_argument("-g", "--group_by", nargs="*",
-                                     help=GROUP_BY_HELP, dest="groups")
-        optional_parser.add_argument("-s", "--order_by", nargs="*",
-                                     help=ORDER_BY_HELP)
+        subparser.add_argument("-if", "--import_file",
+                               type=pipelines_basic.convert_file_path,
+                               help=IMPORT_FILE_HELP, dest="input",
+                               default=[])
+        subparser.add_argument("-in", "--import_names", nargs="*",
+                               help=SINGLE_GENOMES_HELP, dest="input")
+        subparser.add_argument("-w", "--where", nargs="?",
+                               help=WHERE_HELP, dest="filters")
+        subparser.add_argument("-g", "--group_by", nargs="*",
+                               help=GROUP_BY_HELP, dest="groups")
+        subparser.add_argument("-s", "--order_by", nargs="*",
+                               help=ORDER_BY_HELP)
 
-        if initial.pipeline in BIOPYTHON_PIPELINES:
-            optional_parser.add_argument("-cc", "--concatenate",
-                                         help=CONCATENATE_HELP,
-                                         action="store_true")
-        elif initial.pipeline == "csv":
-            optional_parser.add_argument("-sc", "--sequence_columns",
-                                         help=SEQUENCE_COLUMNS_HELP,
-                                         action="store_true")
-            optional_parser.add_argument("-ic", "--include_columns", nargs="*",
-                                         help=INCLUDE_COLUMNS_HELP)
-            optional_parser.add_argument("-ec", "--exclude_columns", nargs="*",
-                                         help=EXCLUDE_COLUMNS_HELP)
-            optional_parser.add_argument("-rb", "--raw_bytes",
-                                         help=RAW_BYTES_HELP,
-                                         action="store_true")
-    elif initial.pipeline == "sql":
-        optional_parser.add_argument("-n", "--db_name", type=str,
-                                     help=DB_NAME_HELP)
+    for subparser in biopython_parsers:
+        subparser.add_argument("-cc", "--concatenate", help=CONCATENATE_HELP,
+                               action="store_true")
+        subparser.add_argument("-t", "--table", help=TABLE_HELP,
+                               choices=FLAT_FILE_TABLES)
 
-    optional_parser.set_defaults(pipeline=initial.pipeline,
-                                 database=initial.database,
-                                 folder_name=DEFAULT_FOLDER_NAME,
-                                 folder_path=None,
-                                 config_file=None, verbose=False, input=[],
-                                 table=DEFAULT_TABLE,
-                                 filters="", groups=[], sort=[],
-                                 include_columns=[], exclude_columns=[],
-                                 sequence_columns=False, concatenate=False,
-                                 raw_bytes=False, db_name=None)
+    tbl_parser.add_argument("-t", "--table", help=TABLE_HELP,
+                            choices=FIVE_COLUMN_TABLES)
 
-    parsed_args = optional_parser.parse_args(unparsed_args_list[4:])
+    csv_parser.add_argument("-t", "--table", help=TABLE_HELP,
+                            choices=TABLES)
+    csv_parser.add_argument("-sc", "--sequence_columns",
+                            help=SEQUENCE_COLUMNS_HELP, action="store_true")
+    csv_parser.add_argument("-ic", "--include_columns", nargs="*",
+                            help=INCLUDE_COLUMNS_HELP)
+    csv_parser.add_argument("-ec", "--exclude_columns", nargs="*",
+                            help=EXCLUDE_COLUMNS_HELP)
+    csv_parser.add_argument("-rb", "--raw_bytes", help=RAW_BYTES_HELP,
+                            action="store_true")
+
+    sql_parser.add_argument("-n", "--db_name", type=str, help=DB_NAME_HELP)
+    sql_parser.add_argument("-pho", "--phams_out", action="store_true")
+
+    for subparser in subparser_list:
+        subparser.set_defaults(
+                        folder_name=DEFAULT_FOLDER_NAME, folder_path=None,
+                        config_file=None, verbose=False, input=[],
+                        table=DEFAULT_TABLE, filters="", groups=[], sort=[],
+                        include_columns=[], exclude_columns=[],
+                        sequence_columns=False, concatenate=False,
+                        raw_bytes=False, db_name=None, phams_out=False,
+                        number_processes=1)
+
+    parsed_args = parser.parse_args(unparsed_args_list[2:])
 
     return parsed_args
 
@@ -295,7 +318,7 @@ def execute_export(alchemist, pipeline, folder_path=None,
                    dump=False, force=False, table=DEFAULT_TABLE, filters="",
                    groups=[], sort=[], include_columns=[], exclude_columns=[],
                    sequence_columns=False, raw_bytes=False, concatenate=False,
-                   db_name=None):
+                   db_name=None, phams_out=False, threads=1):
     """Executes the entirety of the file export pipeline.
 
     :param alchemist: A connected and fully built AlchemyHandler object.
@@ -348,14 +371,7 @@ def execute_export(alchemist, pipeline, folder_path=None,
                                                  values=values,
                                                  verbose=verbose)
         if sort:
-            if verbose:
-                print("Processing columns for sorting...")
-            try:
-                db_filter.sort(sort)
-            except:
-                print("Please check your syntax for sorting columns:\n"
-                      f"{', '.join(sort)}")
-                sys.exit(1)
+            pipelines_basic.add_sort_columns(db_filter, sort, verbose=verbose)
 
     if verbose:
         print("Creating export folder...")
@@ -364,12 +380,10 @@ def execute_export(alchemist, pipeline, folder_path=None,
 
     data_cache = {}
     if pipeline == "sql":
-        if verbose:
-            print("Writing SQL database file...")
-        pipelines_basic.create_working_dir(export_path, dump=dump, force=force)
-
-        fileio.write_database(alchemist, db_version["Version"], export_path,
-                              db_name=db_name)
+        execute_sql_export(alchemist, export_path, folder_path, db_version,
+                           db_name=db_name, dump=dump, force=force,
+                           phams_out=phams_out, threads=threads,
+                           verbose=verbose)
     elif pipeline in FILTERABLE_PIPELINES:
         conditionals_map = pipelines_basic.build_groups_map(
                                                 db_filter, export_path,
@@ -541,6 +555,45 @@ def execute_ffx_export(alchemist, export_path, folder_path, values,
                                concatenate=concatenate)
 
 
+def execute_sql_export(alchemist, export_path, folder_path, db_version,
+                       db_name=None, dump=False, force=False, phams_out=False,
+                       threads=1, verbose=False):
+    pipelines_basic.create_working_dir(export_path, dump=dump, force=force)
+
+    if phams_out:
+        temp_dir = Path(TEMP_DIR)
+        if temp_dir.is_dir():
+            shutil.rmtree(temp_dir)
+        temp_dir.mkdir()
+
+        phams_out_fasta_dir = temp_dir.joinpath("phams_out_fastas")
+        pipelines_basic.create_working_dir(phams_out_fasta_dir,
+                                           dump=dump, force=force)
+        phams_out_aln_dir = temp_dir.joinpath("phams_out_alns")
+        pipelines_basic.create_working_dir(phams_out_aln_dir,
+                                           dump=dump, force=force)
+
+        phams_dict = get_all_pham_gene_translations(alchemist)
+        filepaths = dump_pham_out_fastas(phams_out_fasta_dir, phams_dict,
+                                         threads=threads, verbose=verbose)
+        align_pham_out_fastas(phams_out_aln_dir, filepaths,
+                              threads=threads, verbose=verbose)
+
+        pham_fastas_zip = export_path.joinpath("pham_fastas.zip")
+        pham_alns_zip = export_path.joinpath("pham_alns.zip")
+
+        shutil.make_archive(pham_fastas_zip.with_suffix(""), "zip",
+                            phams_out_fasta_dir)
+        shutil.make_archive(pham_alns_zip.with_suffix(""), "zip",
+                            phams_out_aln_dir)
+
+    if verbose:
+        print("Writing SQL database file...")
+
+    fileio.write_database(alchemist, db_version["Version"], export_path,
+                          db_name=db_name)
+
+
 # EXPORT-SPECIFIC HELPER FUNCTIONS
 # -----------------------------------------------------------------------------
 
@@ -623,6 +676,8 @@ def get_sort_columns(alchemist, sort_inputs):
     return sort_columns
 
 
+# CSV-EXPORT HELPER FUNCTIONS
+# -----------------------------------------------------------------------------
 def filter_csv_columns(alchemist, table, include_columns=[],
                        exclude_columns=[], sequence_columns=False):
     """Function that filters and constructs a list of Columns to select.
@@ -702,6 +757,108 @@ def decode_results(results, columns, verbose=False):
             for result in results:
                 if not result[column.name] is None:
                     result[column.name] = result[column.name].decode("utf-8")
+
+
+# SQL-EXPORT HELPER FUNCTIONS
+# -----------------------------------------------------------------------------
+def run_clustalo(fasta_path, aln_path):
+    command = (f"clustalo -i {fasta_path} --infmt=fasta -o {aln_path} "
+               "--outfmt=fasta --output-order=tree-order --threads=1 "
+               "--seqtype=protein")
+
+    command = shlex.split(command)
+    with Popen(command, stdout=DEVNULL, stderr=DEVNULL) as proc:
+        proc.wait()
+
+    return aln_path
+
+
+def get_all_pham_gene_translations(alchemist):
+    engine = alchemist.engine
+
+    # Build phage>>cluster lookup table
+    cluster_lookup = dict()
+    query = "SELECT PhageID, Cluster, Subcluster FROM phage"
+    results = engine.execute(query)
+    for result in results:
+        phageid = result["PhageID"]
+        cluster = result["Cluster"]
+        subcluster = result["Subcluster"]
+        if cluster is None:
+            cluster_lookup[phageid] = "Singleton"
+        elif subcluster is None:
+            cluster_lookup[phageid] = cluster
+        else:
+            cluster_lookup[phageid] = subcluster
+
+    # Build pham>>translation>>cluster>>gene lookup table
+    phams = dict()
+    query = ("SELECT PhamID, LocusTag, Name, Translation, Notes, PhageID "
+             "FROM gene")
+    results = engine.execute(query)
+    for result in results:
+        phageid = result["PhageID"]
+        locus = result["LocusTag"]
+        translation = result["Translation"].decode('utf-8')
+        product = result["Notes"].decode('utf-8')
+        phamid = result["PhamID"]
+        if locus is not None:
+            name = locus.split('_')[-1]
+        else:
+            name = result["Name"]
+        geneid = f"{phageid}_{name}"
+        if product is not None and product > "":
+            geneid += f" ({product})"
+        cluster = cluster_lookup[phageid]
+
+        geneid = geneid.join(["[", cluster, "]", geneid])
+
+        pham_translations = phams.get(phamid, dict())
+        pham_translations[geneid] = translation
+        phams[phamid] = pham_translations
+
+    engine.dispose()
+
+    return phams
+
+
+def dump_pham_out_fastas(working_dir, phams_dict, threads=1, verbose=False):
+    filepaths = list()
+
+    if verbose:
+        print("...Writing pham gene fasta files...")
+
+    work_items = []
+    for pham, pham_translations in phams_dict.items():
+        filename = f"{pham}_genes.fasta"
+        filepath = working_dir.joinpath(filename)
+        filepaths.append(filepath)
+
+        work_items.append((pham_translations, filepath))
+
+    multithread.multithread(work_items, threads, fileio.write_fasta,
+                            verbose=verbose)
+
+    return filepaths
+
+
+def align_pham_out_fastas(working_dir, filepaths, threads=1, verbose=False):
+    aln_paths = list()
+
+    if verbose:
+        print("...Aligning pham gene fasta files...")
+
+    work_items = []
+    for filepath in filepaths:
+        aln_name = filepath.with_suffix(".aln").name
+        aln_path = working_dir.joinpath(aln_name)
+        aln_paths.append(aln_path)
+
+        work_items.append((filepath, aln_path))
+
+    parallelize.parallelize(work_items, threads, run_clustalo, verbose=verbose)
+
+    return aln_paths
 
 
 # Functions to be evaluated for another module:

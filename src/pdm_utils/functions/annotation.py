@@ -9,7 +9,7 @@ from pdm_utils.functions import querying
 
 
 # ANNOTATION RETRIEVAL
-# -------------------------
+# -----------------------------------------------------------------------------
 def get_genes_from_pham(alchemist, pham):
     gene_obj = alchemist.metadata.tables["gene"]
 

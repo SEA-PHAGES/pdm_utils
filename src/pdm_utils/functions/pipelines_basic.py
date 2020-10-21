@@ -151,6 +151,18 @@ def build_filter(alchemist, key, filters, values=None, verbose=False):
     return db_filter
 
 
+def add_sort_columns(db_filter, sort_columns, verbose=False):
+    if verbose:
+        print("Processing columns for sorting...")
+
+    try:
+        db_filter.sort(sort_columns)
+    except:
+        print("Please check your syntax for sorting columns:\n"
+              f"{', '.join(sort_columns)}")
+        sys.exit(1)
+
+
 def build_groups_map(db_filter, export_path, groups=[], verbose=False,
                      force=False, dump=False):
     """Function that generates a map between conditionals and grouping paths.

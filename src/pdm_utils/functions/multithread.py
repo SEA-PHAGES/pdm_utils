@@ -71,7 +71,7 @@ def create_threads(work_queue, work_lock, result_queue, result_lock,
     return threads
 
 
-def multithread(target, work_items, threads=1, verbose=False):
+def multithread(work_items, threads, target, verbose=False):
     """Runs list of work items with specified number of threads.
 
     :param target: Function used by the thread to process work items.

@@ -1,5 +1,6 @@
 import csv
 import os
+import shutil
 import textwrap
 from pathlib import Path
 
@@ -105,7 +106,7 @@ def write_fasta(ids_seqs, infile_path):
     """
     Writes the input genes to the indicated file in FASTA multiple
     sequence format (unaligned).
-    :param id_seqs: the ids and sequences to be written to file 
+    :param id_seqs: the ids and sequences to be written to file
     :type genes: dict
     :param infile_path: the path of the file to write the genes to
     :type infile: Path
