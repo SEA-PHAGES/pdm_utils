@@ -425,9 +425,6 @@ def use_function_report_data(db_filter, data_dicts, columns, conditionals,
 
     export_dicts = []
     for data_dict in data_dicts:
-        if verbose:
-            print(f"...Retrieving data for pham {data_dict['Pham']}...")
-
         final_call = data_dict["Final Call"]
         if final_call.lower() == "hypothetical protein":
             final_call = ""
@@ -445,6 +442,7 @@ def use_function_report_data(db_filter, data_dicts, columns, conditionals,
             if (not result["Accession"]) or (not result["LocusTag"]):
                 continue
             result["Notes"] = data_dict["Final Call"]
+            result["Start"] = result["Start"] + 1
             export_dicts.append(result)
 
     return export_dicts

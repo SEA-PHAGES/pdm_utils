@@ -243,7 +243,8 @@ def copy_gb_data(ncbi_handle, acc_id_dict, records_path, file_type,
             seqrecords.append(record)
 
         ncbi_handle.close()
-        fileio.write_seqrecord(seqrecords, "gb", records_path, verbose=verbose)
+        fileio.write_seqrecords(seqrecords, "gb", records_path,
+                                verbose=verbose)
 
     elif file_type == "tbl":
         file_lines = ncbi_handle.readlines()

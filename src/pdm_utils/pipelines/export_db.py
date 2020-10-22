@@ -7,8 +7,6 @@ import sys
 import time
 from pathlib import Path
 
-from Bio.SeqRecord import SeqRecord
-
 from pdm_utils.classes.filter import Filter
 from pdm_utils.functions import configfile
 from pdm_utils.functions import fileio
@@ -423,7 +421,7 @@ def execute_export(alchemist, pipeline, folder_path=None,
                                    db_filter.values, pipeline, db_version,
                                    table, concatenate=concatenate,
                                    data_cache=data_cache,
-                                   export_name=export_name,
+                                   export_name=export_name, threads=threads,
                                    verbose=verbose, dump=dump)
             elif pipeline == "csv":
                 execute_csv_export(db_filter, mapped_path, export_path,
@@ -496,7 +494,7 @@ def execute_csv_export(db_filter, export_path, folder_path, columns, csv_name,
 def execute_ffx_export(alchemist, export_path, folder_path, values,
                        file_format, db_version, table, concatenate=False,
                        data_cache=None, verbose=False, dump=False,
-                       export_name=None):
+                       threads=1, export_name=None):
     """Executes SeqRecord export of the compilation of data from a MySQL entry.
 
     :param alchemist: A connected and fully build AlchemyHandler object.
@@ -550,9 +548,9 @@ def execute_ffx_export(alchemist, export_path, folder_path, values,
             print("Appending database version...")
         for record in seqrecords:
             append_database_version(record, db_version)
-        fileio.write_seqrecord(seqrecords, file_format, export_path,
-                               export_name=export_name, verbose=verbose,
-                               concatenate=concatenate)
+        fileio.write_seqrecords(seqrecords, file_format, export_path,
+                                export_name=export_name, verbose=verbose,
+                                concatenate=concatenate, threads=threads)
 
 
 def execute_sql_export(alchemist, export_path, folder_path, db_version,
@@ -627,18 +625,17 @@ def get_cds_seqrecords(alchemist, values, data_cache=None, nucleotide=False,
     db_filter = Filter(alchemist)
     db_filter.key = 'gene.GeneID'
 
+    if verbose:
+        print("...Converting SQL data...")
+
     seqrecords = []
     for cds in cds_list:
         parent_genome = data_cache.get(cds.genome_id)
 
         if parent_genome is None:
-            if verbose:
-                print(f"...Retrieving parent genome for {cds.id}...")
             parent_genome = get_single_genome(alchemist, cds.genome_id,
                                               data_cache=data_cache)
 
-        if verbose:
-            print(f"Converting {cds.id}...")
         cds.genome_length = parent_genome.length
         cds.set_seqfeature()
 
@@ -674,6 +671,10 @@ def get_sort_columns(alchemist, sort_inputs):
             sort_columns.append(sort_column)
 
     return sort_columns
+
+
+# FFX-EXPORT HELPER FUNCTIONS
+# -----------------------------------------------------------------------------
 
 
 # CSV-EXPORT HELPER FUNCTIONS
@@ -909,18 +910,10 @@ def append_database_version(genome_seqrecord, version_data):
     if "SchemaVersion" in version_keys:
         schema_version = version_data["SchemaVersion"]
 
-    try:
-        genome_seqrecord.annotations["comment"] =\
-                genome_seqrecord.annotations["comment"] + (
-                    "Database Version: {}; Schema Version: {}".format(
-                                                            version,
-                                                            schema_version),)
-    except:
-        if isinstance(genome_seqrecord, SeqRecord):
-            return
-
-        raise TypeError("Object must be of type SeqRecord."
-                        f"Object was of type {type}.")
+    genome_seqrecord.annotations["comment"] =\
+        genome_seqrecord.annotations["comment"] + (
+            "Database Version: {}; Schema Version: {}".format(
+                                                version, schema_version),)
 
 
 # TODO Document

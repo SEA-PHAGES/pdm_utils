@@ -1,6 +1,5 @@
 import csv
 import os
-import shutil
 import textwrap
 from pathlib import Path
 
@@ -8,6 +7,7 @@ from Bio import SeqIO
 from Bio.SeqFeature import CompoundLocation
 
 from pdm_utils.classes.fileio import FeatureTableParser
+from pdm_utils.functions import multithread
 
 # GLOBAL VARIABLES
 # -----------------------------------------------------------------------------
@@ -45,7 +45,7 @@ def read_feature_table(filehandle):
     :type filepath: Path
     :returns: Returns a Biopython SeqRecord object with the table data.
     :rtype: SeqRecord
-    """ 
+    """
     parser = FeatureTableParser(filehandle)
 
     try:
@@ -63,7 +63,7 @@ def parse_feature_table(filehandle):
     :returns: Returns a feature table file parser generator.
     :rtype: FeatureTableFileParser
     """
-    return FeatureTableParser(filehandle)    
+    return FeatureTableParser(filehandle)
 
 
 # WRITING FUNCTIONS
@@ -148,51 +148,17 @@ def write_database(alchemist, version, export_path, db_name=None):
     version_path.write_text(f"{version}")
 
 
-def write_seqrecord(seqrecord_list, file_format, export_path, export_name=None,
-                                                              concatenate=False,
-                                                              verbose=False):
-    """Outputs files with a particuar format from a SeqRecord list.
+def write_seqrecord(seqrecord, file_path, file_format):
+    file_handle = file_path.open(mode="w")
 
-    :param seq_record_list: List of populated SeqRecords.
-    :type seq_record_list: list[SeqRecord]
-    :param file_format: Biopython supported file type.
-    :type file_format: str
-    :param export_path: Path to a dir for file creation.
-    :type export_path: Path
-    :param concatenate: A boolean to toggle concatenation of SeqRecords.
-    :type concaternate: bool
-    :param verbose: A boolean value to toggle progress print statements.
-    :type verbose: bool
-    """
-    if verbose:
-        print(f"Writing selected data to files at '{export_path}'...")
-
-    record_dictionary = {}
-    if concatenate:
-        if export_name is None:
-            record_dictionary.update({export_path.name:seqrecord_list})
+    if isinstance(seqrecord, list):
+        for record in seqrecord:
+            SeqIO.write(record, file_handle, file_format)
+            file_handle.write("\n")
         else:
-            record_dictionary.update({export_name:seqrecord_list})
-    else:
-        for record in seqrecord_list:
-            record_dictionary.update({record.name:record})
+            SeqIO.write(seqrecord, file_handle, file_format)
 
-    for record_name in record_dictionary.keys():
-        if verbose:
-            print(f"...Writing {record_name}...")
-        file_name = f"{record_name}.{file_format}"
-        file_path = export_path.joinpath(file_name)
-
-        file_handle = file_path.open(mode='w')
-        records = record_dictionary[record_name]
-        if isinstance(records, list):
-            for record in records:
-                SeqIO.write(record, file_handle, file_format)
-                file_handle.write("\n")
-        else:
-            SeqIO.write(record_dictionary[record_name], file_handle, file_format)
-
-        file_handle.close()
+    file_handle.close()
 
 
 def write_feature_table(seqrecord_list, export_path, verbose=False):
@@ -264,3 +230,48 @@ def write_feature_table(seqrecord_list, export_path, verbose=False):
 
         file_handle.write("\n")
         file_handle.close()
+
+
+# MULTITHREAD WRAPPERS
+# -----------------------------------------------------------------------------
+
+def write_seqrecords(seqrecord_list, file_format, export_path,
+                     export_name=None, concatenate=False, threads=1,
+                     verbose=False):
+    """Outputs files with a particuar format from a SeqRecord list.
+
+    :param seq_record_list: List of populated SeqRecords.
+    :type seq_record_list: list[SeqRecord]
+    :param file_format: Biopython supported file type.
+    :type file_format: str
+    :param export_path: Path to a dir for file creation.
+    :type export_path: Path
+    :param concatenate: A boolean to toggle concatenation of SeqRecords.
+    :type concaternate: bool
+    :param verbose: A boolean value to toggle progress print statements.
+    :type verbose: bool
+    """
+    record_dictionary = {}
+    if concatenate:
+        if export_name is None:
+            record_dictionary.update({export_path.name: seqrecord_list})
+        else:
+            record_dictionary.update({export_name: seqrecord_list})
+    else:
+        for record in seqrecord_list:
+            record_dictionary.update({record.name: record})
+
+    if verbose:
+        print(f"Writing selected data to files at '{export_path}'...")
+
+    work_items = []
+    for record_name in record_dictionary.keys():
+        file_name = f"{record_name}.{file_format}"
+        file_path = export_path.joinpath(file_name)
+
+        records = record_dictionary[record_name]
+
+        work_items.append((records, file_path, file_format))
+
+    multithread.multithread(work_items, threads, write_seqrecord,
+                            verbose=verbose)

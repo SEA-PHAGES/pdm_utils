@@ -1,45 +1,36 @@
 """Tests the functionality of the unique functions in the export_db pipeline"""
-import os
 import unittest
-from argparse import ArgumentError
-from pathlib import Path
-from unittest.mock import call
 from unittest.mock import Mock
 from unittest.mock import patch
 from unittest.mock import PropertyMock
 
-from Bio.Seq import Seq
-from Bio.SeqFeature import CompoundLocation
-from Bio.SeqFeature import FeatureLocation
-from Bio.SeqFeature import SeqFeature
-from Bio.SeqRecord import SeqRecord
-
-from pdm_utils.classes import genome, cds
-from pdm_utils.functions import flat_files
 from pdm_utils.pipelines import export_db
+
 
 class TestExportMain(unittest.TestCase):
     def setUp(self):
-        self.mock_args = Mock()  
+        self.mock_args = Mock()
 
         self.mock_pipeline = "gb"
-        self.mock_alchemist = Mock() 
-        self.mock_engine = Mock() 
+        self.mock_alchemist = Mock()
+        self.mock_engine = Mock()
         self.mock_database = Mock()
 
-        type(self.mock_alchemist).engine = \
-                            PropertyMock(return_value=self.mock_engine)
+        type(self.mock_alchemist).engine = PropertyMock(
+                                                return_value=self.mock_engine)
 
         self.mock_folder_path = Mock()
-        self.mock_folder_name = Mock() 
+        self.mock_folder_name = Mock()
         self.mock_input = Mock()
         self.mock_values = Mock()
-        self.mock_verbose = Mock() 
+        self.mock_verbose = Mock()
         self.mock_dump = Mock()
         self.mock_force = Mock()
         self.mock_config = Mock()
+        self.mock_threads = Mock()
 
         self.mock_db_name = Mock()
+        self.mock_phams_out = Mock()
 
         self.mock_table = Mock()
         self.mock_filters = Mock()
@@ -53,48 +44,52 @@ class TestExportMain(unittest.TestCase):
 
         self.mock_concatenate = Mock()
 
-        type(self.mock_args).pipeline = \
-                            PropertyMock(return_value=self.mock_pipeline) 
-        type(self.mock_args).database = \
-                            PropertyMock(return_value=self.mock_database)
+        type(self.mock_args).pipeline = PropertyMock(
+                                    return_value=self.mock_pipeline)
+        type(self.mock_args).database = PropertyMock(
+                                    return_value=self.mock_database)
 
-        type(self.mock_args).folder_path = \
-                            PropertyMock(return_value=self.mock_folder_path)
-        type(self.mock_args).folder_name = \
-                            PropertyMock(return_value=self.mock_folder_name) 
-        type(self.mock_args).input = \
-                            PropertyMock(return_value=self.mock_input)
-        type(self.mock_args).verbose = \
-                            PropertyMock(return_value=self.mock_verbose)
-        type(self.mock_args).dump = \
-                            PropertyMock(return_value=self.mock_dump)
-        type(self.mock_args).force = \
-                            PropertyMock(return_value=self.mock_force)
+        type(self.mock_args).folder_path = PropertyMock(
+                                    return_value=self.mock_folder_path)
+        type(self.mock_args).folder_name = PropertyMock(
+                                    return_value=self.mock_folder_name)
+        type(self.mock_args).input = PropertyMock(
+                                    return_value=self.mock_input)
+        type(self.mock_args).verbose = PropertyMock(
+                                    return_value=self.mock_verbose)
+        type(self.mock_args).dump = PropertyMock(
+                                    return_value=self.mock_dump)
+        type(self.mock_args).force = PropertyMock(
+                                    return_value=self.mock_force)
+        type(self.mock_args).number_processes = PropertyMock(
+                                    return_value=self.mock_threads)
 
-        type(self.mock_args).db_name = \
-                            PropertyMock(return_value=self.mock_db_name)
-    
-        type(self.mock_args).table = \
-                            PropertyMock(return_value=self.mock_table)
-        type(self.mock_args).filters = \
-                            PropertyMock(return_value=self.mock_filters)
-        type(self.mock_args).groups = \
-                            PropertyMock(return_value=self.mock_groups)
-        type(self.mock_args).sort = \
-                            PropertyMock(return_value=self.mock_sort)
+        type(self.mock_args).db_name = PropertyMock(
+                                    return_value=self.mock_db_name)
+        type(self.mock_args).phams_out = PropertyMock(
+                                    return_value=self.mock_phams_out)
 
-        type(self.mock_args).include_columns = \
-                        PropertyMock(return_value=self.mock_include_columns)
-        type(self.mock_args).exclude_columns = \
-                        PropertyMock(return_value=self.mock_exclude_columns)
-        type(self.mock_args).sequence_columns = \
-                        PropertyMock(return_value=self.mock_sequence_columns)
-        type(self.mock_args).raw_bytes = \
-                            PropertyMock(return_value=self.mock_raw_bytes)
+        type(self.mock_args).table = PropertyMock(
+                                    return_value=self.mock_table)
+        type(self.mock_args).filters = PropertyMock(
+                                    return_value=self.mock_filters)
+        type(self.mock_args).groups = PropertyMock(
+                                    return_value=self.mock_groups)
+        type(self.mock_args).sort = PropertyMock(
+                                    return_value=self.mock_sort)
 
-        type(self.mock_args).concatenate = \
-                            PropertyMock(return_value=self.mock_concatenate)
-       
+        type(self.mock_args).include_columns = PropertyMock(
+                                    return_value=self.mock_include_columns)
+        type(self.mock_args).exclude_columns = PropertyMock(
+                                    return_value=self.mock_exclude_columns)
+        type(self.mock_args).sequence_columns = PropertyMock(
+                                    return_value=self.mock_sequence_columns)
+        type(self.mock_args).raw_bytes = PropertyMock(
+                                    return_value=self.mock_raw_bytes)
+
+        type(self.mock_args).concatenate = PropertyMock(
+                                    return_value=self.mock_concatenate)
+
     @patch("pdm_utils.pipelines.revise.configfile.build_complete_config")
     @patch("pdm_utils.pipelines.export_db.execute_export")
     @patch("pdm_utils.pipelines.export_db.pipelines_basic.parse_value_input")
@@ -102,17 +97,15 @@ class TestExportMain(unittest.TestCase):
     @patch("pdm_utils.pipelines.export_db.pipelines_basic.build_alchemist")
     @patch("pdm_utils.pipelines.export_db.parse_export")
     def test_main_1(self, parse_export_mock, build_alchemist_mock,
-                                             check_schema_compatibility_mock,
-                                             parse_value_input_mock,
-                                             execute_export_mock,
-                                             build_complete_config_mock):
-        """Verify function structure of main(). 
-        """ 
+                    check_schema_compatibility_mock, parse_value_input_mock,
+                    execute_export_mock, build_complete_config_mock):
+        """Verify function structure of main().
+        """
         parse_export_mock.return_value = self.mock_args
         parse_value_input_mock.return_value = self.mock_values
         build_alchemist_mock.return_value = self.mock_alchemist
         build_complete_config_mock.return_value = self.mock_config
-        
+
         export_db.main(["cmd", "args"])
 
         parse_export_mock.assert_called_with(["cmd", "args"])
@@ -123,28 +116,22 @@ class TestExportMain(unittest.TestCase):
         parse_value_input_mock.assert_called_with(self.mock_input)
 
         execute_export_mock.assert_called_with(
-                                    self.mock_alchemist, 
-                                    self.mock_pipeline,
-                                    folder_path=self.mock_folder_path,
-                                    folder_name=self.mock_folder_name,
-                                    table=self.mock_table,
-                                    values=self.mock_values,
-                                    filters=self.mock_filters,
-                                    groups=self.mock_groups,
-                                    sort=self.mock_sort, 
-                                    include_columns=self.mock_include_columns,
-                                    exclude_columns=self.mock_exclude_columns,
-                                    raw_bytes=self.mock_raw_bytes,
-                                    sequence_columns=self.mock_sequence_columns,
-                                    concatenate=self.mock_concatenate,
-                                    verbose=self.mock_verbose,
-                                    dump=self.mock_dump,
-                                    force=self.mock_force,
-                                    db_name=self.mock_db_name)
+                            self.mock_alchemist, self.mock_pipeline,
+                            folder_path=self.mock_folder_path,
+                            folder_name=self.mock_folder_name,
+                            table=self.mock_table, values=self.mock_values,
+                            filters=self.mock_filters, groups=self.mock_groups,
+                            sort=self.mock_sort,
+                            include_columns=self.mock_include_columns,
+                            exclude_columns=self.mock_exclude_columns,
+                            raw_bytes=self.mock_raw_bytes,
+                            sequence_columns=self.mock_sequence_columns,
+                            concatenate=self.mock_concatenate,
+                            verbose=self.mock_verbose, dump=self.mock_dump,
+                            force=self.mock_force, threads=self.mock_threads,
+                            db_name=self.mock_db_name, 
+                            phams_out=self.mock_phams_out)
 
 
-
-                
-        
 if __name__ == "__main__":
     unittest.main()

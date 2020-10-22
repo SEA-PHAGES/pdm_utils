@@ -5,19 +5,16 @@ from unittest.mock import patch
 from unittest.mock import PropertyMock
 
 from networkx import Graph
-from sqlalchemy import create_engine
 from sqlalchemy import Column
 from sqlalchemy import MetaData
 from sqlalchemy import Table
-from sqlalchemy.sql import distinct
-from sqlalchemy.sql import func
 from sqlalchemy.sql import functions
 from sqlalchemy.sql.elements import BinaryExpression
-from sqlalchemy.sql.elements import BindParameter
 from sqlalchemy.sql.elements import UnaryExpression
 from sqlalchemy.sql.schema import ForeignKey
 
 from pdm_utils.functions import querying
+
 
 class TestUseMetadata(unittest.TestCase):
     def setUp(self):
@@ -216,6 +213,7 @@ class TestUseMetadata(unittest.TestCase):
 
         self.assertEqual(table, self.phage)
 
+
 class TestExtract(unittest.TestCase):
     def setUp(self):
         self.column = Mock(spec=Column)
@@ -321,7 +319,8 @@ class TestExtract(unittest.TestCase):
 
         extract_column_mock.assert_called_with(self.column, check=None)
 
-class TestUseGraph(unittest.TestCase): 
+
+class TestUseGraph(unittest.TestCase):
     def setUp(self):
         self.graph = Mock()
         self.center = Mock()
@@ -499,33 +498,34 @@ class TestUseGraph(unittest.TestCase):
         build_on_clause_mock.assert_not_called()
         join_mock.assert_not_called()
 
+
 class TestBuildClauses(unittest.TestCase):
     def setUp(self):
         self.graph = Mock()
         self.metadata = Mock()
-        self.graph_properties = {"metadata" : self.metadata}
+        self.graph_properties = {"metadata": self.metadata}
         type(self.graph).graph = PropertyMock(
                                  return_value=self.graph_properties)
 
         self.phage = Mock(spec=Table)
-        self.gene  = Mock(spec=Table)
-        self.trna  = Mock(spec=Table)
-     
+        self.gene = Mock(spec=Table)
+        self.trna = Mock(spec=Table)
+
         self.tables = [self.phage, self.gene, self.trna]
 
         type(self.phage).name = PropertyMock(return_value="phage")
-        type(self.gene).name  = PropertyMock(return_value="gene")
-        type(self.trna).name  = PropertyMock(return_value="trna")
-  
+        type(self.gene).name = PropertyMock(return_value="gene")
+        type(self.trna).name = PropertyMock(return_value="trna")
+
         self.table_names = ["phage", "gene", "trna"]
 
-        nodes_dict = {"phage" : {"table" : self.phage},
-                      "gene"  : {"table"  : self.gene},
-                      "trna"  : {"table"  : self.trna}}
-        tables_dict = {"phage" : self.phage,
-                       "gene"  : self.gene,
-                       "trna"  : self.trna}
-    
+        nodes_dict = {"phage": {"table": self.phage},
+                      "gene": {"table": self.gene},
+                      "trna": {"table": self.trna}}
+        tables_dict = {"phage": self.phage,
+                       "gene": self.gene,
+                       "trna": self.trna}
+
         mock_nodes = PropertyMock(return_value=nodes_dict)
         mock_tables = PropertyMock(return_value=tables_dict)
         type(self.graph).nodes = mock_nodes
@@ -555,13 +555,14 @@ class TestBuildClauses(unittest.TestCase):
         type(self.PhamID).type = PropertyMock(return_value=self.PhamID_type)
         type(self.Notes).type = PropertyMock(return_value=self.Notes_type)
 
-        self.phage_columns = {"Cluster" : self.Cluster}
-        self.gene_columns = {"PhamID" : self.PhamID}
-        self.trna_columns = {"Notes" : self.Notes}
+        self.phage_columns = {"Cluster": self.Cluster}
+        self.gene_columns = {"PhamID": self.PhamID}
+        self.trna_columns = {"Notes": self.Notes}
 
-        type(self.phage).columns = PropertyMock(return_value=self.phage_columns)
-        type(self.gene).columns  = PropertyMock(return_value=self.gene_columns)
-        type(self.trna).columns  = PropertyMock(return_value=self.trna_columns)
+        type(self.phage).columns = PropertyMock(
+                                               return_value=self.phage_columns)
+        type(self.gene).columns = PropertyMock(return_value=self.gene_columns)
+        type(self.trna).columns = PropertyMock(return_value=self.trna_columns)
 
         self.not_column = Mock()
         self.count_column = Mock()
@@ -584,9 +585,9 @@ class TestBuildClauses(unittest.TestCase):
         self.session_mock.query.return_value = self.query_mock
         self.query_mock.select_from_mock.return_value = self.select_from_mock
         self.select_from_mock.filter_mock.return_value = self.filter_mock
- 
+
     @patch("pdm_utils.functions.querying.parsing.parse_filter")
-    def test_build_where_clause_1(self, parse_filter_mock): 
+    def test_build_where_clause_1(self, parse_filter_mock):
         """Verify parse_filter() is called with correct parameters.
         """
         parse_filter_mock.return_value = ["phage", "Cluster", "!=", "A"]
@@ -602,19 +603,19 @@ class TestBuildClauses(unittest.TestCase):
         querying.build_where_clause(self.graph, "gene.PhamID = 2")
 
         check_operator_mock.assert_called_with("=", self.PhamID)
-   
+
     @patch("pdm_utils.functions.querying.join_pathed_tables")
     @patch("pdm_utils.functions.querying.get_table_pathing")
     @patch("pdm_utils.functions.querying.get_table_list")
-    def test_build_fromclause_1(self, get_table_list_mock, 
-                                      get_table_pathing_mock, 
-                                      join_pathed_tables_mock):
+    def test_build_fromclause_1(self, get_table_list_mock,
+                                get_table_pathing_mock,
+                                join_pathed_tables_mock):
         """Verify function structure of build_fromclause().
         """
         get_table_list_mock.return_value = self.table_names
         get_table_pathing_mock.return_value = self.pathing
-        join_pathed_tables_mock.return_value  = Mock()
-        
+        join_pathed_tables_mock.return_value = Mock()
+
         querying.build_fromclause(self.graph, self.tables)
 
         get_table_list_mock.assert_called_with(self.tables)
@@ -627,8 +628,9 @@ class TestBuildClauses(unittest.TestCase):
     @patch("pdm_utils.functions.querying.build_fromclause")
     @patch("pdm_utils.functions.querying.extract_columns")
     def test_build_select_1(self, extract_columns_mock,
-                                  build_from_clause_mock, select_mock,
-                                  append_where_clauses_mock, append_order_by_clauses_mock):
+                            build_from_clause_mock, select_mock,
+                            append_where_clauses_mock,
+                            append_order_by_clauses_mock):
         """Verify function structure of build_select().
         """
         executable_mock = Mock()
@@ -642,29 +644,30 @@ class TestBuildClauses(unittest.TestCase):
         append_where_clauses_mock.return_value = executable_mock
         append_order_by_clauses_mock.return_value = executable_mock
 
-        querying.build_select(self.graph, self.columns, 
-                                            order_by=self.columns,
-                                            add_in=self.columns)
+        querying.build_select(self.graph, self.columns,
+                              order_by=self.columns, add_in=self.columns)
 
         extract_columns_mock.assert_any_call(None)
         extract_columns_mock.assert_any_call(self.columns, check=Column)
-        total_columns = self.columns * 4
-        build_from_clause_mock.assert_called_once_with(self.graph, total_columns)
-        
+        total_columns = self.columns * 6
+        build_from_clause_mock.assert_called_once_with(self.graph,
+                                                       total_columns)
+
         select_mock.assert_called_once_with(self.columns)
         select_from_mock.assert_called_once_with(self.phage)
-        append_where_clauses_mock.assert_called_once_with(executable_mock, None)
+        append_where_clauses_mock.assert_called_once_with(executable_mock,
+                                                          None)
         append_order_by_clauses_mock.assert_called_once_with(executable_mock,
-                                                   self.columns)
+                                                             self.columns)
 
     @patch("pdm_utils.functions.querying.append_where_clauses")
     @patch("pdm_utils.functions.querying.select")
     @patch("pdm_utils.functions.querying.func.count")
     @patch("pdm_utils.functions.querying.build_fromclause")
     @patch("pdm_utils.functions.querying.extract_columns")
-    def test_build_count_1(self, extract_columns_mock, 
-                                 build_from_clause_mock, count_mock, select_mock,
-                                 append_where_clauses_mock):
+    def test_build_count_1(self, extract_columns_mock,
+                           build_from_clause_mock, count_mock, select_mock,
+                           append_where_clauses_mock):
         """Verify function structure of build_count().
         """
         executable_mock = Mock()
@@ -678,14 +681,14 @@ class TestBuildClauses(unittest.TestCase):
         select_mock.return_value = executable_mock
         append_where_clauses_mock.return_value = executable_mock
 
-        querying.build_count(self.graph, self.columns, 
-                                            where=self.whereclauses)
+        querying.build_count(self.graph, self.columns, where=self.whereclauses)
 
         extract_columns_mock.assert_any_call(self.whereclauses)
         extract_columns_mock.assert_any_call(None, check=Column)
         total_columns = self.columns + self.columns + self.columns
-        build_from_clause_mock.assert_called_once_with(self.graph, total_columns)
-        
+        build_from_clause_mock.assert_called_once_with(self.graph,
+                                                       total_columns)
+
         for index in range(len(self.columns)):
             with self.subTest(columns_list_index=index):
                 count_mock.assert_any_call(self.columns[index])
@@ -693,8 +696,8 @@ class TestBuildClauses(unittest.TestCase):
         count_param = [self.count_column, self.count_column, self.count_column]
         select_mock.assert_called_once_with(count_param)
         select_from_mock.assert_called_once_with(self.phage)
-        append_where_clauses_mock.assert_called_once_with(executable_mock, 
-                                                   self.whereclauses)
+        append_where_clauses_mock.assert_called_once_with(executable_mock,
+                                                          self.whereclauses)
 
     @patch("pdm_utils.functions.querying.build_select")
     def test_build_distinct_1(self, build_select_mock):
@@ -705,15 +708,14 @@ class TestBuildClauses(unittest.TestCase):
         type(executable_mock).distinct = DistinctMock
 
         build_select_mock.return_value = executable_mock
-        
-        querying.build_distinct(self.graph, self.columns, 
-                                            where=self.whereclauses, 
-                                            order_by=self.columns)
+
+        querying.build_distinct(self.graph, self.columns,
+                                where=self.whereclauses, order_by=self.columns)
 
         build_select_mock.assert_called_with(self.graph, self.columns,
-                                            where=self.whereclauses, 
-                                            order_by=self.columns,
-                                            add_in=None)
+                                             where=self.whereclauses,
+                                             order_by=self.columns,
+                                             add_in=None)
 
     @patch("pdm_utils.functions.querying.build_fromclause")
     @patch("pdm_utils.functions.querying.extract_columns")
@@ -728,8 +730,9 @@ class TestBuildClauses(unittest.TestCase):
 
         querying.query(session_mock, self.graph, map_mock)
 
-        extract_columns_mock.assert_any_call(None)  
-        build_from_clause_mock.assert_called_once_with(self.graph, 
+        extract_columns_mock.assert_any_call(None)
+        build_from_clause_mock.assert_called_once_with(
+                                                    self.graph,
                                                     [map_mock] + self.columns)
 
     @patch("pdm_utils.functions.querying.build_fromclause")
@@ -745,10 +748,12 @@ class TestBuildClauses(unittest.TestCase):
 
         querying.query(session_mock, self.graph, map_mock, where=self.columns)
 
-        extract_columns_mock.assert_any_call(self.columns)  
-        build_from_clause_mock.assert_called_once_with(self.graph, 
+        extract_columns_mock.assert_any_call(self.columns)
+        build_from_clause_mock.assert_called_once_with(
+                                                    self.graph,
                                                     [map_mock] + self.columns)
-        
+
+
 class TestExecute(unittest.TestCase):
     def setUp(self):
         self.mock_engine = Mock()
@@ -994,6 +999,7 @@ class TestExecute(unittest.TestCase):
         
         self.mock_in_column.in_.assert_any_call(self.values[:2])
         self.mock_in_column.in_.assert_any_call([self.values[2]])
+
 
 if __name__ == "__main__":
     unittest.main()

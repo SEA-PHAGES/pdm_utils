@@ -6,16 +6,16 @@ from collections import OrderedDict
 from datetime import datetime
 
 from Bio import SeqIO
-from Bio.SeqFeature import SeqFeature, CompoundLocation, FeatureLocation, ExactPosition
+from Bio.SeqFeature import (
+                SeqFeature, CompoundLocation, FeatureLocation, ExactPosition)
 from Bio import Alphabet
 from Bio.Alphabet import IUPAC
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 
 from pdm_utils.classes import genome, cds, trna, tmrna, source
-from pdm_utils.functions import basic
 from pdm_utils.constants import constants
-from pdm_utils.classes import genomepair
+
 
 def retrieve_genome_data(filepath):
     """Retrieve data from a GenBank-formatted flat file.
@@ -39,7 +39,7 @@ def retrieve_genome_data(filepath):
         print(f"There are no records in {filepath.name}.")
         seqrecord = None
     elif len(seqrecords) > 1:
-        print(f"There are multiple records in {filepath.name}." )
+        print(f"There are multiple records in {filepath.name}.")
         seqrecord = None
     else:
         seqrecord = seqrecords[0]
@@ -77,8 +77,8 @@ def parse_coordinates(seqfeature):
     stop = -1
     parts = 0
 
-    if (isinstance(seqfeature.location, FeatureLocation) or \
-        isinstance(seqfeature.location, CompoundLocation)):
+    if (isinstance(seqfeature.location, FeatureLocation) or
+            isinstance(seqfeature.location, CompoundLocation)):
 
         if seqfeature.strand is None:
             pass
@@ -139,7 +139,7 @@ def parse_cds_seqfeature(seqfeature):
     finally:
         cds_ftr.set_locus_tag(locus_tag, delimiter=None)
 
-    cds_ftr.set_orientation(seqfeature.strand, "fr_short", case = True)
+    cds_ftr.set_orientation(seqfeature.strand, "fr_short", case=True)
     cds_ftr.start, cds_ftr.stop, cds_ftr.parts = parse_coordinates(seqfeature)
 
     # Coordinate format for GenBank flat file features parsed by Biopython
@@ -217,7 +217,8 @@ def parse_trna_seqfeature(seqfeature):
         trna_ftr.set_locus_tag(locus_tag, delimiter=None)
 
     trna_ftr.set_orientation(seqfeature.strand, "fr_short", True)
-    trna_ftr.start, trna_ftr.stop, trna_ftr.parts = parse_coordinates(seqfeature)
+    trna_ftr.start, trna_ftr.stop, trna_ftr.parts = parse_coordinates(
+                                                                    seqfeature)
 
     # Coordinate format for GenBank flat file features parsed by Biopython
     # are 0-based half open intervals.
@@ -271,7 +272,8 @@ def parse_tmrna_seqfeature(seqfeature):
         tmrna_ftr.set_locus_tag(locus_tag, delimiter=None)
 
     tmrna_ftr.set_orientation(seqfeature.strand, "fr_short", True)
-    tmrna_ftr.start, tmrna_ftr.stop, tmrna_ftr.parts = parse_coordinates(seqfeature)
+    tmrna_ftr.start, tmrna_ftr.stop, tmrna_ftr.parts = parse_coordinates(
+                                                                    seqfeature)
 
     # Coordinate format for GenBank flat file features parsed by Biopython
     # are 0-based half open intervals.
@@ -376,14 +378,15 @@ def create_seqfeature_dictionary(seqfeature_list):
         seqfeature_dict[type] = sublist
     return seqfeature_dict
 
+
 # TODO should this function be improved? Maybe create a more basic
 # parse_flat_file() function - the only parameter is the seqrecord, and
 # there is only minimal parsing and data processing.
 # Then the parse_genome_data() function calls parse_flat_file(),
 # and processes some data in specific ways.
 def parse_genome_data(seqrecord, filepath=pathlib.Path(),
-        translation_table=11, genome_id_field="_organism_name", gnm_type="",
-        host_genus_field="_organism_host_genus"):
+                      translation_table=11, genome_id_field="_organism_name",
+                      gnm_type="", host_genus_field="_organism_host_genus"):
     """Parse data from a Biopython SeqRecord object into a Genome object.
 
     All Source, CDS, tRNA, and tmRNA features are parsed into their
@@ -481,7 +484,6 @@ def parse_genome_data(seqrecord, filepath=pathlib.Path(),
     except:
         gnm.date = constants.EMPTY_DATE
 
-
     # # Now that record fields are parsed, set the genome name, id,
     # # and host_genus.
     if genome_id_field != "":
@@ -568,6 +570,7 @@ def parse_genome_data(seqrecord, filepath=pathlib.Path(),
     gnm.set_feature_ids(use_type=True, use_tmrna=True)
     return gnm
 
+
 def create_fasta_seqrecord(header, sequence_string):
     """Create a fasta-formatted Biopython SeqRecord object.
 
@@ -582,10 +585,11 @@ def create_fasta_seqrecord(header, sequence_string):
     seqrecord = SeqRecord(seq, description=header)
     return seqrecord
 
-#Needs unittests, however:
-#Seqfeature retrieval and generation is clunky probably requires some
-#over arching seqfeature generation.
-#May delay unittests until structure is revamped
+
+# Needs unittests, however:
+# Seqfeature retrieval and generation is clunky probably requires some
+# over arching seqfeature generation.
+# May delay unittests until structure is revamped
 def genome_to_seqrecord(phage_genome):
     """Creates a SeqRecord object from a pdm_utils Genome object.
 
@@ -594,9 +598,8 @@ def genome_to_seqrecord(phage_genome):
     :returns: A BioPython SeqRecord object
     :rtype: SeqRecord
     """
-
-    assert phage_genome != None,\
-    "Genome object passed is None and not initialized"
+    assert phage_genome is not None, \
+        "Genome object passed is None and not initialized"
     try:
         record = SeqRecord(phage_genome.seq)
         record.seq.alphabet = IUPAC.IUPACAmbiguousDNA()
@@ -612,10 +615,10 @@ def genome_to_seqrecord(phage_genome):
         record.id = phage_genome.accession
     record.features = get_genome_seqrecord_features(phage_genome)
     record.description = get_genome_seqrecord_description(phage_genome)
-    record.annotations=\
-            get_genome_seqrecord_annotations(phage_genome)
+    record.annotations = get_genome_seqrecord_annotations(phage_genome)
 
     return record
+
 
 def cds_to_seqrecord(cds, parent_genome, gene_domains=[]):
     """Creates a SeqRecord object from a Cds and its parent Genome.
@@ -623,7 +626,7 @@ def cds_to_seqrecord(cds, parent_genome, gene_domains=[]):
     :param cds: A populated Cds object.
     :type cds: Cds
     :param phage_genome: Populated parent Genome object of the Cds object.
-    :param domains: List of domain objects populated with column-like attributes
+    :param domains: List of domain objects populated with column attributes
     :type domains: list
     :returns: Filled Biopython SeqRecord object.
     :rtype: SeqRecord
@@ -631,28 +634,27 @@ def cds_to_seqrecord(cds, parent_genome, gene_domains=[]):
     record = SeqRecord(cds.translation)
     record.seq.alphabet = IUPAC.IUPACProtein()
     record.name = cds.id
-    if cds.locus_tag == "" or cds.locus_tag == None:
+    if cds.locus_tag == "" or cds.locus_tag is None:
         record.id = "".join(["|", cds.id])
     else:
         record.id = cds.locus_tag
-    
+
     cds.set_seqfeature()
 
     source = f"{parent_genome.host_genus} phage {cds.genome_id}"
     source_feature = cds.create_seqfeature("source", 0,
-                                                    cds.translation_length, 1)
-    source_feature.qualifiers["organism"]  = [source]
+                                           cds.translation_length, 1)
+    source_feature.qualifiers["organism"] = [source]
 
     record.features = [source_feature]
     record.features.append(cds.create_seqfeature("Protein", 0,
-                                                    cds.translation_length, 1))
-
+                                                 cds.translation_length, 1))
 
     cds_feature = cds.create_seqfeature("CDS", 0, cds.translation_length, 1)
     format_cds_seqrecord_CDS_feature(cds_feature, cds, parent_genome)
     record.features.append(cds_feature)
 
-    region_features = get_cds_seqrecord_regions(gene_domains, cds) 
+    region_features = get_cds_seqrecord_regions(gene_domains, cds)
     for region_feature in region_features:
         record.features.append(region_feature)
 
@@ -661,6 +663,7 @@ def cds_to_seqrecord(cds, parent_genome, gene_domains=[]):
     record.annotations = get_cds_seqrecord_annotations(cds, parent_genome)
 
     return record
+
 
 def get_genome_seqrecord_features(phage_genome):
     """Helper function that uses Genome data to populate
@@ -675,7 +678,7 @@ def get_genome_seqrecord_features(phage_genome):
     """
 
     source_feature = SeqFeature(FeatureLocation(0, phage_genome.length),
-                                                strand=1, type="source")
+                                strand=1, type="source")
     source_feature.qualifiers = OrderedDict()
     source_feature.qualifiers["source"] = (f"{phage_genome.host_genus} phage "
                                            f"{phage_genome.name}")
@@ -692,9 +695,10 @@ def get_genome_seqrecord_features(phage_genome):
         phage_trna.set_seqfeature(type="gene")
         features.append(phage_trna.seqfeature)
         phage_trna.set_seqfeature()
-        features.append(phage_trna.seqfeature) 
+        features.append(phage_trna.seqfeature)
 
     return features
+
 
 def get_genome_seqrecord_description(phage_genome):
     """Helper function to construct a description SeqRecord attribute.
@@ -706,10 +710,10 @@ def get_genome_seqrecord_description(phage_genome):
         description is a formatted string parsed
         from genome data
     """
-
     description = (f"{phage_genome.host_genus} phage {phage_genome.name}"
-                    ", complete genome")
+                   ", complete genome")
     return description
+
 
 def get_genome_seqrecord_annotations(phage_genome):
     """Helper function that uses Genome data to populate
@@ -724,29 +728,30 @@ def get_genome_seqrecord_annotations(phage_genome):
         annotations attribute
     """
 
-    annotations = {"molecule type": "DNA",\
-            "topology" : "linear",\
-            "data_file_division" : "PHG",\
-            "date" : "",\
-            "accessions" : [],\
-            "sequence_version" : "1",\
-            "keywords" : [],\
-            "source" : "",\
-            "organism" : "",\
-            "taxonomy" : [],\
-            "comment": ()}
+    annotations = {"molecule type": "DNA",
+                   "topology": "linear",
+                   "data_file_division": "PHG",
+                   "date": "",
+                   "accessions": [],
+                   "sequence_version": "1",
+                   "keywords": [],
+                   "source": "",
+                   "organism": "",
+                   "taxonomy": [],
+                   "comment": ()}
     annotations["date"] = phage_genome.date
     annotations["keywords"] = ["complete_genome"]
-    annotations["source"] =\
-            f"{phage_genome.host_genus} phage {phage_genome.id}"
-    annotations["organism"] =\
-            f"{phage_genome.host_genus} phage {phage_genome.name}"
+    annotations["source"] = (
+            f"{phage_genome.host_genus} phage {phage_genome.id}")
+    annotations["organism"] = (
+            f"{phage_genome.host_genus} phage {phage_genome.name}")
     annotations["taxonomy"].append("Viruses")
     annotations["taxonomy"].append("dsDNA Viruses")
     annotations["taxonomy"].append("Caudovirales")
-    annotations["comment"] =\
-            get_genome_seqrecord_annotations_comments(phage_genome)
+    annotations["comment"] = get_genome_seqrecord_annotations_comments(
+                                                                phage_genome)
     return annotations
+
 
 def get_genome_seqrecord_annotations_comments(phage_genome):
     """Helper function that uses Genome data to populate
@@ -763,49 +768,59 @@ def get_genome_seqrecord_annotations_comments(phage_genome):
         annotations comment attribute
     """
     if phage_genome.subcluster == "":
-        cluster_comment = "Cluster: {}; Subcluster: None".format\
-                (phage_genome.cluster)
+        cluster_comment = "Cluster: {}; Subcluster: None".format(
+                                                        phage_genome.cluster)
     else:
-        cluster_comment = "Cluster: {}; Subcluster: {}".format\
-                (phage_genome.cluster, phage_genome.subcluster)
-    auto_generated_comment =\
-            "Auto-generated genome record from the MySQL database"
-    annotation_status_comment =\
-            "Annotation Status: {}; Annotation Author: {}".format\
-            (phage_genome.annotation_status,\
-            phage_genome.annotation_author)
-    retrieval_value = \
-            "RetrieveRecord: {}".format(phage_genome.retrieve_record)
+        cluster_comment = "Cluster: {}; Subcluster: {}".format(
+                                phage_genome.cluster, phage_genome.subcluster)
+    auto_generated_comment = (
+            "Auto-generated genome record from the MySQL database")
+    annotation_status_comment = (
+            "Annotation Status: {}; Annotation Author: {}".format(
+                                             phage_genome.annotation_status,
+                                             phage_genome.annotation_author))
+    retrieval_value = (
+            "RetrieveRecord: {}".format(phage_genome.retrieve_record))
 
-    return (cluster_comment, auto_generated_comment,\
+    return (cluster_comment, auto_generated_comment,
             annotation_status_comment, retrieval_value)
+
 
 def get_cds_seqrecord_regions(gene_domains, cds):
     region_features = []
     for gene_domain in gene_domains:
-            region_feature = cds.create_seqfeature("Region", 
-                                                    gene_domain["QueryStart"], 
-                                                    gene_domain["QueryEnd"], 1) 
-            region_feature.qualifiers["region_name"] = [gene_domain["Name"]]
-            region_feature.qualifiers["note"] = [
-                                    gene_domain["Description"].decode("utf-8")] 
-            region_feature.qualifiers["db_xref"]  = ["CDD:"
-                                    f"{gene_domain['DomainID']}"]
-            region_features.append(region_feature)
+        region_feature = cds.create_seqfeature("Region",
+                                               gene_domain["QueryStart"],
+                                               gene_domain["QueryEnd"], 1)
+        region_feature.qualifiers["region_name"] = [gene_domain["Name"]]
+        region_feature.qualifiers["note"] = [
+                                    gene_domain["Description"].decode("utf-8")]
+        region_feature.qualifiers["db_xref"] = ["CDD:"
+                                                f"{gene_domain['DomainID']}"]
+        region_features.append(region_feature)
 
     return region_features
+
 
 def format_cds_seqrecord_CDS_feature(cds_feature, cds, parent_genome):
     cds_feature.qualifiers.pop("codon_start")
     cds_feature.qualifiers.pop("product")
     cds_feature.qualifiers.pop("translation")
 
+    if cds.coordinate_format == "0_half_open":
+        start = cds.seqfeature.location.start + 1
+    elif cds.coordinate_format == "1_closed":
+        start = cds.seqfeature.location.start
+    else:
+        start = cds.seqfeature.location.start
+
     coded_by = (f"{parent_genome.accession}:"
-            f"{cds.seqfeature.location.start}..{cds.seqfeature.location.end}")
+                f"{start}..""{cds.seqfeature.location.end}")
     if cds.seqfeature.strand == -1:
         coded_by = f"complement({coded_by})"
-    
+
     cds_feature.qualifiers["coded by"] = [coded_by]
+
 
 def get_cds_seqrecord_annotations(cds, parent_genome):
     """Function that creates a Cds SeqRecord annotations attribute dict.
@@ -816,16 +831,16 @@ def get_cds_seqrecord_annotations(cds, parent_genome):
     :returns: Formatted SeqRecord annotations dictionary.
     :rtype: dict{str}
     """
-    annotations = {"topology" : "linear",
-                   "data_file_division" : "PHG",
-                   "date" : "",
-                   "accessions" : [],
-                   "sequence_version" : "",
-                   "keywords" : [],
-                   "source" : "",
-                   "organism" : "",
-                   "taxonomy" : [],
-                   "comment" : ()}
+    annotations = {"topology": "linear",
+                   "data_file_division": "PHG",
+                   "date": "",
+                   "accessions": [],
+                   "sequence_version": "",
+                   "keywords": [],
+                   "source": "",
+                   "organism": "",
+                   "taxonomy": [],
+                   "comment": ()}
 
     annotations["date"] = parent_genome.date
     annotations["organism"] = (f"{parent_genome.host_genus} phage "
@@ -840,18 +855,18 @@ def get_cds_seqrecord_annotations(cds, parent_genome):
 
     return annotations
 
+
 def get_cds_seqrecord_annotations_comments(cds):
     """Function that creates a Cds SeqRecord comments attribute tuple.
 
     :param cds:
     :type cds:
     """
-    pham_comment =\
-           f"Pham: {cds.pham_id}"
-    auto_generated_comment =\
-            "Auto-generated CDS record from a MySQL database"
+    pham_comment = f"Pham: {cds.pham_id}"
+    auto_generated_comment = "Auto-generated CDS record from a MySQL database"
 
     return (pham_comment, auto_generated_comment)
+
 
 def sort_seqrecord_features(seqrecord):
     """Function that sorts and processes the seqfeature objects of a seqrecord.
@@ -868,4 +883,3 @@ def sort_seqrecord_features(seqrecord):
             raise TypeError
         print("Genome seqrecord features unable to be sorted")
         pass
-
