@@ -102,7 +102,7 @@ def export_data_dict(data_dicts, file_path, headers, include_headers=False):
             file_writer.writerow(data_dict)
 
 
-def write_fasta(ids_seqs, infile_path):
+def write_fasta(ids_seqs, infile_path, name=None):
     """
     Writes the input genes to the indicated file in FASTA multiple
     sequence format (unaligned).
@@ -118,6 +118,9 @@ def write_fasta(ids_seqs, infile_path):
         file_handle = infile_path.open(mode="w")
     else:
         raise TypeError("File path type not supported.")
+
+    if name is not None:
+        file_handle.write(f"#{name}")
 
     for id, seq in ids_seqs.items():
         split_seq = textwrap.wrap(seq, 60)
