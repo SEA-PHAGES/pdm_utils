@@ -120,7 +120,7 @@ def write_fasta(ids_seqs, infile_path, name=None):
         raise TypeError("File path type not supported.")
 
     if name is not None:
-        file_handle.write(f"#{name}")
+        file_handle.write(f"#{name}\n")
 
     for id, seq in ids_seqs.items():
         split_seq = textwrap.wrap(seq, 60)
