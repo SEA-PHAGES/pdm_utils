@@ -635,7 +635,7 @@ def cds_to_seqrecord(cds, parent_genome, gene_domains=[]):
     record.seq.alphabet = IUPAC.IUPACProtein()
     record.name = cds.id
     if cds.locus_tag == "" or cds.locus_tag is None:
-        record.id = "".join(["|", cds.id])
+        record.id = "".join(["DRAFT ", cds.id])
     else:
         record.id = cds.locus_tag
 

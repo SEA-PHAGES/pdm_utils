@@ -129,3 +129,5 @@ def multithread(work_items, threads, target, verbose=False):
     if verbose:
         # Leave the progress bar line
         print("\n")
+
+    return results
