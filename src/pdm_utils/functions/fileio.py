@@ -158,8 +158,8 @@ def write_seqrecord(seqrecord, file_path, file_format):
         for record in seqrecord:
             SeqIO.write(record, file_handle, file_format)
             file_handle.write("\n")
-        else:
-            SeqIO.write(seqrecord, file_handle, file_format)
+    else:
+        SeqIO.write(seqrecord, file_handle, file_format)
 
     file_handle.close()
 
@@ -268,13 +268,10 @@ def write_seqrecords(seqrecord_list, file_format, export_path,
         print(f"Writing selected data to files at '{export_path}'...")
 
     work_items = []
-    for record_name in record_dictionary.keys():
+    for record_name, records in record_dictionary.items():
         file_name = f"{record_name}.{file_format}"
         file_path = export_path.joinpath(file_name)
 
-        records = record_dictionary[record_name]
-
         work_items.append((records, file_path, file_format))
-
     multithread.multithread(work_items, threads, write_seqrecord,
                             verbose=verbose)

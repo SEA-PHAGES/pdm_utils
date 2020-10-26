@@ -564,10 +564,10 @@ def execute_sql_export(alchemist, export_path, folder_path, db_version,
             shutil.rmtree(temp_dir)
         temp_dir.mkdir()
 
-        phams_out_fasta_dir = temp_dir.joinpath("phams_out_fastas")
+        phams_out_fasta_dir = temp_dir.joinpath("phams_fastas")
         pipelines_basic.create_working_dir(phams_out_fasta_dir,
                                            dump=dump, force=force)
-        phams_out_aln_dir = temp_dir.joinpath("phams_out_alns")
+        phams_out_aln_dir = temp_dir.joinpath("phams_alns")
         pipelines_basic.create_working_dir(phams_out_aln_dir,
                                            dump=dump, force=force)
 
@@ -581,9 +581,9 @@ def execute_sql_export(alchemist, export_path, folder_path, db_version,
         pham_alns_zip = export_path.joinpath("pham_alns.zip")
 
         shutil.make_archive(pham_fastas_zip.with_suffix(""), "zip",
-                            phams_out_fasta_dir)
+                            temp_dir, phams_out_fasta_dir.name)
         shutil.make_archive(pham_alns_zip.with_suffix(""), "zip",
-                            phams_out_aln_dir)
+                            temp_dir, phams_out_aln_dir.name)
 
     if verbose:
         print("Writing SQL database file...")
