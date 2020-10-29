@@ -564,10 +564,10 @@ def execute_sql_export(alchemist, export_path, folder_path, db_version,
             shutil.rmtree(temp_dir)
         temp_dir.mkdir()
 
-        phams_out_fasta_dir = temp_dir.joinpath("phams_fastas")
+        phams_out_fasta_dir = temp_dir.joinpath("fastas")
         pipelines_basic.create_working_dir(phams_out_fasta_dir,
                                            dump=dump, force=force)
-        phams_out_aln_dir = temp_dir.joinpath("phams_alns")
+        phams_out_aln_dir = temp_dir.joinpath("alns")
         pipelines_basic.create_working_dir(phams_out_aln_dir,
                                            dump=dump, force=force)
 
@@ -577,8 +577,8 @@ def execute_sql_export(alchemist, export_path, folder_path, db_version,
         align_pham_out_fastas(phams_out_aln_dir, filepaths,
                               threads=threads, verbose=verbose)
 
-        pham_fastas_zip = export_path.joinpath("pham_fastas.zip")
-        pham_alns_zip = export_path.joinpath("pham_alns.zip")
+        pham_fastas_zip = export_path.joinpath("fastas.zip")
+        pham_alns_zip = export_path.joinpath("alns.zip")
 
         shutil.make_archive(pham_fastas_zip.with_suffix(""), "zip",
                             temp_dir, phams_out_fasta_dir.name)
@@ -812,7 +812,7 @@ def get_all_pham_gene_translations(alchemist):
             geneid += f" ({product})"
         cluster = cluster_lookup[phageid]
 
-        geneid = geneid.join(["[", cluster, "]", geneid])
+        geneid = "".join(["[", cluster, "]", " ", geneid])
 
         pham_translations = phams.get(phamid, dict())
         pham_translations[geneid] = translation
