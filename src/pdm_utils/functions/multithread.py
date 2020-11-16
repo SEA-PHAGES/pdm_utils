@@ -5,8 +5,7 @@ Functions to multithread process a list of inputs.
 from queue import Queue
 import threading
 
-from pdm_utils.classes.progress import Progress
-from pdm_utils.functions.basic import show_progress
+from pdm_utils.classes.progressbar import ProgressBar, show_progress
 
 
 class MixedThread(threading.Thread):
@@ -96,7 +95,7 @@ def multithread(work_items, threads, target, verbose=False):
         for i in range(len(work_items)):
             if i % interval == 0:
                 tasks += 1
-                work_queue.put((show_progress, (i, len(work_items))))
+                work_queue.put((show_progress, (i+1, len(work_items))))
 
             tasks += 1
             work_queue.put((target, work_items[i]))
@@ -123,11 +122,7 @@ def multithread(work_items, threads, target, verbose=False):
     results = []
     for i in range(tasks):
         result = result_queue.get()
-        if not isinstance(result, Progress):
+        if not isinstance(result, ProgressBar):
             results.append(result)
-
-    if verbose:
-        # Leave the progress bar line
-        print("\n")
 
     return results

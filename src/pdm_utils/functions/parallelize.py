@@ -5,8 +5,7 @@ Adapted from https://docs.python.org/3/library/multiprocessing.html
 
 import multiprocessing as mp
 
-from pdm_utils.functions.basic import show_progress
-from pdm_utils.classes.progress import Progress
+from pdm_utils.classes.progressbar import ProgressBar, show_progress
 
 # Make sure new processes are forked, not spawned
 mp.set_start_method("fork")
@@ -88,7 +87,7 @@ def start_processes(inputs, num_processors, verbose):
         for i in range(len(inputs)):
             tasks += 1
             if i % interval == 0:
-                job_queue.put((show_progress, (i, len(inputs))))
+                job_queue.put((show_progress, (i+1, len(inputs))))
                 tasks += 1
             job_queue.put(inputs[i])
         tasks += 1
@@ -115,13 +114,9 @@ def start_processes(inputs, num_processors, verbose):
     # Remove non-Progress results
     for i in range(tasks):
         result = done_queue.get()
-        if not isinstance(result, Progress):
+        if result is not None and not isinstance(result, ProgressBar):
             results.append(result)
 
     [worker_n.join() for worker_n in worker_pool]
-
-    if verbose:
-        # Leave the progress bar line
-        print("\n")
 
     return results
