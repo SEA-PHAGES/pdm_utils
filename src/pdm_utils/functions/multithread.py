@@ -122,7 +122,7 @@ def multithread(work_items, threads, target, verbose=False):
     results = []
     for i in range(tasks):
         result = result_queue.get()
-        if not isinstance(result, ProgressBar):
+        if result is not None and not isinstance(result, ProgressBar):
             results.append(result)
 
     return results
