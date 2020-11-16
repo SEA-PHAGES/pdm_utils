@@ -19,11 +19,10 @@ if str(test_dir) not in set(sys.path):
 import test_db_utils
 import test_data_utils
 
-
 # Create the main test directory in which all files will be
 # created and managed.
 test_root_dir = Path("/tmp", "pdm_utils_tests_find_domains")
-if test_root_dir.exists() == True:
+if test_root_dir.exists():
     shutil.rmtree(test_root_dir)
 test_root_dir.mkdir()
 
@@ -58,6 +57,7 @@ GENE_DOMAIN = "gene_domain"
 # Assumes that output message contains "SQLAlchemy Error..."
 ERROR_MSG = "SQLAlchemy"
 
+
 def get_unparsed_args():
     """Returns list of command line arguments to find domains."""
     # Threads are set to 1 so that running tests doesn't completely drain
@@ -79,12 +79,14 @@ def get_gene_update_statement(int, data_dict=None):
         statement = statement.format(data_dict["GeneID"])
     return statement
 
+
 def statements_to_txns(statement_list):
     """Convert list of statements to list of lists, where each sub-list
     represents a collection of statements meant to be executed as a single
     transaction."""
     new_list = [[stmt] for stmt in statement_list]
     return new_list
+
 
 def get_all_domain_txns(db):
     """Get all domain data from a database and convert it to a list of
@@ -122,16 +124,16 @@ def get_gene_id_dict(list_of_results):
 def count_status(list_of_results, domain_status):
     """Count DomainStatus from gene table results."""
     count = 0
-    for dict in list_of_results:
-        if dict["DomainStatus"] == domain_status:
+    for d in list_of_results:
+        if d["DomainStatus"] == domain_status:
             count += 1
     return count
+
 
 TRIXIE_GENEID = {"GeneID": "TRIXIE_0001"}
 
 
 class TestFindDomains1(unittest.TestCase):
-
     def setUp(self):
         test_db_utils.create_empty_test_db()
         test_db_utils.insert_data(PHAGE, test_data_utils.get_trixie_phage_data())
@@ -179,7 +181,6 @@ class TestFindDomains1(unittest.TestCase):
              }
         self.rps_translation_dict = {translation: self.rps_data}
 
-
         self.rps_result_1 = {"Translation": "ABCDE", "Data": self.rps_data}
         self.rps_result_2 = {"Translation": "FGHIJ", "Data": self.rps_data}
         self.rps_result_3 = {"Translation": "MNOPQ", "Data": self.rps_data}
@@ -188,11 +189,8 @@ class TestFindDomains1(unittest.TestCase):
         self.rps_results = [self.rps_result_1, self.rps_result_2,
                             self.rps_result_3, self.rps_result_4]
 
-
-
     def tearDown(self):
         test_db_utils.remove_db()
-
 
     def test_construct_gene_update_stmt_1(self):
         """Verify gene table data can be updated."""
@@ -266,14 +264,12 @@ class TestFindDomains1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(query_end_1, query_end_2)
 
-
     def test_construct_sql_txn_1(self):
         """Verify list of SQL statements representing one transaction
         is constructed."""
         gene_id = self.gene_data_1["GeneID"]
         txn = find_domains.construct_sql_txn(gene_id, self.rps_data)
         self.assertEqual(len(txn), 5)
-
 
     def test_construct_sql_txns_1(self):
         """Verify list of list of SQL statements representing one transaction
@@ -289,7 +285,6 @@ class TestFindDomains1(unittest.TestCase):
         with self.subTest():
             self.assertEqual(len(txns[2]), 5)
 
-
     def test_create_results_dict_1(self):
         """Verify dictionary is constructed correctly."""
         dict = find_domains.create_results_dict(self.rps_results)
@@ -299,7 +294,6 @@ class TestFindDomains1(unittest.TestCase):
             self.assertEqual(len(dict["ABCDE"]), 2)
         with self.subTest():
             self.assertEqual(len(dict["FGHIJ"]), 2)
-
 
     def test_create_cds_translation_dict_1(self):
         """Verify dictionary is constructed with three unique translations."""
@@ -342,10 +336,7 @@ class TestFindDomains1(unittest.TestCase):
                                         self.gene_data_3["GeneID"]})
 
 
-
-
 class TestFindDomains2(unittest.TestCase):
-
     def setUp(self):
         test_db_utils.create_empty_test_db()
         test_db_utils.insert_data(PHAGE, test_data_utils.get_trixie_phage_data())
@@ -375,7 +366,6 @@ class TestFindDomains2(unittest.TestCase):
         test_db_utils.insert_data(DOMAIN, self.domain_data2)
         test_db_utils.insert_data(DOMAIN, self.domain_data3)
 
-
         # Insert data into gene_domain table.
         self.gene_domain_data1 = test_data_utils.get_trixie_gene_domain_data()
         self.gene_domain_data2 = test_data_utils.get_trixie_gene_domain_data()
@@ -387,16 +377,13 @@ class TestFindDomains2(unittest.TestCase):
         test_db_utils.insert_data(GENE_DOMAIN, self.gene_domain_data2)
         test_db_utils.insert_data(GENE_DOMAIN, self.gene_domain_data3)
 
-
         self.alchemist = AlchemyHandler(database=DB, username=USER, password=PWD)
         self.alchemist.build_engine()
         self.engine = self.alchemist.engine
 
-
     def tearDown(self):
         self.engine.dispose()
         test_db_utils.remove_db()
-
 
     def test_clear_domain_data_1(self):
         """Verify data in gene, gene_domain, and domain tables are cleared."""
@@ -429,10 +416,7 @@ class TestFindDomains2(unittest.TestCase):
             self.assertEqual(len(domain2), 0)
 
 
-
-
 class TestFindDomains3(unittest.TestCase):
-
     def setUp(self):
         test_db_utils.create_empty_test_db()
         test_db_utils.insert_data(PHAGE, test_data_utils.get_trixie_phage_data())
@@ -448,7 +432,6 @@ class TestFindDomains3(unittest.TestCase):
         self.trans.rollback()
         self.engine.dispose()
         test_db_utils.remove_db()
-
 
     def test_execute_statement_1(self):
         """Verify valid DomainStatus update data can be inserted
@@ -488,7 +471,6 @@ class TestFindDomains3(unittest.TestCase):
         with self.subTest():
             self.assertIsInstance(msg, str)
 
-
     def test_execute_statement_2(self):
         """Verify valid data can be inserted into domain table."""
         domain_data = test_data_utils.get_trixie_domain_data()
@@ -508,7 +490,6 @@ class TestFindDomains3(unittest.TestCase):
             self.assertFalse(type_error)
         with self.subTest():
             self.assertFalse(value_error)
-
 
     def test_execute_statement_3(self):
         """Verify valid data can be inserted into domain and gene_domain tables."""
@@ -548,7 +529,6 @@ class TestFindDomains3(unittest.TestCase):
         with self.subTest():
             self.assertFalse(value_error2)
 
-
     def test_execute_statement_4(self):
         """Verify invalid data can NOT be inserted into gene_domain table
         when there is no matching 'HitID' in the domain table."""
@@ -570,7 +550,6 @@ class TestFindDomains3(unittest.TestCase):
             self.assertFalse(type_error)
         with self.subTest():
             self.assertFalse(value_error)
-
 
     def test_execute_statement_5(self):
         """Verify invalid data can NOT be inserted into domain table when
@@ -616,7 +595,6 @@ class TestFindDomains3(unittest.TestCase):
         with self.subTest():
             self.assertTrue(ERROR_MSG in msg2)
 
-
     def test_execute_statement_6(self):
         """Verify invalid data can NOT be inserted into domain table when
         there is an invalid column name."""
@@ -641,7 +619,6 @@ class TestFindDomains3(unittest.TestCase):
             self.assertFalse(type_error)
         with self.subTest():
             self.assertFalse(value_error)
-
 
     def test_execute_statement_7(self):
         """Verify invalid data can NOT be inserted due to '%'."""
@@ -670,7 +647,6 @@ class TestFindDomains3(unittest.TestCase):
         with self.subTest():
             self.assertFalse(value_error)
 
-
     def test_execute_statement_8(self):
         """Verify invalid data can be inserted after '%' is
         replaced with '%%'."""
@@ -698,7 +674,6 @@ class TestFindDomains3(unittest.TestCase):
         with self.subTest():
             self.assertFalse(value_error)
 
-
     def test_execute_statement_9(self):
         """Verify invalid data can NOT be inserted due to '% w'."""
         domain_data = test_data_utils.get_trixie_domain_data()
@@ -725,7 +700,6 @@ class TestFindDomains3(unittest.TestCase):
             self.assertFalse(type_error)
         with self.subTest():
             self.assertTrue(value_error)
-
 
     def test_execute_statement_10(self):
         """Verify invalid data can be inserted after '% w' is
@@ -755,10 +729,7 @@ class TestFindDomains3(unittest.TestCase):
             self.assertFalse(value_error)
 
 
-
-
 class TestFindDomains4(unittest.TestCase):
-
     def setUp(self):
         test_db_utils.create_empty_test_db()
         test_db_utils.insert_data(PHAGE, test_data_utils.get_trixie_phage_data())
@@ -769,13 +740,9 @@ class TestFindDomains4(unittest.TestCase):
         self.engine = self.alchemist.engine
         self.connection = self.engine.connect()
 
-
     def tearDown(self):
         self.engine.dispose()
         test_db_utils.remove_db()
-
-
-
 
     def test_execute_transaction_1(self):
         """Verify function runs with list of zero statements."""
@@ -785,7 +752,6 @@ class TestFindDomains4(unittest.TestCase):
             self.assertEqual(len(domain_table_results), 0)
         with self.subTest():
             self.assertEqual(result, 0)
-
 
     def test_execute_transaction_2(self):
         """Verify list of one valid statement can be inserted into domain table."""
@@ -798,7 +764,6 @@ class TestFindDomains4(unittest.TestCase):
             self.assertEqual(len(domain_table_results), 1)
         with self.subTest():
             self.assertEqual(result, 0)
-
 
     def test_execute_transaction_3(self):
         """Verify list of two valid statements can be inserted into
@@ -817,7 +782,6 @@ class TestFindDomains4(unittest.TestCase):
             self.assertEqual(len(gene_domain_table_results), 1)
         with self.subTest():
             self.assertEqual(result, 0)
-
 
     def test_execute_transaction_4(self):
         """Verify list of three statements (including one with
@@ -850,7 +814,6 @@ class TestFindDomains4(unittest.TestCase):
         with self.subTest():
             self.assertEqual(domain_status, 1)
 
-
     def test_execute_transaction_5(self):
         """Verify list of three valid statements and one invalid statement
         are NOT inserted. All statements rolled back."""
@@ -882,7 +845,6 @@ class TestFindDomains4(unittest.TestCase):
             self.assertEqual(result, 1)
         with self.subTest():
             self.assertEqual(domain_status, 0)
-
 
     def test_execute_transaction_6(self):
         """Verify list of three valid statements and one invalid statement
@@ -919,7 +881,6 @@ class TestFindDomains4(unittest.TestCase):
         with self.subTest():
             self.assertEqual(domain_status, 1)
 
-
     def test_execute_transaction_7(self):
         """Verify list of three valid statements and one invalid statement
         (containing '% w') are inserted (since '% w' replaced with '%% w')."""
@@ -955,11 +916,10 @@ class TestFindDomains4(unittest.TestCase):
         with self.subTest():
             self.assertEqual(domain_status, 1)
 
-
-    # TODO this isn't the best way to test the rolllback in the
-    # try/except block. The execute_statement is patched, so no changes are
-    # actually made to the database. This test just confirms that the except
-    # block is entered.
+    # TODO this isn't the best way to test the rollback in the
+    #  try/except block. The execute_statement is patched, so no changes are
+    #  actually made to the database. This test just confirms that the except
+    #  block is entered.
     @patch("pdm_utils.pipelines.find_domains.execute_statement")
     def test_execute_transaction_8(self, es_mock):
         """Verify error inside try/except block is executed."""
@@ -1001,10 +961,7 @@ class TestFindDomains4(unittest.TestCase):
             self.assertEqual(es_mock.call_count, 2)
 
 
-
-
 class TestFindDomains5(unittest.TestCase):
-
     def setUp(self):
         test_db_utils.create_empty_test_db()
         test_db_utils.insert_data(PHAGE, test_data_utils.get_trixie_phage_data())
@@ -1028,9 +985,6 @@ class TestFindDomains5(unittest.TestCase):
         test_db_utils.remove_db()
         self.engine.dispose()
 
-
-
-
     def test_insert_domain_data_1(self):
         """Verify list of domain data can be inserted."""
         # The purpose of this test is to take thousands of rows of domain data
@@ -1046,7 +1000,6 @@ class TestFindDomains5(unittest.TestCase):
         domain_table_results = test_db_utils.get_data(test_db_utils.domain_table_query)
         rows = len(domain_table_results)
         self.assertEqual(len(txns), rows)
-
 
     def test_insert_domain_data_2(self):
         """Verify one transaction of three valid statements can be
@@ -1080,7 +1033,6 @@ class TestFindDomains5(unittest.TestCase):
             self.assertEqual(gd_rows, 1)
         with self.subTest():
             self.assertEqual(domain_status, 1)
-
 
     def test_insert_domain_data_3(self):
         """Verify one transaction of three valid statements and one
@@ -1121,7 +1073,6 @@ class TestFindDomains5(unittest.TestCase):
             self.assertEqual(gd_rows, 0)
         with self.subTest():
             self.assertEqual(domain_status, 0)
-
 
     def test_insert_domain_data_4(self):
         """Verify two transactions of valid statements are inserted and
@@ -1179,9 +1130,7 @@ class TestFindDomains5(unittest.TestCase):
             self.assertEqual(domain_status2, 1)
 
 
-
 class TestFindDomains6(unittest.TestCase):
-
     def setUp(self):
         test_folder.mkdir()
         test_db_utils.create_empty_test_db()
@@ -1224,13 +1173,10 @@ class TestFindDomains6(unittest.TestCase):
         self.alchemist.build_engine()
         self.unparsed_args = get_unparsed_args()
 
-
     def tearDown(self):
         shutil.rmtree(test_folder)
         test_db_utils.remove_db()
         self.alchemist.engine.dispose()
-
-
 
     @patch("pdm_utils.pipelines.find_domains.AlchemyHandler")
     def test_main_1(self, alchemy_mock):
@@ -1247,7 +1193,6 @@ class TestFindDomains6(unittest.TestCase):
             self.assertEqual(d_rows, 0)
         with self.subTest():
             self.assertEqual(gd_rows, 0)
-
 
     @patch("pdm_utils.pipelines.find_domains.AlchemyHandler")
     def test_main_2(self, alchemy_mock):
@@ -1297,7 +1242,6 @@ class TestFindDomains6(unittest.TestCase):
             self.assertEqual(domain_status3, 1)
         with self.subTest():
             self.assertEqual(domain_status4, 1)
-
 
 
 if __name__ == '__main__':
