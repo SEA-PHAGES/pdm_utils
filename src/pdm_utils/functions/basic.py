@@ -10,7 +10,6 @@ from pathlib import Path
 import sys
 
 from pdm_utils.constants import constants
-from pdm_utils.classes.progress import Progress
 
 
 def find_expression(expression, list_of_items):
@@ -1288,23 +1287,6 @@ def prepare_filepath(folder_path, file_name, folder_name=None):
         subfolder_path = folder_path
     file_path = Path(subfolder_path, file_name)
     return file_path
-
-
-def show_progress(current, end, width=50):
-    """Updating progress bar that prints to the command line in-line.
-
-    :param current: current value (0-n)
-    :param end: end value (n)
-    :param width:
-        character width for the progress bar (default 50);
-        ideally 100 divided by width should naturally be an integer
-    :return:
-        progress - the integer percent completion calculated
-        as the ratio of current to end multiplied by 100
-    """
-    progress = Progress(current, end, width)
-    print(f"\r{progress}", end="")
-    return progress
 
 
 def join_strings(input_list, delimiter=" "):
