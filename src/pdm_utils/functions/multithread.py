@@ -95,7 +95,7 @@ def multithread(work_items, threads, target, verbose=False):
         for i in range(len(work_items)):
             if i % interval == 0:
                 tasks += 1
-                work_queue.put((show_progress, (i+1, len(work_items))))
+                work_queue.put((show_progress, (i, len(work_items))))
 
             tasks += 1
             work_queue.put((target, work_items[i]))
