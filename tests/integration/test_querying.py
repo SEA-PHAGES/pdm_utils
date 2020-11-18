@@ -1,28 +1,17 @@
-import re
 import sys
 import unittest
-from datetime import datetime
-from decimal import Decimal
 from pathlib import Path
-from unittest.mock import Mock
-from unittest.mock import patch
 
 from networkx import Graph
-from networkx import shortest_path
-from sqlalchemy import Column
 from sqlalchemy import and_
 from sqlalchemy import create_engine
 from sqlalchemy import MetaData
 from sqlalchemy import or_
-from sqlalchemy import select
 from sqlalchemy.exc import InternalError
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import func
-from sqlalchemy.sql import functions
 from sqlalchemy.sql.elements import BinaryExpression
-from sqlalchemy.sql.elements import Grouping
-from sqlalchemy.sql.elements import UnaryExpression
 
 
 from pdm_utils.functions import querying
@@ -34,6 +23,7 @@ test_dir = unittest_file.parent.parent
 if str(test_dir) not in set(sys.path):
     sys.path.append(str(test_dir))
 import test_db_utils
+
 
 class TestQuerying(unittest.TestCase):
     @classmethod
@@ -74,12 +64,14 @@ class TestQuerying(unittest.TestCase):
     def test_get_table_1(self):
         """Verify get_table() retrieves correct Table.
         """
-        self.assertEqual(querying.get_table(self.metadata, "phage"), self.phage)
+        self.assertEqual(querying.get_table(self.metadata, "phage"),
+                         self.phage)
 
     def test_get_table_2(self):
         """Verify get_table() operates case insensitive.
         """
-        self.assertEqual(querying.get_table(self.metadata, "pHAgE"), self.phage)
+        self.assertEqual(querying.get_table(self.metadata, "pHAgE"),
+                         self.phage)
 
     def test_get_table_3(self):
         """Verify get_table() raises ValueError from invalid table name.
@@ -91,13 +83,13 @@ class TestQuerying(unittest.TestCase):
         """Verify get_column() retrieves correct Column.
         """
         self.assertEqual(querying.get_column(self.metadata, "gene.GeneID"),
-                                                             self.GeneID)
+                         self.GeneID)
 
     def test_get_column_2(self):
         """Verify get_column() retrieves correct Column.
         """
         self.assertEqual(querying.get_column(self.metadata, "GENE.GENEID"),
-                                                             self.GeneID)
+                         self.GeneID)
 
     def test_get_column_3(self):
         """Verify get_column() raises ValueError from invalid column name.
@@ -137,7 +129,7 @@ class TestQuerying(unittest.TestCase):
         """Verify build_where_clause() returns a BinaryExpression object.
         """
         where_clause = querying.build_where_clause(self.graph,
-                                                        "phage.PhageID=Trixie")
+                                                   "phage.PhageID=Trixie")
 
         self.assertTrue(isinstance(where_clause, BinaryExpression))
 
@@ -145,7 +137,7 @@ class TestQuerying(unittest.TestCase):
         """Verify build_where_clause() builds from specified Column.
         """
         where_clause = querying.build_where_clause(self.graph,
-                                                        "phage.PhageID=Trixie")
+                                                   "phage.PhageID=Trixie")
 
         self.assertEqual(where_clause.left, self.PhageID)
 
@@ -153,7 +145,7 @@ class TestQuerying(unittest.TestCase):
         """Verify build_where_clause() builds from specified value.
         """
         where_clause = querying.build_where_clause(self.graph,
-                                                        "phage.PhageID=Trixie")
+                                                   "phage.PhageID=Trixie")
 
         self.assertEqual(where_clause.right.value, "Trixie")
 
@@ -162,7 +154,7 @@ class TestQuerying(unittest.TestCase):
         """
         phageid_clause = (self.PhageID == "Trixie")
         cluster_clause = (self.Cluster == "A")
-        phamid_clause  = (self.PhamID == 2)
+        phamid_clause = (self.PhamID == 2)
 
         clauses = [phageid_clause, cluster_clause, phamid_clause]
         and_clauses = and_(*clauses)
@@ -177,7 +169,7 @@ class TestQuerying(unittest.TestCase):
         """
         phageid_clause = (self.PhageID == "Trixie")
         cluster_clause = (self.Cluster == "A")
-        phamid_clause  = (self.PhamID == 2)
+        phamid_clause = (self.PhamID == 2)
 
         subcluster_clause = (self.Subcluster == "A2")
 
@@ -336,7 +328,7 @@ class TestQuerying(unittest.TestCase):
         """
         where_clause = (self.Cluster == "A")
         select_query = querying.build_select(self.graph, self.PhageID,
-                                                        where=where_clause)
+                                             where=where_clause)
 
         phage_ids = []
         dict_list = query_dict_list(self.engine, select_query)
@@ -351,7 +343,7 @@ class TestQuerying(unittest.TestCase):
         """Verify build_select() appends ORDER BY clauses to executable.
         """
         select_query = querying.build_select(self.graph, self.PhageID,
-                                                        order_by=self.PhageID)
+                                             order_by=self.PhageID)
 
         dict_list = query_dict_list(self.engine, select_query)
 
@@ -371,7 +363,7 @@ class TestQuerying(unittest.TestCase):
         """
         where_clause = (self.Subcluster == "A2")
         select_query = querying.build_select(self.graph, self.Cluster,
-                                                        where=where_clause)
+                                             where=where_clause)
 
         dict_list = query_dict_list(self.engine, select_query)
 
@@ -388,19 +380,18 @@ class TestQuerying(unittest.TestCase):
         for dict in dict_list:
             hosts.append(dict["HostGenus"])
 
-
     def test_build_select_6(self):
         """Verify build_select() correctly aggregates columns for having query.
         """
         having_clause = (func.count(self.GeneID) == 1)
-        select_query = querying.build_select(self.graph, self.PhamID, 
+        select_query = querying.build_select(self.graph, self.PhamID,
                                              group_by=self.PhamID,
                                              having=having_clause)
 
         phamids = []
         dict_list = query_dict_list(self.engine, select_query)
         for dict in dict_list:
-            phamids.append(dict["PhamID"]) 
+            phamids.append(dict["PhamID"])
 
     def test_build_count_1(self):
         """Verify build_count() creates valid SQLAlchemy executable.
@@ -417,7 +408,7 @@ class TestQuerying(unittest.TestCase):
         """
         where_clause = (self.PhageID == "Trixie")
         count_query = querying.build_count(self.graph, self.PhageID,
-                                                        where=where_clause)
+                                           where=where_clause)
 
         dict_list = query_dict_list(self.engine, count_query)
         count_dict = dict_list[0]
@@ -429,9 +420,9 @@ class TestQuerying(unittest.TestCase):
         """
         where_clause = (self.Cluster == "A")
         count_query = querying.build_count(self.graph,
-                                                [self.PhageID,
-                                                 self.Cluster.distinct()],
-                                                        where=where_clause)
+                                           [self.PhageID,
+                                            self.Cluster.distinct()],
+                                           where=where_clause)
 
         dict_list = query_dict_list(self.engine, count_query)
         count_dict = dict_list[0]
@@ -445,26 +436,13 @@ class TestQuerying(unittest.TestCase):
         """
         where_clause = (self.Subcluster == "A2")
         distinct_query = querying.build_distinct(self.graph, self.Cluster,
-                                                        where=where_clause)
+                                                 where=where_clause)
 
         dict_list = query_dict_list(self.engine, distinct_query)
         self.assertEqual(len(dict_list), 1)
 
         distinct_dict = dict_list[0]
         self.assertEqual(distinct_dict["Cluster"], "A")
-
-    def test_build_distinct_2(self):
-        """Verify build_distinct() cannot variable aggregated columns.
-        MySQL does not accept DISTINCT queries with aggregated
-        and non-aggregated columns.
-        """
-        distinct_query = querying.build_distinct(self.graph,
-                                                    [self.PhageID,
-                                                     func.count(self.Cluster)])
-
-
-        with self.assertRaises(InternalError):
-            dict_list = query_dict_list(self.engine, distinct_query)
 
     def test_execute_1(self):
         """Verify execute() correctly executes SQLAlchemy select objects.
@@ -585,7 +563,7 @@ class TestQuerying(unittest.TestCase):
         phage_map = self.mapper.classes["phage"]
 
         instances = querying.query(self.session, self.graph, phage_map,
-                                            where=phage_map.Cluster=="A")
+                                   where=phage_map.Cluster == "A")
 
         phageids = []
         for instance in instances:
@@ -596,6 +574,7 @@ class TestQuerying(unittest.TestCase):
         self.assertFalse("Myrna" in phageids)
 
         self.session.close()
+
 
 if __name__ == "__main__":
     unittest.main()
