@@ -87,7 +87,7 @@ def start_processes(inputs, num_processors, verbose):
         for i in range(len(inputs)):
             tasks += 1
             if i % interval == 0:
-                job_queue.put((show_progress, (i+1, len(inputs))))
+                job_queue.put((show_progress, (i, len(inputs))))
                 tasks += 1
             job_queue.put(inputs[i])
         tasks += 1
