@@ -195,7 +195,6 @@ def execute_get_server_db(
             continue
 
         if database == directory_name.split("/")[0]:
-            print(data_dict.get("name"))
             valid_db_request = True
             break
 
