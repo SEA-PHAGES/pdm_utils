@@ -206,3 +206,4 @@ HOST_GENUS_SYNONYMS = [{"Mycobacterium", "Mycobacterio", "Mycolicibacterium"}]
 
 # Hatfull lab server info
 DB_WEBSITE = "http://phamerator.webfactional.com/databases_Hatfull/"
+DB_SERVER = "http://databases.hatfull.org/"
