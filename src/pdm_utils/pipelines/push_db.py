@@ -130,9 +130,9 @@ def main(unparsed_args):
     password = config["upload_server"]["password"]
 
     # Command line hostname and destination override config file defaults
-    if server_host is None or args.server_host is not None:
+    if args.server_host is not None:
         server_host = args.server_host
-    if remote_dir is None or args.remote_directory is not None:
+    if args.remote_directory is not None:
         remote_dir = args.remote_directory
     key_file = args.key_file
 
