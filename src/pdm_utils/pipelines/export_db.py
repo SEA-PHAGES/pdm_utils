@@ -1,22 +1,14 @@
 """Pipeline for exporting database information into files."""
 import argparse
-import shlex
 import shutil
-from subprocess import Popen, DEVNULL
 import sys
 import time
 from pathlib import Path
 
 from pdm_utils.classes.filter import Filter
-from pdm_utils.functions import configfile
-from pdm_utils.functions import fileio
-from pdm_utils.functions import flat_files
-from pdm_utils.functions import multithread
-from pdm_utils.functions import mysqldb
-from pdm_utils.functions import mysqldb_basic
-from pdm_utils.functions import parallelize
-from pdm_utils.functions import pipelines_basic
-from pdm_utils.functions import querying
+from pdm_utils.functions import (configfile, fileio, flat_files, mysqldb,
+                                 mysqldb_basic, pham_alignment,
+                                 pipelines_basic, querying)
 
 
 # GLOBAL VARIABLES
@@ -233,11 +225,15 @@ def parse_export(unparsed_args_list):
         subparser_list.append(bio_parser)
 
     tbl_parser = subparsers.add_parser("tbl")
-    subparser_list.append(tbl_parser)
     csv_parser = subparsers.add_parser("csv")
-    subparser_list.append(csv_parser)
     sql_parser = subparsers.add_parser("sql")
+
+    subparser_list.append(tbl_parser)
+    subparser_list.append(csv_parser)
     subparser_list.append(sql_parser)
+
+    filterable_parsers.append(tbl_parser)
+    filterable_parsers.append(csv_parser)
 
     for subparser in subparser_list:
         subparser.add_argument("-c", "--config_file",
@@ -351,6 +347,8 @@ def execute_export(alchemist, pipeline, folder_path=None,
     :type sequence_columns: bool
     :param concatenate: A boolean to toggle concaternation for SeqRecords.
     :type concaternate: bool
+    :param threads: Number of processes/threads to spawn during the pipeline
+    :type threads: int
     """
     if verbose:
         print("Retrieving database version...")
@@ -571,11 +569,25 @@ def execute_sql_export(alchemist, export_path, folder_path, db_version,
         pipelines_basic.create_working_dir(phams_out_aln_dir,
                                            dump=dump, force=force)
 
-        phams_dict = get_all_pham_gene_translations(alchemist)
-        filepaths = dump_pham_out_fastas(phams_out_fasta_dir, phams_dict,
+        phams_dict = pham_alignment.get_all_pham_gene_translations(alchemist)
+        pham_fasta_map = pham_alignment.dump_pham_out_fastas(
+                                         phams_out_fasta_dir, phams_dict,
                                          threads=threads, verbose=verbose)
-        align_pham_out_fastas(phams_out_aln_dir, filepaths,
-                              threads=threads, verbose=verbose)
+        pham_aln_map = pham_alignment.align_pham_out_fastas(
+                                         phams_out_aln_dir, pham_fasta_map,
+                                         threads=threads, verbose=verbose)
+
+        if verbose:
+            print("...Reintroducing pham fasta translation duplicates...")
+        pham_alignment.reintroduce_pham_fasta_duplicates(
+                                         pham_fasta_map, phams_dict,
+                                         threads=threads, verbose=verbose)
+
+        if verbose:
+            print("...Reintroducing pham alignment translation duplicates...")
+        pham_alignment.reintroduce_pham_fasta_duplicates(
+                                         pham_aln_map, phams_dict,
+                                         threads=threads, verbose=verbose)
 
         pham_fastas_zip = export_path.joinpath("fastas.zip")
         pham_alns_zip = export_path.joinpath("alns.zip")
@@ -673,10 +685,6 @@ def get_sort_columns(alchemist, sort_inputs):
     return sort_columns
 
 
-# FFX-EXPORT HELPER FUNCTIONS
-# -----------------------------------------------------------------------------
-
-
 # CSV-EXPORT HELPER FUNCTIONS
 # -----------------------------------------------------------------------------
 def filter_csv_columns(alchemist, table, include_columns=[],
@@ -758,108 +766,6 @@ def decode_results(results, columns, verbose=False):
             for result in results:
                 if not result[column.name] is None:
                     result[column.name] = result[column.name].decode("utf-8")
-
-
-# SQL-EXPORT HELPER FUNCTIONS
-# -----------------------------------------------------------------------------
-def run_clustalo(fasta_path, aln_path):
-    command = (f"clustalo -i {fasta_path} --infmt=fasta -o {aln_path} "
-               "--outfmt=fasta --output-order=tree-order --threads=1 "
-               "--seqtype=protein")
-
-    command = shlex.split(command)
-    with Popen(command, stdout=DEVNULL, stderr=DEVNULL) as proc:
-        proc.wait()
-
-    return aln_path
-
-
-def get_all_pham_gene_translations(alchemist):
-    engine = alchemist.engine
-
-    # Build phage>>cluster lookup table
-    cluster_lookup = dict()
-    query = "SELECT PhageID, Cluster, Subcluster FROM phage"
-    results = engine.execute(query)
-    for result in results:
-        phageid = result["PhageID"]
-        cluster = result["Cluster"]
-        subcluster = result["Subcluster"]
-        if cluster is None:
-            cluster_lookup[phageid] = "Singleton"
-        elif subcluster is None:
-            cluster_lookup[phageid] = cluster
-        else:
-            cluster_lookup[phageid] = subcluster
-
-    # Build pham>>translation>>cluster>>gene lookup table
-    phams = dict()
-    query = ("SELECT PhamID, LocusTag, Name, Translation, Notes, PhageID "
-             "FROM gene")
-    results = engine.execute(query)
-    for result in results:
-        phageid = result["PhageID"]
-        locus = result["LocusTag"]
-        translation = result["Translation"].decode('utf-8')
-        product = result["Notes"].decode('utf-8')
-        phamid = result["PhamID"]
-        if locus is not None:
-            name = locus.split('_')[-1]
-        else:
-            name = result["Name"]
-        geneid = f"{phageid}_{name}"
-        if product is not None and product > "":
-            geneid += f" ({product})"
-        cluster = cluster_lookup[phageid]
-
-        geneid = "".join(["[", cluster, "]", " ", geneid])
-
-        pham_translations = phams.get(phamid, dict())
-        pham_translations[geneid] = translation
-        phams[phamid] = pham_translations
-
-    engine.dispose()
-
-    return phams
-
-
-def dump_pham_out_fastas(working_dir, phams_dict, threads=1, verbose=False):
-    filepaths = list()
-
-    if verbose:
-        print("...Writing pham gene fasta files...")
-
-    work_items = []
-    for pham, pham_translations in phams_dict.items():
-        filename = f"{pham}_genes.fasta"
-        filepath = working_dir.joinpath(filename)
-        filepaths.append(filepath)
-
-        work_items.append((pham_translations, filepath))
-
-    multithread.multithread(work_items, threads, fileio.write_fasta,
-                            verbose=verbose)
-
-    return filepaths
-
-
-def align_pham_out_fastas(working_dir, filepaths, threads=1, verbose=False):
-    aln_paths = list()
-
-    if verbose:
-        print("...Aligning pham gene fasta files...")
-
-    work_items = []
-    for filepath in filepaths:
-        aln_name = filepath.with_suffix(".aln").name
-        aln_path = working_dir.joinpath(aln_name)
-        aln_paths.append(aln_path)
-
-        work_items.append((filepath, aln_path))
-
-    parallelize.parallelize(work_items, threads, run_clustalo, verbose=verbose)
-
-    return aln_paths
 
 
 # Functions to be evaluated for another module:
