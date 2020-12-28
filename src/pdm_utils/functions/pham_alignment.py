@@ -1,12 +1,23 @@
 import shlex
 from subprocess import (Popen, DEVNULL)
 
-from Bio import SeqIO
-
 from pdm_utils.functions import (fileio, multithread, parallelize)
 
 
 def run_clustalo(fasta_path, aln_path):
+    """Runs Clustal Omega to generate a fasta-formatted  multiple sequence
+    alignment file
+
+    :param fasta_path: Path to a fasta file containing sequences to be aligned
+    :type fasta_path: Path
+    :type fasta_path: str
+    :param aln_path: The desired path to the aligned sequences file
+    :type aln_path: Path
+    :type aln_path: str
+    :return: Returns the path to the aligned sequences file
+    :rtype: Path
+    :rtype: str
+    """
     command = (f"clustalo -i {fasta_path} --infmt=fasta -o {aln_path} "
                "--outfmt=fasta --output-order=tree-order --threads=1 "
                "--seqtype=protein")
@@ -19,6 +30,14 @@ def run_clustalo(fasta_path, aln_path):
 
 
 def get_all_pham_gene_translations(alchemist):
+    """Creates a 2D dictionary that maps phams to dictionaries that map
+    unique translations to respective geneids.
+
+    :param alchemist: A connected and fully built AlchemyHandler object
+    :type alchemist: AlchemyHandler
+    :return: Returns a dictionary mapping phams to translations to geneids
+    :rtype: dict{dict}
+    """
     engine = alchemist.engine
 
     # Build phage>>cluster lookup table
@@ -71,6 +90,22 @@ def get_all_pham_gene_translations(alchemist):
 
 def dump_pham_out_fastas(working_dir, phams_dict, neglect_singles=True,
                          threads=1, verbose=False):
+    """Uses multiple threads to write fasta-formatted multiple sequence files
+    for all of the phams listed.
+
+    :param working_dir: Path to the directory where the files will be written
+    :type working_dir: pathlib.Path
+    :param phams_dict: Dictionary that maps phams to translations to geneids
+    :type phams_dict: dict{dict}
+    :param neglect_singles: Omit single sequence fasta files from the path map
+    :type neglect_singles: bool
+    :param threads: Number of threads to spawn during export
+    :type threads: int
+    :param verbose: A boolean value to toggle progress print statements.
+    :type verbose: bool
+    :return pham_fasta_map: Dictionary that maps phams to their fasta file path
+    :rtype pham_fasta_map: dict
+    """
     pham_fasta_map = dict()
 
     if verbose:
@@ -98,6 +133,20 @@ def dump_pham_out_fastas(working_dir, phams_dict, neglect_singles=True,
 
 def align_pham_out_fastas(working_dir, pham_fasta_map, threads=1,
                           verbose=False):
+    """Uses multiple processes to align fasta-formatted multiple sequence files
+    for all of the phams listed.
+
+    :param working_dir: Path to the directory where the files will be written
+    :type working_dir: pathlib.Path
+    :param phams_dict: Dictionary that maps phams to their fasta file path
+    :type phams_dict: dict{Path}
+    :param threads: Number of processes/threads to spawn during alignment
+    :type threads: int
+    :param verbose: A boolean value to toggle progress print statements.
+    :type verbose: bool
+    :return pham_aln_map: Dictionary that maps phams to their aln file path
+    :rtype pham_aln_map: dict
+    """
     pham_aln_map = dict()
 
     if verbose:
@@ -117,31 +166,26 @@ def align_pham_out_fastas(working_dir, pham_fasta_map, threads=1,
     return pham_aln_map
 
 
-def reintroduce_fasta_duplicates(filepath, ts_to_gs):
-    with filepath.open(mode="r") as filehandle:
-        records = []
-        for record in SeqIO.parse(filehandle, "fasta"):
-            records.append(record)
-
-    gs_to_ts = {}
-    for record in records:
-        translation = record.seq
-        ungapped_translation = translation.ungap(gap="-")
-
-        geneids = ts_to_gs.get(str(ungapped_translation), [])
-        for geneid in geneids:
-            gs_to_ts[geneid] = str(translation)
-
-    fileio.write_fasta(gs_to_ts, filepath)
-
-
 def reintroduce_pham_fasta_duplicates(pham_path_map, pham_translations_dict,
                                       threads=1, verbose=False):
+    """Uses multiple threads to read and re-write fasta-formatted sequence
+    files for all of the phams listed.
+
+    :param pham_path_map: Dictionary that maps phams to their file path
+    :type pham_path_map: dict{Path}
+    :param phams_translations_dict: Map of phams to translations to geneids
+    :type phams_translations_dict: dict{dict}
+    :param threads: Number of threads to spawn during reading/writing of files
+    :type threads: int
+    :param verbose: A boolean value to toggle progress print statements.
+    :type verbose: bool
+    """
     work_items = []
     for pham, filepath in pham_path_map.items():
         ts_to_gs = pham_translations_dict.get(pham, {})
 
-        work_items.append((filepath, ts_to_gs))
+        work_items.append((ts_to_gs, filepath))
 
-    multithread.multithread(work_items, threads, reintroduce_fasta_duplicates,
-                            verbose=verbose)
+    multithread.multithread(
+                        work_items, threads,
+                        fileio.reintroduce_fasta_duplicates, verbose=verbose)

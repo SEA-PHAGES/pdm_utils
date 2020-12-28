@@ -66,6 +66,35 @@ def parse_feature_table(filehandle):
     return FeatureTableParser(filehandle)
 
 
+def reintroduce_fasta_duplicates(ts_to_gs, filepath):
+    """Reads a fasta file and reintroduces (rewrittes) duplicate sequences
+    guided by an ungapped translation to sequence-id map
+
+    :param filepath: Path to fasta-formatted multiple sequence file
+    :type filepath: pathlib.Path
+    :param ts_to_gs: Dictionary mapping unique translations to sequence-ids
+    :type ts_to_gs: dict
+    """
+    with filepath.open(mode="r") as filehandle:
+        records = []
+        for record in SeqIO.parse(filehandle, "fasta"):
+            records.append(record)
+
+    gs_to_ts = {}
+    for record in records:
+        translation = record.seq
+        ungapped_translation = translation.ungap(gap="-")
+
+        geneids = ts_to_gs.get(str(ungapped_translation))
+        if geneids is not None:
+            for geneid in geneids:
+                gs_to_ts[geneid] = str(translation)
+        else:
+            gs_to_ts[record.id] = translation
+
+    write_fasta(gs_to_ts, filepath)
+
+
 # WRITING FUNCTIONS
 # -----------------------------------------------------------------------------
 def export_data_dict(data_dicts, file_path, headers, include_headers=False):

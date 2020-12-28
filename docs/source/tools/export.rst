@@ -26,7 +26,6 @@ Database information stored in a SQL database may need to be uploaded to a serve
 The database version is tracked as an integer in the Version field of the *version* table, and a version file is also generated (e.g. Actinobacteriophage.version), which is a text file that contains a single integer corresponding to the database version.
 
 
-
 CSV File Export
 _______________
 
@@ -94,6 +93,17 @@ Dump created files into the current working directory or the specified folder pa
 
 The command-line flag **-d** or **--dump** will toggle on file export dumping.  
 
+Utilizing more power
+____________________
+
+Use more of your computational resources via multithreading/parallel processing::
+    
+    > python3 -m pdm_utils export Actinobacteriophage sql -np 8
+
+    > python3 -m pdm_utils export Actinobacteriophage gb --number_processes 8
+
+The command-line flag **-np** or **--number_processes** followed by an integer specifies the number of virtual cores to utilize during the export pipeline
+
 Forcing aggressive exports
 __________________________
 
@@ -141,6 +151,17 @@ Csv or SeqIO option to pre-select data for export.::
     > python3 pdm_utils export Actinobacteriophage csv --import_file /path/to/file
 
 The command-line flag **-if** or **--import_file** followed by a comma-separated-values file to be read for values.  The first row of this file will be used as primary-key values from the database table selected for export (see *Changing the table*) to condition export on (similar to *Importing values with the command line*).
+
+Dumping pham fasta-formatted multiple sequence and sequence alignment files
+___________________________________________________________________________
+
+SQL option to include compressed files containing fasta-formatted multiple sequence and sequence alignment files::
+
+    > python3 pdm_utils export Actinobacteriophage sql -pho
+
+    > python3 pdm_utils export Actinobacteriophage sql --phams_out
+
+The command line flag **-pho** or **--phams_out** toggles the export of all phams as fasta-formatted multiple sequence files, subsequent generation of sequence alignment files with clustal omega, and compression into zip files placed at the specified directory.
 
 Including additional csv export columns
 _______________________________________

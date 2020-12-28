@@ -347,6 +347,8 @@ def execute_export(alchemist, pipeline, folder_path=None,
     :type sequence_columns: bool
     :param concatenate: A boolean to toggle concaternation for SeqRecords.
     :type concaternate: bool
+    :param threads: Number of processes/threads to spawn during the pipeline
+    :type threads: int
     """
     if verbose:
         print("Retrieving database version...")

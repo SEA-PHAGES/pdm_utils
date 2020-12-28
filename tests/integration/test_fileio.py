@@ -3,7 +3,6 @@ import filecmp
 import re
 import shutil
 import sys
-import tempfile
 import unittest
 from pathlib import Path
 
@@ -30,8 +29,9 @@ test_dir = unittest_file.parent.parent
 test_file_dir = Path(test_dir, "test_files")
 
 TMPDIR_PREFIX = "pdm_utils_tests_fileio_"
-# Can set TMPDIR_BASE to string such as "/tmp/" to track tmp directory location.
+# Can set TMPDIR_BASE to string such as "/tmp/" to track tmp directory location
 TMPDIR_BASE = "/tmp"
+
 
 class TestFileIO(unittest.TestCase):
     @classmethod
@@ -45,6 +45,48 @@ class TestFileIO(unittest.TestCase):
 
         self.test_dir.mkdir()
 
+        self.test_import_table_1 = Path(test_file_dir,
+                                        "test_import_table_1.csv")
+        self.tkt_dict1 = {"phage_id": "L5", "host_genus": "Mycobacterium"}
+        self.tkt_dict2 = {"phage_id": "Trixie", "host_genus": "Mycobacterium"}
+
+        self.test_fasta_file_1 = Path(test_file_dir,
+                                      "test_fasta_file_1.fasta")
+        self.test_fasta_file_2 = Path(test_file_dir,
+                                      "test_fasta_file_2.fasta")
+
+        self.test_fa_1_gs_to_ts = {}
+        self.test_fa_2_gs_to_ts = {}
+        with self.test_fasta_file_1.open(mode="r") as filehandle:
+            for record in SeqIO.parse(filehandle, "fasta"):
+                self.test_fa_1_gs_to_ts[record.id] = str(record.seq)
+                self.test_fa_2_gs_to_ts[record.id] = str(record.seq)
+
+        self.test_fa_1_ts_to_gs = {}
+        for seq_id, trans in self.test_fa_1_gs_to_ts.items():
+            seq_ids = self.test_fa_1_ts_to_gs.get(trans, [])
+            seq_ids.append(seq_id)
+            self.test_fa_1_ts_to_gs[trans] = seq_ids
+
+        self.test_fa_2_ts_to_gs = {}
+        for seq_id, trans in self.test_fa_2_gs_to_ts.items():
+            seq_ids = self.test_fa_2_ts_to_gs.get(trans, [])
+            seq_ids.append(seq_id)
+            self.test_fa_2_ts_to_gs[trans] = seq_ids
+
+        self.fasta_dict_1 = {"Trixie_CDS_11": (
+                                        "MASIQGKLIALVLKYGISYLRKHPELLKEI"
+                                        "SKHIPGKVDDLVLEVLAKLLGV")}
+        self.fasta_dict_2 = {"TRIXIE_CDS_3": (
+                                        "MSGFDDKIVDQAQAIVPADDYDALPLAGPGR"
+                                        "WAHVPGGLTLYTNDDTVLFAQGDMSTIESSY"
+                                        "LFQAMEKLRLAGKTASQAFDILRLEADAISG"
+                                        "DLSELAEE"),
+                             "L5_CDS_3": (
+                                        "MAQMQATHTIEGFLAVEVAPRAFVAENGHVL"
+                                        "TRLSATKWGGGEGLEILNYEGPGTVEVSDEK"
+                                        "LAEAQRASEVEAELRREVGKE")}
+
     @classmethod
     def tearDownClass(self):
         test_db_utils.remove_db()
@@ -52,29 +94,15 @@ class TestFileIO(unittest.TestCase):
 
     def setUp(self):
         self.alchemist = AlchemyHandler()
-        self.alchemist.username=USER
-        self.alchemist.password=PWD
-        self.alchemist.database=DB
+        self.alchemist.username = USER
+        self.alchemist.password = PWD
+        self.alchemist.database = DB
         self.alchemist.connect(ask_database=True, login_attempts=0)
         self.alchemist.build_graph()
 
-        self.test_import_table_1 = Path(test_file_dir, "test_import_table_1.csv")
-        self.tkt_dict1 = {"phage_id": "L5", "host_genus": "Mycobacterium"}
-        self.tkt_dict2 = {"phage_id": "Trixie", "host_genus": "Mycobacterium"}
-
-        self.fasta_dict_1 = {"Trixie_CDS_11" : ("MASIQGKLIALVLKYGISYLRKHPELLKEI"
-                                                "SKHIPGKVDDLVLEVLAKLLGV")}
-        self.fasta_dict_2 = {"TRIXIE_CDS_3" : ("MSGFDDKIVDQAQAIVPADDYDALPLAGPGR"
-                                               "WAHVPGGLTLYTNDDTVLFAQGDMSTIESSY"
-                                               "LFQAMEKLRLAGKTASQAFDILRLEADAISG"
-                                               "DLSELAEE"),
-                             "L5_CDS_3"     : ("MAQMQATHTIEGFLAVEVAPRAFVAENGHVL"
-                                               "TRLSATKWGGGEGLEILNYEGPGTVEVSDEK"
-                                               "LAEAQRASEVEAELRREVGKE")}
-        
         self.fileio_test_dir = self.test_dir.joinpath("fileio_test_dir")
         self.fileio_test_dir.mkdir()
-        self.data_dict_file =  self.fileio_test_dir.joinpath("table.csv")
+        self.data_dict_file = self.fileio_test_dir.joinpath("table.csv")
         self.fasta_file = self.fileio_test_dir.joinpath("translations.fasta")
 
     def tearDown(self):
@@ -92,10 +120,10 @@ class TestFileIO(unittest.TestCase):
         list_of_data = [self.tkt_dict1, self.tkt_dict2]
         headers = ["type", "phage_id", "host_genus", "cluster"]
         fileio.export_data_dict(list_of_data, self.data_dict_file,
-                                    headers, include_headers=True)
+                                headers, include_headers=True)
 
         exp_success_tkts = []
-        with open(self.data_dict_file,'r') as file:
+        with open(self.data_dict_file, 'r') as file:
             file_reader = csv.DictReader(file)
             for dict in file_reader:
                 exp_success_tkts.append(dict)
@@ -105,7 +133,7 @@ class TestFileIO(unittest.TestCase):
         with self.subTest():
             self.assertEqual(set(exp_success_tkts[0].keys()), set(headers))
 
-    def test_write_fasta_1(self): 
+    def test_write_fasta_1(self):
         """Verify write_fasta() creates readable fasta formatted file"""
         fileio.write_fasta(self.fasta_dict_1, self.fasta_file)
 
@@ -115,20 +143,64 @@ class TestFileIO(unittest.TestCase):
 
         self.assertEqual(record.id, id)
         self.assertEqual(str(record.seq), seq)
-           
+
     def test_write_fasta_2(self):
         """Verify write_fasta() can properly concatenate fasta files"""
         fileio.write_fasta(self.fasta_dict_2, self.fasta_file)
 
         records = SeqIO.parse(self.fasta_file, "fasta")
-        
+
         keys = list(self.fasta_dict_2.keys())
-        
+
         for record in records:
             self.assertTrue(record.id in keys)
 
             seq = self.fasta_dict_2[record.id]
             self.assertEqual(str(record.seq), seq)
+
+    def test_reintroduce_fasta_duplicates_1(self):
+        """Verify reintroduce_duplicates() copies fastas without duplicates"""
+        fileio.write_fasta(self.test_fa_1_gs_to_ts, self.fasta_file)
+
+        fileio.reintroduce_fasta_duplicates(self.test_fa_1_ts_to_gs,
+                                            self.fasta_file)
+
+        with self.fasta_file.open(mode="r") as filehandle:
+            for record in SeqIO.parse(filehandle, "fasta"):
+                with self.subTest(seq_id=record.id):
+                    translation = self.test_fa_1_gs_to_ts[record.id]
+                    self.assertTrue(translation is not None)
+                    self.assertEqual(str(record.seq), translation)
+
+    def test_reintroduce_fasta_duplicates_2(self):
+        """Verify reintroduce_duplicates() recognizes duplicate sequences"""
+        fileio.write_fasta(self.test_fa_1_gs_to_ts, self.fasta_file)
+
+        fileio.reintroduce_fasta_duplicates(self.test_fa_2_ts_to_gs,
+                                            self.fasta_file)
+
+        with self.fasta_file.open(mode="r") as filehandle:
+            for record in SeqIO.parse(filehandle, "fasta"):
+                with self.subTest(seq_id=record.id):
+                    translation = self.test_fa_2_gs_to_ts[record.id]
+                    self.assertTrue(translation is not None)
+                    self.assertEqual(str(record.seq), translation)
+
+    def test_reintroduce_fasta_duplicates_3(self):
+        """Verify reintroduce_duplicates() preserves unrecognized translations
+        """
+        fileio.write_fasta(self.test_fa_2_gs_to_ts, self.fasta_file)
+
+        fileio.reintroduce_fasta_duplicates(self.test_fa_1_ts_to_gs,
+                                            self.fasta_file)
+
+        with self.fasta_file.open(mode="r") as filehandle:
+            for record in SeqIO.parse(filehandle, "fasta"):
+                with self.subTest(seq_id=record.id):
+                    translation = self.test_fa_2_gs_to_ts[record.id]
+                    self.assertTrue(translation is not None)
+                    self.assertEqual(str(record.seq), translation)
+
 
 def get_acc_id_dict(alchemist):
     """Test helper function to retrieve accessions of database entries.
@@ -136,10 +208,11 @@ def get_acc_id_dict(alchemist):
     db_filter = Filter(alchemist=alchemist)
     db_filter.key = "phage.PhageID"
 
-    db_filter.values = db_filter.build_values() 
+    db_filter.values = db_filter.build_values()
     groups = db_filter.group("phage.Accession")
 
     return groups
+
 
 def copy_gb_ft_files(ncbi_handle, acc_id_dict, records_path):
     """Test helper functions to create duplicates of GenBank ft files.
@@ -150,20 +223,20 @@ def copy_gb_ft_files(ncbi_handle, acc_id_dict, records_path):
 
     total_files_path = records_path.joinpath("TOTAL.tbl")
     total_files_handle = total_files_path.open(mode="w")
-    
+
     file_handle = None
     for line in file_lines:
-        total_files_handle.write(line) 
+        total_files_handle.write(line)
 
         if not re.match(feature_format, line) is None:
-            if not file_handle is None:
+            if file_handle is not None:
                 file_handle.close()
 
             accession_split = re.split(feature_format, line)
             accession = accession_split[1]
-            phage_id = acc_id_dict[accession_split[1]][0]
+            phage_id = acc_id_dict[accession][0]
 
-            file_name = (f"{phage_id}.tbl") 
+            file_name = (f"{phage_id}.tbl")
             file_path = records_path.joinpath(file_name)
             if file_path.is_file():
                 raise Exception
@@ -174,13 +247,14 @@ def copy_gb_ft_files(ncbi_handle, acc_id_dict, records_path):
         else:
             if file_handle is None:
                 continue
-            file_handle.write(line) 
+            file_handle.write(line)
 
-    if not file_handle is None:
+    if file_handle is not None:
         file_handle.close()
 
     total_files_handle.close()
     ncbi_handle.close()
+
 
 class TestFeatureTableParser(unittest.TestCase):
     @classmethod
@@ -188,26 +262,27 @@ class TestFeatureTableParser(unittest.TestCase):
         base_dir = Path(TMPDIR_BASE)
         self.test_dir = base_dir.joinpath(TMPDIR_PREFIX)
         test_db_utils.create_filled_test_db()
-       
+
         if self.test_dir.is_dir():
             shutil.rmtree(self.test_dir)
 
         self.test_dir.mkdir()
 
         self.alchemist = AlchemyHandler()
-        self.alchemist.username=USER
-        self.alchemist.password=PWD
-        self.alchemist.database=DB
+        self.alchemist.username = USER
+        self.alchemist.password = PWD
+        self.alchemist.database = DB
         self.alchemist.connect(ask_database=True, login_attempts=0)
         self.acc_id_dict = get_acc_id_dict(self.alchemist)
 
         accession_list = list(self.acc_id_dict.keys())
         ncbi_handle = Entrez.efetch(db="nucleotide", rettype="ft",
-                                    id=",".join(accession_list), retmode="text")
+                                    id=",".join(accession_list),
+                                    retmode="text")
 
         copy_gb_ft_files(ncbi_handle, self.acc_id_dict, self.test_dir)
 
-    @classmethod 
+    @classmethod
     def tearDownClass(self):
         test_db_utils.remove_db()
         shutil.rmtree(self.test_dir)
@@ -231,13 +306,13 @@ class TestFeatureTableParser(unittest.TestCase):
                 with self.subTest(file_name=file_name):
                     with tbl_file.open(mode="r") as filehandle:
                         record = fileio.read_feature_table(filehandle)
-                        
+
                         self.assertFalse(record is None)
                         self.assertTrue(record.id in self.acc_id_dict.keys())
-                        
+
                         record_name = self.acc_id_dict[record.id][0]
-                        self.assertEqual(".".join([record_name, "tbl"]), 
-                                                   file_name)
+                        self.assertEqual(".".join([record_name, "tbl"]),
+                                         file_name)
 
     def test_read_feature_table_2(self):
         """Verify read_feature_table() returns None from an empty file.
@@ -262,7 +337,7 @@ class TestFeatureTableParser(unittest.TestCase):
                 with self.subTest(accession=record.id):
                     self.assertFalse(record is None)
                     self.assertTrue(record.id in self.acc_id_dict.keys())
-                        
+
                     record_name = self.acc_id_dict[record.id][0]
                     record_path = self.test_dir.joinpath(
                                          ".".join([record_name, "tbl"]))
@@ -270,10 +345,10 @@ class TestFeatureTableParser(unittest.TestCase):
                     self.assertTrue(record_path.is_file())
 
     def test_parse_write_feature_table_1(self):
-        """Verify reading the feature table in and rewriting it exactly mimics 
+        """Verify reading the feature table in and rewriting it exactly mimics
         copied feature table files.
         """
-        total_file_path = self.test_dir.joinpath("TOTAL.tbl")  
+        total_file_path = self.test_dir.joinpath("TOTAL.tbl")
 
         records = []
         file_names = []
@@ -282,14 +357,14 @@ class TestFeatureTableParser(unittest.TestCase):
             for record in parser:
                 record_name = self.acc_id_dict[record.id][0]
                 record.name = record_name
-               
+
                 file_names.append(".".join([record_name, "tbl"]))
-                
+
                 records.append(record)
 
         fileio.write_feature_table(records, self.indv_test_dir)
 
-        file_diffs = filecmp.cmpfiles(self.test_dir, self.indv_test_dir, 
+        file_diffs = filecmp.cmpfiles(self.test_dir, self.indv_test_dir,
                                       file_names)
 
         for discrepant_file in file_diffs[1]:
@@ -302,7 +377,7 @@ class TestFeatureTableParser(unittest.TestCase):
 
             source_data = source_handle.readlines()
             rewritten_data = rewritten_handle.readlines()
-           
+
             source_handle.close()
             rewritten_handle.close()
 
@@ -316,6 +391,7 @@ class TestFeatureTableParser(unittest.TestCase):
                 self.assertEqual(source_line, rewritten_line)
 
         self.assertTrue(len(file_diffs[1]) == 0)
+
 
 if __name__ == "__main__":
     unittest.main()

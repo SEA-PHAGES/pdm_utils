@@ -197,7 +197,6 @@ def parse_filter(unparsed_filter):
                 value = parse_out_ends(value)
                 value = value.lstrip("'")
                 value = value.rstrip("'")
-                print(value)
                 in_values.append(parse_out_ends(value))
         else:
             parenthesized = parenthesized.split(",")
