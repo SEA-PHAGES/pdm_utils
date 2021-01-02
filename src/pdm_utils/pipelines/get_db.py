@@ -1,10 +1,15 @@
 """Pipeline to install a pdm_utils MySQL database."""
 
 import argparse
+from cmd import Cmd
 from datetime import date
+import os
 import pathlib
+from pathlib import Path
+import shlex
 import shutil
 import sys
+import textwrap
 import urllib3
 
 from pdm_utils.classes.alchemyhandler import MySQLDatabaseError
@@ -18,6 +23,15 @@ CURRENT_DATE = date.today().strftime("%Y%m%d")
 RESULTS_FOLDER = f"{CURRENT_DATE}_get_db"
 
 DB_LINK = constants.DB_SERVER
+
+GET_DB_CMD_INTRO = ("Loaded the pdm_utils get_db interactive environment:\n"
+                    "Type help or ? to list commands.")
+FILE_CMD_COMMANDS = ["desc", "select", "version"]
+DIR_CMD_COMMANDS = ["cd"]
+PATH_CMD_COMMANDS = FILE_CMD_COMMANDS + DIR_CMD_COMMANDS + ["ls"]
+ARGLESS_COMMANDS = ["exit", "reload"]
+SINGLE_ARG_COMMANDS = ["which", "load"]
+CMD_COMMANDS = PATH_CMD_COMMANDS + ARGLESS_COMMANDS + SINGLE_ARG_COMMANDS
 
 
 # TODO test.
@@ -164,15 +178,6 @@ def execute_get_server_db(
                 force_pull=False, get_version=False, schema_version=None):
     config = configfile.build_complete_config(config_file)
 
-    if db_name is None:
-        db_name = database
-
-    if database is None:
-        print("Interactive mode not supported at this time, please manually "
-              "select a database using the -db flag.")
-        sys.exit(1)
-        database = interactive()
-
     # Give priority to config file to define url, although this is
     # arbitrary
     server_creds = config["download_server"]
@@ -184,17 +189,31 @@ def execute_get_server_db(
         url = "".join([url, str(subdirectory), "/"])
 
     pool = urllib3.PoolManager()
-    response = url_basic.pool_request(url, pool=pool, pipeline=True)
-    directory_listing = url_basic.get_url_listing_dirs(response)
+    if database is None:
+        print("Loading get_db interactive environment...")
+        cmd = GetDBCMD(url, name=alchemist.username, pool=pool)
+        cmd.cmdloop(intro=GET_DB_CMD_INTRO)
 
-    if database not in directory_listing:
-        print("Requested database is not at the specified url.\n"
-              "Please check the database availability.")
-        return
+        if cmd.selected is None:
+            return
 
-    response.close()
+        database = cmd.selected.name
+        pkg_url = "".join([cmd.selected.get_abs_path(), "/"])
+    else:
+        response = url_basic.pool_request(url, pool=pool, pipeline=True)
+        directory_listing = url_basic.get_url_listing_dirs(response)
 
-    pkg_url = "".join([url, database, "/"])
+        if database not in directory_listing:
+            print("Requested database is not at the specified url.\n"
+                  "Please check the database availability.")
+            return
+
+        response.close()
+        pkg_url = "".join([url, database, "/"])
+
+    if db_name is None:
+        db_name = database
+
     pkg_response = url_basic.pool_request(pkg_url, pool=pool, pipeline=True)
 
     sql_file_listing = url_basic.get_url_listing_files(pkg_response, "sql")
@@ -394,6 +413,202 @@ def prepare_download(local_folder, url_folder, db_name, extension,
 # created with text indicating there was an error.
 # So this step needs to catch that error.
 # TODO test.
+
+def clear_screen():
+    if os.name == "nt":
+        os.system("cls")
+    else:
+        os.system("clear")
+
+
+class GetDBCMD(Cmd):
+    def __init__(self, url, name="root", preload=False, pool=None, **kwargs):
+        super().__init__(**kwargs)
+
+        if pool is None:
+            pool = urllib3.PoolManager()
+
+        self.pool = pool
+        self.name = name
+        self.preload = preload
+        self.load_graph(url)
+
+        self.selected = None
+        self.tmp = None
+        self.text_wrapper = textwrap.TextWrapper(width=80, initial_indent="\t")
+
+    def set_prompt(self):
+        self.prompt = "".join([self.name, "@", self.dir_graph.url,
+                               "::", self.dir_graph.curr.get_rel_path(), "$ "])
+
+    def load_graph(self, url):
+        self.dir_graph = url_basic.UrlPathGraph(url, pipeline=True,
+                                                preload=True, pool=self.pool)
+        if self.preload:
+            for node in self.dir_graph.nodes:
+                if not node.isdir:
+                    self.load_yaml_data(node)
+
+    def load_yaml_data(self, node):
+        for file_name in node.contents:
+            if file_name.endswith(".yml"):
+                file_url = "".join([node.get_abs_path(), "/", file_name])
+
+                response = url_basic.pool_request(file_url,
+                                                  pool=self.dir_graph.pool)
+                node.data = url_basic.get_yaml_data(response)
+
+    def preloop(self):
+        self.set_prompt()
+
+    def precmd(self, line):
+        split_args_list = shlex.split(line)
+        if split_args_list:
+            command = split_args_list[0]
+
+            if command in PATH_CMD_COMMANDS:
+                self.tmp = self.parse_path_command(
+                                                    split_args_list, command)
+
+            if command in SINGLE_ARG_COMMANDS:
+                self.tmp = self.parse_single_arg_command(
+                                                    split_args_list, command)
+        return line
+
+    def postcmd(self, stop, line):
+        self.set_prompt()
+        self.tmp = None
+        return stop
+
+    # This functionality could be replaced/improved with python's argparse
+    # library, however argparse exits on error.  This functionality is
+    # toggleable with python3 v3.9, but this is the most recent python3
+    # version as of 01/01/2021.  Could be updated as this version becomes more
+    # commonly used.
+    def parse_path_command(self, split_args_list, command):
+        if len(split_args_list) == 1:
+            path = ""
+        else:
+            path = split_args_list[1]
+
+        if command in FILE_CMD_COMMANDS:
+            node_type = "file"
+        elif command in DIR_CMD_COMMANDS:
+            node_type = "dir"
+        else:
+            node_type = None
+
+        return self.get_path_node(path, command, node_type)
+
+    def parse_single_arg_command(self, split_args_list, command):
+        if len(split_args_list) == 1:
+            arg = ""
+        else:
+            arg = split_args_list[1]
+
+        return arg
+
+    def get_path_node(self, path, command="", node_type=None):
+        corrected_path = str(Path(path))
+        path_node = self.dir_graph.traverse(corrected_path)
+
+        if path_node is not None:
+            if node_type == "file":
+                if path_node.isdir:
+                    print("".join([command, ": ", path, ": Not a package"]))
+                    path_node = None
+            elif node_type == "dir":
+                if not path_node.isdir:
+                    print("".join([command, ": ", path, ": Not a directory"]))
+                    path_node = None
+        else:
+            print("".join([command, ": ", path,
+                           ": Not a package or directory"]))
+
+        return path_node
+
+    def do_ls(self, arg):
+        ("List directory contents\n"
+         "Usage: ls [path/to/dir]")
+        node = self.tmp
+        if node is not None:
+            if node.isdir:
+                node.print_children()
+            else:
+                print(node.get_rel_path())
+
+    def do_cd(self, arg):
+        ("Change directory\n"
+         "Usage: cd [path/to/dir]")
+        node = self.tmp
+        if node is not None:
+            self.dir_graph.curr = node
+
+    def do_desc(self, arg):
+        ("Describe database package\n"
+         "Usage: desc [path/to/package]")
+        node = self.tmp
+        if node is not None:
+            if node.data is None:
+                self.load_yaml_data(node)
+
+            if node.data is not None:
+                lines = []
+                if node.data.get("name") is not None:
+                    lines.append("Name:")
+                    lines += self.text_wrapper.wrap(node.data["name"])
+
+                if node.data.get("date") is not None:
+                    lines.append("Date:")
+                    lines += self.text_wrapper.wrap(str(node.data["date"]))
+
+                if node.data.get("description") is not None:
+                    lines.append("Description:")
+                    lines += self.text_wrapper.wrap(node.data["description"])
+
+                for line in lines:
+                    print(line)
+
+    def do_version(self, arg):
+        ("Version database package\n"
+         "Usage: version [path/to/package]")
+        node = self.tmp
+        if node is not None:
+            print(": ".join([
+                        "Database version", str(node.data.get("version"))]))
+
+    def do_select(self, arg):
+        ("Select database package\n"
+         "Usage: select [path/to/package]")
+        node = self.tmp
+        if node is not None:
+            self.selected = node
+            return True
+
+    def do_which(self, arg):
+        ("Locate a directory/package\n"
+         "Usage: which [name_of_package]")
+        arg = self.tmp
+        for node in self.dir_graph.nodes:
+            if node.name == arg:
+                print(node.get_rel_path())
+
+    def do_clear(self, arg):
+        "Bring the command line to the top of screen"
+        clear_screen()
+
+    def do_reload(self, arg):
+        ("Reload root contents at the current url")
+        self.load_graph(self.dir_graph.url)
+
+    def do_load(self, arg):
+        ("Reload root contents from a new url\n"
+         "Usage: load [url]")
+        self.load_graph(self.tmp)
+
+    def do_exit(self, arg):
+        ("Exits the interactive shell")
+        return True
 
 
 def interactive():
