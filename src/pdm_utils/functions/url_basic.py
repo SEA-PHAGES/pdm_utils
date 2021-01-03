@@ -1,20 +1,42 @@
 import re
 from collections import deque
 import sys
-import urllib3
-from urllib3.exceptions import MaxRetryError
 import tempfile
 
+import urllib3
+from urllib3.exceptions import (MaxRetryError, PoolError, RequestError)
 import yaml
 from yaml.scanner import ScannerError
 
+# GLOBAL FUNCTIONS
+# -----------------------------------------------------------------------------
+POOL_MAX_CONN_ATTEMPTS_MSG = (
+                "Maximum connection pool construction attempts reached.\n  "
+                "Please check your internet connection.")
+RESPONSE_MAX_CONN_ATTEMPTS_MSG = (
+                "Maximum request attempts reached.\n\t"
+                "Please check the availability at the requested url.")
 
-MAX_CONN_ATTEMPTS_MSG = ("Maximum connection attempts reached.  "
-                         "Please check connection and try again")
+HREF_NAME_FORMAT = ("""<a href="([-_\w\d./]+)">""")
+HREF_DATE_FORMAT = ("""<td align="right">"""
+                    """(\d+[-]\d+[-]\d+)\s+\d+[:]\d+\s+</td>""")
 
 
 # GET FUNCTIONS
 # -----------------------------------------------------------------------------
+def create_pool(pipeline=False):
+    try:
+        pool = urllib3.PoolManager()
+    except MaxRetryError:
+        if pipeline:
+            print(POOL_MAX_CONN_ATTEMPTS_MSG)
+            sys.exit(1)
+
+        raise PoolError(POOL_MAX_CONN_ATTEMPTS_MSG)
+
+    return pool
+
+
 def pool_request(url, pool=None,
                  pipeline=False, preload=False, expect_status=200):
     """
@@ -23,16 +45,17 @@ def pool_request(url, pool=None,
     :rtype: urllib3.response.HTTPResponse
     """
     if pool is None:
-        try:
-            pool = urllib3.PoolManager()
-        except MaxRetryError:
-            if pipeline:
-                print(MAX_CONN_ATTEMPTS_MSG)
-                sys.exit(1)
-            else:
-                raise MaxRetryError(MAX_CONN_ATTEMPTS_MSG)
+        pool = create_pool()
+    try:
+        response = pool.request("GET", url, preload_content=preload)
+    except MaxRetryError:
+        url_fail_msg = "\n".join([RESPONSE_MAX_CONN_ATTEMPTS_MSG,
+                                  "".join(["\t\tRequest failed for ", url])])
+        if pipeline:
+            print(url_fail_msg)
+            sys.exit(1)
 
-    response = pool.request("GET", url, preload_content=preload)
+        raise RequestError(pool, url, url_fail_msg)
 
     pool.clear()
 
@@ -46,20 +69,20 @@ def pool_request(url, pool=None,
 
 
 def download_file(file_url, filepath, pool=None, chunk_size=512000,
-                  preload=False, verbose=True):
+                  preload=False, verbose=True, expect_status=200):
     """
     Retrieve a file from the server.
     :param file_url:  URL for the desired file:
     :type file_url: str
     :param filepath: Local path where the file can be downloaded to.
     :type filepath: Path
-    :returns: Status of the file retrieved from the server
+    :returns: If status of the file retrieved from the server is expected.
     :rtype: bool
     """
     request = pool_request(file_url, pool=pool, pipeline=False)
     status = request.status
 
-    if status == 200:
+    if status == expect_status:
         filesize = int(request.getheader("Content-Length"))
         output_file = filepath.open(mode="wb")
         for chunk in request.stream(chunk_size):
@@ -76,22 +99,41 @@ def download_file(file_url, filepath, pool=None, chunk_size=512000,
     if verbose:
         print("")
 
-    return status
+    return status == expect_status
 
 
-def spool_file(file_url, pool=None, max_size=512000, chunk_size=512000):
+def spool_file(file_url, pool=None, max_size=512000, chunk_size=512000,
+               expect_status=200):
+    """
+    Retrieve a file from the server.
+    :param file_url:  URL for the desired file:
+    :type file_url: str
+    :param filepath: Local path where the file can be downloaded to.
+    :type filepath: Path
+    :param expect_status: Status expected from the HTTPresponse object
+    :type expect_status: int
+    :returns: Returns temporary file handle with the downloaded data
+    :rtype: tempfile.SpooledTemporaryFile
+    """
     request = pool_request(file_url, pool=pool, pipeline=False)
     status = request.status
 
-    if status == 200:
+    if status == expect_status:
         spooled_file = tempfile.SpooledTemporaryFile(max_size=max_size)
         for chunk in request.stream(chunk_size):
             spooled_file.write(chunk)
 
-    return status
+    return spooled_file
 
 
 def get_yaml_data(response):
+    """Parses yaml data from a response using the PyYAML library.
+
+    :param response: An HTTPrepsonse object:
+    :type response: urllib3.response.HTTPResponse
+    :return: Dictionary containing key-value pairs from the YAML file
+    :rtype: dict
+    """
     try:
         data = yaml.safe_load(response.data)
     except ScannerError:
@@ -102,38 +144,47 @@ def get_yaml_data(response):
 
 def get_url_listing_data(response, get_dates=False):
     """
-    Get list of files and directories from the link using a response object
+    Get list of file and directory data from the link using a response object
     :param response: PoolManager response for the specified url link
     :type response: urllib3.response.HTTPResponse
-    :returns: A list of entry listings
-    :rtype: list
+    :returns: A list of entry listing data
+    :rtype: list[dict]
     """
     listings = list()
 
     response_data = response.data.decode("utf-8")
-    # print(response_data)
+    response_data_lines = response_data.split("\n")
 
     # Get database names
-    names_regex = """<a href="([-_\w\d./]+)">"""
-    names_regex = re.compile(names_regex)
-    names = names_regex.findall(response_data)
+    names_regex = re.compile(HREF_NAME_FORMAT)
+    dates_regex = re.compile(HREF_DATE_FORMAT)
 
-    if get_dates:
-        # Get database dates
-        dates_regex = ("""<td align="right">"""
-                       "(\d+[-]\d+[-]\d+)\s+\d+[:]\d+\s+</td>")
-        dates_regex = re.compile(dates_regex)
-        dates = dates_regex.findall(response_data)
+    data = []
+    for line in response_data_lines:
+        name_match = re.match(names_regex, line)
+        date_match = re.match(dates_regex, line)
+
+        date = None
+        if date_match is not None:
+            # Retrieves the first capturing group match to the date regex
+            date = date_match[1]
+
+        name = None
+        if name_match is not None:
+            # Retrieves the first capturing group match to the name regex
+            name = name_match[1]
+
+        if name is not None:
+            data.append((name, date))
 
     response.close()
 
     # creating a list of dictionaries
-    for i in range(len(names)):
+    for i in range(len(data)):
         db_dict = dict()
-        db_dict["num"] = i+1
-        db_dict["name"] = names[i]
-        if get_dates:
-            db_dict["date"] = dates[i]
+        db_dict["num"] = i + 1
+        db_dict["name"] = data[i][0]
+        db_dict["date"] = data[i][1]
 
         listings.append(db_dict)
 
@@ -143,6 +194,17 @@ def get_url_listing_data(response, get_dates=False):
 # PARSING FUNCTIONIS
 # ----------------------------------------------------------------------------
 def get_url_listing_names(response, suffix=None, ignore=None):
+    """Get a list of file and directory names at the url using a HTTPresponse
+
+    :param response: PoolManager response for the specified url link
+    :type response: urllib3.response.HTTPResponse
+    :param suffix: Suffix string to filter names for
+    :type suffix: str
+    :param ignore: Prefix string to filter names against
+    :type ignore: str
+    :returns: A list of entry listing names
+    :rtype: list
+    """
     listing = get_url_listing_data(response)
 
     listing_names = list()
@@ -162,6 +224,7 @@ def get_url_listing_names(response, suffix=None, ignore=None):
                 continue
 
             if name.endswith(suffix):
+                # Removes suffix before appending to names list
                 listing_names.append(name[:-(len(suffix))])
         else:
             listing_names.append(name)
@@ -170,20 +233,43 @@ def get_url_listing_names(response, suffix=None, ignore=None):
 
 
 def get_url_listing_dirs(response, ignore="."):
+    """Get a list of file and directory names at the url using a HTTPresponse
+
+    :param response: PoolManager response for the specified url link
+    :type response: urllib3.response.HTTPResponse
+    :param ignore: Prefix string to filter names against
+    :type ignore: str
+    :returns: A list of entry listing names
+    :rtype: list
+    """
     return get_url_listing_names(response, suffix="/", ignore=ignore)
 
 
-def get_url_listing_files(response, file_ext):
-    return get_url_listing_names(response, "".join([".", str(file_ext)]))
+def get_url_listing_files(response, file_ext, ignore=None):
+    """Get a list of file and directory names at the url using a HTTPresponse
+
+    :param response: PoolManager response for the specified url link
+    :type response: urllib3.response.HTTPResponse
+    :param file_ext: File extension to filter names for
+    :type file_ext: str
+    :param ignore: Prefix string to filter names against
+    :type ignore: str
+    :returns: A list of entry listing names
+    :rtype: list
+    """
+    return get_url_listing_names(response, "".join([".", str(file_ext)]),
+                                 ignore=ignore)
 
 
 class UrlPathGraph():
+    """Graph object that manages and stores PathNodes representing
+    directories at an url"""
     def __init__(self, url, pool=None, pipeline=False, preload=False,
                  expect_status=200):
         self.nodes = list()
 
         if pool is None:
-            pool = urllib3.PoolManager()
+            pool = create_pool(pipeline=pipeline)
 
         self.pool = pool
         self.expect_status = expect_status
@@ -199,15 +285,19 @@ class UrlPathGraph():
             self.load_graph()
 
     def load_graph(self):
+        """Loads the structure of a filesystem at the specified url as a graph
+        """
         node_stack = deque()
 
+        # Do/while loop that iterates until all directories are explored
         parent = self.root
         while True:
             if not parent.loaded:
                 self.load_node(parent)
 
             for child_name, child_node in parent.children.items():
-                if child_name != ".." and child_name != ".":
+                # Ignores hidden nodes
+                if not child_name.startswith("."):
                     node_stack.append(child_node)
 
             try:
@@ -216,6 +306,11 @@ class UrlPathGraph():
                 break
 
     def load_node(self, node):
+        """Uses a HTTPresponse object to gather data to load a PathNode
+
+        :param node: PathNode to load data and children for
+        :type node: PathNode
+        """
         response = pool_request(node.get_abs_path(), pool=self.pool,
                                 expect_status=self.expect_status,
                                 pipeline=self.pipeline)
@@ -238,6 +333,13 @@ class UrlPathGraph():
         node.loaded = True
 
     def traverse(self, path):
+        """ Traverses a linked list using a filesystem path
+
+        :param path: A filesystem path (node names separated by '/')
+        :type path: str
+        :return: Returns the path node specified by the filesystem path
+        :rtype: PathNode
+        """
         curr = self.traverse_relative(path, self.curr)
 
         if curr is None:
@@ -246,6 +348,15 @@ class UrlPathGraph():
         return curr
 
     def traverse_relative(self, path, node):
+        """Traverses a linked list using a filesystem path relative to a node
+
+        :param path: A filesystem path (node names separated by '/')
+        :type path: str
+        :param node: A PathNode designating the start for the path
+        ;type node: PathNode
+        :return: Returns the path node specified by the filesystem path
+        :rtype: PathNode
+        """
         node_stops = path.split("/")
 
         curr = node
@@ -261,6 +372,13 @@ class UrlPathGraph():
         return curr
 
     def traverse_absolute(self, path):
+        """Traverses a linked list using a filesystem path relative to root
+
+        :param path: A filesystem path (node names separated by '/')
+        :type path: str
+        :return: Returns the path node specified by the filesystem path
+        :rtype: PathNode
+        """
         node_stops = path.split("/")
 
         if node_stops[0] == "":
@@ -271,6 +389,7 @@ class UrlPathGraph():
 
 
 class PathNode():
+    """Object that stores information about a directory in a file system"""
     def __init__(self, name, root_path="", rel_path=None, abs_path=None,
                  isdir=False, children=None, parent=None, data=None):
         self.name = name
@@ -291,37 +410,64 @@ class PathNode():
         self.contents = []
         self.loaded = False
 
-    def set_rel_path(self):
+    def calc_rel_path(self, end_node=None):
+        """Calculates the filesystem path relative to the node reference
+
+        :param end_node: Node to create the relative path from
+        :type end_node: PathNode
+        :return: Returns the path relative to the node reference
+        :rtype: str
+        """
         path_nodes = list()
         curr_node = self
         while True:
             path_nodes.insert(0, curr_node.name)
 
             curr_node = curr_node.parent
-            if curr_node is None:
+            if curr_node == end_node or curr_node is None:
                 break
 
-        self.rel_path = "/".join(path_nodes)
+        return "/".join(path_nodes)
+
+    def set_rel_path(self, end_node=None):
+        """Sets the filesystem path relative to the node reference
+
+        :param end_node: Node to create the relative path from
+        :type end_node: PathNode
+        """
+        self.rel_path = self.calc_rel_path(end_node=end_node)
 
     def set_abs_path(self):
-        self.set_rel_path()
-
+        """Sets the filesystem path relative to the root directory
+        """
         self.abs_path = "/".join([self.root_path.rstrip("/"),
-                                  self.rel_path.lstrip("/")])
+                                  self.calc_rel_path().lstrip("/")])
 
-    def get_rel_path(self):
+    def get_rel_path(self, node=None):
+        """Retrieves the filesystem path relative to the deepest node reference
+
+        :return: Returns the relative path
+        :rtype: str
+        """
         if self.rel_path is None:
             self.set_rel_path()
 
         return self.rel_path
 
     def get_abs_path(self):
+        """Retrieves the filesystem path relative to the root directory
+
+        :return: Returns the absolute path
+        :rtype: str
+        """
         if self.abs_path is None:
             self.set_abs_path()
 
         return self.abs_path
 
     def print_children(self, max_width=74):
+        """Prints the filesystem directory child directories
+        """
         names = list()
         max_len = 0
         for child_name, child_node in self.children.items():
@@ -347,6 +493,8 @@ class PathNode():
             print("".join(["\t"] + child_row))
 
     def print_contents(self, max_width=74):
+        """Prints the filesystem directory child contents
+        """
         names = list()
         max_len = 0
         for name in self.contents:

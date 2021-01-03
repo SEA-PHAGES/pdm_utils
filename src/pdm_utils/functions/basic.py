@@ -2,7 +2,6 @@
 modules in this package to prevent circular imports."""
 
 from collections import OrderedDict
-import configparser
 import csv
 import getpass
 import os
@@ -967,6 +966,7 @@ def set_path(path, kind=None, expect=True):
     else:
         return path
 
+
 def make_new_dir(output_dir, new_dir, attempt=1, mkdir=True):
     """Make a new directory.
 
@@ -1005,6 +1005,7 @@ def make_new_dir(output_dir, new_dir, attempt=1, mkdir=True):
     else:
         return new_path
 
+
 # TODO this may not be needed, if a standard config file format is used.
 def parse_flag_file(flag_file):
     """Parse a file to an evaluation flag dictionary.
@@ -1037,6 +1038,7 @@ def parse_flag_file(flag_file):
                 pass
     return eval_flags
 
+
 def get_user_pwd(user_prompt="Username: ", pwd_prompt="Password: "):
     """Get username and password.
 
@@ -1054,6 +1056,7 @@ def get_user_pwd(user_prompt="Username: ", pwd_prompt="Password: "):
     username = getpass.getpass(prompt=user_prompt)
     password = getpass.getpass(prompt=pwd_prompt)
     return (username, password)
+
 
 def choose_from_list(options):
     """Iterate through a list of values and choose a value.
@@ -1102,6 +1105,7 @@ def truncate_value(value, length, suffix):
         value = value[:length2] + suffix
     return value
 
+
 # TODO this needs to be improved.
 # TODO unittest.
 def select_option(prompt, valid_response_set):
@@ -1133,6 +1137,7 @@ def select_option(prompt, valid_response_set):
             print("Invalid response.")
     return response
 
+
 # TODO unittest.
 def get_values_from_dict_list(list_of_dicts):
     """Convert a list of dictionaries to a set of the dictionary values.
@@ -1147,6 +1152,7 @@ def get_values_from_dict_list(list_of_dicts):
         output_set = output_set | set(dict.values())
     return output_set
 
+
 # TODO unittest.
 def get_values_from_tuple_list(list_of_tuples):
     """Convert a list of tuples to a set of the tuple values.
@@ -1160,6 +1166,7 @@ def get_values_from_tuple_list(list_of_tuples):
     for tup in list_of_tuples:
         output_set.add(tup[0])
     return output_set
+
 
 def convert_list_to_dict(data_list, key):
     """Convert list of dictionaries to a dictionary of dictionaries
@@ -1184,7 +1191,8 @@ def convert_list_to_dict(data_list, key):
         data_dict = {}
     return data_dict
 
-#TODO unittest
+
+# TODO unittest
 def invert_dictionary(dictionary):
     """Inverts a dictionary, where the values and keys are swapped.
 
@@ -1209,7 +1217,8 @@ def invert_dictionary(dictionary):
 
     return new_dict
 
-#TODO unittest
+
+# TODO unittest
 def partition_list(data_list, size):
     """Chunks list into a list of lists with the given size.
 
@@ -1225,7 +1234,8 @@ def partition_list(data_list, size):
 
     return chunked_list
 
-#TODO unittest
+
+# TODO unittest
 def increment_histogram(data, histogram):
     """Increments a dictionary histogram based on given data.
 
@@ -1239,7 +1249,8 @@ def increment_histogram(data, histogram):
         count += 1
         histogram[item] = count
 
-#TODO unittest
+
+# TODO unittest
 def sort_histogram_keys(histogram, descending=True):
     """Sorts a dictionary by its values and returns the sorted histogram.
 
@@ -1254,6 +1265,7 @@ def sort_histogram_keys(histogram, descending=True):
 
     return sorted_keys
 
+
 def sort_histogram(histogram, descending=True):
     """Sorts a dictionary by its values and returns the sorted histogram.
 
@@ -1266,6 +1278,7 @@ def sort_histogram(histogram, descending=True):
                                           key=lambda item:item[1],
                                           reverse=descending))
     return sorted_histogram
+
 
 # TODO unittest
 def prepare_filepath(folder_path, file_name, folder_name=None):
@@ -1364,6 +1377,7 @@ def choose_most_common(string, values):
             count1 = count2
     return value1
 
+
 def convert_to_encoded(values):
     """Converts a list of strings to utf-8 encoded values.
 
@@ -1383,6 +1397,7 @@ def convert_to_encoded(values):
             converted_values.append(value.encode("utf-8"))
 
     return converted_values
+
 
 def convert_to_decoded(values):
     """Converts a list of strings to utf-8 encoded values.
@@ -1405,8 +1420,6 @@ def convert_to_decoded(values):
     return converted_values
 
 
-
-#
 # TODO nearly identical to make_new_dir, so could probably be consolidated.
 # TODO test
 def make_new_file(output_dir, new_file, ext, attempt=1):
@@ -1441,10 +1454,19 @@ def make_new_file(output_dir, new_file, ext, attempt=1):
 
         new_file_mod = new_file_mod + "." + ext
         new_path = Path(output_dir, new_file_mod)
-        if new_path.is_file() == False:
+        if not new_path.is_file():
             valid = True
         count += 1
     if not valid:
         return None
     else:
         return new_path
+
+
+def clear_screen():
+    """Brings the command line to the top of the screen."""
+
+    if os.name == "nt":
+        os.system("cls")
+    else:
+        os.system("clear")
