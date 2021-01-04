@@ -43,7 +43,6 @@ class GetDBCMD(Cmd):
         self.pool = pool
         self.name = name
         self.preload = preload
-        self.dir_graph = None
         self.load_graph(url)
 
         self.selected = None
@@ -64,6 +63,7 @@ class GetDBCMD(Cmd):
     def load_graph(self, url):
         self.url = url
 
+        self.dir_graph = None
         try:
             self.dir_graph = url_basic.UrlPathGraph(
                                             url, preload=True, pool=self.pool)
@@ -212,7 +212,11 @@ class GetDBCMD(Cmd):
          "\tUsage: version [path/to/package]")
         node = self.tmp
         if node is not None:
-            print(": ".join([
+            if node.data is None:
+                self.load_yaml_data(node)
+
+            if node.data is not None:
+                print(": ".join([
                         "Database version", str(node.data.get("version"))]))
 
     def do_select(self, arg):
