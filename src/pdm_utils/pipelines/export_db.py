@@ -212,7 +212,7 @@ def parse_export(unparsed_args_list):
     parser = argparse.ArgumentParser()
     parser.add_argument("database", type=str, help=DATABASE_HELP)
 
-    subparsers = parser.add_subparsers(dest="pipeline",
+    subparsers = parser.add_subparsers(dest="pipeline", required=True,
                                        help=EXPORT_SELECT_HELP)
 
     filterable_parsers = []

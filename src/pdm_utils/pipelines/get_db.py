@@ -17,7 +17,7 @@ DEFAULT_OUTPUT_FOLDER = "/tmp/"
 CURRENT_DATE = date.today().strftime("%Y%m%d")
 RESULTS_FOLDER = f"{CURRENT_DATE}_get_db"
 
-DB_LINK = constants.DB_SERVER
+DEFAULT_SETTINGS = {"url": constants.DB_SERVER}
 
 
 # TODO test.
@@ -51,8 +51,16 @@ def main(unparsed_args_list):
         execute_get_new_db(alchemist, args.database, args.schema_version,
                            config_file=args.config_file, verbose=args.verbose)
     else:
+        url = args.url
+        if url is None:
+            server_creds = config["download_server"]
+            url = server_creds.get("url")
+
+        if url is None:
+            url = DEFAULT_SETTINGS["url"]
+
         execute_get_server_db(
-                    alchemist, args.database, args.url,
+                    alchemist, args.database, url,
                     folder_path=args.output_folder, db_name=args.db_name,
                     config_file=args.config_file, verbose=args.verbose,
                     subdirectory=args.remote_directory,
@@ -107,7 +115,8 @@ def parse_args(unparsed_args_list):
 
     parser = argparse.ArgumentParser(description=get_db_help)
 
-    subparsers = parser.add_subparsers(dest="option", help=option_help)
+    subparsers = parser.add_subparsers(dest="option", required=True,
+                                       help=option_help)
 
     # Command line structure
     # python3 -m pdm_utils get_db server -db <database>
@@ -115,7 +124,7 @@ def parse_args(unparsed_args_list):
     parser_a.add_argument("-db", "--database", type=str, help=database_help,
                           default=None)
     parser_a.add_argument("-u", "--url", type=str,
-                          default=constants.DB_SERVER, help=url_help)
+                          default=None, help=url_help)
     parser_a.add_argument("-gv", "--get_version", action="store_true",
                           default=False, help=get_version_help)
     parser_a.add_argument("-fp", "--force_pull", action="store_true",
@@ -162,14 +171,7 @@ def execute_get_server_db(
                 config_file=None, verbose=False, subdirectory=None,
                 download_only=False, get_fastas=False, get_alns=False,
                 force_pull=False, get_version=False, schema_version=None):
-    config = configfile.build_complete_config(config_file)
-
-    # Give priority to config file to define url, although this is
-    # arbitrary
-    server_creds = config["download_server"]
-    config_url = server_creds.get("url")
-    if config_url is not None:
-        url = config_url
+    
 
     if subdirectory:
         url = "".join([url, str(subdirectory), "/"])
