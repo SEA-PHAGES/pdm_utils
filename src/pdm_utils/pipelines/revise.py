@@ -184,7 +184,8 @@ def parse_revise(unparsed_args_list):
 
     parser.add_argument("database", type=str,  help=DATABASE_HELP)
 
-    subparsers = parser.add_subparsers(dest="pipeline", help=PIPELINE_HELP)
+    subparsers = parser.add_subparsers(dest="pipeline", required=True,
+                                       help=PIPELINE_HELP)
 
     local_parser = subparsers.add_parser("local", help=LOCAL_HELP)
     remote_parser = subparsers.add_parser("remote", help=REMOTE_HELP)
