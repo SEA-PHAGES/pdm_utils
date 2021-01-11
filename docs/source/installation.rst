@@ -3,7 +3,11 @@
 Installation
 ============
 
-The ``pdm_utils`` package is written for Python >=3.7 and can be installed on MacOS and Linux platforms. There are several third-party general dependencies that need to be installed in advance, and there are several dependencies that are only needed for a subset of ``pdm_utils`` tools. Below is a general step-by-step installation guide.
+The ``pdm_utils`` package is written for Python >=3.7 and can be installed on
+MacOS and Linux platforms. There are several third-party general dependencies
+that need to be installed in advance, and there are several dependencies that
+are only needed for a subset of ``pdm_utils`` tools. Below is a general step-
+by-step installation guide.
 
 Required
 ________
@@ -23,8 +27,6 @@ The following software should be installed in the order indicated:
 3. :ref:`pdm_utils Python package <install_pdm_utils_package>`
 4. :ref:`MySQL phage genomics database instance <install_database>`
 
-
-
 Optional
 ________
 
@@ -40,8 +42,8 @@ ________
   ./installation/install_aragorn
 
 
-Several ``pdm_utils`` tools have specific dependencies. Install the following software as needed:
-
+Several ``pdm_utils`` tools have specific dependencies. Install the following
+software as needed:
 
 - :ref:`MMseqs2 (creating gene phamilies) <install_mmseqs2>`
 - :ref:`NCBI Blast+ (finding conserved domains) <install_ncbi_tools>`

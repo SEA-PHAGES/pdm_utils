@@ -3,12 +3,13 @@
 Anaconda
 ========
 
-``pdm_utils`` requires Python >=3.7 and several third-party Python packages:
+``pdm_utils`` requires Python >=3.6 and several third-party Python packages:
 
     - :biopython:`Biopython <>`
     - :networkx:`NetworkX <>`
     - :paramiko:`Paramiko <>`
     - :pymysql:`PyMySQL <>`
+    - :pyyaml:`PyYAML <>`
     - :sqlalchemy:`SQLAlchemy <>`
     - :tabulate:`Tabulate <>`
 
@@ -26,11 +27,11 @@ Conda is available as part of Anaconda or Miniconda, and complete installation i
 
 #. Begin the installation:
 
-    - For MacOS: download the Python 3.7 graphical installer and follow the graphical prompts.
+    - For MacOS: download the Python 3.8 graphical installer and follow the graphical prompts.
 
     - For Linux:
 
-        A. Download the Python 3.7 x86 Linux installer (e.g. Anaconda3-2019.10-Linux-x86_64.sh) to the Downloads folder.
+        A. Download the Python 3.8 x86 Linux installer (e.g. Anaconda3-2019.10-Linux-x86_64.sh) to the Downloads folder.
         B. Open a Terminal window.
         C. Execute the following command::
 

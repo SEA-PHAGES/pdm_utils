@@ -15,11 +15,14 @@ setuptools.setup(
     packages=setuptools.find_packages(where="src"),
     package_dir={"":"src"},
     install_requires=[
-       'biopython>=1.70',
-       'pymysql>=0.9.0',
-       'paramiko>=2.5.0',
-       'tabulate>=0.8.0',
-       'sqlalchemy>=1.3.0'
+        'biopython==1.77',
+        'networkx==2.4',
+        'paramiko==2.7.1',
+        'pymysql==0.9.3',
+        'pyyaml==5.3.1',
+        'sqlalchemy==1.3.18',
+        'tabulate==0.8.3',
+        'urllib3==1.25.8'
     ],
     project_urls={
         'Documentation': 'https://pdm-utils.readthedocs.io/en/latest/',
