@@ -136,8 +136,19 @@ def multithread(work_items, threads, target, verbose=False,
         time.sleep(0.25)
 
     for thread in threads:
-        # Blocks and waits for threads to finish
         thread.join(timeout=join_timeout)
+
+    if join_timeout is not None:
+        for _ in range(join_timeout):
+            threads_alive = False
+            for thread in threads:
+                if not threads_alive:
+                    threads_alive = thread.is_alive()
+
+            if not threads_alive:
+                break
+
+            time.sleep(1)
 
     kill_threads = True
 
