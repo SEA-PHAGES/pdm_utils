@@ -4,6 +4,10 @@ from subprocess import (Popen, DEVNULL)
 from pdm_utils.functions import (fileio, multithread, parallelize)
 
 
+THREAD_LOCK_TIMEOUT = 10
+THREAD_JOIN_TIMEOUT = 30
+
+
 def run_clustalo(fasta_path, aln_path):
     """Runs Clustal Omega to generate a fasta-formatted  multiple sequence
     alignment file
@@ -126,7 +130,8 @@ def dump_pham_out_fastas(working_dir, phams_dict, neglect_singles=True,
         work_items.append((gs_to_ts, filepath))
 
     multithread.multithread(work_items, threads, fileio.write_fasta,
-                            verbose=verbose)
+                            verbose=verbose, lock_timeout=THREAD_LOCK_TIMEOUT,
+                            join_timeout=THREAD_JOIN_TIMEOUT)
 
     return pham_fasta_map
 
@@ -188,4 +193,6 @@ def reintroduce_pham_fasta_duplicates(pham_path_map, pham_translations_dict,
 
     multithread.multithread(
                         work_items, threads,
-                        fileio.reintroduce_fasta_duplicates, verbose=verbose)
+                        fileio.reintroduce_fasta_duplicates, verbose=verbose,
+                        lock_timeout=THREAD_LOCK_TIMEOUT,
+                        join_timeout=THREAD_JOIN_TIMEOUT)

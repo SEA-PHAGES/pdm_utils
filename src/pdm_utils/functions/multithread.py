@@ -3,6 +3,7 @@ Functions to multithread process a list of inputs.
 """
 
 from queue import Queue
+import time
 import threading
 
 from pdm_utils.classes.progressbar import ProgressBar, show_progress
@@ -10,7 +11,8 @@ from pdm_utils.classes.progressbar import ProgressBar, show_progress
 
 class MixedThread(threading.Thread):
     def __init__(self, thread_id, work_queue, work_lock,
-                 result_queue, result_lock):
+                 result_queue, result_lock, lock_timeout=-1,
+                 kill_sig=None):
         threading.Thread.__init__(self)
 
         self.name = thread_id
@@ -22,10 +24,13 @@ class MixedThread(threading.Thread):
         self.work_lock = work_lock
         self.result_lock = result_lock
 
+        self.lock_timeout = lock_timeout
+        self.kill_sig = kill_sig
+
     def run(self):
         while not self.work_queue.empty():
             # Tell other threads "I'm accessing the queue right now"
-            self.work_lock.acquire()
+            self.work_lock.acquire(timeout=self.lock_timeout)
 
             job = self.work_queue.get()
             # Let other threads have a turn
@@ -38,13 +43,17 @@ class MixedThread(threading.Thread):
             result = target(*work_item)
 
             # Repeat with the result queue/lock
-            self.result_lock.acquire()
+            self.result_lock.acquire(timeout=self.lock_timeout)
             self.result_queue.put(result)
             self.result_lock.release()
 
+            if self.kill_sig is not None:
+                if self.kill_sig():
+                    break
+
 
 def create_threads(work_queue, work_lock, result_queue, result_lock,
-                   num_threads):
+                   num_threads, lock_timeout=-1, kill_sig=None):
     """Function to create a pseudo-MixIn Thread class for multithreading.
 
     :param target: Function used by the thread to process work items.
@@ -59,18 +68,24 @@ def create_threads(work_queue, work_lock, result_queue, result_lock,
     :type result_lock: Lock
     :param num_threads: Number of threads to be created to process work stack.
     :type num_threads: int
+    :param lock_timeout: Amount of time thread should block during lock.acquire
+    :type lock_timeout: int
+    :param kill_sig: Function that returns a boolean that controls lock killing
+    :type kill_sig: Callable
     :returns: Returns a list of MixIn Thread objects with target function
     :rtype: list[Thread]
     """
     threads = []
     for x in range(num_threads):
         threads.append(MixedThread(x+1, work_queue, work_lock,
-                                   result_queue, result_lock))
+                                   result_queue, result_lock,
+                                   lock_timeout=lock_timeout, kill_sig=None))
 
     return threads
 
 
-def multithread(work_items, threads, target, verbose=False):
+def multithread(work_items, threads, target, verbose=False,
+                lock_timeout=-1, join_timeout=None):
     """Runs list of work items with specified number of threads.
 
     :param target: Function used by the thread to process work items.
@@ -107,16 +122,24 @@ def multithread(work_items, threads, target, verbose=False):
             tasks += 1
             work_queue.put((target, item))
 
+    kill_threads = False
+    kill_sig = (lambda: kill_threads)
     threads = create_threads(work_queue, work_lock, result_queue, result_lock,
-                             threads)
+                             threads, lock_timeout=lock_timeout,
+                             kill_sig=kill_sig)
 
     for thread in threads:
         # Calls thread run()
         thread.start()
 
+    while not work_queue.empty():
+        time.sleep(0.25)
+
     for thread in threads:
         # Blocks and waits for threads to finish
-        thread.join()
+        thread.join(timeout=join_timeout)
+
+    kill_threads = True
 
     # Remove non-Progress results
     results = []
