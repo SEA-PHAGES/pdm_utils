@@ -570,24 +570,11 @@ def execute_sql_export(alchemist, export_path, folder_path, db_version,
                                            dump=dump, force=force)
 
         phams_dict = pham_alignment.get_all_pham_gene_translations(alchemist)
-        pham_fasta_map = pham_alignment.dump_pham_out_fastas(
-                                         phams_out_fasta_dir, phams_dict,
-                                         threads=threads, verbose=verbose)
-        pham_aln_map = pham_alignment.align_pham_out_fastas(
-                                         phams_out_aln_dir, pham_fasta_map,
-                                         threads=threads, verbose=verbose)
 
         if verbose:
-            print("...Reintroducing pham fasta translation duplicates...")
-        pham_alignment.reintroduce_pham_fasta_duplicates(
-                                         pham_fasta_map, phams_dict,
-                                         threads=threads, verbose=verbose)
-
-        if verbose:
-            print("...Reintroducing pham alignment translation duplicates...")
-        pham_alignment.reintroduce_pham_fasta_duplicates(
-                                         pham_aln_map, phams_dict,
-                                         threads=threads, verbose=verbose)
+            print("...Writing and aligning pham fasta files...")
+        pham_alignment.write_phams(phams_out_fasta_dir, phams_out_aln_dir,
+                                   phams_dict, cores=threads, verbose=verbose)
 
         pham_fastas_zip = export_path.joinpath("fastas.zip")
         pham_alns_zip = export_path.joinpath("alns.zip")

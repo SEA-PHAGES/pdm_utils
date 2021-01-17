@@ -1,4 +1,5 @@
 import shlex
+import shutil
 from subprocess import (Popen, DEVNULL)
 
 from pdm_utils.functions import (fileio, multithread, parallelize)
@@ -196,3 +197,32 @@ def reintroduce_pham_fasta_duplicates(pham_path_map, pham_translations_dict,
                         fileio.reintroduce_fasta_duplicates, verbose=verbose,
                         lock_timeout=THREAD_LOCK_TIMEOUT,
                         join_timeout=THREAD_JOIN_TIMEOUT)
+
+
+# Parallelized all-encompassing function that combines the functionality
+# of the above functions
+def write_phams(fasta_dir, aln_dir, phams_translations_dict, cores=1,
+                verbose=False):
+    work_items = []
+    for pham, pham_translations in phams_translations_dict.items():
+        work_items.append((fasta_dir, aln_dir, pham, pham_translations))
+
+    parallelize.parallelize(work_items, cores, write_phams_process,
+                            verbose=verbose)
+
+
+def write_phams_process(fasta_dir, aln_dir, pham, pham_translations):
+    fasta_path = fasta_dir.joinpath("".join([str(pham), "_genes.fasta"]))
+    aln_path = aln_dir.joinpath("".join([str(pham), "_genes.aln"]))
+
+    gs_to_ts = {}
+    for translation, gene_ids in pham_translations.items():
+        gs_to_ts[gene_ids[0]] = translation
+
+    fileio.write_fasta(gs_to_ts, fasta_path)
+
+    if len(pham_translations) > 1:
+        run_clustalo(fasta_path, aln_path)
+        fileio.reintroduce_fasta_duplicates(pham_translations, aln_path)
+
+    fileio.reintroduce_fasta_duplicates(pham_translations, fasta_path)
