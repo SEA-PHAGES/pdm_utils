@@ -90,7 +90,7 @@ def reintroduce_fasta_duplicates(ts_to_gs, filepath):
             for geneid in geneids:
                 gs_to_ts[geneid] = str(translation)
         else:
-            gs_to_ts[record.id] = translation
+            gs_to_ts[record.id] = str(translation)
 
     write_fasta(gs_to_ts, filepath)
 
