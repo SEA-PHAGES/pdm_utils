@@ -281,7 +281,11 @@ def build_where_clause(db_graph, filter_expression):
     right = filter_params[3]  # Stores the expressions 'right' value
 
     if column_object.type.python_type == bytes:
-        right = right.encode("utf-8")
+        if isinstance(right, list):
+            for i in range(len(right)):
+                right[i] = right[i].encode("utf-8")
+        else:
+            right = right.encode("utf-8")
 
     if right == "None":
         right = None
