@@ -21,7 +21,7 @@ Manual installation
 
 #. Retrieve the current version of the database::
 
-    > curl http://phamerator.webfactional.com/databases_Hatfull/Actinobacteriophage.sql > ./Actinobacteriophage.sql
+    > curl http://databases.hatfull.org/Actino_Draft/Actino_Draft.sql > ./Actinobacteriophage.sql
 
 #. Import the database into MySQL (enter your password when prompted)::
 
@@ -42,6 +42,6 @@ Manual update
 
 #. Download the current version file from the Hatfull lab server::
 
-    > curl http://phamerator.webfactional.com/databases_Hatfull/Actinobacteriophage.version > ./Actinobacteriophage.version
+    > curl http://databases.hatfull.org/Actino_Draft/Actino_Draft.sql > ./Actinobacteriophage.version
 
 #. If the current version on the server is different from the version in the local MySQL database, there is a new database available on the server. Repeat steps 3-4 listed above in the 'Manual Installation' section.
