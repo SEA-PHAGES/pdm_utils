@@ -17,7 +17,7 @@ setuptools.setup(
     install_requires=[
         'biopython==1.77',
         'networkx>=2.4',
-        'paramiko>=2.7.1',
+        'paramiko>=2.7.2',
         'pymysql>=0.9.3',
         'pyyaml>=5.3.2',
         'sqlalchemy>=1.3.18',
