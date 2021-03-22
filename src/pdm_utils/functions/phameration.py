@@ -490,7 +490,7 @@ def mmseqs_cluster(sequence_db, cluster_db, args):
               f"-e {args['e_value']} -s {args['sens']} --max-seqs 1000 " \
               f"--cluster-steps {args['steps']} --threads {args['threads']} " \
               f"--alignment-mode {args['aln_mode']} --cov-mode " \
-              f"{args['cov_mode']} --cluster-mode {args['clu_mode']}"
+              f"{args['cov_mode']} --cluster-mode {args['clu_mode']} --cluster-reassign"
     with Popen(args=shlex.split(command), stdout=PIPE, stderr=PIPE) as process:
         # print(process.stdout.read().decode("utf-8"))
         # print(process.stderr.read().decode("utf-8"))
@@ -550,7 +550,7 @@ def mmseqs_search(profile_db, consensus_db, align_db, args):
     command = f"mmseqs search {profile_db} {consensus_db} {align_db} " \
               f"{args['tmp_dir']} --min-seq-id {args['hmmident']} -c " \
               f"{args['hmmcover']} --e-profile {args['hmm_eval']} -v 3 " \
-              f"--add-self-matches 1"
+              f"--add-self-matches --max-seqs 1000 -e {args['hmm_eval']}"
     with Popen(args=shlex.split(command), stdout=PIPE, stderr=PIPE) as process:
         # print(process.stdout.read().decode("utf-8"))
         # print(process.stderr.read().decode("utf-8"))

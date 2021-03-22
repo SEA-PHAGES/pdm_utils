@@ -47,13 +47,13 @@ def setup_argparser():
     mmseqs_parser.description = MMSEQS_DESCRIPTION
     mmseqs_parser.add_argument("db", type=str,
                                help="name of database to phamerate")
-    mmseqs_parser.add_argument("--identity", type=float, default=0.45,
+    mmseqs_parser.add_argument("--identity", type=float, default=0.3,
                                help="pct identity to enter pre-pham [0, 1]")
-    mmseqs_parser.add_argument("--coverage", type=float, default=0.75,
+    mmseqs_parser.add_argument("--coverage", type=float, default=0.85,
                                help="pct coverage to enter pre-pham [0, 1]")
     mmseqs_parser.add_argument("--e-value", type=float, default=0.001,
                                help="E-value to enter pre-pham HMM")
-    mmseqs_parser.add_argument("--sens", type=float, default=8,
+    mmseqs_parser.add_argument("--sens", type=float, default=4,
                                help="sensitivity in range [1, 8.5]")
     mmseqs_parser.add_argument("--steps", type=int, default=1,
                                help="number of steps to build pre-pham HMMs")
@@ -61,11 +61,11 @@ def setup_argparser():
                                help="alignment mode in range [0, 4]")
     mmseqs_parser.add_argument("--cov-mode", type=int, default=0,
                                help="coverage mode in range [0, 4]")
-    mmseqs_parser.add_argument("--clu-mode", type=int, default=0,
+    mmseqs_parser.add_argument("--clu-mode", type=int, default=1,
                                help="cluster mode in range [0, 3]")
     mmseqs_parser.add_argument("--skip-hmm", action="store_true",
                                help="skip the HMM clustering step")
-    mmseqs_parser.add_argument("--hmmident", type=float, default=0.30,
+    mmseqs_parser.add_argument("--hmmident", type=float, default=0.25,
                                help="pct identity to cluster HMMs [0, 1]")
     mmseqs_parser.add_argument("--hmmcover", type=float, default=0.50,
                                help="pct coverage to cluster HMMs [0, 1]")
