@@ -20,9 +20,9 @@ sys.path.insert(0, os.path.abspath('../../src/'))
 project = 'pdm_utils'
 copyright = '2019, Travis Mavrich'
 author = 'Travis Mavrich'
-version = '0.9.6'
+version = '0.9.7'
 # The full version, including alpha/beta/rc tags
-release = '0.9.6'
+release = '0.9.7'
 
 
 # -- General configuration ---------------------------------------------------
