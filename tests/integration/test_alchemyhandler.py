@@ -6,7 +6,7 @@ from networkx import Graph
 from sqlalchemy import create_engine
 from sqlalchemy import MetaData
 from sqlalchemy.engine.base import Engine
-from sqlalchemy.ext.declarative.api import DeclarativeMeta
+from sqlalchemy.orm.decl_api import DeclarativeMeta
 from sqlalchemy.orm.session import Session
 
 from pdm_utils.classes.alchemyhandler import (
