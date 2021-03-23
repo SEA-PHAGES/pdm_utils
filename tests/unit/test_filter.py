@@ -7,7 +7,7 @@ from unittest.mock import PropertyMock
 from networkx import Graph
 from sqlalchemy import Column
 from sqlalchemy.engine.base import Engine
-from sqlalchemy.ext.declarative.api import DeclarativeMeta
+from sqlalchemy.orm.decl_api import DeclarativeMeta
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.elements import BinaryExpression
 

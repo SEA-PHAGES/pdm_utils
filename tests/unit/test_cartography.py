@@ -5,7 +5,7 @@ from unittest.mock import PropertyMock
 
 from sqlalchemy import MetaData
 from sqlalchemy import Table
-from sqlalchemy.ext.declarative.api import DeclarativeMeta
+from sqlalchemy.orm.decl_api import DeclarativeMeta
 
 from pdm_utils.functions import cartography
 
