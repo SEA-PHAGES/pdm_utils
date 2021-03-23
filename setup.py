@@ -20,7 +20,7 @@ setuptools.setup(
         'paramiko>=2.7.2',
         'pymysql==0.9.3',
         'pyyaml>=5.3.1',
-        'sqlalchemy>=1.3.18',
+        'sqlalchemy==1.4.2',
         'tabulate>=0.8.3',
         'urllib3>=1.25.8'
     ],
