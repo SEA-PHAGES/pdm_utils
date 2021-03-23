@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="pdm_utils",
-    version="0.9.7",
+    version="0.9.9",
     author="Christian Gauthier",
     author_email="chg60@pitt.edu",
     description="MySQL phage genomics database management utilities",
@@ -16,7 +16,7 @@ setuptools.setup(
     package_dir={"": "src"},
     install_requires=[
         'biopython==1.77',
-        'networkx~=2.4',
+        'networkx>=2.4',
         'paramiko>=2.7.2',
         'pymysql==0.9.3',
         'pyyaml>=5.3.1',
