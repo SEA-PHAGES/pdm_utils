@@ -8,7 +8,7 @@ from sqlalchemy import join
 from sqlalchemy import MetaData
 from sqlalchemy import select
 from sqlalchemy import Table
-from sqlalchemy.ext.declarative.api import DeclarativeMeta
+from sqlalchemy.orm.decl_api import DeclarativeMeta
 from sqlalchemy.sql import func
 from sqlalchemy.sql import functions
 from sqlalchemy.sql.elements import BinaryExpression

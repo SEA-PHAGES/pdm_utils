@@ -5,7 +5,7 @@ from sqlalchemy import Column
 from sqlalchemy import and_
 from sqlalchemy import or_
 from sqlalchemy.engine.base import Engine
-from sqlalchemy.ext.declarative.api import DeclarativeMeta
+from sqlalchemy.orm.decl_api import DeclarativeMeta
 from sqlalchemy.sql.elements import BooleanClauseList
 from sqlalchemy.sql.elements import Label
 from sqlalchemy.orm.session import Session
