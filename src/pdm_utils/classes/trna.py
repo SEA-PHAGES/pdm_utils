@@ -554,9 +554,9 @@ class Trna:
                 results = NOTE_STANDARD_REGEX.findall(self.note)
                 # If we got two items (e.g. the amino acid and anticodon)
                 # and the amino acid is in our allowed special amino acids
-                if len(results) == 2 and results[0] in SPECIAL_AMINO_ACIDS:
+                if len(results) != 0 and results[0][0] in SPECIAL_AMINO_ACIDS:
                     # Use the re-formatted special amino acid
-                    amino_acid = SPECIAL_AMINO_ACIDS[results[0]]
+                    amino_acid = SPECIAL_AMINO_ACIDS[results[0][0]]
                 # Else, we will leave amino acid as "OTHER"
             # Else, there is nothing else to do but set the attribute
             self.amino_acid = amino_acid
