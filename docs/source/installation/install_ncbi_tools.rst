@@ -10,6 +10,27 @@ ___________
 
 The BLAST+ software package is a stand-alone version of BLAST applications and is maintained by the NCBI (:ref:`Camacho et al., 2009 <bibliography>`). This software is required in the ``find_domains`` pipeline to identify conserved domains within genes. Follow the installation instructions specific to your operating system provided in the :blastplus:`BLAST+ user guide <>`.
 
+MacOS and Ubuntu installation
+*****************************
+
+#. Open a Terminal window and start the Conda environment::
+
+    > conda activate pdm_utils
+    (pdm_utils)>
+
+#. The most straightforward option is to use Conda to install blast::
+
+    (pdm_utils)> conda install -c bioconda blast -y
+
+#. Test whether blast has been successfully installed::
+
+    (pdm_utils)> blastp -help
+
+If successful, a detailed description of the software's options should be displayed.
+
+If unsuccessful, an error message should be displayed, such as::
+
+        -bash: blastp: command not found
 
 NCBI Conserved Domain Database
 ______________________________

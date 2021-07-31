@@ -10,7 +10,7 @@ This table contains information that pertains to the entire phage genome, such a
 
 
 
-**PhageID** This field is the primary key of the *phage* table and is the unique identifier for all phages in the database.  There is a direct correspondence between phage names in PhagesDB or phage names in GenBank records to PhageIDs in the Actinobacteriophage database (although there are a few exceptions, due to naming restrictions in different external databases).
+**PhageID** This field is the primary key of the *phage* table and is the unique identifier for all phages in the database.  There is a direct correspondence between phage names in PhagesDB or phage names in GenBank records to PhageIDs in the Actino_Draft database (although there are a few exceptions, due to naming restrictions in different external databases).
 
 **Name** This field also reflects the phage name, but it is not as constrained as the PhageID, and does not have to be unique. For all 'draft' genomes, the Name contains the PhageID with a '_Draft' suffix appended, indicating the annotations have been automatically annotated. For all other genomes, the Name corresponds to the PhageID. In some downstream applications, such as Phamerator, this serves as the phage's display name.
 

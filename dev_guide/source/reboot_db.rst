@@ -35,9 +35,9 @@ Perform a full round of updates (get data, update, import, phamerate, etc.) to e
 
 Download the most up-to-date database from the server. This is the 'base' database::
 
-    python3 -m pdm_utils get_db Actinobacteriophage server -d -o ./
+    python3 -m pdm_utils get_db Actino_Draft server -d -o ./
     mysql -u root -p --execute "CREATE DATABASE staging"
-    python3 -m pdm_utils get_db staging file ./Actinobacteriophage.sql
+    python3 -m pdm_utils get_db staging file ./Actino_Draft.sql
 
 The base database provides a reliable starting point in case an error is encountered during the staging and import steps.
 
@@ -236,7 +236,7 @@ Import all genomes
 Prepare the 'reboot' database::
 
     mysql -u root -p --execute "CREATE DATABASE reboot;"
-    python3 -m pdm_utils get_db reboot file ./Actinobacteriophage.sql
+    python3 -m pdm_utils get_db reboot file ./Actino_Draft.sql
 
 Remove all 'draft' genomes, since the import pipeline will log an error if a 'draft' genome is replacing a 'draft' genome::
 
@@ -295,4 +295,4 @@ Confirm that phages with alternative spellings in GenBank files have the correct
 Polish the database
 -------------------
 
-After all checks pass, proceed with polishing the database by running phamerate and find_domains pipelines, increment the version. Rename the rebooted database to 'Actinobacteriophage' if needed, and push to server. Copy to 'Actino_Draft' database and convert to the current downgrade schema version.
+After all checks pass, proceed with polishing the database by running phamerate and find_domains pipelines, increment the version. Rename the rebooted database to 'Actino_Draft' if needed, and push to server. Copy to 'Actino_Draft' database and convert to the current downgrade schema version.

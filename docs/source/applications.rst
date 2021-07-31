@@ -9,7 +9,7 @@ Applications
    :maxdepth: 1
 
 
-   Maintaining the Actinobacteriophage database <./applications/data_pipeline/actinobacteriophage_db>
+   Maintaining the Actino_Draft database <./applications/data_pipeline/Actino_Draft_db>
    Reviewing flat file quality <./applications/flat_file_qc>
    Creating custom databases <./applications/customization>
    Maintaining database compatibility with downstream tools <./applications/compatibility>

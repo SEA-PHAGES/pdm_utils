@@ -23,7 +23,7 @@ Alternatively, the connect() method prompts for the credentials::
 
 Similarly, a specific database can be directly set::
 
-    >>> alchemist.database = "Actinobacteriophage"
+    >>> alchemist.database = "Actino_Draft"
 
 or indirectly using the connect() method::
 

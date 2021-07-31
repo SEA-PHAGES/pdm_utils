@@ -3,7 +3,7 @@
 Ticket tracking
 ===============
 
-With new genome sequences and annotations routinely becoming available for the Actinobacteriophage database, and with thousands of researchers utilizing the data, many updates and issues relating to general data management arise. Together, these diverse actions constitute database “tickets”, such as:
+With new genome sequences and annotations routinely becoming available for the Actino_Draft database, and with thousands of researchers utilizing the data, many updates and issues relating to general data management arise. Together, these diverse actions constitute database “tickets”, such as:
 
     - New genome sequences need to be auto-annotated and imported
     - New preliminary final annotations need to be reviewed and imported

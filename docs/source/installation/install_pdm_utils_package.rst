@@ -17,3 +17,4 @@ Once a Conda environment is created, ``pdm_utils`` can be easily installed:
 #. The package is routinely updated, and the most recent version can be retrieved::
 
     (pdm_utils)> pip install --upgrade pdm_utils
+

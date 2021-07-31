@@ -1,7 +1,7 @@
 How to create the database for integration tests
 ================================================
 
-Some integration tests require a pre-defined, non-empty test database, called 'test_db_filled.sql'. This database is created from Actinobacteriophage by deleting all but 16 phages:
+Some integration tests require a pre-defined, non-empty test database, called 'test_db_filled.sql'. This database is created from Actino_Draft by deleting all but 16 phages:
 
 
 1.  Drop the pdm_test_db database (if it exists)::
@@ -13,13 +13,13 @@ Some integration tests require a pre-defined, non-empty test database, called 't
         mysql -u root -p --execute "CREATE DATABASE pdm_test_db;"
 
 
-3.  Download the most recent version of Actinobacteriophage.sql::
+3.  Download the most recent version of Actino_Draft.sql::
 
-        python3 -m pdm_utils get_db Actinobacteriophage server -d -o ./
+        python3 -m pdm_utils get_db Actino_Draft server -d -o ./
 
-4.  Source the new Actinobacteriophage.sql into pdm_test_db::
+4.  Source the new Actino_Draft.sql into pdm_test_db::
 
-        mysql -u root -p pdm_test_db < Actinobacteriophage.sql
+        mysql -u root -p pdm_test_db < Actino_Draft.sql
 
 5. Convert the database to the correct schema, if needed::
 

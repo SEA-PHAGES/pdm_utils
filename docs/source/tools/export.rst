@@ -20,10 +20,10 @@ _______________
 
 Export the entire database as a SQL file::
 
-    > python3 -m pdm_utils export Actinobacteriophage sql
+    > python3 -m pdm_utils export Actino_Draft sql
 
-Database information stored in a SQL database may need to be uploaded to a server for end-users.  This option allows a file to be exported from MySQL into a single file that can be easily uploaded to a server (e.g. Actinobacteriophage.sql). 
-The database version is tracked as an integer in the Version field of the *version* table, and a version file is also generated (e.g. Actinobacteriophage.version), which is a text file that contains a single integer corresponding to the database version.
+Database information stored in a SQL database may need to be uploaded to a server for end-users.  This option allows a file to be exported from MySQL into a single file that can be easily uploaded to a server (e.g. Actino_Draft.sql).
+The database version is tracked as an integer in the Version field of the *version* table, and a version file is also generated (e.g. Actino_Draft.version), which is a text file that contains a single integer corresponding to the database version.
 
 
 CSV File Export
@@ -31,7 +31,7 @@ _______________
 
 Export specific tables from the database into CSV-formatted files::
 
-    > python3 -m pdm_utils export Actinobacteriophage csv ...
+    > python3 -m pdm_utils export Actino_Draft csv ...
 
 Database information stored in a SQL database may need to be viewed in a more universal file.  This option exports database information from a table in a comma-separated-values file that can be viewed in common spreadsheet or text-editing softwares (e.g. phage.sql).
 

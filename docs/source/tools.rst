@@ -35,7 +35,7 @@ Most tools provide functionality without respect to SEA-PHAGES-specific assumpti
   :file: ./images/pipeline_stages.csv
 
 
-The ``pdm_utils`` toolkit can be used to manage different database instances. However, some tools may only be relevant specifically to the primary instance, Actinobacteriophage.
+The ``pdm_utils`` toolkit can be used to manage different database instances. However, some tools may only be relevant specifically to the primary instance, Actino_Draft.
 
 
 .. toctree::

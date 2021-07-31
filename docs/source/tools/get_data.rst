@@ -4,7 +4,7 @@ get_data: get new data to import into the database
 ==================================================
 
 
-New genomics data routinely becomes available for adding to the Actinobacteriophage database, including:
+New genomics data routinely becomes available for adding to the Actino_Draft database, including:
 
     1. Metadata pertaining to individual phages (such as host, cluster, subcluster, and accession)
     2. Newly-sequenced and auto-annotated 'draft' genomes
@@ -14,9 +14,9 @@ New genomics data routinely becomes available for adding to the Actinobacterioph
 
 These data can be automatically retrieved using the ``pdm_utils get_data`` tool::
 
-    > python3 -m pdm_utils get_data Actinobacteriophage -o ./ -c config_file.txt
+    > python3 -m pdm_utils get_data Actino_Draft -o ./ -c config_file.txt
 
-The argument 'Actinobacteriophage' indicates the name of the database from which updates are determined. The '-o ./' indicates the directory where the data should be downloaded (if omitted, the default is the working directory from where the pipeline is called).
+The argument 'Actino_Draft' indicates the name of the database from which updates are determined. The '-o ./' indicates the directory where the data should be downloaded (if omitted, the default is the working directory from where the pipeline is called).
 
 As with other pipelines, use of the :ref:`config_file` option can automate accessing MySQL and NCBI. If only certain types of updates are required, there are separate command line flags for each type of update.
 
@@ -30,7 +30,7 @@ Metadata updates
 ----------------
 
 
-PhagesDB is the primary source for Cluster, Subcluster, Host, and Accession data for phages in the Actinobacteriophage database. ``get_data`` compares these data for each phage in the selected database to the corresponding data in PhagesDB, and creates a new update ticket for all discrepant data that need to be corrected in the Actinobacteriophage database. New metadata is retrieved from PhagesDB: :phagesdb:`sequenced phages <api/sequenced_phages>`. For each phage, PhagesDB stores both GenBank and RefSeq accession data, but only GenBank accession data (stored in the *genbank_accession* field) are stored in the Actinobacteriophage database.
+PhagesDB is the primary source for Cluster, Subcluster, Host, and Accession data for phages in the Actino_Draft database. ``get_data`` compares these data for each phage in the selected database to the corresponding data in PhagesDB, and creates a new update ticket for all discrepant data that need to be corrected in the Actino_Draft database. New metadata is retrieved from PhagesDB: :phagesdb:`sequenced phages <api/sequenced_phages>`. For each phage, PhagesDB stores both GenBank and RefSeq accession data, but only GenBank accession data (stored in the *genbank_accession* field) are stored in the Actino_Draft database.
 
 
 
@@ -60,4 +60,4 @@ Additionally, a CSV-formatted summary table of all PhageIDs, their accession, an
 New non-SEA-PHAGES annotations
 ------------------------------
 
-Actinobacteriophage genomes that have been sequenced and annotated outside of the SEA-PHAGES program occasionally become available in GenBank. If the genomes should be imported into a MySQL database, the GenBank-formatted flat files need to be manually retrieved from GenBank and staged in a local directory with a manually-generated import ticket.
+Actino_Draft genomes that have been sequenced and annotated outside of the SEA-PHAGES program occasionally become available in GenBank. If the genomes should be imported into a MySQL database, the GenBank-formatted flat files need to be manually retrieved from GenBank and staged in a local directory with a manually-generated import ticket.

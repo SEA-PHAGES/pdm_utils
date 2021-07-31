@@ -16,18 +16,18 @@ Clustering (:ref:`van Dongen & Abreu-Goodger, 2012 <bibliography>`) to interpret
 
 To phamerate gene products using the MMseqs2 pipeline::
 
-    > python3 -m pdm_utils phamerate mmseqs Actinobacteriophage
+    > python3 -m pdm_utils phamerate mmseqs Actino_Draft
 
 **The pipeline will crash if the mmseqs software suite has not been installed or is not globally executable**
 
 To phamerate gene products using the blastp --> MCL pipeline::
 
-    > python3 -m pdm_utils phamerate blast-mcl Actinobacteriophage
+    > python3 -m pdm_utils phamerate blast-mcl Actino_Draft
 
 **The pipeline will crash if the NCBI's blast+ package OR Markov Clustering have not been installed or are not
 globally executable**
 
-The argument 'Actinobacteriophage' indicates the name of the database whose gene products are to be phamerated.
+The argument 'Actino_Draft' indicates the name of the database whose gene products are to be phamerated.
 
 Both pipelines have optional arguments that can be used to adjust the thresholds/algorithms used for clustering. The
 mmseqs pipeline has been optimized from the ground up to construct phamilies of globally homologous phage proteins. In

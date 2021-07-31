@@ -200,9 +200,9 @@ After MySQL is installed (on MacOS or Ubuntu), additional user accounts with dif
 
         mysql> GRANT ALL ON *.* TO 'new_user'@'localhost' WITH GRANT OPTION;
 
-    - Grant access with all privileges to a specific database (such as Actinobacteriophage)::
+    - Grant access with all privileges to a specific database (such as Actino_Draft)::
 
-        mysql> GRANT ALL ON Actinobacteriophage.* TO 'new_user'@'localhost';
+        mysql> GRANT ALL ON Actino_Draft.* TO 'new_user'@'localhost';
 
     - Grant access to all databases, but only with the privilege to retrieve data::
 

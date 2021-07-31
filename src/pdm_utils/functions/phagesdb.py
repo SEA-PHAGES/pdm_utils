@@ -416,7 +416,7 @@ def get_unphamerated_phage_list(url):
 
     :param url:
         A URL from which to retrieve a list of PhagesDB genomes that are not
-        in the most up-to-date instance of the Actinobacteriophage
+        in the most up-to-date instance of the Actino_Draft
         MySQL database.
     :type url: str
     :returns: List of PhageIDs.

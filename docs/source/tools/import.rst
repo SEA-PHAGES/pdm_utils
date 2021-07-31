@@ -7,11 +7,11 @@ In general, data pertaining to a complete phage genome is managed within a MySQL
 
 ``pdm_utils import`` is used to manage the addition or replacement of genomes::
 
-    > python3 -m pdm_utils import Actinobacteriophage ./genomes/ ./import_table.csv -o ./ -p -c config_file.txt
+    > python3 -m pdm_utils import Actino_Draft ./genomes/ ./import_table.csv -o ./ -p -c config_file.txt
 
-The first argument ('Actinobacteriophage') following 'import' indicates the database to be used. The next argument ('./genomes/') indicates the directory where the flat files are located. The next argument ('./import_table.csv') indicates the location of the import table. The optional '-o ./' argument indicates the directory where the import results should be stored (if omitted, the default is the working directory from where the pipeline is called). As with other pipelines, use of the :ref:`config_file` option can automate accessing MySQL.
+The first argument ('Actino_Draft') following 'import' indicates the database to be used. The next argument ('./genomes/') indicates the directory where the flat files are located. The next argument ('./import_table.csv') indicates the location of the import table. The optional '-o ./' argument indicates the directory where the import results should be stored (if omitted, the default is the working directory from where the pipeline is called). As with other pipelines, use of the :ref:`config_file` option can automate accessing MySQL.
 
-This tool can be used to specifically update the Actinobacteriophage database, manage different MySQL database instances, and support the process of genome annotation because it:
+This tool can be used to specifically update the Actino_Draft database, manage different MySQL database instances, and support the process of genome annotation because it:
 
     1. relies on import tickets to substantially automate the import process.
 
@@ -41,7 +41,7 @@ Genome-specific data, such as the phage name, nucleotide sequence, host genus, a
 
 Matching tickets to flat files requires that the phage names are spelled identically. Sometimes this is not the case, in which the desired spelling of the phage name in the database (and thus in the import ticket) is slightly differently than the spelling in the GenBank record. These conflicts can arise for several reasons that cannot be immediately corrected (e.g. different nomenclature constraints, such as how “LeBron” is spelled “Bron” in the GenBank record).
 
-To account for these conflicts, ``import`` contains a pre-defined phage name dictionary that converts several GenBank phage names to the desired phage name stored in the Actinobacteriophage database. This list only contains about two dozen name conversions and does not change frequently. To avoid phage name discrepancies, the phage name can be parsed from different parts of the file (such as the filename itself). This allows for greater flexibility when parsing batches of flat files that may not adhere to default expectations, such as when new database instances are developed for phages that have not been annotated from disparate sources. This option can be implemented as a command line option.
+To account for these conflicts, ``import`` contains a pre-defined phage name dictionary that converts several GenBank phage names to the desired phage name stored in the Actino_Draft database. This list only contains about two dozen name conversions and does not change frequently. To avoid phage name discrepancies, the phage name can be parsed from different parts of the file (such as the filename itself). This allows for greater flexibility when parsing batches of flat files that may not adhere to default expectations, such as when new database instances are developed for phages that have not been annotated from disparate sources. This option can be implemented as a command line option.
 
 
 Gene-specific data

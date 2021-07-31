@@ -14,42 +14,17 @@ MacOS and Ubuntu installation
     > conda activate pdm_utils
     (pdm_utils)>
 
+#. The most straightforward option is to use Conda to install tRNAscan-SE::
 
-#. tRNAScan-SE can be installed anywhere on your computer. For example, navigate to your home directory::
+    (pdm_utils)> conda install -c bioconda trnascan-se -y
 
-    (pdm_utils)> cd
+#. Test whether tRNAscan-SE has been successfully installed::
 
-#. Download the latest version of the tarball::
+    (pdm_utils)> tRNAscan-SE -h
 
-    (pdm_utils)> curl http://trna.ucsc.edu/software/trnascan-se-2.0.5.tar.gz > trnascan-se-2.0.5.tar.gz
+If successful, a detailed description of the software's options should be displayed.
 
-#. Uncompress the tarball, then delete the original archive:
-
-    - Enter the following commands::
-
-        (pdm_utils)> tar -xvzf trnascan-se-2.0.5.tar.gz
-        (pdm_utils)> rm trnascan-se-2.0.5.tar.gz
-
-#. Navigate to the new subdirectory and compile the program::
-
-    (pdm_utils)> cd tRNAscan-SE-2.0/
-    (pdm_utils)> ./configure
-    (pdm_utils)> make
-
-#. Make the program globally executable::
-
-    (pdm_utils)> sudo make install
-
-#. Test whether tRNAScan-SE has been successfully installed:
-
-    - Open a new Terminal window.
-
-    - Run the following command::
-
-        (pdm_utils)> tRNAscan-SE -h
-
-    - If successful, a detailed description of the software's options should be displayed.
-
-    - If unsuccessful, an error message should be displayed, such as::
+If unsuccessful, an error message should be displayed, such as::
 
         -bash: tRNAscan-SE: command not found
+

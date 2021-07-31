@@ -98,25 +98,25 @@ The following steps can be performed when ready to upgrade the production databa
     6. Upgrade current production database:
         - download current production database from the server::
 
-            python3 -m pdm_utils get_db Actinobacteriophage server -d -o ./
-            python3 -m pdm_utils get_db Actinobacteriophage file ./Actinobacteriophage.sql
+            python3 -m pdm_utils get_db Actino_Draft server -d -o ./
+            python3 -m pdm_utils get_db Actino_Draft file ./Actino_Draft.sql
 
         - use convert pipeline to upgrade schema and increment version.SchemaVersion::
 
-            python3 -m pdm_utils convert Actinobacteriophage
+            python3 -m pdm_utils convert Actino_Draft
 
         - use update pipeline to increment version.Version::
 
-            python3 -m pdm_utils update Actinobacteriophage -v
+            python3 -m pdm_utils update Actino_Draft -v
 
         - use export and push pipelines to export database and push to server::
 
-            python3 -m pdm_utils export Actinobacteriophage sql
+            python3 -m pdm_utils export Actino_Draft sql
             python3 -m pdm_utils push -d ./<new_database_folder>
 
         - use convert pipeline to created a downgraded database::
 
-            python3 -m pdm_utils convert Actinobacteriophage -s 6 -n Actino_Draft
+            python3 -m pdm_utils convert Actino_Draft -s 6 -n Actino_Draft
 
         - use export and push pipelines to export downgraded database and push to server::
 

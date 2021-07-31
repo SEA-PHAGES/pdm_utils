@@ -96,7 +96,7 @@ def get_all_domain_txns(db):
     # Since domain descriptions are unstructured, they can have characters
     # that cause the INSERT to break due to SQLAlchemy or MySQL.
     # To test the INSERT step, all domain data presently in a
-    # MySQL database (such as Actinobacteriophage) is used
+    # MySQL database (such as Actino_Draft) is used
     # to create thousands of INSERT statements.
     results = test_db_utils.get_data(test_db_utils.domain_table_query, db=db)
     test_db_utils.process_domain_table_data(results)
@@ -988,7 +988,7 @@ class TestFindDomains5(unittest.TestCase):
     def test_insert_domain_data_1(self):
         """Verify list of domain data can be inserted."""
         # The purpose of this test is to take thousands of rows of domain data
-        # from an existing database such as Actinobacteriophage and try to
+        # from an existing database such as Actino_Draft and try to
         # reinsert that data into a test database using the find_domains
         # pipeline. This ensures that as the find_domains pipeline is modified,
         # it is still able to insert all domain data previously encountered.

@@ -9,33 +9,34 @@ Specifically, the review pipeline focuses on genes within the same pham that hav
 
 To export a csv spreadsheet of phams with discrepant product annotations and other relevant data from a database::
 
-    > python3 -m pdm_utils pham_review Actinobacteriophage
+    > python3 -m pdm_utils pham_review Actino_Draft
 
 Like many other pipelines that involve exporting data in the ``pdm_utils`` package, the output of these phams can be modified with command line ``filter`` module implementations.  Filtering, grouping, and sorting can be done in the same manner as described in the ``export`` module docs::
 
-    > python3 -m pdm_utils pham_review Actinobacteriophage -w "phage.Cluster = 'A'" -g phage.Subcluster -s gene.Name
+    > python3 -m pdm_utils pham_review Actino_Draft -w "phage.Cluster = 'A'" -g phage.Subcluster -s gene.Name
 
 For attempting to revise specific phams that do not necessarily have genes with discrepant product annotations, the process of 'review' can be toggled off with the command-line flag **-r** or **--review**::
 
-    > python3 -m pdm_utils pham_review Actinobacteriophage -nr
+    > python3 -m pdm_utils pham_review Actino_Draft -nr
 
 
 References to the database that the review was performed on, and the profile of the phages of the genes within the phams selected for review can be obtained by generating a summary report with the command-line flag **-sr** or **--summary_report**::
 
-    > python3 -m pdm_utils pham_review Actinobacteriophage -sr
+    > python3 -m pdm_utils pham_review Actino_Draft -sr
 
 In addition, other supplementary information files that might help with the review process can be generated.  Translation data and data about the respective phage genomes are available in the gene reports generated with the command-line flag **-gr** or **--gene_reports**::
 
-    > python3 -m pdm_utils pham_review Actinobacteriophage -gr
+    > python3 -m pdm_utils pham_review Actino_Draft -gr
 
 A comprehensive profile of the pham including Conserved Domain Database data and the most common annotations of adjacent genes can be generated using the command-line flag **-psr** or **--pham_summary_reports**::
 
-    > python3 -m pdm_utils pham_review Actinobacteriophage -psr
+    > python3 -m pdm_utils pham_review Actino_Draft -psr
 
 A complete review with all reports included can be done with the command-line flag **-a** or **--all_reports**::
 
-    > python3 -m pdm_utils pham_review Actinobacteriophage -a
+    > python3 -m pdm_utils pham_review Actino_Draft -a
 
-The ``pham_review`` pipeline can also be targetted for gene data in the Actinobacteriophage database that has been recorded as submitted to GenBank and accessible for change as part of a pipeline of exchanging/updating data with GenBank::
+The ``pham_review`` pipeline can also be targetted for gene data in the Actino_Draft database that has been recorded as submitted to GenBank and accessible for change as part of a pipeline of exchanging/updating data with GenBank::
     
-    > python3 -m pdm_utils pham_review Actinobacteriophage -p
+    > python3 -m pdm_utils pham_review Actino_Draft -p
+

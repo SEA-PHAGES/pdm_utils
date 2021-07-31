@@ -14,7 +14,7 @@ The Filter can dynamically accept a column and table inputs since it combines SQ
     >>> alchemist = alchemyhandler.AlchemyHandler()
     >>> alchemist.username = "user123"
     >>> alchemist.password = "p@ssword"
-    >>> alchemist.database = "Actinobacteriophage"
+    >>> alchemist.database = "Actino_Draft"
     >>> alchemist.connect()
     >>> graph = alchemist.graph
 

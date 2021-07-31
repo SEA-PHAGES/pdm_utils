@@ -12,7 +12,7 @@ First, create a new, empty database with the most current database schema::
 
     > python3 -m pdm_utils get_db PhageDatabase new
 
-A new MySQL database, PhageDatabase, has been created, and it has the same structure as the most current Actinobacteriophage database.
+A new MySQL database, PhageDatabase, has been created, and it has the same structure as the most current Actino_Draft database.
 
 .. note::
 

@@ -1,6 +1,6 @@
-.. _actinobacteriophagedb:
+.. _Actino_Draftdb:
 
-Actinobacteriophage data management pipeline
+Actino_Draft data management pipeline
 ============================================
 
 .. toctree::
@@ -15,7 +15,7 @@ The ``pdm_utils`` package is designed to facilitate the management of specifical
 
 .. figure:: ../../images/data_pipeline.jpg
 
-    Overview of the pipeline to maintain and update Actinobacteriophage
+    Overview of the pipeline to maintain and update Actino_Draft
 
 SEA-PHAGES genome sequencing and annotation
 -------------------------------------------
@@ -43,88 +43,77 @@ Phage genomics database
 A specifically-structured :ref:`MySQL database <dbstructure>` is used to store phage genome and gene annotation data in a standardized format that enhances downstream genomics analyses and that can be easily distributed to end-users. Different versions, or instances, of this genomics database can be constructed for different research projects.
 
 
-The Actinobacteriophage database
---------------------------------
+The Actino_Draft database
+-------------------------
 
-The primary instance of this database, the Actinobacteriophage, works in conjunction with the :phagesdb:`PhagesDB <>` database as the primary source of genomics data for the SEA-PHAGES program. This database serves not only as a repository of final, refined gene annotations, but also as a tool to facilitate the dynamic, iterative improvement of annotations. Using the ``pdm_utils`` toolkit, a data management pipeline is constructed to accommodate the needs of this constantly updated database.
+The primary instance of this database, the Actino_Draft, works in conjunction with the :phagesdb:`PhagesDB <>` database as the primary source of genomics data for the SEA-PHAGES program. This database serves not only as a repository of final, refined gene annotations, but also as a tool to facilitate the dynamic, iterative improvement of annotations. Using the ``pdm_utils`` toolkit, a data management pipeline is constructed to accommodate the needs of this constantly updated database.
 
-The Actinobacteriophage management pipeline relies on :ref:`GenBank-formatted flat files <flatfile>` as the primary file format for importing annotation data into the database. During the import process, data is parsed from flat files. If a previous annotated version of the genome is already present in the database, all data relating to that genome is removed and the genome is completely re-imported using the new flat file. Only in limited circumstances are individual fields populated with data extrinsic to a flat file or retained between rounds of genome replacement.
+The Actino_Draft management pipeline relies on :ref:`GenBank-formatted flat files <flatfile>` as the primary file format for importing annotation data into the database. During the import process, data is parsed from flat files. If a previous annotated version of the genome is already present in the database, all data relating to that genome is removed and the genome is completely re-imported using the new flat file. Only in limited circumstances are individual fields populated with data extrinsic to a flat file or retained between rounds of genome replacement.
 
 
 
-The Actinobacteriophage data management pipeline
+The Actino_Draft data management pipeline
 ------------------------------------------------
 
-The most up-to-date version of Actinobacteriophage is stored on the Hatfull lab's public server as a single file, Actinobacteriophage.sql, with an assocaited version file, Actinobacteriophage.version. The process of maintaining and updating this database occurs on the database administrator’s local computer, and the new version is made available on the public server. Below is a description of how ``pdm_utils`` is used during a typical round of database updates:
+The most up-to-date version of Actino_Draft is stored on the Hatfull lab's public server as a single file, Actino_Draft.sql, with an associated version file, Actino_Draft.version. The process of maintaining and updating this database occurs on the database administrator’s local computer, and the new version is made available on the public server. Below is a description of how ``pdm_utils`` is used during a typical round of database updates:
 
 
 
-    #. **Retrieve the newest version of Actinobacteriophage.** Ensure the newest version of the database is locally installed::
+    #. **Retrieve the newest version of Actino_Draft.** Ensure the newest version of the database is locally installed::
 
-        > python3 -m pdm_utils get_db server -d Actinobacteriophage
+        (pdm_utils)> python3 -m pdm_utils get_db server -u http://databases.hatfull.org/ -db Actino_Draft -v
 
     #. **Retrieve new data to import into the database.** New data that needs to be added to the database is retrieved from various sources and staged in a structured local directory for import. *get_data* creates separate staged directories and import tables for different types of data to be imported to minimize potential ticket conflicts::
 
-        > python3 -m pdm_utils get_data Actinobacteriophage -a -c config.txt
-
+        (pdm_utils)> python3 -m pdm_utils get_data Actino_Draft -a -c config.txt
 
     #. **Update specific fields.** New updates are implemented predominantly in the *phage* table::
 
-        > python3 -m pdm_utils update Actinobacteriophage -f update_table.csv
-
-
+        (pdm_utils)> python3 -m pdm_utils update Actino_Draft -f update_table.csv
 
     #. **Import new and replacement genome data.** New data (mostly in the form of flat files) is parsed and imported into the *phage* and *gene* tables. The *import* tool should be run separately for different types of genome data, in the following order:
 
         A. Auto-annotated genomes::
 
-            > python3 -m pdm_utils import Actinobacteriophage ./pecaan/genomes/ ./pecaan/import_table.csv -p
+            (pdm_utils)> python3 -m pdm_utils import Actino_Draft ./pecaan/genomes/ ./pecaan/import_table.csv -p
 
         B. New final annotations::
 
-            > python3 -m pdm_utils import Actinobacteriophage ./phagesdb/genomes/ ./phagesdb/import_table.csv -p
-
+            (pdm_utils)> python3 -m pdm_utils import Actino_Draft ./phagesdb/genomes/ ./phagesdb/import_table.csv -p
 
         C. Auto-updated SEA-PHAGES final annotations from GenBank::
 
-            > python3 -m pdm_utils import Actinobacteriophage ./genbank/genomes/ ./genbank/import_table.csv -p
-
+            (pdm_utils)> python3 -m pdm_utils import Actino_Draft ./genbank/genomes/ ./genbank/import_table.csv -p
 
         D. Other miscellaneous genomes::
 
-            > python3 -m pdm_utils import Actinobacteriophage ./misc/genomes/ ./misc/import_table.csv -p
-
-
+            (pdm_utils)> python3 -m pdm_utils import Actino_Draft ./misc/genomes/ ./misc/import_table.csv -p
 
     #. **Group gene products into phamilies.** Phamilies are created using MMseqs and stored in the *gene* and *pham* tables::
 
-        > python3 -m pdm_utils phamerate mmseqs Actinobacteriophage
+        (pdm_utils)> python3 -m pdm_utils phamerate mmseqs Actino_Draft
 
     #. **Identifying conserved domains.** Conserved domain data is retrieved from a local copy of the NCBI CDD and stored in the *gene*, *domain*, and *gene_domain* tables::
 
-        > python3 -m pdm_utils find_domains Actinobacteriophage -d ./cdd/
+        (pdm_utils)> python3 -m pdm_utils find_domains Actino_Draft -d ./cdd/
 
     #. **Increment database version.** After the database's content has changed, the database version number is updated in the *version* table::
 
-        > python3 -m pdm_utils update Actinobacteriophage -v
+        (pdm_utils)> python3 -m pdm_utils update Actino_Draft -v
 
-    #. **Export the updated database to a single file.** The updated Actinobacteriophage database is exported from MySQL into a single file, Actinobacteriophage.sql, with a corresponding Actinobacteriophage.version file that stores the database version number::
+    #. **Export the updated database to a single file.** The updated Actino_Draft database is exported from MySQL into a single file, Actino_Draft.sql, with a corresponding Actino_Draft.version file that stores the database version number::
 
-        > python3 -m pdm_utils export Actinobacteriophage sql
+        (pdm_utils)> python3 -m pdm_utils export Actino_Draft sql
 
     #. **Upload the database for public access.** The SQL file is uploaded to the Hatfull lab's public server, where it can be retrieved by end-users for downstream applications and data analysis tools::
 
-        > python3 -m pdm_utils push -d ./new_version/
-
+        (pdm_utils)> python3 -m pdm_utils push -d ./new_version/
 
     #. **Prepare downgraded database and upload to server.** A copy of the database is generated with a downgraded schema that is compliant with several downstream tools::
 
-        > python3 -m pdm_utils convert Actinobacteriophage -n Actino_Draft -s 6 -v
-        > python3 -m pdm_utils export Actino_Draft sql
-        > python3 -m pdm_utils push -d ./downgraded_version/
-
-
-
+        (pdm_utils)> python3 -m pdm_utils convert Actino_Draft -n Actino_Draft_v6 -s 6 -v
+        (pdm_utils)> python3 -m pdm_utils export Actino_Draft_v6 sql
+        (pdm_utils)> python3 -m pdm_utils push -d ./downgraded_version/
 
 
 Non-routine maintenance:
