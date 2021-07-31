@@ -1691,7 +1691,7 @@ class TestImportGenome6(unittest.TestCase):
 
         engine_string = ("mysql+pymysql://"
                          "pdm_anon:pdm_anon@localhost/"
-                         "actinobacteriophage")
+                         "actino_draft")
         self.engine = sqlalchemy.create_engine(engine_string, echo=True)
 
 

@@ -47,7 +47,7 @@ PIPELINE = "find_domains"
 USER = test_db_utils.USER
 PWD = test_db_utils.PWD
 DB = test_db_utils.DB
-DB2 = "Actinobacteriophage"
+DB2 = "Actino_Draft"
 
 PHAGE = "phage"
 GENE = "gene"

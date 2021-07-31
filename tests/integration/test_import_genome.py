@@ -76,7 +76,7 @@ DB = test_db_utils.DB
 
 #sqlalchemy setup
 ENGINE_STRING1 = test_db_utils.create_engine_string()
-ENGINE_STRING2 = test_db_utils.create_engine_string(db="Actinobacteriophage")
+ENGINE_STRING2 = test_db_utils.create_engine_string(db="Actino_Draft")
 
 test_file_dir = Path(test_dir, "test_files")
 
@@ -602,7 +602,7 @@ class TestImportGenome3(unittest.TestCase):
         # Minimum args list
         self.args_list = ["run.py",
                           "import",
-                          "Actinobacteriophage",
+                          "Actino_Draft",
                           str(self.test_directory1),
                           str(self.test_filepath1)]
 
@@ -613,7 +613,7 @@ class TestImportGenome3(unittest.TestCase):
         """Verify args when minimum args_list is provided."""
         args = import_genome.parse_args(self.args_list)
         with self.subTest():
-            self.assertEqual(args.database, "Actinobacteriophage")
+            self.assertEqual(args.database, "Actino_Draft")
         with self.subTest():
             self.assertEqual(args.input_folder, self.test_directory1)
         with self.subTest():

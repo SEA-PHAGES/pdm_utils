@@ -253,7 +253,7 @@ class TestAlchemyHandler(unittest.TestCase):
 
         mock_engine.execute.return_value = mock_proxy
         mock_proxy.fetchall.return_value = [("pdm_test_db",),
-                                            ("Actinobacteriophage",)]
+                                            ("Actino_Draft",)]
 
         self.alchemist.connected = True
         self.alchemist.database = "pdm_test_db"
