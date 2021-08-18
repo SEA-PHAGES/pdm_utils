@@ -26,8 +26,8 @@ GENBANK_AMINO_ACIDS = {"Ala", "Arg", "Asn", "Asp", "Cys", "Gln", "Glu", "Gly",
 
 # Additional amino acids that SEA-PHAGES may annotate in the note field
 SPECIAL_AMINO_ACIDS = {"fMet": "fMet", "Ile2": "Ile2", "Pyl": "Pyl",
-                       "SeC": "SeC", "Stop": "Stop", "Sup": "Stop",
-                       "Undet": "OTHER"}
+                       "SeC": "SeC", "Sec": "SeC", "Term": "Stop",
+                       "Stop": "Stop", "Sup": "Stop", "Undet": "OTHER"}
 
 # Extracts amino acid from product field
 PRODUCT_REGEX = re.compile("tRNA-(\w+)")
@@ -1378,12 +1378,13 @@ class Trna:
         self.structure = structure
 
         definition = f"Check if the tRNA coordinates appear to match the " \
-                     f"Aragorn or tRNAscan-SE prediction(s) for {self.locus_tag} ({self.id})."
+                     f"Aragorn or tRNAscan-SE prediction(s) for " \
+                     f"{self.locus_tag} ({self.id})."
         definition = basic.join_strings([definition, eval_def])
         self.set_eval(eval_id, definition, result, status)
 
     def check_terminal_nucleotides(self, eval_id=None, success="correct",
-                                   fail="error", eval_def=None):
+                                   fail="warning", eval_def=None):
         """
         Checks that the tRNA ends with "CCA" or "CC" or "C".
         :param eval_id: unique identifier for the evaluation
@@ -1398,15 +1399,15 @@ class Trna:
         """
         if len(self.seq) > 4:
             result = f"The tRNA ends with '...{self.seq[-4:]}'. "
-            # tRNAs must end in "NCCA" to function - some are this way naturally.
+            # tRNAs must end in "NCCA" to function - some are this way naturally
             # The others must end in "NCC" or "NC" or N
-            if self.seq[-3:] == "CCA":
+            if self.seq.endswith("CCA"):
                 result += "This is expected."
                 status = success
-            elif self.seq[-2:] == "CC":
+            elif self.seq.endswith("CC"):
                 result += "This is expected."
                 status = success
-            elif self.seq[-1:] == "C":
+            elif self.seq.endswith("C"):
                 result += "This is expected."
                 status = success
             else:
