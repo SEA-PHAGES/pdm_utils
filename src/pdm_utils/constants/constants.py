@@ -136,7 +136,7 @@ UNPHAMERATED_PHAGE_LIST = "https://phagesdb.org/data/unphameratedlist"
 
 
 # Auto-annotations from PECAAN
-PECAAN_PREFIX = "https://discoverdev.kbrinsgd.org/phameratoroutput/phage/"
+PECAAN_PREFIX = "https://discover.kbrinsgd.org/phameratoroutput/phage/"
 
 
 # Phage name typo correction dictionary.
