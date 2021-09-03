@@ -1871,9 +1871,9 @@ def check_trna(trna_ftr, eval_flags):
             eval_id="TRNA-EVAL-016", fail="warning",
             eval_def=EDD["TRNA-EVAL-016"])
         # 7. check_terminal_nucleotides
-        trna_ftr.check_terminal_nucleotides(
-            eval_id="TRNA-EVAL-015", fail="warning",
-            eval_def=EDD["TRNA-EVAL-015"])
+        # trna_ftr.check_terminal_nucleotides(
+        #     eval_id="TRNA-EVAL-015", fail="warning",
+        #     eval_def=EDD["TRNA-EVAL-015"])
 
 
 def check_tmrna(tmrna_ftr, eval_flags):
