@@ -126,9 +126,9 @@ class AragornHandler:
         # values:       aa., orient, start, stop,          anticodon,
         # indices:       0      1      2     3                 4
         re_str = "tRNA-(\w+)\s+(c)?\[(-?\d+),(\d+)\]\s+\d+\s+\((\w+)\)\s+" \
-                 "([.]*?\w+)\s+([( )dAtv.]*)"
-        # values:   sequence,  structure
-        # indices:     5           6
+                 "([.]*?\w+[.]*?)\s+([( )dAtv.]*)"
+        # values:     sequence,      structure
+        # indices:       5               6
         regex = re.compile(re_str, re.MULTILINE | re.DOTALL)
 
         trnas = regex.findall(self.out_str)
@@ -189,9 +189,9 @@ class AragornHandler:
         # values: possible amino acids., orient, start, stop,
         # indices:          0      1        2      3     4
         re_str = "tRNA-\?\((\w+)\|(\w+)\)\s+(c)?\[(-?\d+),(\d+)\]\s+\d+\s+" \
-                 "\((\w+)\)\s+([.]*?\w+)\s+([( )dAtv.]*)"
-        # values: anticodon,   sequence, structure
-        # indices:    5           6          7
+                 "\((\w+)\)\s+([.]*?\w+[.]*?)\s+([( )dAtv.]*)"
+        # values: anticodon,      sequence,       structure
+        # indices:    5              6                7
         regex = re.compile(re_str, re.MULTILINE | re.DOTALL)
 
         trnas = regex.findall(self.out_str)
