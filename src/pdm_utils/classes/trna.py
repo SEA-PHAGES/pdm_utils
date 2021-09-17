@@ -580,13 +580,13 @@ class Trna:
         results = NOTE_STANDARD_REGEX.findall(self.note)
         # If we got two items (e.g. the amino acid and anticodon)
         if len(results) == 1:
-            self.anticodon = results[0][-1].lower()
+            self.anticodon = results[0][-1].lower().replace('u', 't')
         else:
             results = NOTE_SPECIAL_REGEX.findall(self.note)
             # If we got three items (e.g. the two amino acid choices and
             # part of anticodon)
             if len(results) == 1:
-                self.anticodon = results[0][-1].lower()
+                self.anticodon = results[0][-1].lower().replace('u', 't')
         # If the regex fails to parse an anticodon using either regex, it
         # will be left as "nnn"
 
