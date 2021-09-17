@@ -635,7 +635,7 @@ def cds_to_seqrecord(cds, parent_genome, gene_domains=[]):
     record.seq.alphabet = IUPAC.IUPACProtein()
     record.name = cds.id
     if cds.locus_tag == "" or cds.locus_tag is None:
-        record.id = "".join(["DRAFT ", cds.id])
+        record.id = "".join([cds.id, " DRAFT"])
     else:
         record.id = cds.locus_tag
 
@@ -793,8 +793,14 @@ def get_cds_seqrecord_regions(gene_domains, cds):
                                                gene_domain["QueryStart"],
                                                gene_domain["QueryEnd"], 1)
         region_feature.qualifiers["region_name"] = [gene_domain["Name"]]
-        region_feature.qualifiers["note"] = [
-                                    gene_domain["Description"].decode("utf-8")]
+
+        description = gene_domain["Description"]
+        if description is None:
+            description = ""
+        else:
+            description = description.decode("utf-8")
+        region_feature.qualifiers["note"] = [description]
+
         region_feature.qualifiers["db_xref"] = ["CDD:"
                                                 f"{gene_domain['DomainID']}"]
         region_features.append(region_feature)
