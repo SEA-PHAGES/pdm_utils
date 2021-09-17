@@ -10,12 +10,13 @@ from pdm_utils.functions import configfile
 from pdm_utils.functions import fileio
 from pdm_utils.functions import pipelines_basic
 
-#GLOBAL VARIABLES
-#-----------------------------------------------------------------------------
+# GLOBAL VARIABLES
+# -----------------------------------------------------------------------------
 DEFAULT_FOLDER_NAME = f"{time.strftime('%Y%m%d')}_pham_finder"
 DEFAULT_FOLDER_PATH = Path.cwd()
 
 PHAM_FINDER_HEADER = ["Reference Pham", "Corresponding Phams"]
+
 
 def main(unparsed_args_list):
     """Uses parsed args to run the entirety of the pham_finder pipeline.
@@ -39,6 +40,7 @@ def main(unparsed_args_list):
                         filters=args.filters, groups=args.groups, 
                         sort=args.sort, show_per=args.show_percentages,
                         use_locus=args.use_locus, verbose=args.verbose)
+
 
 def parse_pham_finder(unparsed_args_list):
     """Parses pham_finder arguments and stores them with an argparse object.
@@ -151,8 +153,9 @@ def parse_pham_finder(unparsed_args_list):
     parsed_args = parser.parse_args(unparsed_args_list[2:])
     return parsed_args
 
-#TODO Owen Needs unittests
-def execute_pham_finder(alchemist, folder_path, folder_name, 
+
+# TODO Owen Needs unittests
+def execute_pham_finder(alchemist, folder_path, folder_name,
                         adatabase, bdatabase, values=None,
                         filters="", groups=[], sort=[],
                         show_per=False, use_locus=False, verbose=False):
@@ -186,10 +189,10 @@ def execute_pham_finder(alchemist, folder_path, folder_name,
     :param use_locus: Toggles conversion between phams using LocusTag instead
     :type use_locus: bool
     """
-    if not (adatabase in alchemist.databases and \
+    if not (adatabase in alchemist.databases and
             bdatabase in alchemist.databases):
         print("User credentials does not have access to both "
-             f"databases {adatabase} and {bdatabase}.\n"
+              f"databases {adatabase} and {bdatabase}.\n"
               "Please check your database access and try again.")
         sys.exit(1)
 
@@ -210,7 +213,7 @@ def execute_pham_finder(alchemist, folder_path, folder_name,
             a_filter.sort(sort)
         except:
             print("Please check your syntax for sorting columns:\n"
-                 f"{', '.join(sort)}")
+                  f"{', '.join(sort)}")
             sys.exit(1)
 
     if verbose:
@@ -218,11 +221,9 @@ def execute_pham_finder(alchemist, folder_path, folder_name,
     export_path = folder_path.joinpath(folder_name)
     export_path = basic.make_new_dir(folder_path, export_path, attempt=50)
 
-    conditionals_map = {}
-    pipelines_basic.build_groups_map(a_filter, export_path,
-                                        conditionals_map,
-                                        groups=groups,
-                                        verbose=verbose)
+    conditionals_map = pipelines_basic.build_groups_map(a_filter, export_path,
+                                                        groups=groups,
+                                                        verbose=verbose)
 
     if verbose:
         print("Prepared query and path structure, beginning export...")
@@ -234,21 +235,20 @@ def execute_pham_finder(alchemist, folder_path, folder_name,
 
         conditionals = conditionals_map[mapped_path]
         a_filter.values = a_filter.build_values(where=conditionals)
-        
+
         if a_filter.hits() == 0:
             print("No database entries received from gene.PhamID "
-                 f"for '{mapped_path}'.")
+                  f"for '{mapped_path}'.")
             shutil.rmtree(mapped_path)
             continue
 
         if sort:
-            sort_columns = get_sort_columns(alchemist, sort)
-            a_filter.sort(sort_columns)
+            a_filter.sort(sort)
 
         mapped_phams = find_phams(a_filter, b_filter, show_per=show_per)
         if not mapped_phams:
             print("Phams are consistent between the two databases "
-                 f"for '{mapped_path}'.")
+                  f"for '{mapped_path}'.")
             shutil.rmtree(mapped_path)
             continue
 
@@ -263,7 +263,8 @@ def execute_pham_finder(alchemist, folder_path, folder_name,
         fileio.export_data_dict(out_data_dicts, file_path, PHAM_FINDER_HEADER,
                                 include_headers=True)
 
-#TODO Owen Needs unittests
+
+# TODO Owen Needs unittests
 def find_phams(a_filter, b_filter, show_per=False, use_locus=False):
     """Find phams helper function that finds phams via GeneID intermediates.
 
@@ -323,10 +324,6 @@ def find_phams(a_filter, b_filter, show_per=False, use_locus=False):
         
     return mapped_phams
 
+
 if __name__ == "__main__":
     main(sys.argv)
-    
-
-
-
-
