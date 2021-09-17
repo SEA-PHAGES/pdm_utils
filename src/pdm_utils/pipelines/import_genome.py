@@ -2,7 +2,6 @@
 into the MySQL database."""
 
 import argparse
-import csv
 from datetime import datetime, date
 import logging
 import os
@@ -37,7 +36,8 @@ logger.addHandler(logging.NullHandler())
 
 
 DEFAULT_OUTPUT_FOLDER = os.getcwd()
-IMPORT_DATE = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
+IMPORT_DATE = datetime.today().replace(hour=0, minute=0, second=0,
+                                       microsecond=0)
 CURRENT_DATE = date.today().strftime("%Y%m%d")
 RESULTS_FOLDER = f"{CURRENT_DATE}_import"
 SUCCESS_FOLDER = "success"
@@ -47,6 +47,7 @@ LOGS_FOLDER = "logs"
 VERSION = pdm_utils.__version__
 EDD = eval_descriptions.EVAL_DESCRIPTIONS
 MAIN_LOG_FILE = "import.log"
+
 
 def main(unparsed_args_list):
     """Runs the complete import pipeline.
@@ -115,7 +116,7 @@ def main(unparsed_args_list):
             description_field=args.description_field,
             eval_mode=args.eval_mode,
             output_folder=results_path,
-            interactive=args.interactive)
+            interactive=args.interactive, accept_warning=args.accept_warning)
 
     logger.info("Import complete.")
 
@@ -161,6 +162,8 @@ def parse_args(unparsed_args_list):
         "to store the gene description.")
     interactive_help = (
         "Indicates whether interactive evaluation of data is permitted.")
+    accept_warning_help = (
+        "Indicates whether warnings are accepted without interactivity.")
     config_file_help = "Path to the file containing user-specific login data."
 
     parser = argparse.ArgumentParser(description=import_help)
@@ -191,6 +194,8 @@ def parse_args(unparsed_args_list):
         default=pathlib.Path(DEFAULT_OUTPUT_FOLDER), help=output_folder_help)
     parser.add_argument("-i", "--interactive", action="store_true",
         default=False, help=interactive_help)
+    parser.add_argument("-Y", "--accept_warning", action="store_true",
+                        default=False, help=accept_warning_help)
     parser.add_argument("-c", "--config_file", type=pathlib.Path,
                         help=config_file_help, default=None)
 
@@ -203,15 +208,15 @@ def parse_args(unparsed_args_list):
     return args
 
 
-
-
 def data_io(engine=None, genome_folder=pathlib.Path(),
-    import_table_file=pathlib.Path(), genome_id_field="", host_genus_field="",
-    prod_run=False, description_field="", eval_mode="",
-    output_folder=pathlib.Path(), interactive=False):
+            import_table_file=pathlib.Path(), genome_id_field="",
+            host_genus_field="", prod_run=False, description_field="",
+            eval_mode="", output_folder=pathlib.Path(), interactive=False,
+            accept_warning=False):
     """Set up output directories, log files, etc. for import.
 
-    :param engine: SQLAlchemy Engine object able to connect to a MySQL database.
+    :param engine:
+        SQLAlchemy Engine object able to connect to a MySQL database.
     :type engine: Engine
     :param genome_folder: Path to the folder of flat files.
     :type genome_folder: Path
@@ -235,8 +240,12 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
     :type output_folder: Path
     :param interactive:
         Indicates whether user is able to interact with genome evaluations
-        at run time.
+        at run time
     :type interactive: bool
+    :param accept_warning:
+        Toggles whether the import pipeline will accept warnings without
+        interactivity.
+    :type accept_warning: bool
     """
 
     logger.info("Setting up environment.")
@@ -292,7 +301,7 @@ def data_io(engine=None, genome_folder=pathlib.Path(),
                         prod_run=prod_run,
                         genome_id_field=genome_id_field,
                         host_genus_field=host_genus_field,
-                        interactive=interactive,
+                        interactive=interactive, accept_warning=accept_warning,
                         log_folder_paths_dict=log_folder_paths_dict)
     success_ticket_list = results_tuple[0]
     failed_ticket_list = results_tuple[1]
@@ -411,7 +420,6 @@ def log_evaluations(dict_of_dict_of_lists, logfile_path=None):
         logger.removeHandler(flatfile_logger)
 
 
-
 def prepare_tickets(import_table_file=pathlib.Path(), eval_data_dict=None,
         description_field="", table_structure_dict={}):
     """Prepare dictionary of pdm_utils ImportTickets.
@@ -507,10 +515,12 @@ def prepare_tickets(import_table_file=pathlib.Path(), eval_data_dict=None,
 
         return ticket_dict
 
+
 def process_files_and_tickets(ticket_dict, files_in_folder, engine=None,
                               prod_run=False, genome_id_field="",
                               host_genus_field="", interactive=False,
-                              log_folder_paths_dict=None):
+                              log_folder_paths_dict=None,
+                              accept_warning=False):
     """Process GenBank-formatted flat files and import tickets.
 
     :param ticket_dict:
@@ -526,6 +536,7 @@ def process_files_and_tickets(ticket_dict, files_in_folder, engine=None,
     :param genome_id_field: same as for data_io().
     :param host_genus_field: same as for data_io().
     :param interactive: same as for data_io().
+    :param accept_warning: same as for data_io().
     :param log_folder_paths_dict:
         Dictionary indicating paths to success and fail folders.
     :type log_folder_paths_dict: dict
@@ -604,7 +615,8 @@ def process_files_and_tickets(ticket_dict, files_in_folder, engine=None,
                    file_ref=file_ref, ticket_ref=ticket_ref,
                    retrieve_ref=retrieve_ref, retain_ref=retain_ref)
 
-        review_bundled_objects(bndl, interactive=interactive)
+        review_bundled_objects(bndl, interactive=interactive,
+                               accept_warning=accept_warning)
 
         # TODO this section below could probably be improved.
         # import_into_db may not need to return result, since it now
@@ -952,7 +964,7 @@ def run_checks(bndl, accession_set=set(), phage_id_set=set(),
             check_retain_genome(gnm2, tkt.type, eval_flags)
 
 
-def review_bundled_objects(bndl, interactive=False):
+def review_bundled_objects(bndl, interactive=False, accept_warning=False):
     """Review all evaluations of all bundled objects.
 
     Iterate through all objects stored in the bundle.
@@ -960,14 +972,16 @@ def review_bundled_objects(bndl, interactive=False):
 
     :param bndl: same as for run_checks().
     :param interactive: same as for data_io().
+    :param accept_warnring: same as for data_io().
     """
 
     # Bundle-level evaluations.
-    review_object_list([bndl], "Bundle", ["id"], interactive=interactive)
+    review_object_list([bndl], "Bundle", ["id"], interactive=interactive,
+                       accept_warning=accept_warning)
 
     # Ticket-level evaluations.
     review_object_list([bndl.ticket], "Ticket", ["id", "type", "phage_id"],
-                       interactive=interactive)
+                       interactive=interactive, accept_warning=accept_warning)
 
     # Genome check.
     if len(bndl.genome_dict.keys()) > 0:
@@ -980,22 +994,27 @@ def review_bundled_objects(bndl, interactive=False):
             # at the same time as the evaluations for its cds, tRNA, tmRNA,
             # and source features.
             review_object_list([gnm], "Genome", ["id", "type"],
-                               interactive=interactive)
+                               interactive=interactive,
+                               accept_warning=accept_warning)
 
             review_object_list(gnm.cds_features, "CDS feature",
                                ["id", "start", "stop", "orientation"],
-                               interactive=interactive)
+                               interactive=interactive,
+                               accept_warning=accept_warning)
 
             review_object_list(gnm.source_features, "Source feature",
-                               ["id"], interactive=interactive)
+                               ["id"], interactive=interactive,
+                               accept_warning=accept_warning)
 
             review_object_list(gnm.trna_features, "tRNA feature",
                                ["id", "start", "stop", "orientation"],
-                               interactive=interactive)
+                               interactive=interactive,
+                               accept_warning=accept_warning)
 
             review_object_list(gnm.tmrna_features, "tmRNA feature",
                                ["id", "start", "stop", "orientation"],
-                               interactive=interactive)
+                               interactive=interactive,
+                               accept_warning=accept_warning)
 
     else:
         log_and_print("No genomes to review.", False)
@@ -1003,10 +1022,12 @@ def review_bundled_objects(bndl, interactive=False):
     # Genome-pair check.
     genome_pair_list = list(bndl.genome_pair_dict.values())
     review_object_list(genome_pair_list, "Genome pair",
-                       ["genome1","genome2"], interactive=interactive)
+                       ["genome1","genome2"], interactive=interactive,
+                       accept_warning=accept_warning)
 
 
-def review_object_list(object_list, object_type, attr_list, interactive=False):
+def review_object_list(object_list, object_type, attr_list, interactive=False,
+                       accept_warning=False):
     """Determine if evaluations are present and record results.
 
     :param object_list: List of pdm_utils objects containing evaluations.
@@ -1017,6 +1038,7 @@ def review_object_list(object_list, object_type, attr_list, interactive=False):
         List of attributes used to log data about the object instance.
     :type attr_list: list
     :param interactive: same as for data_io().
+    :param accept_warning: same as for data_io().
     """
     # Test for None, since tkt data can be missing and be None.
     if (len(object_list) > 0 and object_list[0] is not None):
@@ -1031,12 +1053,16 @@ def review_object_list(object_list, object_type, attr_list, interactive=False):
             if len(object.evaluations) > 0:
                 log_and_print("Reviewing " + partial_msg, interactive)
                 if exit == False:
-                    exit = review_evaluation_list(object.evaluations,
-                                interactive=interactive)
+                    exit = review_evaluation_list(
+                                                object.evaluations,
+                                                interactive=interactive,
+                                                accept_warning=accept_warning)
                 else:
                     # If exit=True, all 'warning' evaluations are automatically
                     # changed to 'error'. The exit response is not captured.
-                    review_evaluation_list(object.evaluations, interactive=False)
+                    review_evaluation_list(object.evaluations,
+                                           interactive=False,
+                                           accept_warning=False)
             else:
                 log_and_print("No " + partial_msg, False)
         if exit:
@@ -1047,12 +1073,14 @@ def review_object_list(object_list, object_type, attr_list, interactive=False):
         log_and_print(f"No evaluations for {object_type}(s)", False)
 
 
-def review_evaluation_list(evaluation_list, interactive=False):
+def review_evaluation_list(evaluation_list, interactive=False,
+                           accept_warning=False):
     """Iterate through all evaluations and review 'warning' results.
 
     :param evaluation_list: List of pdm_utils Evaluation objects.
     :type evaluation_list: list
     :param interactive: same as for data_io().
+    :param accept_warning: same as for data_io().
     :returns: Indicates whether user selected to exit the review process.
     :rtype: bool
     """
@@ -1061,7 +1089,8 @@ def review_evaluation_list(evaluation_list, interactive=False):
     for x in range(len(evaluation_list)):
         evl = evaluation_list[x]
         if exit == False:
-            exit, correct = review_evaluation(evl, interactive=interactive)
+            exit, correct = review_evaluation(evl, interactive=interactive,
+                                              accept_warning=accept_warning)
         else:
             # If exit=True, then all 'warning' evaluations are automatically
             # changed to 'error'. The exit2 response is unused and thrown away.
@@ -1074,12 +1103,13 @@ def review_evaluation_list(evaluation_list, interactive=False):
     return exit
 
 
-def review_evaluation(evl, interactive=False):
+def review_evaluation(evl, interactive=False, accept_warning=False):
     """Review an evaluation object.
 
     :param evl: A pdm_utils Evaluation object.
     :type evl: Evaluation
     :param interactive: same as for data_io().
+    :param accept_warning: same as for data_io().
     :returns:
         tuple (exit, message)
         WHERE
@@ -1113,6 +1143,8 @@ def review_evaluation(evl, interactive=False):
                     exit = True
                     evl.result = evl.result + msg.format(
                                     "automatically due to review exit")
+        elif accept_warning:
+            pass
         else:
             # If interactive is set to False,
             # change all 'warnings' to 'errors'.
@@ -1258,8 +1290,8 @@ def review_cds_descriptions(feature_list, description_field):
     return new_field
 
 
-
-def check_bundle(bndl, ticket_ref="", file_ref="", retrieve_ref="", retain_ref=""):
+def check_bundle(bndl, ticket_ref="", file_ref="", retrieve_ref="",
+                 retain_ref=""):
     """Check a Bundle for errors.
 
     Evaluate whether all genomes have been successfully grouped,
@@ -1712,6 +1744,7 @@ def check_cds(cds_ftr, eval_flags, description_field="product"):
         cds_ftr.check_description_field(attribute=description_field,
                                         eval_id="CDS-EVAL-012", fail="warning",
                                         eval_def=EDD["CDS-EVAL-012"])
+
 
 def compare_genomes(genome_pair, eval_flags):
     """Compare two genomes to identify discrepancies.
