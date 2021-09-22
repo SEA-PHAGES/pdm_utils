@@ -620,7 +620,7 @@ def genome_to_seqrecord(phage_genome):
     return record
 
 
-def cds_to_seqrecord(cds, parent_genome, gene_domains=[]):
+def cds_to_seqrecord(cds, parent_genome, gene_domains=[], desc_type="gb"):
     """Creates a SeqRecord object from a Cds and its parent Genome.
 
     :param cds: A populated Cds object.
@@ -628,6 +628,8 @@ def cds_to_seqrecord(cds, parent_genome, gene_domains=[]):
     :param phage_genome: Populated parent Genome object of the Cds object.
     :param domains: List of domain objects populated with column attributes
     :type domains: list
+    :param desc_type: Inteneded format of the CDS SeqRecord description.
+    :type desc_type: str
     :returns: Filled Biopython SeqRecord object.
     :rtype: SeqRecord
     """
@@ -655,24 +657,29 @@ def cds_to_seqrecord(cds, parent_genome, gene_domains=[]):
     for region_feature in region_features:
         record.features.append(region_feature)
 
-    description = ""
+    if desc_type == "fasta":
+        description = ""
 
-    product = cds.seqfeature.qualifiers["product"][0]
-    if product > "":
-        description = " ".join([description, f"[product={product}]"])
+        product = cds.seqfeature.qualifiers["product"][0]
+        if product > "":
+            description = "".join([description, f"[product={product}]"])
 
-    cluster = parent_genome.cluster
-    if cluster > "":
-        description = " ".join([description, f"[cluster={cluster}]"])
+        cluster = parent_genome.cluster
+        if cluster > "":
+            description = " ".join([description, f"[cluster={cluster}]"])
 
-    host_genus = parent_genome.host_genus
-    if host_genus > "":
-        description = " ".join([description, f"[host_genus={host_genus}]"])
+        host_genus = parent_genome.host_genus
+        if host_genus > "":
+            description = " ".join([description, f"[host_genus={host_genus}]"])
 
-    if cds.locus_tag > "":
-        description = " ".join([description, f"[locus={cds.locus_tag}]"])
+        if cds.locus_tag > "":
+            description = " ".join([description, f"[locus={cds.locus_tag}]"])
 
-    record.description = description
+        record.description = description
+    elif desc_type == "gb":
+        description = f"{source} gp {cds.name}"
+        record.description = description
+
     record.annotations = get_cds_seqrecord_annotations(cds, parent_genome)
 
     return record

@@ -533,7 +533,8 @@ def execute_ffx_export(alchemist, export_path, folder_path, values,
                                            verbose=verbose)
     elif table == "gene":
         seqrecords = get_cds_seqrecords(alchemist, values,
-                                        data_cache=data_cache, verbose=verbose)
+                                        data_cache=data_cache, verbose=verbose,
+                                        file_format=file_format)
     else:
         print(f"Unknown error occured, table '{table}' is not recognized "
               "for SeqRecord export pipelines.")
@@ -615,7 +616,7 @@ def get_genome_seqrecords(alchemist, values, data_cache=None, verbose=False):
 
 # TODO Document and Unittest
 def get_cds_seqrecords(alchemist, values, data_cache=None, nucleotide=False,
-                       verbose=False):
+                       verbose=False, file_format=None):
     if data_cache is None:
         data_cache = {}
 
@@ -642,7 +643,8 @@ def get_cds_seqrecords(alchemist, values, data_cache=None, nucleotide=False,
         gene_domains = db_filter.select(CDD_DATA_COLUMNS)
 
         record = flat_files.cds_to_seqrecord(cds, parent_genome,
-                                             gene_domains=gene_domains)
+                                             gene_domains=gene_domains,
+                                             desc_type=file_format)
         seqrecords.append(record)
 
     return seqrecords
