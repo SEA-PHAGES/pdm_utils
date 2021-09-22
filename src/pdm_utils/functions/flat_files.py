@@ -634,10 +634,7 @@ def cds_to_seqrecord(cds, parent_genome, gene_domains=[]):
     record = SeqRecord(cds.translation)
     record.seq.alphabet = IUPAC.IUPACProtein()
     record.name = cds.id
-    if cds.locus_tag == "" or cds.locus_tag is None:
-        record.id = "".join([cds.id, " DRAFT"])
-    else:
-        record.id = cds.locus_tag
+    record.id = cds.id
 
     cds.set_seqfeature()
 
@@ -658,8 +655,24 @@ def cds_to_seqrecord(cds, parent_genome, gene_domains=[]):
     for region_feature in region_features:
         record.features.append(region_feature)
 
-    record.description = (f"{cds.seqfeature.qualifiers['product'][0]} "
-                          f"[{source}]")
+    description = ""
+
+    product = cds.seqfeature.qualifiers["product"][0]
+    if product > "":
+        description = " ".join([description, f"[product={product}]"])
+
+    cluster = parent_genome.cluster
+    if cluster > "":
+        description = " ".join([description, f"[cluster={cluster}]"])
+
+    host_genus = parent_genome.host_genus
+    if host_genus > "":
+        description = " ".join([description, f"[host_genus={host_genus}]"])
+
+    if cds.locus_tag > "":
+        description = " ".join([description, f"[locus={cds.locus_tag}]"])
+
+    record.description = description
     record.annotations = get_cds_seqrecord_annotations(cds, parent_genome)
 
     return record

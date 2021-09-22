@@ -1,5 +1,4 @@
 import shlex
-import shutil
 from subprocess import (Popen, DEVNULL)
 
 from pdm_utils.functions import (fileio, multithread, parallelize)
@@ -47,18 +46,22 @@ def get_all_pham_gene_translations(alchemist):
 
     # Build phage>>cluster lookup table
     cluster_lookup = dict()
-    query = "SELECT PhageID, Cluster, Subcluster FROM phage"
+    host_lookup = dict()
+    query = "SELECT PhageID, Cluster, Subcluster, HostGenus FROM phage"
     results = engine.execute(query)
     for result in results:
         phageid = result["PhageID"]
         cluster = result["Cluster"]
         subcluster = result["Subcluster"]
+        host = result["HostGenus"]
         if cluster is None:
             cluster_lookup[phageid] = "Singleton"
         elif subcluster is None:
             cluster_lookup[phageid] = cluster
         else:
             cluster_lookup[phageid] = subcluster
+
+        host_lookup[phageid] = host
 
     # Build pham>>translation>>gene lookup table
     phams = dict()
@@ -75,12 +78,22 @@ def get_all_pham_gene_translations(alchemist):
             name = locus.split('_')[-1]
         else:
             name = result["Name"]
-        geneid = f"{phageid}_{name}"
-        if product is not None and product > "":
-            geneid += f" ({product})"
-        cluster = cluster_lookup[phageid]
 
-        geneid = "".join(["[", cluster, "]", " ", geneid])
+        geneid = f"{phageid}_{name}"
+
+        if product is not None and product > "":
+            geneid = "".join([geneid, " [product=", str(product), "]"])
+
+        cluster = cluster_lookup[phageid]
+        if cluster is not None and cluster > "":
+            geneid = "".join([geneid, " [cluster=", str(cluster), "]"])
+
+        host = host_lookup[phageid]
+        if host is not None and host > "":
+            geneid = "".join([geneid, " [host_genus=", str(host), "]"])
+
+        if locus is not None and locus > "":
+            geneid = "".join([geneid, " [locus=", str(locus), "]"])
 
         pham_translations = phams.get(phamid, dict())
         gene_ids = pham_translations.get(translation, [])

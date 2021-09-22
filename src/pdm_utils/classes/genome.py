@@ -11,6 +11,7 @@ from pdm_utils.classes import evaluation, cds, trna, tmrna, source
 from pdm_utils.constants import constants
 from pdm_utils.functions import basic
 
+
 class Genome:
     """Class to hold data about a phage genome."""
 
