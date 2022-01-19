@@ -24,7 +24,7 @@ Follow the steps below to push a new version of the ``pdm_utils`` package to PyP
 
         - This updates the version in four separate locations:
 
-            - setup.py (used by PyPI for tracking package versions)
+            - setup.cfg (used by PyPI for tracking package versions)
             - src/pdm_utils/__init__.py (can be accessed after installation)
             - docs/conf.py (for Sphinx documentation)
 
@@ -33,11 +33,12 @@ Follow the steps below to push a new version of the ``pdm_utils`` package to PyP
 
 
     .. warning::
-        The version number in setup.py must be unique within the ``pdm_utils`` version history in TestPyPI and PyPI databases. Even if the package release is removed from these databases, PyPI stores its version number, and a subsequent package release cannot have the same version number, even if it has been deleted.
+        The version number in setup.cfg must be unique within the ``pdm_utils``
+version history in TestPyPI and PyPI databases. Even if the package release is removed from these databases, PyPI stores its version number, and a subsequent package release cannot have the same version number, even if it has been deleted.
 
     6. By default, the working directory is outside of top-level pdm_utils, but the location can be specified within setup.py using the 'package_dir' and 'packages' parameters. Run the setup script from the working directory::
 
-        > python3 setup.py sdist bdist_wheel
+        > python3 -m build .
 
 
     7. To test the package without uploading to PyPI, install the locally-built package file::
