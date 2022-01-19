@@ -7,13 +7,13 @@ import sys
 PACKAGE_PATH = pathlib.Path(__file__)
 PACKAGE_DIR = PACKAGE_PATH.parent
 INIT_PATH = pathlib.Path(PACKAGE_DIR, "src/pdm_utils/__init__.py")
-SETUP_PATH = pathlib.Path(PACKAGE_DIR, "setup.py")
+SETUP_PATH = pathlib.Path(PACKAGE_DIR, "setup.cfg")
 CONF_PATH = pathlib.Path(PACKAGE_DIR, "docs/source/conf.py")
 
 VERSION1 = '__version__ = "{}"\n'
 VERSION2 = "version = '{}'\n"
 VERSION3 = "release = '{}'\n"
-VERSION4 = '    version="{}",\n'
+VERSION4 = 'version = {}\n'
 VERSION_FILES = {
     "init_file":{
         "path":INIT_PATH,
@@ -31,7 +31,7 @@ VERSION_FILES = {
     "setup_file":{
         "path":SETUP_PATH,
         "lines":{
-            12: {VERSION4[:12]:VERSION4}
+            10: {VERSION4[:10] :VERSION4}
         }
     }
 }
