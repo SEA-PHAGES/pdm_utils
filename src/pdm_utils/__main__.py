@@ -1,4 +1,5 @@
 """Controls pipelines from command line."""
-import sys
-from pdm_utils import run
-run.main(sys.argv)
+from pdm_utils.run import main
+
+if __name__ == "__main__":
+    main()

@@ -2,6 +2,7 @@
 It verifies a valid pipeline is selected,
 then passes all command line arguments to the main pipeline module.
 """
+import sys
 import argparse
 
 from pdm_utils.pipelines import compare_db
@@ -26,8 +27,33 @@ VALID_PIPELINES = {"compare", "convert", "export", "find_domains",
                    "revise", "pham_review", "update"}
 
 
-def main(unparsed_args):
-    """Run a pdm_utils pipeline."""
+def parse_args(unparsed_args):
+    """
+    Use argparse to verify pipeline argument only.
+
+    :param unparsed_args: raw command line args
+    :type unparsed_args: list
+    """
+    run_help = "Commandline script to call a pdm_utils pipeline."
+    usage = "python3 -m pdm_utils [pipeline]"
+    pipeline_help = "name of the pdm_utils pipeline to run"
+
+    parser = argparse.ArgumentParser(description=run_help, usage=usage)
+    parser.add_argument("pipeline", type=str, choices=list(VALID_PIPELINES),
+                        help=pipeline_help)
+
+    # Assumed command line arg structure:
+    # python3 -m pdm_utils.run <pipeline> <additional args...>
+    # sys.argv:      [0]            [1]         [2...]
+    return parser.parse_args(unparsed_args[1:2])
+
+
+def main():
+    """Commandline entry point for the pdm_utils package."""
+    if len(sys.argv) == 1:
+        sys.argv.append("-h")
+    unparsed_args = sys.argv
+
     args = parse_args(unparsed_args)
 
     if args.pipeline == "compare":
@@ -63,26 +89,3 @@ def main(unparsed_args):
     else:
         pass
     print("\n\nPipeline completed")
-
-
-def parse_args(unparsed_args):
-    """
-    Use argparse to verify pipeline argument only.
-
-    :param unparsed_args: raw command line args
-    :type unparsed_args: list
-    """
-    run_help = "Command line script to call a pdm_utils pipeline."
-    usage = "python3 -m pdm_utils [pipeline]"
-    pipeline_help = "Name of the pdm_utils pipeline to run."
-
-    parser = argparse.ArgumentParser(description=run_help, usage=usage)
-    parser.add_argument("pipeline", type=str, choices=list(VALID_PIPELINES),
-                        help=pipeline_help)
-
-    # Assumed command line arg structure:
-    # python3 -m pdm_utils.run <pipeline> <additional args...>
-    # sys.argv:      [0]            [1]         [2...]
-    args = parser.parse_args(unparsed_args[1:2])
-
-    return args

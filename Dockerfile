@@ -38,9 +38,6 @@ WORKDIR /home/Cdd
 RUN wget https://ftp.ncbi.nlm.nih.gov/pub/mmdb/cdd/little_endian/Cdd_LE.tar.gz && tar -xzf Cdd_LE.tar.gz && rm Cdd_LE.tar.gz
 
 # Finally, get pdm_utils and perform final setup steps
-RUN mkdir /home/pdm_utils
-WORKDIR /home/pdm_utils
+WORKDIR /home
 RUN pip install pdm_utils
-
-# Start mysql service each time we start the container
 CMD service mysql start && tail -F /var/log/mysql/error.log
