@@ -20,9 +20,9 @@ sys.path.insert(0, os.path.abspath('../../src/'))
 project = 'pdm_utils'
 copyright = '2019, Travis Mavrich'
 author = 'Travis Mavrich'
-version = '0.9.16'
+version = '0.9.17'
 # The full version, including alpha/beta/rc tags
-release = '0.9.16'
+release = '0.9.17'
 
 
 # -- General configuration ---------------------------------------------------
@@ -62,8 +62,8 @@ master_doc = "index"
 # External link library
 extlinks = {
     'anaconda': ('https://www.anaconda.com/%s', ''),
-    'aragorn': ('http://130.235.244.92/ARAGORN/%s', ''),
-    'biopython': ('https://biopython.org/%s', ''),
+    'aragorn': ('http://www.ansikte.se/ARAGORN/%s', ''),
+    'biopython': ('https://pypi.org/project/biopython/%s', ''),
     'blastplus': ('https://blast.ncbi.nlm.nih.gov/'
         'Blast.cgi?CMD=Web&PAGE_TYPE=BlastDocs&DOC_TYPE=Download%s', ''),
     'cdd': ('https://www.ncbi.nlm.nih.gov/cdd/%s', ''),
@@ -73,8 +73,7 @@ extlinks = {
     'dnamaster': ('http://cobamide2.bio.pitt.edu/%s', ''),
     'gbfff': ('https://www.ncbi.nlm.nih.gov/Sitemap/samplerecord.html%s', ''),
     'git': ('https://git-scm.com/%s', ''),
-    'hatfullserver': ('http://phamerator.webfactional.com/databases_Hatfull/%s',
-        ''),
+    'hatfullserver': ('http://databases.hatfull.org/%s', ''),
     'infernal': ('http://eddylab.org/infernal/%s', ''),
     'mysql': ('https://www.mysql.com/%s', ''),
     'mysql_docs': ('https://dev.mysql.com/doc/refman/5.7/en/%s', ''),
@@ -86,6 +85,7 @@ extlinks = {
     'pdmutils': ('https://github.com/SEA-PHAGES/pdm_utils/%s', ''),
     'phagesdb': ('http://phagesdb.org/%s', ''),
     'pymysql': ('https://pymysql.readthedocs.io/en/latest/%s', ''),
+    'pyyaml': ('https://pypi.org/project/PyYAML/', ''),
     'seaphages': ('https://seaphages.org/%s', ''),
     'sqlalchemy': ('https://www.sqlalchemy.org/%s', ''),
     'tabulate': ('https://github.com/astanin/python-tabulate/%s', ''),
