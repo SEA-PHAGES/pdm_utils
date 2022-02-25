@@ -4,9 +4,8 @@ database."""
 from Bio.Alphabet import IUPAC
 from Bio.Seq import Seq
 from datetime import datetime, date
-from pathlib import Path
 
-# pdm_utils is compatibile with this schema version.
+# pdm_utils is compatible with this schema version.
 CODE_SCHEMA_VERSION = 10
 
 CURRENT_DATE = date.today().strftime("%Y%m%d")
@@ -71,8 +70,8 @@ IMPORT_TABLE_STRUCTURE = {
 
 NAME_SUFFIX = "_Draft"
 ANNOTATION_STATUS_SET = {"draft", "final", "unknown"}
-ANNOTATION_AUTHOR_SET = {0,1}
-RETRIEVE_RECORD_SET = {0,1}
+ANNOTATION_AUTHOR_SET = {0, 1}
+RETRIEVE_RECORD_SET = {0, 1}
 EMPTY_DATE = datetime.strptime("1/1/0001 00:00:00", "%m/%d/%Y %H:%M:%S")
 
 # Some locus tags have "PHIRE", but this should not be the case.
@@ -155,7 +154,7 @@ PHAGE_ID_DICT = {
     # the original publication.
     "P100_1": "P100.1",
     "P100_A": "P100A",
-    "P14":"P14.4",
+    "P14": "P14.4",
     "phiELB20": "ELB20",
     "ZL12": "pZL12",
 

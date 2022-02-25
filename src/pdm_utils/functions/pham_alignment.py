@@ -1,7 +1,7 @@
 import shlex
 from subprocess import (Popen, DEVNULL)
 
-from pdm_utils.functions import (fileio, multithread, parallelize)
+from pdm_utils.functions import (fileio, multithread, multiprocess)
 
 
 THREAD_LOCK_TIMEOUT = 10

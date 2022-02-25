@@ -1,26 +1,27 @@
 """Configuration file definition and parsing."""
 
 import configparser
-import pathlib
 import sys
 
 from pdm_utils.functions import basic
 
+
 def default_sections_keys():
-    dict = {"mysql": {"user", "password"},
-            "mysqldump": {"user", "password"},
-            "ncbi": {"api_key", "email", "tool"},
-            "upload_server": {"host", "dest", "user", "password"},
-            "download_server": {"url"},
-            "emailer": {"username", "password"}
-            }
-    return dict
+    sections = {"mysql": {"user", "password"},
+                "mysqldump": {"user", "password"},
+                "ncbi": {"api_key", "email", "tool"},
+                "upload_server": {"host", "dest", "user", "password"},
+                "download_server": {"url"},
+                "emailer": {"username", "password"}}
+    return sections
+
 
 def setup_section(keys, value):
-    dict = {}
+    section = {}
     for key in keys:
-        dict[key] = value
-    return dict
+        section[key] = value
+    return section
+
 
 def default_parser(null_value):
     """Constructs complete config with empty values."""
@@ -30,6 +31,7 @@ def default_parser(null_value):
     for key in all_configs.keys():
         null_parser[key] = setup_section(all_configs[key], null_value)
     return null_parser
+
 
 def parse_config(file, parser=None):
     """Get parameters from config file."""
@@ -45,6 +47,7 @@ def parse_config(file, parser=None):
     else:
         return parser
 
+
 def build_complete_config(file):
     "Buid a complete config object by merging user-supplied and default config."
     parser = default_parser(None)
@@ -52,10 +55,12 @@ def build_complete_config(file):
         parser = parse_config(file, parser)
     return parser
 
+
 def write_config(parser, filepath):
     """Write a ConfigParser to file."""
     with filepath.open("w") as fh:
         parser.write(fh)
+
 
 def create_empty_config_file(dir, file, null_value):
     """Create an empty config file with all available settings."""

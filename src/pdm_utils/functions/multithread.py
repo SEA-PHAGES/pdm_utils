@@ -6,7 +6,7 @@ from queue import Queue
 import time
 import threading
 
-from pdm_utils.classes.progressbar import ProgressBar, show_progress
+from pdm_utils.classes.progress import ProgressBar, show_progress
 
 
 class MixedThread(threading.Thread):

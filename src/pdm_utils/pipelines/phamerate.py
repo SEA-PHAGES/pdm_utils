@@ -10,7 +10,7 @@ import shutil
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.functions.configfile import *
 from pdm_utils.functions.phameration import *
-from pdm_utils.functions.parallelize import *
+from pdm_utils.functions.multiprocess import *
 
 MMSEQS_DESCRIPTION = """
 Assort protein sequences into phamilies using MMseqs2.
