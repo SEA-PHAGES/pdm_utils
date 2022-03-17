@@ -2,10 +2,11 @@
 
 import json
 import pathlib
-import urllib.request
+from urllib import request, error
 
 from pdm_utils.classes import genome
 from pdm_utils.constants import constants
+
 
 def parse_phage_name(data_dict):
     """Retrieve Phage Name from PhagesDB.
@@ -17,7 +18,7 @@ def parse_phage_name(data_dict):
     """
     try:
         phage_name = data_dict["phage_name"]
-    except:
+    except KeyError:
         phage_name = ""
     return phage_name
 
@@ -44,7 +45,7 @@ def parse_cluster(data_dict):
             cluster = "UNK"
         else:
             cluster = data_dict["pcluster"]["cluster"]
-    except:
+    except KeyError:
         cluster = ""
     return cluster
 
@@ -70,7 +71,7 @@ def parse_subcluster(data_dict):
             subcluster = "none"
         else:
             subcluster = data_dict["psubcluster"]["subcluster"]
-    except:
+    except KeyError:
         subcluster = ""
     return subcluster
 
@@ -85,7 +86,7 @@ def parse_host_genus(data_dict):
     """
     try:
         host_genus = data_dict["isolation_host"]["genus"]
-    except:
+    except KeyError:
         host_genus = ""
     return host_genus
 
@@ -100,7 +101,7 @@ def parse_accession(data_dict):
     """
     try:
         accession = data_dict["genbank_accession"]
-    except:
+    except KeyError:
         accession = ""
     return accession
 
@@ -115,7 +116,7 @@ def parse_fasta_filename(data_dict):
     """
     try:
         fastafile_url = data_dict["fasta_file"]
-    except:
+    except KeyError:
         fastafile_url = ""
     return fastafile_url
 
@@ -134,11 +135,11 @@ def retrieve_url_data(url):
         # certificate verify failed (_ssl.c:590)> ==> creating new TLS
         # context tells urllib2 to ignore certificate chain
         # NOTE this is BAD SECURITY, prone to man-in-the-middle attacks
-        request = urllib.request.Request(url)
-        with urllib.request.urlopen(request) as response:
+        rqst = request.Request(url)
+        with request.urlopen(rqst) as response:
             data = response.read()
             data = data.decode("utf-8")
-    except:
+    except error.HTTPError:
         print(f"Unable to retrieve data from {url}")
         data = ""
     return data
@@ -165,12 +166,12 @@ def parse_fasta_data(fasta_data):
     if len(split_fasta_data) > 1:
         header = split_fasta_data[0]
         if header[0] == ">":
-            header = header[1:] # Remove '>' symbol.
-        header = header.strip() # Remove any whitespace
+            header = header[1:]  # Remove '>' symbol.
+        header = header.strip()  # Remove any whitespace
         for index in range(1, len(split_fasta_data)):
             # Strip off potential whitespace before appending, such as '\r'.
             sequence = sequence + split_fasta_data[index].strip()
-    return (header, sequence)
+    return header, sequence
 
 
 def parse_genome_data(data_dict, gnm_type="", seq=False):
@@ -205,7 +206,7 @@ def parse_genome_data(data_dict, gnm_type="", seq=False):
     cluster = parse_cluster(data_dict)
     gnm.set_cluster(cluster)
 
-    #Subcluster
+    # Subcluster
     subcluster = parse_subcluster(data_dict)
     gnm.set_subcluster(subcluster)
 
@@ -216,7 +217,7 @@ def parse_genome_data(data_dict, gnm_type="", seq=False):
 
     # Fasta file record
     # if fastafile_url != "":
-    if (fastafile_url != "" and seq == True):
+    if fastafile_url != "" and seq is True:
         fasta_file = retrieve_url_data(fastafile_url)
 
         # TODO unit test - not sure how to test this, since this function
@@ -231,6 +232,7 @@ def parse_genome_data(data_dict, gnm_type="", seq=False):
     gnm.misc = data_dict
     return gnm
 
+
 def retrieve_genome_data(phage_url):
     """Retrieve all data from PhagesDB for a specific phage.
 
@@ -240,10 +242,10 @@ def retrieve_genome_data(phage_url):
     :rtype: dict
     """
     try:
-        data_json = urllib.request.urlopen(phage_url)
+        data_json = request.urlopen(phage_url)
         data_dict = json.loads(data_json.read())
         # TODO should data_dict.close() be called after retrieving data?
-    except:
+    except error.HTTPError:
         data_dict = {}
     return data_dict
 
@@ -295,7 +297,7 @@ def get_phagesdb_data(url):
         an empty list is returned.
     :rtype: list
     """
-    data_json = urllib.request.urlopen(url)
+    data_json = request.urlopen(url)
     # Response is a bytes object that json.loads can't read without first
     # being decoded to a UTF-8 string.
     data_dict = json.loads(data_json.read().decode("utf-8"))
@@ -340,8 +342,6 @@ def parse_genomes_dict(data_dict, gnm_type="", seq=False):
     return genome_dict
 
 
-
-
 def retrieve_data_list(url):
     """Retrieve list of data from PhagesDB.
 
@@ -351,9 +351,9 @@ def retrieve_data_list(url):
     :rtype: list
     """
     try:
-        data_json = urllib.request.urlopen(url)
+        data_json = request.urlopen(url)
         data_list = json.loads(data_json.read())
-    except:
+    except error.HTTPError:
         data_list = []
     return data_list
 
@@ -368,13 +368,13 @@ def create_host_genus_set(url=constants.API_HOST_GENERA):
     """
     try:
         output = retrieve_data_list(url)
-    except:
+    except error.HTTPError:
         output = []
     host_genera_set = set()
     for genus_dict in output:
         try:
             host_genera_set.add(genus_dict["genus_name"])
-        except:
+        except KeyError:
             pass
     return host_genera_set
 
@@ -393,41 +393,18 @@ def create_cluster_subcluster_sets(url=constants.API_CLUSTERS):
     """
     try:
         output = retrieve_data_list(url)
-    except:
+    except error.HTTPError:
         output = []
     cluster_set = set()
     subcluster_set = set()
     for data in output:
         try:
-            cluster_set.add(data["cluster"]) # This set contains 'Singleton'.
+            cluster_set.add(data["cluster"])  # This set contains 'Singleton'.
             try:
                 subclusters_list = data["subclusters_set"]
                 subcluster_set = subcluster_set | set(subclusters_list)
-            except:
+            except KeyError:
                 pass
-        except:
+        except KeyError:
             pass
-    return (cluster_set, subcluster_set)
-
-
-# TODO unittest.
-def get_unphamerated_phage_list(url):
-    """Retreive list of unphamerated phages from PhagesDB.
-
-    :param url:
-        A URL from which to retrieve a list of PhagesDB genomes that are not
-        in the most up-to-date instance of the Actino_Draft
-        MySQL database.
-    :type url: str
-    :returns: List of PhageIDs.
-    :rtype: list
-    """
-    # Retrieved file is a tab-delimited text file.
-    # Each row is a newly-sequenced phage.
-    response = urllib.request.urlopen(url)
-    processed_list = []
-    for new_phage in response:
-        new_phage = new_phage.strip()  # Remove \t at end of each row
-        new_phage = new_phage.decode("utf-8")  # convert bytes object to str
-        processed_list.append(new_phage)
-    return processed_list
+    return cluster_set, subcluster_set

@@ -1654,10 +1654,6 @@ def check_source(src_ftr, eval_flags, host_genus=""):
 
     if eval_flags["check_host_typo"]:
 
-        # TODO not sure if host genus synonyms is needed anymore.
-        # Strategy to utilize host genus synonyms, such as 'Mycolicibacterium'.
-        # host_genus_synonyms = basic.get_synonyms(host_genus,
-        #                                 constants.HOST_GENUS_SYNONYMS)
         # Alternatively, a host_genus_set could be passed into the function,
         # instead of a string, and the decision to pass in a set of synonyms
         # could be pushed up a level.

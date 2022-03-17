@@ -121,19 +121,9 @@ API_HOST_GENERA = "https://phagesdb.org/api/host_genera/"
 API_CLUSTERS = "https://phagesdb.org/api/clusters/"
 
 # API at PhagesDB has you specify how many results to return.
-# 1 page at length 100000 will return everything.
-SEQUENCED_PAGE = 1
-SEQUENCED_SIZE = 100000
+# 1 page at length 7500 will return everything for a few years.
 API_SEQUENCED = ("https://phagesdb.org/api/sequenced_phages/"
-                 f"?page={SEQUENCED_PAGE}"
-                 f"&page_size={SEQUENCED_SIZE}")
-
-
-# TODO this may no longer be needed, now that get_data pipeline
-# determines which new genomes to retrieve based on the
-# MySQL database instance instead of PhagesDB.
-UNPHAMERATED_PHAGE_LIST = "https://phagesdb.org/data/unphameratedlist"
-
+                 f"?page=1&page_size=7500")
 
 # Auto-annotations from PECAAN
 PECAAN_PREFIX = "https://discover.kbrinsgd.org/phameratoroutput/phage/"
@@ -200,10 +190,5 @@ PHAGE_ID_DICT = {
     "vB_MoxS-ISF9": "ISF9"
     }
 
-# TODO HOST_GENUS_DICT may no longer be needed.
-# List of host_genus synonyms.
-HOST_GENUS_SYNONYMS = [{"Mycobacterium", "Mycobacterio", "Mycolicibacterium"}]
-
 # Hatfull lab server info
-DB_WEBSITE = "http://phamerator.webfactional.com/databases_Hatfull/"
 DB_SERVER = "http://databases.hatfull.org/"
