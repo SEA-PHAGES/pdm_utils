@@ -78,6 +78,17 @@ def parse_args(args=None):
     return parser.parse_args()
 
 
+def detect_rpsblast_name():
+    """Detect whether rpsblast or rpsblast+ is installed locally.
+
+    :return: name
+    """
+    for program in ["rpsblast", "rpsblast+"]:
+        version = rpsblast.get_version(program)
+        if version:
+            return program
+
+
 def learn_cdd_name(cdd_dir):
     """Return the NCBI Cdd 'name' learned by analyzing the filename of
     every file in the Cdd directory.
@@ -96,7 +107,7 @@ def learn_cdd_name(cdd_dir):
         return filenames[0]
 
 
-def find_domains(program, sequences, cdd, out_dir, evalue, cpus):
+def find_domains(program, sequences, cdd, evalue, cpus):
     """Find and return NCBI conserved domain database hits for the
     given sequences.
 
@@ -106,8 +117,6 @@ def find_domains(program, sequences, cdd, out_dir, evalue, cpus):
     :type sequences: list[tuple[str, str]]
     :param cdd: path to a local copy of the Cdd database
     :type cdd: str or pathlib.Path
-    :param out_dir: path where temporary files can be placed
-    :type out_dir: pathlib.Path
     :param evalue: significance threshold to retain hits
     :type evalue: float
     :param cpus: number of cpu cores to use
@@ -116,7 +125,7 @@ def find_domains(program, sequences, cdd, out_dir, evalue, cpus):
     """
     # Calling code needs to clean up temp dir created this way - see
     # try/finally block below
-    tmp_dir = tempfile.mkdtemp(prefix="cdd_search_", dir=out_dir)
+    tmp_dir = tempfile.mkdtemp(prefix="pdm_utils__find_domains")
 
     try:
         outfiles = rpsblast.blastall(program=program, sequences=sequences,
@@ -189,19 +198,13 @@ def main(argument_list):
 
     # If no rpsblast given, try to discover a globally executable version
     if not program:
-        for p in ("rpsblast", "rpsblast+"):
-            try:
-                rpsblast.get_version(p)
-                program = p
-                break
-            except rpsblast.BlastError:
-                continue
+        program = detect_rpsblast_name()
 
     if not program:
-        msg = "No globally executable rpsblast or rpsblast+ on $PATH. Please " \
-              "install the NCBI-BLAST+ toolkit. If it is already installed, " \
-              "re-run this pipeline with the '--rpsblast' argument and " \
-              "provide the path to the executable."
+        msg = "Unable to auto-detect an rpsblast or rpsblast+ executable on " \
+              "$PATH. Please install the NCBI-BLAST+ toolkit. If already " \
+              "installed, re-run this pipeline with the '--rpsblast' " \
+              "argument and provide the path to the rpsblast(+) executable."
         logger.error(msg)
         print(msg)
         return
@@ -269,7 +272,7 @@ def main(argument_list):
             batch_sequences.append((nr_dict[translation][0], translation))
 
         batch_domains = find_domains(program, batch_sequences, cdd,
-                                     results_path, evalue, cpus)
+                                     evalue, cpus)
 
         batch_transactions = list()
         for translation, domains in batch_domains.items():
@@ -383,7 +386,7 @@ def insert_domain_data(engine, results):
         rolled_back += exe_result
 
     if rolled_back > 0:
-        msg = (f"Error executing {rolled_back} transaction(s).")
+        msg = f"Error executing {rolled_back} transaction(s)."
         logger.error(msg)
         print(msg)
 

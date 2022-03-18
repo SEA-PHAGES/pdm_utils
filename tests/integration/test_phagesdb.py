@@ -1,28 +1,23 @@
 """Integration tests for misc. functions that interact with PhagesDB."""
 
-from pdm_utils.classes import bundle
-from pdm_utils.functions import phagesdb
-from pdm_utils.classes import genome
-from pdm_utils.constants import constants
 import unittest
-from Bio.SeqRecord import SeqRecord
-from Bio.Seq import Seq
 from pathlib import Path
 
+from Bio.Seq import Seq
+
+from pdm_utils.classes import bundle
+from pdm_utils.classes import genome
+from pdm_utils.constants import constants
+from pdm_utils.functions import phagesdb
 
 
 class TestPhagesDBFunctions(unittest.TestCase):
 
-
     def setUp(self):
-
         self.API_PREFIX = constants.API_PREFIX
         self.API_SUFFIX = constants.API_SUFFIX
 
         self.gnm = genome.Genome()
-
-
-
 
     def test_retrieve_url_data_1(self):
         """Verify fasta data is retrieved and no error is produced."""
@@ -40,19 +35,16 @@ class TestPhagesDBFunctions(unittest.TestCase):
         expected_fasta_data_header = ""
         self.assertEqual(fasta_data, expected_fasta_data_header)
 
-
-
-
     def test_parse_genome_data_1(self):
         """Verify genome object is parsed from PhagesDB."""
         url = "https://phagesdb.org/media/fastas/L5.fasta"
         filename = Path(url).stem
-        data_dict = {"phage_name":"Trixie",
-                    "pcluster": {"cluster": "A"},
-                    "psubcluster": {"subcluster": "A2"},
-                    "isolation_host": {"genus": "Mycobacterium"},
-                    "genbank_accession": "ABC123",
-                    "fasta_file": url}
+        data_dict = {"phage_name": "Trixie",
+                     "pcluster": {"cluster": "A"},
+                     "psubcluster": {"subcluster": "A2"},
+                     "isolation_host": {"genus": "Mycobacterium"},
+                     "genbank_accession": "ABC123",
+                     "fasta_file": url}
         self.gnm = phagesdb.parse_genome_data(data_dict,
                                               gnm_type="phagesdb",
                                               seq=True)
@@ -87,89 +79,82 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertIsInstance(self.gnm.misc, dict)
 
-
     def test_parse_genome_data_2(self):
         """Verify output when there is no phage_name key."""
 
         url = "https://phagesdb.org/media/fastas/L5.fasta"
-        data_dict = {"phage_name_x":"Trixie",
-                    "pcluster": {"cluster": "A"},
-                    "psubcluster": {"subcluster": "A2"},
-                    "isolation_host": {"genus": "Mycobacterium"},
-                    "genbank_accession": "ABC123",
-                    "fasta_file": url}
+        data_dict = {"phage_name_x": "Trixie",
+                     "pcluster": {"cluster": "A"},
+                     "psubcluster": {"subcluster": "A2"},
+                     "isolation_host": {"genus": "Mycobacterium"},
+                     "genbank_accession": "ABC123",
+                     "fasta_file": url}
         self.gnm = phagesdb.parse_genome_data(data_dict)
         with self.subTest():
             self.assertEqual(self.gnm.name, "")
         with self.subTest():
             self.assertEqual(self.gnm.id, "")
 
-
-
     def test_parse_genome_data_3(self):
         """Verify output when there is no pcluster key."""
         url = "https://phagesdb.org/media/fastas/L5.fasta"
-        data_dict = {"phage_name":"Trixie",
-                    "pcluster_x": {"cluster": "A"},
-                    "psubcluster": {"subcluster": "A2"},
-                    "isolation_host": {"genus": "Mycobacterium"},
-                    "genbank_accession": "ABC123",
-                    "fasta_file": url}
+        data_dict = {"phage_name": "Trixie",
+                     "pcluster_x": {"cluster": "A"},
+                     "psubcluster": {"subcluster": "A2"},
+                     "isolation_host": {"genus": "Mycobacterium"},
+                     "genbank_accession": "ABC123",
+                     "fasta_file": url}
         self.gnm = phagesdb.parse_genome_data(data_dict, gnm_type="phagesdb")
         with self.subTest():
             self.assertEqual(self.gnm.name, "Trixie")
         with self.subTest():
             self.assertEqual(self.gnm.cluster, "")
 
-
     def test_parse_genome_data_4(self):
         """Verify output when there is no psubcluster key."""
         url = "https://phagesdb.org/media/fastas/L5.fasta"
-        data_dict = {"phage_name":"Trixie",
-                    "pcluster": {"cluster": "A"},
-                    "psubcluster_x": {"subcluster": "A2"},
-                    "isolation_host": {"genus": "Mycobacterium"},
-                    "genbank_accession": "ABC123",
-                    "fasta_file": url}
+        data_dict = {"phage_name": "Trixie",
+                     "pcluster": {"cluster": "A"},
+                     "psubcluster_x": {"subcluster": "A2"},
+                     "isolation_host": {"genus": "Mycobacterium"},
+                     "genbank_accession": "ABC123",
+                     "fasta_file": url}
         self.gnm = phagesdb.parse_genome_data(data_dict, gnm_type="phagesdb")
         self.assertEqual(self.gnm.subcluster, "")
-
 
     def test_parse_genome_data_5(self):
         """Verify output when there is no isolation_host key."""
         url = "https://phagesdb.org/media/fastas/L5.fasta"
-        data_dict = {"phage_name":"Trixie",
-                    "pcluster": {"cluster": "A"},
-                    "psubcluster": {"subcluster": "A2"},
-                    "isolation_host_x": {"genus": "Mycobacterium"},
-                    "genbank_accession": "ABC123",
-                    "fasta_file": url}
+        data_dict = {"phage_name": "Trixie",
+                     "pcluster": {"cluster": "A"},
+                     "psubcluster": {"subcluster": "A2"},
+                     "isolation_host_x": {"genus": "Mycobacterium"},
+                     "genbank_accession": "ABC123",
+                     "fasta_file": url}
         self.gnm = phagesdb.parse_genome_data(data_dict, gnm_type="phagesdb")
         self.assertEqual(self.gnm.host_genus, "")
-
 
     def test_parse_genome_data_6(self):
         """Verify output when there is no genbank_accession key."""
         url = "https://phagesdb.org/media/fastas/L5.fasta"
-        data_dict = {"phage_name":"Trixie",
-                    "pcluster": {"cluster": "A"},
-                    "psubcluster": {"subcluster": "A2"},
-                    "isolation_host": {"genus": "Mycobacterium"},
-                    "genbank_accession_x": "ABC123",
-                    "fasta_file": url}
+        data_dict = {"phage_name": "Trixie",
+                     "pcluster": {"cluster": "A"},
+                     "psubcluster": {"subcluster": "A2"},
+                     "isolation_host": {"genus": "Mycobacterium"},
+                     "genbank_accession_x": "ABC123",
+                     "fasta_file": url}
         self.gnm = phagesdb.parse_genome_data(data_dict, gnm_type="phagesdb")
         self.assertEqual(self.gnm.accession, "")
-
 
     def test_parse_genome_data_7(self):
         """Verify output when there is no fasta_file key."""
         url = "https://phagesdb.org/media/fastas/L5.fasta"
-        data_dict = {"phage_name":"Trixie",
-                    "pcluster": {"cluster": "A"},
-                    "psubcluster": {"subcluster": "A2"},
-                    "isolation_host": {"genus": "Mycobacterium"},
-                    "genbank_accession": "ABC123",
-                    "fasta_file_x": url}
+        data_dict = {"phage_name": "Trixie",
+                     "pcluster": {"cluster": "A"},
+                     "psubcluster": {"subcluster": "A2"},
+                     "isolation_host": {"genus": "Mycobacterium"},
+                     "genbank_accession": "ABC123",
+                     "fasta_file_x": url}
         self.gnm = phagesdb.parse_genome_data(data_dict,
                                               gnm_type="phagesdb",
                                               seq=True)
@@ -184,17 +169,16 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.gnm._description_host_genus, "")
 
-
     def test_parse_genome_data_8(self):
         """Verify output when there is incorrect fasta_file URL."""
         url = "https://phagesdb.org/media/fastas/L5_x.fasta"
         filename = Path(url).stem
-        data_dict = {"phage_name":"Trixie",
-                    "pcluster": {"cluster": "A"},
-                    "psubcluster": {"subcluster": "A2"},
-                    "isolation_host": {"genus": "Mycobacterium"},
-                    "genbank_accession": "ABC123",
-                    "fasta_file": url}
+        data_dict = {"phage_name": "Trixie",
+                     "pcluster": {"cluster": "A"},
+                     "psubcluster": {"subcluster": "A2"},
+                     "isolation_host": {"genus": "Mycobacterium"},
+                     "genbank_accession": "ABC123",
+                     "fasta_file": url}
         self.gnm = phagesdb.parse_genome_data(data_dict,
                                               gnm_type="phagesdb",
                                               seq=True)
@@ -209,16 +193,15 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.gnm._description_host_genus, "")
 
-
     def test_parse_genome_data_9(self):
         """Verify output when there are multiple errors."""
         url = "https://phagesdb.org/media/fastas/L5.fasta"
-        data_dict = {"phage_name":"Trixie",
-                    "pcluster_x": {"cluster": "A"},
-                    "psubcluster_x": {"subcluster": "A2"},
-                    "isolation_host_x": {"genus": "Mycobacterium"},
-                    "genbank_accession_x": "ABC123",
-                    "fasta_file_x": url}
+        data_dict = {"phage_name": "Trixie",
+                     "pcluster_x": {"cluster": "A"},
+                     "psubcluster_x": {"subcluster": "A2"},
+                     "isolation_host_x": {"genus": "Mycobacterium"},
+                     "genbank_accession_x": "ABC123",
+                     "fasta_file_x": url}
         self.gnm = phagesdb.parse_genome_data(data_dict, seq=True)
         with self.subTest():
             self.assertEqual(self.gnm.name, "Trixie")
@@ -245,17 +228,16 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertEqual(self.gnm.type, "")
 
-
     def test_parse_genome_data_10(self):
         """Verify output when seq is False."""
         url = "https://phagesdb.org/media/fastas/L5.fasta"
         filename = Path(url).stem
-        data_dict = {"phage_name":"Trixie",
-                    "pcluster": {"cluster": "A"},
-                    "psubcluster": {"subcluster": "A2"},
-                    "isolation_host": {"genus": "Mycobacterium"},
-                    "genbank_accession": "ABC123",
-                    "fasta_file": url}
+        data_dict = {"phage_name": "Trixie",
+                     "pcluster": {"cluster": "A"},
+                     "psubcluster": {"subcluster": "A2"},
+                     "isolation_host": {"genus": "Mycobacterium"},
+                     "genbank_accession": "ABC123",
+                     "fasta_file": url}
         self.gnm = phagesdb.parse_genome_data(data_dict,
                                               gnm_type="phagesdb",
                                               seq=False)
@@ -269,9 +251,6 @@ class TestPhagesDBFunctions(unittest.TestCase):
             self.assertEqual(self.gnm._description_name, "")
         with self.subTest():
             self.assertEqual(self.gnm._description_host_genus, "")
-
-
-
 
     def test_retrieve_genome_data_1(self):
         """Verify data is retrieved from PhagesDB with no error produced."""
@@ -288,9 +267,6 @@ class TestPhagesDBFunctions(unittest.TestCase):
         data_dict = phagesdb.retrieve_genome_data(url)
         self.assertEqual(len(data_dict.keys()), 0)
 
-
-
-
     def test_retrieve_data_list_1(self):
         """Confirm that data is successfully retrieved."""
         url = constants.API_CLUSTERS
@@ -300,11 +276,9 @@ class TestPhagesDBFunctions(unittest.TestCase):
     def test_retrieve_data_list_2(self):
         """Confirm that data is not successfully retrieved."""
         url = 'invalid url'
-        data_list = phagesdb.retrieve_data_list(url)
-        self.assertTrue(len(data_list) == 0)
-
-
-
+        # data_list = (url)
+        # self.assertTrue(len(data_list) == 0)
+        self.assertRaises(ValueError, phagesdb.retrieve_data_list, url)
 
     def test_create_host_genus_set_1(self):
         """Confirm that host genera data is successfully retrieved."""
@@ -314,15 +288,12 @@ class TestPhagesDBFunctions(unittest.TestCase):
         with self.subTest():
             self.assertTrue("Mycobacterium" in host_genera_set)
 
-
     def test_create_host_genus_set_2(self):
         """Confirm that host genera data are not retrieved due to
         invalid url."""
-        host_genera_set = phagesdb.create_host_genus_set("invalid_url")
-        self.assertTrue(len(host_genera_set) == 0)
-
-
-
+        # host_genera_set = phagesdb.create_host_genus_set("invalid_url")
+        # self.assertTrue(len(host_genera_set) == 0)
+        self.assertRaises(ValueError, phagesdb.create_host_genus_set, "invalid_url")
 
     def test_create_cluster_subcluster_sets_1(self):
         """Confirm that cluster and subcluster data are successfully
@@ -337,14 +308,13 @@ class TestPhagesDBFunctions(unittest.TestCase):
     def test_create_cluster_subcluster_sets_2(self):
         """Confirm that cluster and subcluster data are not retrieved due
         to invalid url."""
-        cluster_set, \
-        subcluster_set = phagesdb.create_cluster_subcluster_sets("invalid_url")
-        with self.subTest():
-            self.assertTrue(len(cluster_set) == 0)
-        with self.subTest():
-            self.assertTrue(len(subcluster_set) == 0)
-
-
+        self.assertRaises(ValueError, phagesdb.create_cluster_subcluster_sets, "invalid_url")
+        # cluster_set, \
+        # subcluster_set = phagesdb.create_cluster_subcluster_sets("invalid_url")
+        # with self.subTest():
+        #     self.assertTrue(len(cluster_set) == 0)
+        # with self.subTest():
+        #     self.assertTrue(len(subcluster_set) == 0)
 
 
 class TestPhagesDBFunctions2(unittest.TestCase):
@@ -360,9 +330,6 @@ class TestPhagesDBFunctions2(unittest.TestCase):
         self.genome1.cluster = "B"
 
         self.bundle1 = bundle.Bundle()
-
-
-
 
     def test_get_genome_1(self):
         """Check that a genome is successfully retrieved."""

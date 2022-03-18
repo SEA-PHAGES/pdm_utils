@@ -18,20 +18,21 @@ def get_version(program="rpsblast", long=False):
     :param long: return the long version string
     :type long: bool
     :return: version
-    :raise: BlastError
     """
     command = f"{program} -version"
 
     try:
         stderr, stdout = run_command(command)
+        if stdout:
+            raise BlastError(stdout)
+        if long:
+            version = stderr.split("\n")[1].split("blast ")[-1]
+        else:
+            version = stderr.split("\n")[0].split(": ")[-1]
     except FileNotFoundError:
-        # Problem running rpsblast at all
-        raise BlastError(f"program '{program}' not found")
+        version = None
 
-    if long:
-        return stderr.split("\n")[1].split("blast ")[-1]
-
-    return stderr.split("\n")[0].split(": ")[-1]
+    return version
 
 
 def rpsblast(program, query, db, out, evalue, comp_based_stats=1,
@@ -64,14 +65,10 @@ def rpsblast(program, query, db, out, evalue, comp_based_stats=1,
               f"{outfmt} -evalue {evalue} -seg {seg} -comp_based_stats " \
               f"{comp_based_stats}"
 
-    try:
-        stdout, stderr = run_command(command)
-        if stderr:
-            # Problem with filepaths or other parameters
-            raise BlastError(stderr)
-    except FileNotFoundError:
-        # Problem running rpsblast at all
-        raise BlastError(f"program '{program}' not found")
+    stdout, stderr = run_command(command)
+    if stderr:
+        # Problem with filepaths or other parameters
+        raise BlastError(stderr)
 
     return out
 
