@@ -48,11 +48,12 @@ def parse_args(unparsed_args):
     return parser.parse_args(unparsed_args[1:2])
 
 
-def main():
+def main(unparsed_args=None):
     """Commandline entry point for the pdm_utils package."""
-    if len(sys.argv) == 1:
-        sys.argv.append("-h")
-    unparsed_args = sys.argv
+    if not unparsed_args:
+        if len(sys.argv) == 1:
+            sys.argv.append("-h")
+        unparsed_args = sys.argv
 
     args = parse_args(unparsed_args)
 
