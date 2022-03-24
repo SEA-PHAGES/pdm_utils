@@ -180,7 +180,8 @@ def align_pham_out_fastas(working_dir, pham_fasta_map, threads=1,
 
         work_items.append((filepath, aln_path))
 
-    parallelize.parallelize(work_items, threads, run_clustalo, verbose=verbose)
+    multiprocess.parallelize(work_items, threads, run_clustalo,
+                             verbose=verbose)
 
     return pham_aln_map
 
@@ -220,8 +221,8 @@ def write_phams(fasta_dir, aln_dir, phams_translations_dict, cores=1,
     for pham, pham_translations in phams_translations_dict.items():
         work_items.append((fasta_dir, aln_dir, pham, pham_translations))
 
-    parallelize.parallelize(work_items, cores, write_phams_process,
-                            verbose=verbose)
+    multiprocess.parallelize(work_items, cores, write_phams_process,
+                             verbose=verbose)
 
 
 def write_phams_process(fasta_dir, aln_dir, pham, pham_translations):
