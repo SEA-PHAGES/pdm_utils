@@ -99,7 +99,7 @@ def blastall(program, sequences, db, tmp_dir, evalue, cpus=1,
     :rtype: list[str or pathlib.Path]
     """
     # Determine appropriate number of partitions for good load balancing
-    num_batches = len(sequences) // batch_size
+    num_batches = max((len(sequences) // batch_size, 1))
     while len(sequences) / num_batches > batch_size or num_batches % cpus != 0:
         num_batches += 1
 

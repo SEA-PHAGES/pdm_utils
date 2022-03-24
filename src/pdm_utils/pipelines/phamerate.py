@@ -6,6 +6,7 @@ import argparse
 from datetime import datetime
 import os
 import shutil
+import pathlib
 
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.functions.configfile import *
@@ -71,7 +72,7 @@ def setup_argparser():
                                help="pct coverage to cluster HMMs [0, 1]")
     mmseqs_parser.add_argument("--hmm-eval", type=float, default=0.001,
                                help="E-value to cluster HMMs")
-    mmseqs_parser.add_argument("--threads", type=int, default=mp.cpu_count(),
+    mmseqs_parser.add_argument("--threads", type=int, default=CPUS,
                                help="number of threads to use")
     mmseqs_parser.add_argument("--tmp-dir", type=str, default="/tmp/phamerate",
                                help="temporary directory for file I/O")
@@ -91,7 +92,7 @@ def setup_argparser():
                               help="blastp query coverage to keep HSPs [0, 1]")
     blast_parser.add_argument("--inflate", type=float, default=5.0,
                               help="MCL inflation parameter")
-    blast_parser.add_argument("--threads", type=int, default=mp.cpu_count(),
+    blast_parser.add_argument("--threads", type=int, default=CPUS,
                               help="blastp instances to run in parallel")
     blast_parser.add_argument("--tmp-dir", type=str, default="/tmp/phamerate",
                               help="temporary directory for file I/O")
