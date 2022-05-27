@@ -51,7 +51,7 @@ def parse_args(args=None):
     parser.add_argument("database", type=str,
                         help="name of database to find conserved domains for")
 
-    parser.add_argument("--cdd-dir", type=str, default=DEFAULT_CDD,
+    parser.add_argument("--cdd-dir", type=pathlib.Path, default=DEFAULT_CDD,
                         help=f"path to local NCBI Cdd [default: {DEFAULT_CDD}]")
     parser.add_argument("--cpus", default=mp.CPUS, type=int,
                         help=f"number of CPU cores to use [default: {mp.CPUS}]")
@@ -134,8 +134,8 @@ def find_domains(program, sequences, cdd, evalue, cpus):
         domains = dict()
         for outfile in outfiles:
             temp_domains = rpsblast.parse_xml(outfile, sequences, evalue)
-            for key, value in temp_domains.items():
-                domains[key] = value
+            for geneid, gene_domains in temp_domains.items():
+                domains[geneid] = gene_domains
     finally:
         shutil.rmtree(tmp_dir)
 
