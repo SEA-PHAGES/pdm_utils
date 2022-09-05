@@ -10,7 +10,7 @@ WORKDIR /home/software
 # Perform all apt updates and installs, then cleanup to reduce image size
 RUN apt update && apt upgrade -y
 RUN apt install -y --no-install-recommends software-properties-common && add-apt-repository -y ppa:deadsnakes && apt install -y --no-install-recommends python3.8-venv
-RUN apt install mysql-server-5.7 gcc wget infernal make autoconf m4 ncbi-blast+ clustalo -y
+RUN apt install mysql-server-5.7 gcc wget make autoconf m4 ncbi-blast+ clustalo -y
 RUN apt clean -y && rm -rf /var/lib/apt/lists/*
 
 # Set Python 3.8 as the default (Ubuntu 18.04 default is Python 3.6.9)
@@ -22,6 +22,9 @@ RUN service mysql start && mysql -u root -e "ALTER USER 'root'@'localhost' IDENT
 
 # Install Aragorn
 RUN wget http://www.ansikte.se/ARAGORN/Downloads/aragorn1.2.41.c && gcc -O3 -ffast-math -finline-functions -o /usr/local/bin/aragorn aragorn1.2.41.c && rm aragorn1.2.41.c
+
+# Install Infernal
+RUN wget http://eddylab.org/infernal/infernal-1.1.4.tar.gz && tar -xzf infernal-1.1.4.tar.gz && rm infernal-1.1.4.tar.gz && cd infernal-1.1.4 && ./configure && make && make install
 
 # Install tRNAscan-SE
 RUN wget http://trna.ucsc.edu/software/trnascan-se-2.0.9.tar.gz && tar -xzf trnascan-se-2.0.9.tar.gz && rm trnascan-se-2.0.9.tar.gz && cd tRNAscan-SE-2.0 && ./configure && make && make install
