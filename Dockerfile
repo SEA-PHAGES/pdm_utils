@@ -29,9 +29,6 @@ RUN wget http://trna.ucsc.edu/software/trnascan-se-2.0.9.tar.gz && tar -xzf trna
 # Install MMseqs2
 RUN wget https://mmseqs.com/latest/mmseqs-linux-sse41.tar.gz && tar -xzf mmseqs-linux-sse41.tar.gz && rm mmseqs-linux-sse41.tar.gz && export PATH=$(pwd)/mmseqs/bin/:$PATH
 
-# Install Markov clustering (MCL)
-RUN wget https://micans.org/mcl/src/mcl-14-137.tar.gz && tar -xzf mcl-14-137.tar.gz && rm mcl-14-137.tar.gz && cd mcl-14-137 && ./configure && make && make install
-
 # Get NCBI conserved domain database
 RUN mkdir /home/Cdd
 WORKDIR /home/Cdd
