@@ -5,9 +5,8 @@ import argparse
 from datetime import datetime
 import pathlib
 
-from phamerate.__main__ import assemble_phams
-from phamerate.SequenceDB import SequenceDB
-from phamerate.multiprocess import CPUS
+from phammseqs import assemble_phams, SequenceDB
+from phammseqs.multiprocess import CPUS
 
 from pdm_utils.classes.alchemyhandler import AlchemyHandler
 from pdm_utils.functions.configfile import *
@@ -38,7 +37,7 @@ sequence searching for the analysis of massive data sets. Nature
 Biotechnology, 2017. doi: 10.1038/nbt.3988"""
 
 DB_SUMMARY = """
-Initial database summary:
+Database summary:
 =============================
  {} total phams
  {} orphams
