@@ -429,11 +429,13 @@ def use_function_report_data(db_filter, data_dicts, columns, conditionals,
         final_call = data_dict["Final Call"]
         if final_call.lower() == "hypothetical protein":
             final_call = ""
-        conditionals.append(querying.build_where_clause(
+
+        pham_conditionals = [condition for condition in conditionals]
+        pham_conditionals.append(querying.build_where_clause(
                             db_filter.graph, f"gene.Notes!='{final_call}'"))
 
         query = querying.build_select(db_filter.graph, columns,
-                                      where=conditionals)
+                                      where=pham_conditionals)
 
         results = querying.execute(db_filter.engine, query,
                                    in_column=db_filter.key,
@@ -442,6 +444,7 @@ def use_function_report_data(db_filter, data_dicts, columns, conditionals,
         for result in results:
             if (not result["Accession"]) or (not result["LocusTag"]):
                 continue
+
             result["Notes"] = data_dict["Final Call"]
             result["Start"] = result["Start"] + 1
             export_dicts.append(result)
