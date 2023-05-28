@@ -365,6 +365,24 @@ CONVERSION_STEPS = {
         step_summary_dict: {}
         },
 
+    "upgrade_10_to_11": {
+        statements: [
+            """CREATE TABLE `gene_transmembrane` (
+                  `ID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+                  `GeneID ` varchar(35) DEFAULT NULL,
+                  `QueryStart` int(10) unsigned NOT NULL,
+                  `QueryEnd` int(10) unsigned NOT NULL,
+                  `Type` enum('signal', 'transmembrane') DEFAULT NULL,
+                  `Source`  enum('deeptmmhmm', 'sosui') DEFAULT NULL,
+                  PRIMARY KEY (`ID`),
+                  KEY `GeneID` (`GeneID`),
+                  FOREIGN KEY (`PhageID`) REFERENCES `gene` (`GeneID`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=latin1;""",
+            """"""
+            ],
+        step_summary_dict: {}
+        },
+
     # Downgrade steps
     "downgrade_1_to_0": {
         statements: [
@@ -690,6 +708,16 @@ CONVERSION_STEPS = {
             ],
         step_summary_dict: {
             lost_data: ["gene.Translation"]
+            }
+        },
+
+    "downgrade_11_to_10": {
+        statements: [
+            """DROP TABLE `gene_transmembrane`;""",
+            """UPDATE `version` SET `schema_version` = 10;"""
+            ],
+        step_summary_dict: {
+            lost_table: ["gene_transmembrane"]
             }
         }
     }
