@@ -373,7 +373,7 @@ CONVERSION_STEPS = {
                   `QueryStart` int(10) unsigned NOT NULL,
                   `QueryEnd` int(10) unsigned NOT NULL,
                   `Type` enum('signal', 'transmembrane') DEFAULT NULL,
-                  `Source`  enum('deeptmmhmm', 'sosui') DEFAULT NULL,
+                  `Source`  enum('deeptmhmm', 'sosui') DEFAULT NULL,
                   PRIMARY KEY (`ID`),
                   KEY `GeneID` (`GeneID`),
                   FOREIGN KEY (`GeneID`) REFERENCES `gene` (`GeneID`)
