@@ -35,7 +35,6 @@ DEFAULT_FOLDER_NAME = f"{time.strftime('%Y%m%d')}_membrane"
 # Miscellaneous
 VERSION = pdm_utils.__version__
 BATCH = 100
-MAX_BATCHES = 10
 RESULTS_FOLDER = f"{constants.CURRENT_DATE}_deeptmhmm"
 
 # MySQL queries and commands for everything else
@@ -81,10 +80,10 @@ def parse_args(args=None):
     parser.add_argument("-b", "--batch_size", default=BATCH, type=int,
                         help=f"number of translations to search at a time "
                              f"[default: {BATCH}]")
-    parser.add_argument("-Mb", "--maximum-batches", default=MAX_BATCHES,
+    parser.add_argument("-Mb", "--maximum-batches", default=None,
                         type=int,
                         help="number of maximum batches to run in total "
-                             f"[default: {MAX_BATCHES}")
+                             "[default: infinite]")
     parser.add_argument("-rm", "--run_machine", default="local",
                         choices=["local", "remote"], type=str,
                         help="runmode option to select whether deeptmhmm "
@@ -149,7 +148,7 @@ def execute_deeptmhmm_scan(alchemist, folder_path=None,
                            folder_name=DEFAULT_FOLDER_NAME, values=None,
                            verbose=False, filters="", reset=False,
                            run_machine="local",
-                           batch_size=BATCH, max_batches=MAX_BATCHES):
+                           batch_size=BATCH, max_batches=None):
     export_path = pipelines_basic.create_working_path(folder_path,
                                                       folder_name)
     pipelines_basic.create_working_dir(export_path)
@@ -203,8 +202,9 @@ def execute_deeptmhmm_scan(alchemist, folder_path=None,
     batch_indices = basic.create_indices(unique_trans, batch_size)
     total_rolled_back = 0
     for i, (start, stop) in enumerate(batch_indices):
-        if i > max_batches:
-            break
+        if max_batches:
+            if i >= max_batches:
+                break
 
         if verbose:
             print(f"Processing translations {start+1} to {stop}...")
@@ -221,6 +221,9 @@ def execute_deeptmhmm_scan(alchemist, folder_path=None,
         try:
             batch_domains = run_deeptmhmm(batch_file, machine=run_machine)
         except BioLibError as err:
+            print(f"Unable to continue - {err.message}...")
+            return
+        except TypeError as err:
             print(f"Unable to continue - {err.message}...")
             return
 
