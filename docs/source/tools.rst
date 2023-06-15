@@ -18,6 +18,7 @@ Most tools provide functionality without respect to SEA-PHAGES-specific assumpti
    convert <./tools/convert>
    export <./tools/export>
    find_domains <./tools/find_domains>
+   find_transmembrane <./tools/find_transmembrane>
    freeze <./tools/freeze>
    get_data <./tools/get_data>
    get_db <./tools/get_db>

@@ -5,8 +5,7 @@ from Bio.Alphabet import IUPAC
 from Bio.Seq import Seq
 from datetime import datetime, date
 
-# pdm_utils is compatible with this schema version.
-CODE_SCHEMA_VERSION = 10
+CODE_SCHEMA_VERSION = 11
 
 CURRENT_DATE = date.today().strftime("%Y%m%d")
 

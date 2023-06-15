@@ -3,7 +3,7 @@
 Database structure
 ==================
 
-The database (schema version 10) contains the following tables:
+The database (schema version 11) contains the following tables:
 
 .. toctree::
     :maxdepth: 1
@@ -11,6 +11,7 @@ The database (schema version 10) contains the following tables:
     domain <./table_domain>
     gene <./table_gene>
     gene_domain <./table_gene_domain>
+    gene_transmembrane <./table_gene_transmembrane>
     phage <./table_phage>
     pham <./table_pham>
     trna <./table_trna>
@@ -20,6 +21,6 @@ The database (schema version 10) contains the following tables:
 
 .. _figschema:
 
-.. figure:: ../images/database_structure/schema_10_map.jpg
+.. figure:: ../images/database_structure/schema_11_map.jpga
 
     Schema Entity Relationship Diagram.

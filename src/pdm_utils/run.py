@@ -9,6 +9,7 @@ from pdm_utils.pipelines import compare_db
 from pdm_utils.pipelines import convert_db
 from pdm_utils.pipelines import export_db
 from pdm_utils.pipelines import find_domains
+from pdm_utils.pipelines import find_transmembrane
 from pdm_utils.pipelines import freeze_db
 from pdm_utils.pipelines import get_data
 from pdm_utils.pipelines import get_db
@@ -22,8 +23,8 @@ from pdm_utils.pipelines import pham_review
 from pdm_utils.pipelines import update_field
 
 VALID_PIPELINES = {"compare", "convert", "export", "find_domains",
-                   "find_phams", "freeze", "get_data", "get_db",
-                   "get_gb_records", "import", "phamerate", "push",
+                   "find_transmembrane", "find_phams", "freeze", "get_data",
+                   "get_db", "get_gb_records", "import", "phamerate", "push",
                    "revise", "pham_review", "update"}
 
 
@@ -61,6 +62,8 @@ def main(unparsed_args=None):
         compare_db.main(unparsed_args)
     elif args.pipeline == "convert":
         convert_db.main(unparsed_args)
+    elif args.pipeline == "find_transmembrane":
+        find_transmembrane.main(unparsed_args)
     elif args.pipeline == "export":
         export_db.main(unparsed_args)
     elif args.pipeline == "find_domains":

@@ -115,11 +115,14 @@ def update_field(alchemist, update_ticket):
               f"for key '{key_field.name}' in table '{table_obj.name}'")
         return 0
 
-    if update_ticket["value"] == "NULL":
-        update_ticket["value"] = None
+    value = update_ticket["value"]
+    if value == "NULL":
+        value = None
+    elif field.type.python_type == bytes:
+        value = value.encode("utf-8")
 
     statement = update(table_obj).where(key_value_clause).values(
-                                    {field.name : update_ticket["value"]})
+                                    {field.name : value})
     alchemist.engine.execute(statement)
     return 1
 

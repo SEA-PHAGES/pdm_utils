@@ -83,7 +83,7 @@ def main(unparsed_args_list):
                              output_type=args.output_type,
                              filters=args.filters, groups=args.groups,
                              verbose=args.verbose, force=args.force,
-                             production=args.production)
+                             production=args.production, draft=args.draft)
     elif args.pipeline == "remote":
         values = pipelines_basic.parse_value_input(args.input)
         execute_remote_revise(alchemist, folder_path=args.folder_path,
@@ -199,6 +199,7 @@ def parse_revise(unparsed_args_list):
                               choices=LOCAL_OUTPUT_FILE_TYPES)
     local_parser.add_argument("-p", "--production", help=PRODUCTION_HELP,
                               action="store_true")
+    local_parser.add_argument("-d", "--draft", action="store_true")
 
     remote_parser.add_argument("-if", "--import_file", dest="input",
                                type=pipelines_basic.convert_file_path,
@@ -240,6 +241,7 @@ def execute_local_revise(alchemist, revisions_file_path, folder_path=None,
                          folder_name=DEFAULT_FOLDER_NAME, config=None,
                          input_type="function_report",
                          output_type="p_curation", production=False,
+                         draft=False,
                          filters="", groups=[],
                          force=False, verbose=False):
     """Executes the entirety of the genbank local revise pipeline.
@@ -302,7 +304,7 @@ def execute_local_revise(alchemist, revisions_file_path, folder_path=None,
             export_dicts = use_function_report_data(
                                         db_filter, revisions_data_dicts,
                                         revise_columns, conditionals,
-                                        verbose=verbose)
+                                        verbose=verbose, draft=draft)
         elif input_type == "csv":
             export_dicts = use_csv_data(db_filter, revisions_data_dicts,
                                         revise_columns, conditionals,
@@ -407,7 +409,7 @@ def execute_remote_revise(alchemist, folder_path=None,
 
 
 def use_function_report_data(db_filter, data_dicts, columns, conditionals,
-                             verbose=False):
+                             verbose=False, draft=False):
     """Reads in FunctionReport data and pairs it with existing data.
 
     :param db_filter: A connected and fully built Filter object.
@@ -429,19 +431,23 @@ def use_function_report_data(db_filter, data_dicts, columns, conditionals,
         final_call = data_dict["Final Call"]
         if final_call.lower() == "hypothetical protein":
             final_call = ""
-        conditionals.append(querying.build_where_clause(
+
+        pham_conditionals = [condition for condition in conditionals]
+        pham_conditionals.append(querying.build_where_clause(
                             db_filter.graph, f"gene.Notes!='{final_call}'"))
 
         query = querying.build_select(db_filter.graph, columns,
-                                      where=conditionals)
+                                      where=pham_conditionals)
 
         results = querying.execute(db_filter.engine, query,
                                    in_column=db_filter.key,
                                    values=[data_dict["Pham"]])
 
         for result in results:
-            if (not result["Accession"]) or (not result["LocusTag"]):
-                continue
+            if not draft:
+                if (not result["Accession"]) or (not result["LocusTag"]):
+                    continue
+
             result["Notes"] = data_dict["Final Call"]
             result["Start"] = result["Start"] + 1
             export_dicts.append(result)

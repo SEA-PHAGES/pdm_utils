@@ -9,8 +9,8 @@ from pdm_utils.functions import configfile
 from pdm_utils.functions import mysqldb, mysqldb_basic
 from pdm_utils.constants import schema_conversions
 
-MAX_VERSION = 10
-CURRENT_VERSION = 10
+MAX_VERSION = 11
+CURRENT_VERSION = 11
 VERSIONS = list(range(0, MAX_VERSION + 1))
 CHOICES = set(VERSIONS)
 
