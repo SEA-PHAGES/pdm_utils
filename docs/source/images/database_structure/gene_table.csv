@@ -1,1 +1,15 @@
-Field,Data origin (GenBank field or pipeline)GeneID,importPhageID,importStart,LOCATIONStop,LOCATIONLength,importName,MULTIPLE FIELDSTranslation,TRANSLATIONOrientation,STRANDNotes,"PRODUCT, FUNCTION, or NOTE"DomainStatus,find_domainsLocusTag,LOCUS_TAGParts,PARTSPhamID,phamerate
+Field,Data origin (GenBank field or pipeline)
+GeneID,import
+PhageID,import
+Start,LOCATION
+Stop,LOCATION
+Length,import
+Name,MULTIPLE FIELDS
+Translation,TRANSLATION
+Orientation,STRAND
+Notes,"PRODUCT, FUNCTION, or NOTE"
+DomainStatus,find_domains
+MembraneStatus,find_transmembrane
+LocusTag,LOCUS_TAG
+Parts,PARTS
+PhamID,phamerate
