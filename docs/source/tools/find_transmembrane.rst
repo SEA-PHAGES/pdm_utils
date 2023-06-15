@@ -1,7 +1,7 @@
 .. _find_transmembrane:
 
 find_transmembrane: find transmembrane domains
-=========================================
+==============================================
 
 
 Several tools exist to detect domains associated with the cell membrane, including SOSUI and DeepTMHMM.  Every gene product in the database can be evaluated for the presence of signal or transmembrane domains by running one of the aforementioned software.  After running this software, the domain data is stored in the database using the ``pdm_utils find_transmembrane`` tool.
