@@ -375,10 +375,12 @@ CONVERSION_STEPS = {
                   `Type` enum('signal', 'transmembrane') DEFAULT NULL,
                   `Source`  enum('deeptmhmm', 'sosui') DEFAULT NULL,
                   PRIMARY KEY (`ID`),
-                  KEY `GeneID` (`GeneID`),
+                  CONSTRAINT `fk_gene_transmembrane_gene`
                   FOREIGN KEY (`GeneID`) REFERENCES `gene` (`GeneID`)
+                  ON DELETE CASCADE
+                  ON UPDATE CASCADE
                 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;""",
-            """ALTER TABLE `gene` ADD COLUMN `MembraneStatus` tinyint(1) NOT NULL AFTER `PhamID`;""",
+            """ALTER TABLE `gene` ADD COLUMN `MembraneStatus` tinyint(1) DEFAULT 1 NOT NULL AFTER `PhamID`;""",
             """UPDATE `version` SET `SchemaVersion` = 11;"""
             ],
         step_summary_dict: {
