@@ -5,7 +5,7 @@ PHAMERATOR_STORAGE = "http://databases.hatfull.org"
 
 
 def get_db(database, config_file):
-    command = f"pdm_utils get_db server -db {database} -fp "
+    command = f"pdm_utils get_db server -db {database} "
 
     if config_file:
         command += f"-c {config_file} "
@@ -55,6 +55,15 @@ def phammseqs(database, config_file, threads):
 
 def find_domains(database, config_file, output_dir, cpus):
     command = (f"pdm_utils find_domains {database} --cpus {cpus} "
+               f"-o {output_dir} ")
+
+    if config_file:
+        command += f"-c {config_file} "
+
+    run_command(command)
+
+def find_transmembrane(database, config_file, output_dir, run_machine):
+    command = (f"pdm_utils find_transmembrane {database} --run_machine {run_machine} -b 1000 -Mb 20 -v "
                f"-o {output_dir} ")
 
     if config_file:

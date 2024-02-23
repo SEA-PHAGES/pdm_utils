@@ -22,21 +22,21 @@ import urllib3
 
 # Email login credentials and message templates
 USERNAME = "phamerator.qc@gmail.com"
-PASSWORD = "egngzitquqpchdux"
+PASSWORD = ""
 TEMPLATES = {
     "success": "{} has been successfully imported into the Phamerator "
                "database. No further action is needed.\n\nBest,\n\n"
-               "A friendly Hatfull lab server",
+               "The Cresawn lab",
     "submit": "The following genomes are ready for submission to Genbank:\n"
               "{}\n\nBest,\n\n"
-              "A friendly Hatfull lab server",
+              "The Cresawn lab",
     "fail": "{} could not be imported into the Phamerator database. See the "
             "attached log file(s) for details.\n\nA Google spreadsheet ("
             "https://docs.google.com/spreadsheets/d/1LU-ueqWIwjiWWjGFVuLlpt"
             "r6ha4zF4re2ScmYhdExPc/edit?usp=sharing) has been created to "
             "help interpret the most common errors. Feel free to reach out "
             "if any remain indecipherable.\n\nBest,\n\n"
-            "A friendly Hatfull lab server"}
+            "The Cresawn lab"}
 
 # URLs
 ASN1_LINK = "https://phagesdb.org/data/submissionfiles/"
@@ -49,8 +49,7 @@ ASN1_DIR = os.path.join(OUT_DIR, "submission_files")
 # Build HTTPS pool so we can use urllib3 to download content
 http_pool = urllib3.PoolManager()
 
-MAINTAINER_EMAILS = {"djs@pitt.edu", "laa89@pitt.edu",
-                     "phamerator.qc@gmail.com"}
+MAINTAINER_EMAILS = {"djs@pitt.edu", "cresawsg@jmu.edu", "bendelmg@dukes.jmu.edu", "phamerator.qc@gmail.com"}
 
 
 # Low-level functions

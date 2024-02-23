@@ -43,8 +43,8 @@ def execute_update(database, config_file,
                                         output_folder, folder_name)
     pipelines_basic.create_working_dir(working_dir)
 
-    print(f"Retreiving latest version of {database}...")
-    get_db(database, config_file)
+#    print(f"Retreiving latest version of {database}...")
+#    get_db(database, config_file)
 
     print("Pulling data from remote servers...")
     get_data(database, config_file, working_dir)
