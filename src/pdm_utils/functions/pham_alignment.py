@@ -47,13 +47,15 @@ def get_all_pham_gene_translations(alchemist):
     # Build phage>>cluster lookup table
     cluster_lookup = dict()
     host_lookup = dict()
-    query = "SELECT PhageID, Cluster, Subcluster, HostGenus FROM phage"
+    status_lookup = dict()
+    query = "SELECT PhageID, Cluster, Subcluster, HostGenus, Status FROM phage"
     results = engine.execute(query)
     for result in results:
         phageid = result["PhageID"]
         cluster = result["Cluster"]
         subcluster = result["Subcluster"]
         host = result["HostGenus"]
+        status = result["Status"]
         if cluster is None:
             cluster_lookup[phageid] = "Singleton"
         elif subcluster is None:
@@ -62,6 +64,7 @@ def get_all_pham_gene_translations(alchemist):
             cluster_lookup[phageid] = subcluster
 
         host_lookup[phageid] = host
+        status_lookup[phageid] = status
 
     # Build pham>>translation>>gene lookup table
     phams = dict()
@@ -94,6 +97,10 @@ def get_all_pham_gene_translations(alchemist):
 
         if locus is not None and locus > "":
             geneid = "".join([geneid, " [locus=", str(locus), "]"])
+
+        status = status_lookup[phageid]
+        if status == "draft":
+            geneid = "".join([geneid, " [status=draft]"])
 
         pham_translations = phams.get(phamid, dict())
         gene_ids = pham_translations.get(translation, [])
