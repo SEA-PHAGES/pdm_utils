@@ -1,6 +1,10 @@
 # Below is a history of changes associated with each database schema
 # (relative to the prior schema).
 
+# Schema version: 11
+# Implemented by: Steven Cresawn
+# Change gene.MembraneStatus default value from 1 to 0.
+# Implemented 20250124 in database version = 587 -> 588.
 
 # Schema version: 10
 # Implemented by: Travis Mavrich
