@@ -7,3 +7,10 @@ build/
 dist/
 pdm_utils.egg-info/
 *.swp
+scripts/data/
+scripts/tmp/
+working/
+backups/
+*.pem
+config.txt
+frozen/
