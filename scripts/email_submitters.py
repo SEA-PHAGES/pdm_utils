@@ -49,7 +49,7 @@ ASN1_DIR = os.path.join(OUT_DIR, "submission_files")
 # Build HTTPS pool so we can use urllib3 to download content
 http_pool = urllib3.PoolManager()
 
-MAINTAINER_EMAILS = {"djs@pitt.edu", "cresawsg@jmu.edu", "bendelmg@dukes.jmu.edu", "phamerator.qc@gmail.com"}
+MAINTAINER_EMAILS = {"djs@pitt.edu", "montid@hhmi.org", "cresawsg@jmu.edu", "phamerator.qc@gmail.com"}
 
 
 # Low-level functions
