@@ -3,14 +3,10 @@
 from operator import itemgetter
 from itertools import groupby
 import pathlib
+import shlex, subprocess, os, sys
+script_dir = os.getcwd()
 
-import biolib
-
-# Load the DeepTMHMM api as a protected variable
-_api = biolib.load("DTU/DeepTMHMM")
-
-
-def run_deeptmhmm(infile, machine="local"):
+def run_deeptmhmm(infile, batch_export_path, machine="local"):
     """Execute a DeepTMHMM job using the input file, and return
     the coordinates of predicted signal or transmembrane domains.
 
@@ -19,17 +15,33 @@ def run_deeptmhmm(infile, machine="local"):
     :
     :return: pred_dict
     """
+
+    print("run_deeptmhmm()")
+
     if machine == "local":
-        job = _api.cli(args=f"--fasta {infile}", machine=machine)
+      predictor_path = os.getenv("DEEPTMHMM_PATH")
+      print("predictor_path: ", predictor_path)
+      print("batch_export_path: ", batch_export_path)
+
+      if predictor_path and os.path.exists(predictor_path):
+        subprocess.run([sys.executable, os.path.join(predictor_path, "predict.py"), "--fasta", infile, "--output-dir", os.path.join(batch_export_path)],
+        cwd=predictor_path)
+        with open(os.path.join(batch_export_path, "predicted_topologies.3line"), 'r') as f:
+          data = f.read()
+      else:
+        print("Please set the DEEPTMHMM_PATH environment variable.")
+        return 
+
     elif machine == "remote":
         job = _api.cli(args=f"--fasta {infile}")
+        outfile = job.get_output_file("/predicted_topologies.3line")
+        data = outfile.get_data()
     else:
         raise ValueError(
                     "DeepTMHMM run machine must either be remote or local.")
 
-    outfile = job.get_output_file("/predicted_topologies.3line")
 
-    return parse_3line(outfile.get_data())
+    return parse_3line(data)
 
 
 def parse_3line(data):

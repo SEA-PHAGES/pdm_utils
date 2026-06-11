@@ -13,15 +13,23 @@ def get_db(database, config_file):
     run_command(command)
 
 
-def get_data(database, config_file, working_dir):
+def get_data(database, config_file, working_dir, source=None):
     command = (f"pdm_utils get_data {database} "
                f"-o {working_dir} ")
+
+    if source == "draft":
+        command += f"-d "
+    elif source == "final":
+        command += f"-f "
+    elif source == "genbank":
+        command += f"-g "
+    else:
+        command += f"-a "
 
     if config_file:
         command += f"-c {config_file} "
 
     run_command(command)
-
 
 def import_gb(database, config_file, working_dir, data_dir, import_table):
     command = (f"pdm_utils import {database} {data_dir} {import_table} "
@@ -82,8 +90,7 @@ def convert(database, config_file, version):
     run_command(command)
 
 
-def export(database, config_file, working_directory, cpus, name=None,
-           phams=False):
+def export(database, name, config_file, working_directory, cpus, phams=False):
     command = (f"pdm_utils export {database} sql -o {working_directory} "
                f"-m {database} ")
 

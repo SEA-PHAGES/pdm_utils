@@ -17,12 +17,16 @@ from email import encoders
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from dotenv import load_dotenv
+
+load_dotenv()
 
 import urllib3
 
 # Email login credentials and message templates
-USERNAME = "phamerator.qc@gmail.com"
-PASSWORD = ""
+# load credentials from .env file
+USERNAME = os.getenv("EMAIL_USERNAME")
+PASSWORD = os.getenv("EMAIL_PASSWORD")
 TEMPLATES = {
     "success": "{} has been successfully imported into the Phamerator "
                "database. No further action is needed.\n\nBest,\n\n"

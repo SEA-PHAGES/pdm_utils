@@ -100,7 +100,7 @@ def learn_cdd_name(cdd_dir):
     filenames = list()
     for filepath in cdd_dir.iterdir():
         if filepath.is_file() and filepath.name != ".DS_Store":
-            filenames.append(filepath.stem)
+            filenames.append(filepath.name.split(".")[0])
 
     name_set = set(filenames)
     if len(name_set) == 1:

@@ -3,10 +3,12 @@
 import json
 import pathlib
 from urllib import request, error
+from urllib.request import Request, urlopen
 
 from pdm_utils.classes import genome
 from pdm_utils.constants import constants
 
+import sys
 
 def parse_phage_name(data_dict):
     """Retrieve Phage Name from PhagesDB.
@@ -130,12 +132,7 @@ def retrieve_url_data(url):
     :rtype: str
     """
     try:
-        # gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1) ==> required for
-        # urllib2.URLError: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED]
-        # certificate verify failed (_ssl.c:590)> ==> creating new TLS
-        # context tells urllib2 to ignore certificate chain
-        # NOTE this is BAD SECURITY, prone to man-in-the-middle attacks
-        rqst = request.Request(url)
+        rqst = request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
         with request.urlopen(rqst) as response:
             data = response.read()
             data = data.decode("utf-8")
@@ -242,7 +239,9 @@ def retrieve_genome_data(phage_url):
     :rtype: dict
     """
     try:
-        data_json = request.urlopen(phage_url)
+        req = Request(phage_url, headers={'User-Agent': 'Mozilla/5.0'})
+        data_json = urlopen(req)
+
         data_dict = json.loads(data_json.read())
         # TODO should data_dict.close() be called after retrieving data?
     except error.HTTPError:
@@ -297,7 +296,16 @@ def get_phagesdb_data(url):
         an empty list is returned.
     :rtype: list
     """
-    data_json = request.urlopen(url)
+    try:
+      # data_json = request.urlopen(url)
+      req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+      data_json = urlopen(req)
+
+    except Exception as e:
+      print("data_json:", data_json)
+      print('DOWNLOAD ERROR: ', url)
+      print(e)
+      sys.exit()
     # Response is a bytes object that json.loads can't read without first
     # being decoded to a UTF-8 string.
     data_dict = json.loads(data_json.read().decode("utf-8"))
@@ -351,7 +359,10 @@ def retrieve_data_list(url):
     :rtype: list
     """
     try:
-        data_json = request.urlopen(url)
+        req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        data_json = urlopen(req)
+
+
         data_list = json.loads(data_json.read())
     except error.HTTPError:
         data_list = []

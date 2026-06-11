@@ -5,6 +5,7 @@ then passes all command line arguments to the main pipeline module.
 import sys
 import argparse
 
+from pdm_utils.pipelines import cluster_db
 from pdm_utils.pipelines import compare_db
 from pdm_utils.pipelines import convert_db
 from pdm_utils.pipelines import export_db
@@ -22,10 +23,10 @@ from pdm_utils.pipelines import revise
 from pdm_utils.pipelines import pham_review
 from pdm_utils.pipelines import update_field
 
-VALID_PIPELINES = {"compare", "convert", "export", "find_domains",
-                   "find_transmembrane", "find_phams", "freeze", "get_data",
-                   "get_db", "get_gb_records", "import", "phamerate", "push",
-                   "revise", "pham_review", "update"}
+VALID_PIPELINES = {"cluster_db", "compare", "convert", "export",
+                   "find_domains", "find_transmembrane", "find_phams",
+                   "freeze", "get_data", "get_db", "get_gb_records", "import",
+                   "phamerate", "push", "revise", "pham_review", "update"}
 
 
 def parse_args(unparsed_args):
@@ -58,7 +59,9 @@ def main(unparsed_args=None):
 
     args = parse_args(unparsed_args)
 
-    if args.pipeline == "compare":
+    if args.pipeline == "cluster_db":
+        cluster_db.main(unparsed_args)
+    elif args.pipeline == "compare":
         compare_db.main(unparsed_args)
     elif args.pipeline == "convert":
         convert_db.main(unparsed_args)

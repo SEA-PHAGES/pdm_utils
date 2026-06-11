@@ -214,12 +214,13 @@ def execute_deeptmhmm_scan(alchemist, folder_path=None,
             gs_to_ts[nr_dict[translation][0]] = translation
 
         batch_file = export_path.joinpath(f"batch_{i+1}.fasta")
+        batch_export_path = export_path.joinpath(f"results_{i+1}")
         write_fasta(gs_to_ts, batch_file)
 
         if verbose:
             print("\tfinding transmembrane domains...")
         try:
-            batch_domains = run_deeptmhmm(batch_file, machine=run_machine)
+            batch_domains = run_deeptmhmm(batch_file, batch_export_path, machine=run_machine)
         except BioLibError as err:
             print(f"Unable to continue - {err.message}...")
             return
