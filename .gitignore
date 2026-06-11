@@ -14,3 +14,4 @@ backups/
 *.pem
 config.txt
 frozen/
+.env*
