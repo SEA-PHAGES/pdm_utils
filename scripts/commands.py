@@ -71,12 +71,10 @@ def find_domains(database, config_file, output_dir, cpus):
     run_command(command)
 
 def find_transmembrane(database, config_file, output_dir, run_machine):
-    command = (f"pdm_utils find_transmembrane {database} --run_machine {run_machine} -b 1000 -Mb 20 -v "
-               f"-o {output_dir} ")
+    command = (f"pdm_utils find_transmembrane {database} -rm {run_machine} -b 500 -Mb 1000 -v ")
 
     if config_file:
         command += f"-c {config_file} "
-
     run_command(command)
 
 

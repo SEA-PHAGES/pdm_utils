@@ -370,7 +370,8 @@ def execute_transaction(connection, statements):
                 print(msg)
                 failed = True
                 break
-        except Exception:
+        except Exception as e:
+            print(f"Unexpected error type: {str(type(e))}. Message: {str(e)}.")
             # One cause is that Cdd description contains '%'. Try replacing
             # '%' with '%%' and re-running the statement.
             if "%" in statement:

@@ -1,3 +1,4 @@
+.vscode/
 .idea/
 __pycache__
 docs/build/
@@ -15,3 +16,4 @@ backups/
 config.txt
 frozen/
 .env*
+2026*
